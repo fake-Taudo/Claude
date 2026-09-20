@@ -3974,7 +3974,7 @@ function respawn() {
   PL.x = wp ? wp.x : 170 * TS; PL.y = wp ? wp.y + 20 : 404 * TS;
   PL.gold = floor(PL.gold * .9);
   foes.length = 0; projs.length = 0; areas.length = 0;
-  BOSSACTIVE = null;
+  BOSSACTIVE = null; GAME.inCitadel = 0;
   refreshStats(); updateMood(1);
   toast('Du erwachst am Wegstein. Etwas Gold ist verloren.', P.uidim);
 }
@@ -5342,6 +5342,16 @@ function drawPropObj(ctx, p, cx, cy, t) {
   if (!def) return;
   const fr = def.frames > 1 ? floor(t * def.fps + p.x * .1) : 0;
   const x = p.x - cx, y = p.y - cy;
+  // Hohe Objekte transparent machen, wenn sie die Spielfigur verdecken
+  let al = 1;
+  if (def.h > 26 && p.y > PL.y && abs(p.x - PL.x) < def.w * .5 + 3 && PL.y > p.y - def.h - 4 && !PL.dead) al = .45;
+  if (al < 1) {
+    const oa = ctx.globalAlpha;
+    ctx.globalAlpha = oa * al;
+    drawProp(ctx, p.p, p.v, fr, x, y);
+    ctx.globalAlpha = oa;
+    return;
+  }
   if (def.sway > 0) {
     const sw = sin(t * 1.5 + p.x * .05 + p.y * .03) * def.sway;
     const v = ((p.v | 0) % def.vars + def.vars) % def.vars;
@@ -6105,7 +6115,8 @@ function invFiltered() {
 const EQSLOTS = ['staff', 'hood', 'robe', 'boots', 'amulet', 'ring'];
 function drawInventory(ctx, t) {
   const w = 300, h = 210, x = floor((VW - w) / 2), y = floor((VH - h) / 2) - 6;
-  panel(ctx, x, y, w, h, { title: 'Gepaeck und Ausruestung', right: fmt(PL.gold) + ' Gold   [I] schliessen' });
+  R(0, 0, VW, VH, 'rgba(4,6,12,.5)');
+  panel(ctx, x, y, w, h, { title: 'Gepaeck und Ausruestung', right: fmt(PL.gold) + ' Gold   [I] schliessen', bg: 'rgba(14,18,30,1)' });
   G(ctx);
   // Ausruestung
   const ex = x + 8, ey = y + 20;
@@ -6185,7 +6196,8 @@ function drawInventory(ctx, t) {
 /* ---- Faehigkeiten -------------------------------------------------------- */
 function drawSkills(ctx, t) {
   const w = 300, h = 210, x = floor((VW - w) / 2), y = floor((VH - h) / 2) - 6;
-  panel(ctx, x, y, w, h, { title: 'Zauber und Talente', right: 'Punkte: ' + PL.sp + '   [K] schliessen' });
+  R(0, 0, VW, VH, 'rgba(4,6,12,.5)');
+  panel(ctx, x, y, w, h, { title: 'Zauber und Talente', right: 'Punkte: ' + PL.sp + '   [K] schliessen', bg: 'rgba(14,18,30,1)' });
   G(ctx);
   text(ctx, 'Zauber', x + 8, y + 18, P.uidim);
   SPELLS.forEach(function (sp, i) {
@@ -6266,12 +6278,20 @@ function drawSkills(ctx, t) {
     }
   });
 }
+function clipTxt(str, maxW) {
+  str = '' + str;
+  if (textW(str) <= maxW) return str;
+  let out = str;
+  while (out.length > 1 && textW(out + '.') > maxW) out = out.slice(0, -1);
+  return out + '.';
+}
 function hit(x, y, w, h) { return MOUSE.inside && MOUSE.x >= x && MOUSE.x < x + w && MOUSE.y >= y && MOUSE.y < y + h; }
 
 /* ---- Questbuch ----------------------------------------------------------- */
 function drawQuestLog(ctx, t) {
   const w = 300, h = 210, x = floor((VW - w) / 2), y = floor((VH - h) / 2) - 6;
-  panel(ctx, x, y, w, h, { title: 'Questbuch', right: '[J] schliessen' });
+  R(0, 0, VW, VH, 'rgba(4,6,12,.5)');
+  panel(ctx, x, y, w, h, { title: 'Questbuch', right: '[J] schliessen', bg: 'rgba(14,18,30,1)' });
   G(ctx);
   const all = [];
   for (const id in PL.q) all.push(id);
@@ -6291,34 +6311,34 @@ function drawQuestLog(ctx, t) {
     const on = UI.qsel === i + scroll;
     if (on) R(x + 5, iy - 1, 130, lh, 'rgba(40,52,88,.7)');
     const c = q.st === 'turned' ? P.ui4 : q.st === 'done' ? P.grass4 : d.story ? P.gold2 : P.uitx;
-    text(ctx, (d.story ? '* ' : '  ') + d.n, x + 8, iy + 1, c);
+    text(ctx, (d.story ? '* ' : '  ') + clipTxt(d.n, 116), x + 8, iy + 1, c);
     if (hit(x + 5, iy - 1, 130, lh) && MOUSE.click) { UI.qsel = i + scroll; MOUSE.click = 0; sfx('ui'); }
   }
   const id = all[UI.qsel], d = QUESTS[id], q = PL.q[id];
   const dx = x + 142, dy = y + 20;
   R(dx - 4, dy - 2, 158, h - 26, 'rgba(10,14,24,.5)');
-  text(ctx, d.n, dx, dy, d.story ? P.gold2 : P.uitx);
-  text(ctx, d.story ? 'Hauptquest' : 'Nebenquest', dx + 152, dy, P.uidim, { right: 1 });
-  let ly = dy + 12;
+  text(ctx, clipTxt(d.n, 152), dx, dy, d.story ? P.gold2 : P.uitx);
+  text(ctx, (d.story ? 'Hauptquest' : 'Nebenquest') + (q.st === 'turned' ? ' - abgeschlossen' : q.st === 'done' ? ' - erfuellt' : ''), dx, dy + 9, P.uidim);
+  let ly = dy + 21;
   wrap(d.d, 150).forEach(function (l) { text(ctx, l, dx, ly, P.silver); ly += 8; });
   ly += 4;
   text(ctx, 'Ziele:', dx, ly, P.uidim); ly += 10;
   d.obj.forEach(function (o, i) {
     const done = q.prog[i] >= o.n;
-    text(ctx, (done ? '+ ' : '- ') + o.d + '  ' + q.prog[i] + '/' + o.n, dx + 2, ly, done ? P.grass4 : P.uitx);
-    ly += 9;
+    const lines = wrap((done ? '+ ' : '- ') + o.d + ' (' + q.prog[i] + '/' + o.n + ')', 146);
+    lines.forEach(function (l, k) { text(ctx, l, dx + 2 + (k ? 6 : 0), ly, done ? P.grass4 : P.uitx); ly += 9; });
   });
   ly += 4;
   rewardText(d).forEach(function (l) { text(ctx, l, dx, ly, P.gold); ly += 8; });
   const giver = NPCBY[d.giver];
-  if (giver) text(ctx, 'Auftraggeber: ' + giver.n, dx, y + h - 22, P.uidim);
+  if (giver) text(ctx, clipTxt('Von: ' + giver.n, 152), dx, y + h - 22, P.uidim);
   if (q.st === 'active' || q.st === 'done') {
     const bx = dx, by = y + h - 12;
     const on = UI.qtrack === id;
     text(ctx, on ? '[ verfolgt ]' : '[ verfolgen ]', bx, by, on ? P.gold2 : P.uitx);
     if (hit(bx, by, 70, 9) && MOUSE.click) { UI.qtrack = id; MOUSE.click = 0; sfx('uiSel'); }
   }
-  if (q.st === 'turned') text(ctx, 'Abgeschlossen.', dx, y + h - 12, P.grass4);
+
 }
 /* ---- Weltkarte ----------------------------------------------------------- */
 function drawMap(ctx, t) {
@@ -6432,7 +6452,8 @@ function showArea(n) { GAME.areaName = n; GAME.areaT = 3; }
 /* ---- Laden --------------------------------------------------------------- */
 function drawShop(ctx, t) {
   const w = 300, h = 200, x = floor((VW - w) / 2), y = floor((VH - h) / 2);
-  panel(ctx, x, y, w, h, { title: SHOP.npc ? SHOP.npc.n : 'Handel', right: fmt(PL.gold) + ' Gold   [Esc] schliessen' });
+  R(0, 0, VW, VH, 'rgba(4,6,12,.5)');
+  panel(ctx, x, y, w, h, { title: SHOP.npc ? SHOP.npc.n : 'Handel', right: fmt(PL.gold) + ' Gold   [Esc] schliessen', bg: 'rgba(14,18,30,1)' });
   G(ctx);
   text(ctx, 'Waren', x + 8, y + 18, P.gold2);
   text(ctx, 'Dein Gepaeck', x + 158, y + 18, P.gold2);
@@ -6600,7 +6621,7 @@ function drawDeath(ctx, t) {
 function drawVictory(ctx, t) {
   GAME.winT += 1 / 60;
   const a = clamp(GAME.winT / 2, 0, 1);
-  R(0, 0, VW, VH, 'rgba(6,8,18,' + (a * .86) + ')');
+  R(0, 0, VW, VH, 'rgba(6,8,18,' + (a * .97) + ')');
   if (GAME.winT < .6) return;
   for (let i = 0; i < 60; i++) {
     const x = (hash2(i, 1, 9) * VW + t * (6 + hash2(i, 2, 3) * 10)) % VW;
@@ -6608,24 +6629,25 @@ function drawVictory(ctx, t) {
     G(ctx); D(x, y, rgba(P.arcglow, .2 + hash2(i, 4, 7) * .5));
   }
   text(ctx, 'DER LETZTE FUNKE', VW / 2, 40, P.gold2, { center: 1, scale: 2 });
-  const ep = [
+  const para = [
     'Malakar zerfaellt. Was von ihm bleibt, ist ein Geraeusch wie ein ausgeblasenes Licht.',
     'Ueber der Zitadelle reisst der Himmel auf. Es ist nur Himmel dahinter - kein Hunger, kein Auge.',
     '',
-    'In Ahornfurt laeuten sie die Glocken, ohne zu wissen, warum. Sylva zuendet die Erste Kerze neu an.',
-    'Sie brennt ruhig. Zum ersten Mal seit einem Monat flackert sie nicht.',
+    'In Ahornfurt laeuten sie die Glocken, ohne zu wissen, warum. Sylva zuendet die Erste Kerze neu an. Sie brennt ruhig - zum ersten Mal seit einem Monat flackert sie nicht.',
     '',
     'Du hast Wege gegangen, die niemand kartiert hat. Die Welt ist noch da. Du auch.'
   ];
+  const ep = [];
+  para.forEach(function (pr, i) { if (!pr) ep.push({ t: '', p: i }); else wrap(pr, VW - 60).forEach(function (l) { ep.push({ t: l, p: i }); }); });
   ep.forEach(function (l, i) {
-    const la = clamp((GAME.winT - 1 - i * .5) * 1.4, 0, 1);
-    text(ctx, l, VW / 2, 74 + i * 11, P.uitx, { center: 1, alpha: la });
+    const la = clamp((GAME.winT - 1 - l.p * .7) * 1.4, 0, 1);
+    text(ctx, l.t, VW / 2, 66 + i * 10, P.uitx, { center: 1, alpha: la });
   });
-  if (GAME.winT > 6) {
-    text(ctx, 'Stufe ' + PL.lvl + '  -  ' + PL.kills + ' Gegner bezwungen  -  ' + fmt(PL.gold) + ' Gold', VW / 2, 166, P.gold, { center: 1 });
+  if (GAME.winT > 5.4) {
+    text(ctx, 'Stufe ' + PL.lvl + '  -  ' + PL.kills + ' Gegner bezwungen  -  ' + fmt(PL.gold) + ' Gold', VW / 2, 182, P.gold, { center: 1 });
     const doneQ = Object.keys(PL.q).filter(function (k) { return PL.q[k].st === 'turned'; }).length;
-    text(ctx, doneQ + ' von ' + Object.keys(QUESTS).length + ' Auftraegen erfuellt', VW / 2, 178, P.uidim, { center: 1 });
-    const bw = 150, bx = (VW - bw) / 2, by = 196;
+    text(ctx, doneQ + ' von ' + Object.keys(QUESTS).length + ' Auftraegen erfuellt', VW / 2, 194, P.uidim, { center: 1 });
+    const bw = 150, bx = (VW - bw) / 2, by = 212;
     const on = hit(bx, by, bw, 16);
     R(bx, by, bw, 16, on ? P.ui4 : P.ui3);
     text(ctx, 'Weiterspielen', bx + bw / 2, by + 5, on ? P.white : P.uitx, { center: 1 });
@@ -7060,7 +7082,7 @@ function render(t, dt) {
   }
   UI.tip = null;
   drawWorld(ctx, t);
-  if (UI.modal !== 'map') drawHUD(ctx, t, UI.modal === 'dlg' || UI.modal === 'shop');
+  if (UI.modal !== 'map' && !GAME.won) drawHUD(ctx, t, UI.modal === 'dlg' || UI.modal === 'shop');
   if (UI.modal === 'inv') drawInventory(ctx, t);
   else if (UI.modal === 'skill') drawSkills(ctx, t);
   else if (UI.modal === 'quest') drawQuestLog(ctx, t);
