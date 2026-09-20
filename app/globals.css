@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   FARBEN & DESIGN-TOKENS  –  hier änderst du das gesamte Farbschema
+   ========================================================================== */
+:root {
+  /* Hintergründe */
+  --bg: #07070c;          /* Seitenhintergrund (sehr dunkel)      */
+  --bg-soft: #0b0b14;     /* Abwechselnde Sektionen               */
+  --surface: #12121c;     /* Karten                               */
+
+  /* Schrift */
+  --fg: #f6f6f9;          /* Haupttext / Überschriften            */
+  --muted: #a3a7bd;       /* Fließtext, sekundäre Infos           */
+
+  /* Linien */
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  /* Akzentfarben (Violett → Blau) */
+  --accent: #8b5cf6;
+  --accent-2: #3b82f6;
+  --accent-contrast: #ffffff; /* Schrift auf Akzent-Flächen */
+
+  /* Radien */
+  --radius-card: 1.25rem;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent2: var(--accent-2);
+  --color-accent-contrast: var(--accent-contrast);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: var(--radius-card);
+}
+
+/* ==========================================================================
+   BASIS
+   ========================================================================== */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Platz für den fixierten Header beim Ankersprung */
+    scroll-padding-top: 5.5rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--accent) 45%, transparent);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* ==========================================================================
+   HILFSKLASSEN
+   ========================================================================== */
+@layer utilities {
+  /* Farbverlauf auf Text */
+  .text-gradient {
+    background-image: linear-gradient(100deg, var(--accent) 0%, var(--accent-2) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Dezenter Rahmen mit Lichtkante oben */
+  .card-surface {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+      0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Feiner Raster-Hintergrund */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+}
+
+/* ==========================================================================
+   ANIMATIONEN
+   ========================================================================== */
+
+/* Sanftes Einblenden ohne JavaScript – wird im Hero verwendet */
+@keyframes fade-up {
+  from { opacity: 0; transform: translate3d(0, 18px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes mesh-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(6%, -8%, 0) scale(1.12); }
+}
+
+@keyframes mesh-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50%      { transform: translate3d(-8%, 6%, 0) scale(0.92); }
+}
+
+@keyframes mesh-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(0.95); }
+  50%      { transform: translate3d(5%, 7%, 0) scale(1.1); }
+}
+
+.animate-mesh-a { animation: mesh-drift-a 22s ease-in-out infinite; }
+.animate-mesh-b { animation: mesh-drift-b 26s ease-in-out infinite; }
+.animate-mesh-c { animation: mesh-drift-c 30s ease-in-out infinite; }
+
+/* Barrierefreiheit: Animationen abschalten, wenn der Nutzer das wünscht */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
