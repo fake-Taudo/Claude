@@ -24,6 +24,7 @@ Weitere Befehle:
 npm run build    # Produktions-Build erzeugen
 npm run start    # Produktions-Build lokal starten
 npm run lint     # ESLint
+npm run html     # Eigenständige HTML-Dateien nach dist/ (siehe Abschnitt 4b)
 ```
 
 ---
@@ -178,6 +179,52 @@ Variables* hinterlegen.
 
 ---
 
+## 4b. Eigenständige HTML-Fassung (ohne Node.js)
+
+Wenn du die Seite als reine HTML-Dateien brauchst – z. B. für klassisches
+Webhosting per FTP oder zum lokalen Anschauen per Doppelklick:
+
+```bash
+npm run build     # einmalig nötig (liefert die Schriftdateien)
+npm run html
+```
+
+Ergebnis im Ordner `dist/`:
+
+| Datei | Größe |
+| ----- | ----- |
+| `index.html` | ~194 KB |
+| `impressum.html` | ~124 KB |
+| `datenschutz.html` | ~124 KB |
+
+Jede Datei enthält CSS, Schriftart und JavaScript eingebettet – **keine
+externen Anfragen, kein Internet, kein Server nötig**. Einfach alle drei
+Dateien in denselben Ordner legen und `index.html` öffnen oder hochladen.
+
+Lighthouse dieser Fassung: **Performance 94 · Accessibility 100 ·
+Best Practices 100 · SEO 100**
+
+Inhalte kommen unverändert aus `content/site.ts` – nach jeder Textänderung
+einfach `npm run html` erneut ausführen.
+
+**Unterschiede zur Next.js-Version**
+
+| | Next.js (`npm run dev`) | HTML-Export (`npm run html`) |
+| --- | --- | --- |
+| Kontaktformular | serverseitig, E-Mail-Versand über Resend | öffnet das E-Mail-Programm des Besuchers (`mailto:`) |
+| Animationen | Framer Motion | gleichwertig in CSS und Vanilla-JS nachgebaut |
+| sitemap.xml / robots.txt | automatisch | nicht enthalten |
+| Social-Vorschaubild | automatisch erzeugt | nicht enthalten |
+
+Optik, Texte und Bedienung (mobiles Menü, FAQ-Akkordeon, Einblende-Effekte)
+sind in beiden Fassungen identisch.
+
+Der Generator liegt in `scripts/build-html.ts` und `scripts/sections.ts`.
+Die Schriftart wird nur im lateinischen Zeichensatz eingebettet; brauchst du
+osteuropäische Sonderzeichen, ist die Stelle in `build-html.ts` kommentiert.
+
+---
+
 ## 5. Veröffentlichen (Vercel)
 
 1. Projekt auf GitHub pushen.
@@ -231,6 +278,11 @@ components/
 
 content/
   site.ts              ← ALLE Inhalte
+
+scripts/
+  build-html.ts        Erzeugt die eigenständige HTML-Fassung in dist/
+  sections.ts          Markup dafür (identische CSS-Klassen wie components/)
+  icons.ts             Icons als SVG-Strings
 ```
 
 ---
