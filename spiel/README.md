@@ -1,17 +1,23 @@
 # ARKANUM – Der letzte Funke
 
-Ein 2D-Open-World-Action-Adventure im Pixel-Art-Stil, vollständig in **einer einzigen
-HTML-Datei**: [`arkanum.html`](arkanum.html).
+Ein 2D-Open-World-Action-Adventure im **flachen Vektorstil**, vollständig in **einer
+einzigen HTML-Datei**: [`arkanum.html`](arkanum.html).
 
 Datei per Doppelklick im Browser öffnen – fertig. Kein Build, kein Server, keine
 externen Abhängigkeiten, keine Netzwerkzugriffe. Grafik, Welt, Musik und Soundeffekte
 werden zur Laufzeit prozedural erzeugt.
 
+**Bildsprache:** klare geometrische Formen, kräftige Farbflächen, durchgehend saubere
+Konturen – keine Texturen, keine Schraffuren, keine Pixelraster. Weiche Verläufe gibt
+es nur dort, wo sie Tiefe stiften: Himmel, Lichtscheine von Zaubern, Laternen,
+Kristallen und Portalen. Gezeichnet wird alles als Vektorpfade auf Canvas 2D, in der
+vollen Auflösung des Bildschirms.
+
 ---
 
 ## Die Welt
 
-512 × 512 Kacheln (8192 × 8192 Pixel) nahtlos begehbar, aufgeteilt in dreizehn Zonen
+512 × 512 Felder (8192 × 8192 Welteinheiten) nahtlos begehbar, aufgeteilt in dreizehn Zonen
 mit eigener Flora, eigenen Gegnern, eigener Farbstimmung und eigener Musik:
 
 Sonnenwiesen · Flüsterwald · Tiefwald · Schattensumpf · Ruinen von Telvar ·
@@ -88,9 +94,19 @@ Der Spielstand liegt im `localStorage` des Browsers und wird zusätzlich alle
 
 ## Technisches
 
-* Interne Auflösung 480 × 270, ganzzahlig hochskaliert, `image-rendering: pixelated`.
-* Eigener 5×7-Bitmap-Zeichensatz, zur Laufzeit gerastert und eingefärbt.
-* Kachel-Atlas, Deko- und Figurengrafik werden beim Start prozedural gezeichnet.
+* **Canvas 2D, rein vektoriell.** Logischer Weltausschnitt 480 × 270 Einheiten; die
+  Zeichenfläche selbst läuft in Gerätepixeln (bis 4× Überabtastung), sodass Kanten
+  und Schrift immer scharf bleiben. Die Renderauflösung passt sich automatisch an die
+  gemessene Bildrate an.
+* **Boden ohne Kacheloptik:** ein durchgehender Farbteppich je Biom, darüber
+  organische Flächen aus verschmolzenen Kreisen. Die Kontur entsteht, indem die
+  Vereinigungsfläche erst gestrichen und dann gefüllt wird – dadurch bleibt nur die
+  Außenlinie sichtbar.
+* **Objekte und Figuren** werden beim Start als Vektorpfade in Gerätepixel-Auflösung
+  gerastert (Bäume, Häuser, Kristalle, Ruinen) bzw. pro Bild neu gezeichnet
+  (Magier, NSCs, Gegner, Zauberwirkungen).
+* Schrift: serifenlose Systemschrift, direkt auf Canvas gesetzt.
+* Lichtscheine und Vignette laufen über zwischengespeicherte Verlaufstexturen.
 * Ton und adaptive Musik über die Web Audio API – Oszillatoren, Rauschen und ein
   kleiner Faltungshall, kein einziges Audio-Asset.
 * Weltgenerierung in unter einer Sekunde, 60 fps auch mit vielen Gegnern.
