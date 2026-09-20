@@ -39,6 +39,8 @@ export default function ImpressumPage() {
         <p>
           Telefon: {legal.phone}
           <br />
+          Telefon (alternativ): {legal.phoneSecondary}
+          <br />
           E-Mail:{" "}
           <a
             href={`mailto:${legal.email}`}

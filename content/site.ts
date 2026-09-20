@@ -336,8 +336,12 @@ export const site = {
     title: "Lass uns über dein Projekt sprechen",
     subtitle:
       "Erzähl mir kurz, was du vorhast. Du bekommst innerhalb von 24 Stunden eine persönliche Antwort mit einer ersten Einschätzung – kostenlos und unverbindlich.",
-    email: "hallo@studio-kern.de",
-    phone: "+49 151 23456789",
+    email: "Paulmatuszek@icloud.com",
+    /** Erste Nummer ist die Hauptnummer (auch für Google / strukturierte Daten) */
+    phones: [
+      { label: "Telefon", number: "+49 176 89098260" },
+      { label: "Telefon (alternativ)", number: "+49 159 01901660" },
+    ],
     /** Wird neben den Kontaktdaten als Vertrauens-Liste angezeigt */
     highlights: [
       "Antwort innerhalb von 24 Stunden",
@@ -411,8 +415,9 @@ export const site = {
     street: "Musterstraße 1",
     city: "12345 Musterstadt",
     country: "Deutschland",
-    email: "hallo@studio-kern.de",
-    phone: "+49 151 23456789",
+    email: "Paulmatuszek@icloud.com",
+    phone: "+49 176 89098260",
+    phoneSecondary: "+49 159 01901660",
     vatId: "DE123456789",
     /** Zuständige Aufsichtsbehörde / Kammer, falls zutreffend */
     supervisoryAuthority: "",

@@ -81,18 +81,21 @@ export function Kontakt() {
                   </span>
                 </a>
 
-                <a
-                  href={`tel:${contact.phone.replace(/\s/g, "")}`}
-                  className="group flex items-center gap-3 text-sm transition-colors hover:text-accent"
-                >
-                  <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-accent ring-1 ring-white/10">
-                    <PhoneIcon className="size-5" />
-                  </span>
-                  <span className="flex flex-col">
-                    <span className="text-xs text-muted">Telefon</span>
-                    <span className="font-medium">{contact.phone}</span>
-                  </span>
-                </a>
+                {contact.phones.map((entry) => (
+                  <a
+                    key={entry.number}
+                    href={`tel:${entry.number.replace(/\s/g, "")}`}
+                    className="group flex items-center gap-3 text-sm transition-colors hover:text-accent"
+                  >
+                    <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-accent ring-1 ring-white/10">
+                      <PhoneIcon className="size-5" />
+                    </span>
+                    <span className="flex flex-col">
+                      <span className="text-xs text-muted">{entry.label}</span>
+                      <span className="font-medium">{entry.number}</span>
+                    </span>
+                  </a>
+                ))}
               </div>
 
               <ul className="flex flex-col gap-3 border-t border-line pt-7">
