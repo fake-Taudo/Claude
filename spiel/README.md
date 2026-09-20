@@ -92,12 +92,49 @@ Meteorregen, Schattenklonen und Leerenkristallen, die ihn heilen, solange sie st
 Der Spielstand liegt im `localStorage` des Browsers und wird zusätzlich alle
 60 Sekunden automatisch gesichert.
 
+## Auf Handy und Tablet
+
+Geräte ohne Maus schalten von selbst auf Fingersteuerung um – zwei Sticks und
+runde Tasten, alle mindestens 46 CSS-Pixel groß:
+
+| Bedienelement | Funktion |
+| --- | --- |
+| Linker Stick | Laufen (setzt dort auf, wo der Finger landet) |
+| Rechter Stick | Zielen und dabei dauerhaft zaubern |
+| Hand | Reden / Benutzen / Öffnen |
+| Pfeile | Phasenschritt |
+| Flasche | Heiltrank |
+| Beutel · Blitz · Schriftrolle · Karte | Gepäck, Zauber, Questbuch, Übersichtskarte |
+| Balken | Menü (Speichern, Laden, Ton) |
+| Rahmen | Vollbild an oder aus |
+
+Dazu: Tippen auf die Zauberleiste wählt einen Zauber, Tippen auf die Minikarte
+öffnet die Übersichtskarte, Wischen blättert in Gepäck, Laden und Questbuch,
+Ziehen verschiebt die Karte und zwei Finger zoomen sie. Ein Tipp zählt erst
+beim Loslassen – so lässt sich wischen, ohne versehentlich etwas anzulegen.
+Die Hinweistexte im Spiel wechseln mit dem Eingabegerät.
+
+**Hochformat:** Das Spielfeld sitzt oben im Bild, darunter liegt eine eigene
+Steuerfläche – Systemtasten direkt unter dem Bild, Aktionstasten in der Mitte,
+die beiden Sticks unten in Daumenhöhe. Nichts verdeckt das Spielgeschehen.
+**Querformat:** Die Sticks liegen halbtransparent in den unteren Ecken, die
+Systemtasten als kleiner Block am linken Rand.
+
 ## Technisches
 
 * **Canvas 2D, rein vektoriell.** Logischer Weltausschnitt 480 × 270 Einheiten; die
   Zeichenfläche selbst läuft in Gerätepixeln (bis 4× Überabtastung), sodass Kanten
   und Schrift immer scharf bleiben. Die Renderauflösung passt sich automatisch an die
   gemessene Bildrate an.
+* **Jedes Bildformat.** Das 16:9-Spielfeld wird mit festem Seitenverhältnis in das
+  Fenster eingepasst (Letterbox), die Leinwand füllt über `100dvw`/`100dvh` immer die
+  sichtbare Fläche – ohne Rollbalken, ohne abgeschnittene Ränder. Die gesamte
+  Rechnung steckt in einer Stelle: `resize()` bestimmt aus Fenstergröße,
+  `devicePixelRatio` und den Safe-Area-Rändern (`viewport-fit=cover`, Notch,
+  Home-Leiste) den Maßstab, die Ränder und im Hochformat die Höhe der Steuerleiste.
+  Größenänderung, Gerätedrehung und `visualViewport` lösen dieselbe Rechnung aus.
+  Maus- und Fingerpunkte laufen durch eine einzige Umrechnung in Spielkoordinaten.
+  Pinch-Zoom, Doppeltipp-Zoom, Überziehen und Textauswahl sind abgeschaltet.
 * **Boden ohne Kacheloptik:** ein durchgehender Farbteppich je Biom, darüber
   organische Flächen aus verschmolzenen Kreisen. Die Kontur entsteht, indem die
   Vereinigungsfläche erst gestrichen und dann gefüllt wird – dadurch bleibt nur die

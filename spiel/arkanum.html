@@ -2,26 +2,37 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0e1424">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>ARKANUM &ndash; Der letzte Funke</title>
 <meta name="description" content="Ein 2D-Open-World-Action-Adventure im flachen Vektorstil. Spiele einen Magier, erkunde eine riesige Welt, erfülle Quests und stelle dich dem Herrn der Leere.">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{width:100%;height:100%;overflow:hidden;background:#05060a;}
+  html,body{
+    width:100%;height:100%;height:100dvh;
+    overflow:hidden;overscroll-behavior:none;background:#0e1424;
+  }
   body{
-    display:flex;align-items:center;justify-content:center;
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
     color:#dbe4f7;
-    background:radial-gradient(ellipse at 50% 35%,#243156 0%,#161e36 55%,#0e1424 100%);
     touch-action:none;-webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;
   }
-  #wrap{position:relative;line-height:0;}
+  #wrap{position:fixed;inset:0;line-height:0;}
   canvas{
     display:block;
-    background:#1e2540;
-    border-radius:10px;
-    box-shadow:0 0 0 2px rgba(122,150,220,.22),0 18px 60px rgba(0,0,0,.55);
-    cursor:none;
+    width:100vw;height:100vh;width:100dvw;height:100dvh;
+    background:#0e1424;
+    cursor:none;touch-action:none;
+  }
+  /* Liest die Safe-Area-Insets fuer Geraete mit Notch aus */
+  #safe{
+    position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;
+    padding-top:env(safe-area-inset-top,0px);padding-right:env(safe-area-inset-right,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);
   }
   #boot{
     position:fixed;inset:0;display:flex;flex-direction:column;
@@ -37,7 +48,8 @@
 </style>
 </head>
 <body>
-<div id="wrap"><canvas id="cv" width="480" height="270"></canvas></div>
+<div id="wrap"><canvas id="cv" width="960" height="540"></canvas></div>
+<div id="safe"></div>
 <div id="boot"><h1>ARKANUM</h1><p>DER LETZTE FUNKE</p><div id="bar"><i id="barfill"></i></div><p id="bootmsg" style="letter-spacing:1px">Welt wird erschaffen ...</p></div>
 <noscript><p style="padding:40px">Dieses Spiel benötigt JavaScript.</p></noscript>
 <script>
@@ -4463,6 +4475,7 @@ function updatePlayer(dt, t) {
     if (key('KeyD') || key('ArrowRight')) ix += 1;
     if (key('KeyW') || key('ArrowUp')) iy -= 1;
     if (key('KeyS') || key('ArrowDown')) iy += 1;
+    if (TC.on && TC.move.act) { ix += TC.move.dx; iy += TC.move.dy; }
   }
   const len = hypot(ix, iy);
   const sp = ST.moveSpd * tileSpeedMul(PL.x, PL.y) * (PL.slowT > 0 ? .55 : 1) * (PL.castT > 0 ? .55 : 1);
@@ -4483,7 +4496,7 @@ function updatePlayer(dt, t) {
   // Blickrichtung
   const aimD = abs(angDiff(PL.aim, 0));
   PL.dir = (PL.aim > -PI * .75 && PL.aim < -PI * .25) ? 1 : (PL.aim > PI * .25 && PL.aim < PI * .75) ? 0 : (abs(PL.aim) > PI * .5 ? 3 : 2);
-  if (PL.moving && !mouseAim()) {
+  if (PL.moving && !mouseAim() && !(TC.on && TC.aim.act)) {
     if (abs(ix) > abs(iy)) PL.dir = ix < 0 ? 3 : 2; else PL.dir = iy < 0 ? 1 : 0;
   }
   // Schritte
@@ -5839,9 +5852,7 @@ function drawLighting(ctx, cx, cy, t) {
       punchLight(lx, a.x - cx, a.y - cy, a.r * 1.4, .5);
     }
     lx.globalCompositeOperation = 'source-over';
-    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(LIGHT.c, 0, 0);
-    ctx.restore();
+    ctx.drawImage(LIGHT.c, 0, 0, LIGHT.w, LIGHT.h, 0, 0, VW, VH);
     G(ctx);
     ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < _pn.length; i++) {
@@ -6064,7 +6075,7 @@ function drawHUD(ctx, t, compact) {
     if (it) {
       const o = it.o;
       const x = (o.x !== undefined ? o.x : PL.x) - camX(), y = (o.y !== undefined ? o.y : PL.y) - camY();
-      const label = '[E] ' + it.label + (it.n ? ' - ' + it.n : '');
+      const label = (TC.on ? '' : '[E] ') + it.label + (it.n ? ' - ' + it.n : '');
       const w = textW(label) + 8;
       const bx2 = clamp(x - w / 2, 4, VW - w - 4), by2 = clamp(y - 44, 16, VH - 40);
       R(bx2, by2, w, 12, 'rgba(10,14,24,.85)');
@@ -6085,14 +6096,18 @@ function drawHUD(ctx, t, compact) {
   if (GAME.hintT > 0) {
     GAME.hintT -= 1 / 60;
     const a = clamp(GAME.hintT / 3, 0, 1);
-    const hints = [
+    const hints = TC.on ? [
+      ['Stick links', 'laufen'], ['Stick rechts', 'zielen & zaubern'],
+      ['Hand', 'reden / benutzen'], ['Pfeile', 'ausweichen'],
+      ['Flasche', 'Heiltrank'], ['Rundtasten', 'Gepäck, Zauber, Karte']
+    ] : [
       ['WASD', 'laufen'], ['Maus', 'zielen'], ['Linksklick', 'zaubern'],
       ['1-6', 'Zauber wählen'], ['Umschalt', 'ausweichen'], ['E', 'reden / benutzen'],
       ['Q', 'Heiltrank'], ['I', 'Gepäck'], ['K', 'Zauber & Talente'],
       ['J', 'Questbuch'], ['M', 'Karte']
     ];
-    const w = 152, hh = 12 + hints.length * 9;
-    const hx = 8, hy = VH - 62 - hh;
+    const w = TC.on ? 168 : 152, hh = 12 + hints.length * 9;
+    const hx = (TC.on && !TC.bar) ? 120 : 8, hy = VH - 62 - hh;
     ctx.globalAlpha = a;
     panel(ctx, hx, hy, w, hh, { bg: 'rgba(24,32,54,.86)' });
     hints.forEach(function (l, i) {
@@ -6100,15 +6115,6 @@ function drawHUD(ctx, t, compact) {
       text(ctx, l[1], hx + w - 5, hy + 5 + i * 9, P.uitx, { right: 1 });
     });
     ctx.globalAlpha = 1;
-  }
-  // Fadenkreuz
-  if (MOUSE.inside && !UI.modal) {
-    G(ctx);
-    const mx = round(MOUSE.x), my = round(MOUSE.y);
-    const c = canCast(PL.bar[UI.selSpell || 0]) ? P.white : P.uidim;
-    R(mx - 5, my, 3, 1, c); R(mx + 3, my, 3, 1, c);
-    R(mx, my - 5, 1, 3, c); R(mx, my + 3, 1, 3, c);
-    D(mx, my, rgba(P.white, .6));
   }
 }
 function drawMiniMap(ctx, x, y, s, t) {
@@ -6261,7 +6267,7 @@ const EQSLOTS = ['staff', 'hood', 'robe', 'boots', 'amulet', 'ring'];
 function drawInventory(ctx, t) {
   const w = 300, h = 210, x = floor((VW - w) / 2), y = floor((VH - h) / 2) - 6;
   R(0, 0, VW, VH, 'rgba(4,6,12,.5)');
-  panel(ctx, x, y, w, h, { title: 'Gepäck und Ausrüstung', right: fmt(PL.gold) + ' Gold   [I] schließen', bg: 'rgba(26,35,60,1)' });
+  panel(ctx, x, y, w, h, { title: 'Gepäck und Ausrüstung', right: fmt(PL.gold) + ' Gold   ' + kclose('I', 'Beutel'), bg: 'rgba(26,35,60,1)' });
   G(ctx);
   // Ausrüstung
   const ex = x + 8, ey = y + 20;
@@ -6273,7 +6279,7 @@ function drawInventory(ctx, t) {
     if (it) drawIcon(ctx, it, sx + 3, sy + 3, 1);
     else text(ctx, SLOTN[s].slice(0, 3), sx + 11, sy + 7.5, P.ui4, { center: 1, scale: .92 });
     if (hit(sx, sy, 22, 22)) {
-      if (it) { UI.tip = { item: it, x: MOUSE.x, y: MOUSE.y, extra: 'Klick: Ablegen' }; }
+      if (it) { UI.tip = { item: it, x: MOUSE.x, y: MOUSE.y, extra: kw() + ': Ablegen' }; }
       if (MOUSE.click) { if (it) unequip(s); MOUSE.click = 0; }
     }
   });
@@ -6315,7 +6321,7 @@ function drawInventory(ctx, t) {
       const cmp = SLOTN[it.slot] ? PL.eq[it.slot] : null;
       UI.tip = {
         item: it, x: MOUSE.x, y: MOUSE.y, cmp: cmp,
-        extra: it.use ? 'Klick: Benutzen' : SLOTN[it.slot] ? 'Klick: Anlegen' : it.slot === 'quest' ? 'Questgegenstand' : 'Klick: Verkaufen (nur im Laden)'
+        extra: it.use ? kw() + ': Benutzen' : SLOTN[it.slot] ? kw() + ': Anlegen' : it.slot === 'quest' ? 'Questgegenstand' : kw() + ': Verkaufen (nur im Laden)'
       };
       if (MOUSE.click) {
         MOUSE.click = 0;
@@ -6331,13 +6337,14 @@ function drawInventory(ctx, t) {
     R(gx + cols * cell, gy + floor(UI.invScroll / maxScroll * (rowsN * cell - 4 - bh)), 3, bh, P.ui4);
   }
   text(ctx, 'Platz ' + PL.inv.length + '/' + PL.invMax, x + 8, y + h - 12, P.uidim);
-  text(ctx, '[K] Fähigkeiten   [J] Quests   [M] Karte', x + w - 8, y + h - 12, P.uidim, { right: 1 });
+  text(ctx, TC.on ? 'Wischen blättert   Tippen: anlegen oder benutzen'
+    : '[K] Fähigkeiten   [J] Quests   [M] Karte', x + w - 8, y + h - 12, P.uidim, { right: 1 });
 }
 /* ---- Fähigkeiten -------------------------------------------------------- */
 function drawSkills(ctx, t) {
   const w = 300, h = 210, x = floor((VW - w) / 2), y = floor((VH - h) / 2) - 6;
   R(0, 0, VW, VH, 'rgba(4,6,12,.5)');
-  panel(ctx, x, y, w, h, { title: 'Zauber und Talente', right: 'Punkte: ' + PL.sp + '   [K] schließen', bg: 'rgba(26,35,60,1)' });
+  panel(ctx, x, y, w, h, { title: 'Zauber und Talente', right: 'Punkte: ' + PL.sp + '   ' + kclose('K', 'Blitz'), bg: 'rgba(26,35,60,1)' });
   G(ctx);
   text(ctx, 'Zauber', x + 8, y + 18, P.uidim);
   SPELLS.forEach(function (sp, i) {
@@ -6407,7 +6414,7 @@ function drawSkills(ctx, t) {
     CIR(xx + 11, tyy + 8.5, 5.4, rgba(tl.c, .3)); CIR(xx + 11, tyy + 8.5, 3.6, tl.c);
     text(ctx, PL.tal[tl.k] + '/' + tl.max, xx + 11, tyy + 15, PL.tal[tl.k] >= tl.max ? P.gold2 : P.uitx, { center: 1 });
     if (hit(xx, tyy, 22, 22)) {
-      UI.tip = { t: tl.n, s: tl.d + (PL.sp > 0 && PL.tal[tl.k] < tl.max ? '  [Klick: +1]' : ''), x: MOUSE.x, y: MOUSE.y, w: 150 };
+      UI.tip = { t: tl.n, s: tl.d + (PL.sp > 0 && PL.tal[tl.k] < tl.max ? '  [' + kw() + ': +1]' : ''), x: MOUSE.x, y: MOUSE.y, w: 150 };
       if (MOUSE.click) {
         MOUSE.click = 0;
         if (PL.sp > 0 && PL.tal[tl.k] < tl.max) { PL.sp--; PL.tal[tl.k]++; refreshStats(1); sfx('level'); }
@@ -6424,12 +6431,15 @@ function clipTxt(str, maxW) {
   return out + '.';
 }
 function hit(x, y, w, h) { return MOUSE.inside && MOUSE.x >= x && MOUSE.x < x + w && MOUSE.y >= y && MOUSE.y < y + h; }
+/* Bedienhinweise folgen dem Eingabegeraet */
+function kw() { return TC.on ? 'Tippen' : 'Klick'; }
+function kclose(key, btn) { return TC.on ? btn + ' schließt' : '[' + key + '] schließen'; }
 
 /* ---- Questbuch ----------------------------------------------------------- */
 function drawQuestLog(ctx, t) {
   const w = 300, h = 210, x = floor((VW - w) / 2), y = floor((VH - h) / 2) - 6;
   R(0, 0, VW, VH, 'rgba(4,6,12,.5)');
-  panel(ctx, x, y, w, h, { title: 'Questbuch', right: '[J] schließen', bg: 'rgba(26,35,60,1)' });
+  panel(ctx, x, y, w, h, { title: 'Questbuch', right: kclose('J', 'Schriftrolle'), bg: 'rgba(26,35,60,1)' });
   G(ctx);
   const all = [];
   for (const id in PL.q) all.push(id);
@@ -6551,7 +6561,8 @@ function drawMap(ctx, t) {
   text(ctx, BIOMES[bioAtPx(PL.x, PL.y)].n, VW / 2, 4, P.gold2, { center: 1 });
   text(ctx, 'Zoom ' + (zoom < .6 ? 'ganze Welt' : zoom.toFixed(1) + 'x'), VW - 8, 4, P.uidim, { right: 1 });
   R(0, VH - 13, VW, 13, 'rgba(20,27,46,.96)'); R(0, VH - 13, VW, 1, 'rgba(122,150,215,.25)');
-  text(ctx, 'Ziehen/WASD: bewegen   +/-: Zoom   Klick auf Wegstein: Schnellreise   [M] schließen', 8, VH - 9, P.uidim);
+  text(ctx, TC.on ? 'Ziehen: bewegen   Zwei Finger: Zoom   Tippen auf Wegstein: Schnellreise'
+    : 'Ziehen/WASD: bewegen   +/-: Zoom   Klick auf Wegstein: Schnellreise   [M] schließen', 8, VH - 9, P.uidim);
   if (hoverPoi) {
     const lines = [hoverPoi.n];
     if (hoverPoi.wp) lines.push(hoverPoi.wpOn ? 'Wegstein aktiv - Klicken zum Reisen' : 'Wegstein (noch nicht berührt)');
@@ -6595,7 +6606,7 @@ function showArea(n) { GAME.areaName = n; GAME.areaT = 3; }
 function drawShop(ctx, t) {
   const w = 300, h = 200, x = floor((VW - w) / 2), y = floor((VH - h) / 2);
   R(0, 0, VW, VH, 'rgba(4,6,12,.5)');
-  panel(ctx, x, y, w, h, { title: SHOP.npc ? SHOP.npc.n : 'Handel', right: fmt(PL.gold) + ' Gold   [Esc] schließen', bg: 'rgba(26,35,60,1)' });
+  panel(ctx, x, y, w, h, { title: SHOP.npc ? SHOP.npc.n : 'Handel', right: fmt(PL.gold) + ' Gold   ' + kclose('Esc', 'Balken'), bg: 'rgba(26,35,60,1)' });
   G(ctx);
   text(ctx, 'Waren', x + 8, y + 18, P.gold2);
   text(ctx, 'Dein Gepäck', x + 158, y + 18, P.gold2);
@@ -6611,7 +6622,7 @@ function drawShop(ctx, t) {
     const afford = PL.gold >= it.price;
     text(ctx, it.price + 'G', x + 144, iy + 4, afford ? P.gold : P.hp, { right: 1, weight: 600 });
     if (hit(x + 6, iy, 140, 16)) {
-      UI.tip = { item: it, x: MOUSE.x, y: MOUSE.y, cmp: SLOTN[it.slot] ? PL.eq[it.slot] : null, extra: 'Klick: Kaufen für ' + it.price + ' G' };
+      UI.tip = { item: it, x: MOUSE.x, y: MOUSE.y, cmp: SLOTN[it.slot] ? PL.eq[it.slot] : null, extra: kw() + ': Kaufen für ' + it.price + ' G' };
       if (MOUSE.click) { MOUSE.click = 0; buyItem(i + SHOP.scroll); }
     }
   }
@@ -6626,11 +6637,11 @@ function drawShop(ctx, t) {
     text(ctx, clipTxt((it.n > 1 ? it.n + 'x ' : '') + it.name, 92), x + 174, iy + 3, RAR[it.rar || 0].c);
     text(ctx, max(1, floor(invValue(it) * .45)) + 'G', x + 292, iy + 4, P.gold, { right: 1, weight: 600 });
     if (hit(x + 154, iy, 140, 16)) {
-      UI.tip = { item: it, x: MOUSE.x, y: MOUSE.y, extra: 'Klick: Verkaufen' };
+      UI.tip = { item: it, x: MOUSE.x, y: MOUSE.y, extra: kw() + ': Verkaufen' };
       if (MOUSE.click) { MOUSE.click = 0; sellItem(it); }
     }
   }
-  text(ctx, 'Mausrad blättert. Verkauf bringt 45% des Werts.', x + 8, y + h - 12, P.uidim);
+  text(ctx, (TC.on ? 'Wischen blättert.' : 'Mausrad blättert.') + ' Verkauf bringt 45% des Werts.', x + 8, y + h - 12, P.uidim);
 }
 /* ---- Dialog -------------------------------------------------------------- */
 function drawDialog(ctx, t, dt) {
@@ -6668,16 +6679,19 @@ function drawDialog(ctx, t, dt) {
   });
   const complete = DLG.tw >= full.length;
   if (complete && DLG.choices) {
-    DLG.choices.forEach(function (c, i) {
-      const cy2 = y + h - 8 - (DLG.choices.length - i) * 10;
-      const on = UI.dlgSel === i || hit(x + 54, cy2 - 1, w - 60, 10);
-      if (hit(x + 54, cy2 - 1, w - 60, 10)) UI.dlgSel = i;
+    const chs = DLG.choices;                  // Auswahl festhalten: c.a() kann den Dialog beenden
+    for (let i = 0; i < chs.length; i++) {
+      const c = chs[i];
+      const cy2 = y + h - 8 - (chs.length - i) * 10;
+      const over = hit(x + 54, cy2 - 1, w - 60, 10);
+      const on = UI.dlgSel === i || over;
+      if (over) UI.dlgSel = i;
       text(ctx, (on ? '> ' : '  ') + c.t, x + 54, cy2, on ? P.gold2 : P.uitx);
-      if (hit(x + 54, cy2 - 1, w - 60, 10) && MOUSE.click) { MOUSE.click = 0; sfx('uiSel'); c.a(); }
-    });
+      if (over && MOUSE.click) { MOUSE.click = 0; sfx('uiSel'); c.a(); break; }
+    }
   } else if (complete) {
     const blink2 = sin(t * 6) > 0;
-    text(ctx, DLG.pi < DLG.pages.length - 1 ? '[E] weiter' : '[E] beenden', x + w - 8, y + h - 12, blink2 ? P.gold2 : P.uidim, { right: 1 });
+    text(ctx, (TC.on ? 'Tippen: ' : '[E] ') + (DLG.pi < DLG.pages.length - 1 ? 'weiter' : 'beenden'), x + w - 8, y + h - 12, blink2 ? P.gold2 : P.uidim, { right: 1 });
   }
 }
 
@@ -6702,6 +6716,7 @@ const MENUITEMS = [
   { t: 'Weiterspielen', a: function () { UI.modal = null; } },
   { t: 'Karte', a: function () { UI.modal = 'map'; } },
   { t: 'Steuerung', a: function () { UI.modal = 'help'; } },
+  { t: 'Vollbild', a: function () { toggleFullscreen(); } },
   { t: 'Spiel speichern', a: function () { saveGame(); } },
   { t: 'Ton: ', a: function () { AU.enabled = !AU.enabled; if (AU.enabled) audioResume(); sfx('uiSel'); } },
   { t: 'Musik: ', a: function () { AU.musicOn = !AU.musicOn; sfx('uiSel'); } },
@@ -6713,16 +6728,31 @@ function drawMenu(ctx, t) {
   panel(ctx, x, y, w, h, { title: 'ARKANUM' });
   MENUITEMS.forEach(function (m, i) {
     const iy = y + 18 + i * 15;
-    const on = UI.menuSel === i || hit(x + 4, iy - 2, w - 8, 14);
-    if (hit(x + 4, iy - 2, w - 8, 14)) UI.menuSel = i;
+    const over = hit(x + 4, iy - 2, w - 8, 14);      // nur die beruehrte Zeile darf ausloesen
+    const on = UI.menuSel === i || over;
+    if (over) UI.menuSel = i;
     if (on) RR(x + 4, iy - 2, w - 8, 15, 5, 'rgba(74,92,146,.85)');
     let label = m.t;
     if (i === 4) label += AU.enabled ? 'an' : 'aus';
     if (i === 5) label += AU.musicOn ? 'an' : 'aus';
     text(ctx, label, x + 10, iy + 1, on ? P.white : P.uitx);
-    if (on && MOUSE.click) { MOUSE.click = 0; sfx('uiSel'); m.a(); }
+    if (over && MOUSE.click) { MOUSE.click = 0; sfx('uiSel'); m.a(); }
   });
 }
+const TOUCHLINES = [
+  ['Linker Stick', 'Bewegen'],
+  ['Rechter Stick', 'Zielen und zaubern'],
+  ['Zauberleiste unten', 'Zauber auswählen'],
+  ['Hand', 'Reden / Benutzen / Öffnen'],
+  ['Pfeile', 'Phasenschritt (Ausweichen)'],
+  ['Flasche', 'Schnellster Heiltrank'],
+  ['Beutel', 'Inventar und Ausrüstung'],
+  ['Blitz', 'Zauber und Talente'],
+  ['Schriftrolle', 'Questbuch'],
+  ['Karte', 'Übersichtskarte  (zwei Finger: Zoom)'],
+  ['Balken', 'Menü, Speichern und Laden'],
+  ['Rahmen', 'Vollbild an oder aus']
+];
 const HELPLINES = [
   ['WASD / Pfeiltasten', 'Bewegen'],
   ['Maus', 'Zielen'],
@@ -6740,9 +6770,10 @@ const HELPLINES = [
 ];
 function drawHelp(ctx) {
   R(0, 0, VW, VH, 'rgba(4,6,12,.72)');
-  const w = 260, h = 26 + HELPLINES.length * 11, x = floor((VW - w) / 2), y = floor((VH - h) / 2);
-  panel(ctx, x, y, w, h, { title: 'Steuerung', right: '[Esc] zurück' });
-  HELPLINES.forEach(function (l, i) {
+  const lines = TC.on ? TOUCHLINES : HELPLINES;
+  const w = 260, h = 26 + lines.length * 11, x = floor((VW - w) / 2), y = floor((VH - h) / 2);
+  panel(ctx, x, y, w, h, { title: 'Steuerung', right: TC.on ? 'Tippen: zurück' : '[Esc] zurück' });
+  lines.forEach(function (l, i) {
     text(ctx, l[0], x + 8, y + 18 + i * 11, P.gold2);
     text(ctx, l[1], x + 130, y + 18 + i * 11, P.uitx);
   });
@@ -6875,31 +6906,57 @@ function drawTitle(ctx, t) {
    25. EINGABE
    -------------------------------------------------------------------------- */
 const KEYS = {};
-const MOUSE = { x: VW / 2, y: VH / 2, wx: 0, wy: 0, down: 0, rdown: 0, click: 0, inside: 0, moved: 0 };
-function key(c) { return KEYS[c] ? 1 : 0; }
-function mouseAim() { return MOUSE.moved; }
 const CV = document.getElementById('cv');
 const CTX = CV.getContext('2d', { alpha: false });
-let SCALE = 1;
+const SAFEEL = document.getElementById('safe');
+const INPUT = { mode: 'mouse', touchCap: ('ontouchstart' in window) || navigator.maxTouchPoints > 0 };
+let SCALE = 1;                     // CSS-Pixel je logischer Einheit
+/* Bildaufteilung: Spielfeld liegt immer bei (0,0)-(VW,VH); rundherum Raender
+   in logischen Einheiten. Im Hochformat entsteht unten eine Steuerleiste. */
+const VIEW = { gx: 0, gy: 0, ml: 0, mr: 0, mt: 0, mb: 0, cw: VW, ch: VH, portrait: 0, bar: 0, sb: 0 };
+function safeInsets() {
+  try {
+    const cs = getComputedStyle(SAFEEL);
+    return {
+      t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0,
+      b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0
+    };
+  } catch (e) { return { t: 0, r: 0, b: 0, l: 0 }; }
+}
 function resize() {
-  const w = window.innerWidth, h = window.innerHeight;
-  SCALE = min(w / VW, h / VH);
-  CV.style.width = floor(VW * SCALE) + 'px';
-  CV.style.height = floor(VH * SCALE) + 'px';
+  const vv = window.visualViewport;
+  const vw = max(1, round(vv ? vv.width : window.innerWidth));
+  const vh = max(1, round(vv ? vv.height : window.innerHeight));
+  const si = safeInsets();
+  const availW = max(80, vw - si.l - si.r), availH = max(60, vh - si.t - si.b);
+  SCALE = min(availW / VW, availH / VH);
+  const gw = VW * SCALE, gh = VH * SCALE;
+  const freeV = availH - gh;
+  VIEW.portrait = freeV > gh * .35 ? 1 : 0;
+  VIEW.gx = si.l + (availW - gw) / 2;
+  /* Nur mit Fingersteuerung rueckt das Bild nach oben und macht unten Platz */
+  VIEW.gy = (VIEW.portrait && TC.on) ? si.t + min(freeV * .12, 30) : si.t + (availH - gh) / 2;
+  VIEW.ml = VIEW.gx / SCALE; VIEW.mt = VIEW.gy / SCALE;
+  VIEW.mr = (vw - VIEW.gx - gw) / SCALE; VIEW.mb = (vh - VIEW.gy - gh) / SCALE;
+  VIEW.cw = vw / SCALE; VIEW.ch = vh / SCALE;
+  VIEW.sb = si.b / SCALE;
+  VIEW.bar = (VIEW.portrait && TC.on) ? max(0, VIEW.mb - VIEW.sb) : 0;
   const dpr = min(window.devicePixelRatio || 1, 2);
   RSWANT = clamp(round(SCALE * dpr * 2) / 2, 1, 4);
   applyRS(min(RSWANT, RSCAP));
+  layoutTouch();
 }
 let RSWANT = 2, RSCAP = 4, QUALT = 0;
 function applyRS(want) {
-  if (want !== RS || CV.width !== round(VW * RS)) {
+  const cw = max(1, round(VIEW.cw * want)), ch = max(1, round(VIEW.ch * want));
+  if (want !== RS || CV.width !== cw || CV.height !== ch) {
     const rebuild = (want !== RS) && GAME.ready;
     RS = want;
-    CV.width = round(VW * RS); CV.height = round(VH * RS);
+    CV.width = cw; CV.height = ch;
     ensureLight();
     if (rebuild) buildProps();
   }
-  CTX.setTransform(RS, 0, 0, RS, 0, 0);
+  CTX.setTransform(RS, 0, 0, RS, round(VIEW.ml * RS), round(VIEW.mt * RS));
   CTX.imageSmoothingEnabled = true;
   CTX.lineJoin = 'round'; CTX.lineCap = 'round';
 }
@@ -6912,16 +6969,58 @@ function qualityCheck(dt) {
   if (GAME.fps < 44 && RS > 1.5) { RSCAP = RS - .5; applyRS(RSCAP); }
   else if (GAME.fps > 57 && RS < min(RSWANT, RSCAP + .5)) { RSCAP = min(4, RS + .5); applyRS(min(RSWANT, RSCAP)); }
 }
-window.addEventListener('resize', resize);
-function updateMousePos(e) {
-  const r = CV.getBoundingClientRect();
-  MOUSE.x = clamp((e.clientX - r.left) / SCALE, 0, VW - 1);
-  MOUSE.y = clamp((e.clientY - r.top) / SCALE, 0, VH - 1);
-  MOUSE.inside = 1;
+let RESIZET = null;
+function onResize() {
+  clearTimeout(RESIZET);
+  resize();
+  RESIZET = setTimeout(resize, 220);   // nach Drehen/Adressleiste noch einmal nachmessen
 }
-window.addEventListener('mousemove', function (e) { updateMousePos(e); MOUSE.moved = 1; });
+window.addEventListener('resize', onResize);
+window.addEventListener('orientationchange', onResize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
+/* Vollbild */
+function toggleFullscreen() {
+  const d = document;
+  const nop = function () { };
+  let r;
+  if (d.fullscreenElement || d.webkitFullscreenElement) r = (d.exitFullscreen || d.webkitExitFullscreen || nop).call(d);
+  else { const e = d.documentElement; r = (e.requestFullscreen || e.webkitRequestFullscreen || nop).call(e); }
+  if (r && r.catch) r.catch(nop);              // abgelehnte Anfrage nicht als Fehler melden
+  setTimeout(resize, 260);
+}
+
+/* --------------------------------------------------------------------------
+   25b. ZEIGER UND MAUS
+   -------------------------------------------------------------------------- */
+const MOUSE = { x: VW / 2, y: VH / 2, wx: 0, wy: 0, down: 0, rdown: 0, click: 0, inside: 0, moved: 0 };
+function key(c) { return KEYS[c] ? 1 : 0; }
+function mouseAim() { return MOUSE.moved; }
+function toLogical(cx, cy, out) {
+  const r = CV.getBoundingClientRect();
+  out[0] = (cx - r.left) / SCALE - VIEW.ml;
+  out[1] = (cy - r.top) / SCALE - VIEW.mt;
+  return out;
+}
+const _lp = [0, 0];
+function updateMousePos(e) {
+  toLogical(e.clientX, e.clientY, _lp);
+  MOUSE.x = _lp[0]; MOUSE.y = _lp[1];
+  MOUSE.inside = (MOUSE.x >= 0 && MOUSE.y >= 0 && MOUSE.x < VW && MOUSE.y < VH) ? 1 : 0;
+}
+/* Wechsel zwischen Maus und Finger teilt das Bild neu auf */
+function setTouchMode(on) {
+  INPUT.mode = on ? 'touch' : 'mouse';
+  if (TC.on === on) return;
+  TC.on = on;
+  resize();
+}
+window.addEventListener('mousemove', function (e) {
+  setTouchMode(0);
+  updateMousePos(e); MOUSE.moved = 1;
+});
 window.addEventListener('mousedown', function (e) {
   audioInit(); audioResume();
+  setTouchMode(0);
   updateMousePos(e);
   if (e.button === 0) { MOUSE.down = 1; MOUSE.click = 1; }
   if (e.button === 2) { MOUSE.rdown = 1; if (!UI.modal && !GAME.title) cast('dash'); }
@@ -6932,19 +7031,24 @@ window.addEventListener('mouseup', function (e) {
   if (e.button === 2) MOUSE.rdown = 0;
 });
 window.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-window.addEventListener('wheel', function (e) {
-  if (UI.modal === 'map') { UI.mapZoom = mapZoomStep(e.deltaY < 0 ? 1 : -1); }
-  else if (UI.modal === 'inv') { UI.invScroll = (UI.invScroll || 0) + (e.deltaY > 0 ? 1 : -1); }
+/* Blaettern: d = +1 ist eine Stufe weiter (Mausrad nach unten, Wischen nach oben) */
+function uiScroll(d, x) {
+  if (UI.modal === 'map') { UI.mapZoom = mapZoomStep(-d); }
+  else if (UI.modal === 'inv') { UI.invScroll = (UI.invScroll || 0) + d; }
   else if (UI.modal === 'shop') {
-    if (MOUSE.x < VW / 2) SHOP.scroll = max(0, (SHOP.scroll || 0) + (e.deltaY > 0 ? 1 : -1));
-    else SHOP.myScroll = max(0, (SHOP.myScroll || 0) + (e.deltaY > 0 ? 1 : -1));
-  } else if (UI.modal === 'quest') { UI.qsel = max(0, UI.qsel + (e.deltaY > 0 ? 1 : -1)); }
+    if (x < VW / 2) SHOP.scroll = max(0, (SHOP.scroll || 0) + d);
+    else SHOP.myScroll = max(0, (SHOP.myScroll || 0) + d);
+  } else if (UI.modal === 'quest') { UI.qsel = max(0, UI.qsel + d); }
   else if (!UI.modal && !GAME.title) {
-    UI.selSpell = (UI.selSpell + (e.deltaY > 0 ? 1 : -1) + PL.bar.length) % PL.bar.length;
+    UI.selSpell = (UI.selSpell + d + PL.bar.length) % PL.bar.length;
     sfx('ui');
   }
+}
+window.addEventListener('wheel', function (e) {
+  uiScroll(e.deltaY > 0 ? 1 : -1, MOUSE.x);
   e.preventDefault();
 }, { passive: false });
+/* Tastatur */
 window.addEventListener('blur', function () { for (const k in KEYS) KEYS[k] = 0; MOUSE.down = 0; });
 window.addEventListener('keydown', function (e) {
   audioInit(); audioResume();
@@ -7002,27 +7106,335 @@ window.addEventListener('keydown', function (e) {
   }
 }, { passive: false });
 window.addEventListener('keyup', function (e) { KEYS[e.code] = 0; });
-/* Touch: einfache Steuerung für mobile Geraete */
-let TOUCH = null;
-CV.addEventListener('touchstart', function (e) {
-  audioInit(); audioResume();
-  const t = e.touches[0];
-  const r = CV.getBoundingClientRect();
-  MOUSE.x = clamp((t.clientX - r.left) / SCALE, 0, VW - 1);
-  MOUSE.y = clamp((t.clientY - r.top) / SCALE, 0, VH - 1);
-  MOUSE.inside = 1; MOUSE.click = 1; MOUSE.down = 1;
-  TOUCH = { x: MOUSE.x, y: MOUSE.y };
-  e.preventDefault();
-}, { passive: false });
-CV.addEventListener('touchmove', function (e) {
-  const t = e.touches[0];
-  const r = CV.getBoundingClientRect();
-  MOUSE.x = clamp((t.clientX - r.left) / SCALE, 0, VW - 1);
-  MOUSE.y = clamp((t.clientY - r.top) / SCALE, 0, VH - 1);
-  e.preventDefault();
-}, { passive: false });
-CV.addEventListener('touchend', function (e) { MOUSE.down = 0; TOUCH = null; e.preventDefault(); }, { passive: false });
+/* Zeiger wird selbst gezeichnet, damit er in jedem Bildschirm sichtbar bleibt */
+function drawCursor(ctx) {
+  if (INPUT.mode !== 'mouse' || !MOUSE.moved) return;
+  G(ctx);
+  const mx = MOUSE.x, my = MOUSE.y;
+  const aiming = !UI.modal && !GAME.title && !PL.dead && !GAME.won && MOUSE.inside;
+  if (aiming) {
+    const c = canCast(PL.bar[UI.selSpell || 0]) ? P.white : P.uidim;
+    RING(mx, my, 5.5, 'rgba(20,27,48,.55)', 3.4);
+    RING(mx, my, 5.5, c, 1.4);
+    LINE(mx - 9, my, mx - 3, my, 'rgba(20,27,48,.55)', 3.4);
+    LINE(mx + 3, my, mx + 9, my, 'rgba(20,27,48,.55)', 3.4);
+    LINE(mx, my - 9, mx, my - 3, 'rgba(20,27,48,.55)', 3.4);
+    LINE(mx, my + 3, mx, my + 9, 'rgba(20,27,48,.55)', 3.4);
+    LINE(mx - 9, my, mx - 3, my, c, 1.2); LINE(mx + 3, my, mx + 9, my, c, 1.2);
+    LINE(mx, my - 9, mx, my - 3, c, 1.2); LINE(mx, my + 3, mx, my + 9, c, 1.2);
+    CIR(mx, my, 1, c);
+  } else {
+    const p = new Path2D();
+    p.moveTo(mx, my); p.lineTo(mx, my + 12.5); p.lineTo(mx + 3.4, my + 9.4);
+    p.lineTo(mx + 5.9, my + 14.4); p.lineTo(mx + 8.2, my + 13.2); p.lineTo(mx + 5.8, my + 8.4);
+    p.lineTo(mx + 10, my + 8.2); p.closePath();
+    strokeP(p, 'rgba(18,24,42,.9)', 2.6);
+    fillP(p, P.white);
+  }
+}
 
+/* --------------------------------------------------------------------------
+   25c. MOBILE STEUERUNG  (zwei Sticks plus Tasten, Layout folgt dem Format)
+   -------------------------------------------------------------------------- */
+const TC = {
+  on: 0, fire: 0,
+  move: { id: -1, cx: 0, cy: 0, dx: 0, dy: 0, act: 0 },
+  aim: { id: -1, cx: 0, cy: 0, dx: 0, dy: 0, ang: 0, act: 0 },
+  btns: [], zones: null, r: 30, br: 15, bar: 0,
+  pts: {}, hint: 0
+};
+const TCBTN = [
+  { id: 'interact', lab: 'E', icon: 'hand' },
+  { id: 'dash', lab: '', icon: 'dash' },
+  { id: 'potion', lab: 'Q', icon: 'flask' },
+  { id: 'inv', lab: 'I', icon: 'bag', sys: 1 },
+  { id: 'skill', lab: 'K', icon: 'spark', sys: 1 },
+  { id: 'quest', lab: 'J', icon: 'scroll', sys: 1 },
+  { id: 'map', lab: 'M', icon: 'map', sys: 1 },
+  { id: 'menu', lab: '', icon: 'menu', sys: 1 },
+  { id: 'full', lab: '', icon: 'full', sys: 1 }
+];
+/* Eigene Bildschirme (Titel, Tod, Sieg) bringen eigene Schaltflaechen mit -
+   dort bleibt nur die Vollbildtaste stehen. */
+function tcLocked() { return GAME.title || PL.dead || GAME.won; }
+function tcBtnOff(b) { return tcLocked() ? b.id !== 'full' : (!!UI.modal && !b.sys); }
+function tcBtn(id) { for (let i = 0; i < TC.btns.length; i++) if (TC.btns[i].id === id) return TC.btns[i]; return null; }
+/* Alle Touch-Masse in CSS-Pixeln denken und in logische Einheiten umrechnen,
+   damit die Ziele auf jedem Geraet gleich gross (>= 44 px) sind. */
+function layoutTouch() {
+  const U = 1 / max(.0001, SCALE);              // logische Einheiten je CSS-Pixel
+  const br = clamp(23 * U, 9, 46);              // Tastenradius (46 CSS-px Durchmesser)
+  const sr = clamp(36 * U, 14, 70);             // Stickradius
+  TC.br = br; TC.r = sr;
+  TC.tol = 10 * U;                              // Wackeln bis 10 CSS-px bleibt ein Tippen
+  TC.step = 26 * U;                             // Wischweg fuer eine Blaetterstufe
+  TC.btns = [];
+  const SYS = ['inv', 'skill', 'quest', 'map', 'menu', 'full'];
+  const add = function (id, x, y, r) {
+    const d = TCBTN.filter(function (b) { return b.id === id; })[0];
+    TC.btns.push({ id: id, x: x, y: y, r: r || br, lab: d.lab, icon: d.icon, sys: d.sys });
+  };
+  if (VIEW.portrait && VIEW.bar > sr * 2.6) {
+    /* Hochformat: eigene Steuerleiste unterhalb des Spielfelds.
+       Drei Zeilen - Systemtasten oben, Aktionen in der Mitte, Sticks unten. */
+    TC.bar = 1;
+    const by = VH, bh = VIEW.bar;
+    const sR = sr * clamp(bh / (sr * 6), 1, 1.7);        // hohe Leiste: Stick darf wachsen
+    const aR = br * clamp(bh / (br * 10), 1, 1.55);      // dito Aktionstasten
+    const rowR = min(br, VW * .93 / 13.8);               // Systemreihe muss in die Breite passen
+    TC.r = sR;
+    const rowY = by + min(bh * .12, rowR * 1.7) + rowR;
+    const stickY = by + bh - max(bh * .06, VIEW.sb + sR * .22) - sR;
+    const gap = rowR * 2.35, tot = 5 * gap;
+    for (let i = 0; i < 6; i++) add(SYS[i], VW / 2 - tot / 2 + i * gap, rowY, rowR);
+    TC.zones = {
+      move: { x: -VIEW.ml, y: by, w: VW * .46 + VIEW.ml, h: bh + VIEW.sb },
+      aim: { x: VW * .54, y: by, w: VW * .46 + VIEW.mr, h: bh + VIEW.sb }
+    };
+    TC.moveHome = { x: max(sR - VIEW.ml + 4, VW * .21), y: stickY };
+    TC.aimHome = { x: min(VW + VIEW.mr - sR - 4, VW * .79), y: stickY };
+    const free = (stickY - sR) - (rowY + rowR);
+    if (free > aR * 3.4) {
+      const ay = rowY + rowR + free * .62;               // eigene Reihe zwischen Menue und Sticks
+      add('dash', VW / 2 - aR * 2.5, ay, aR);
+      add('interact', VW / 2, ay, aR * 1.12);
+      add('potion', VW / 2 + aR * 2.5, ay, aR);
+    } else {
+      add('interact', VW / 2, stickY - aR * 1.5, aR * 1.12);
+      add('dash', VW / 2 - aR * 1.7, stickY + aR * .6, aR);
+      add('potion', VW / 2 + aR * 1.7, stickY + aR * .6, aR);
+    }
+  } else {
+    /* Querformat: halbtransparente Bedienung ueber den unteren Ecken,
+       Systemtasten als 2x3-Block am linken Rand (frei von Kopfzeile und Karte). */
+    TC.bar = 0;
+    const pad = max(10, br * .7);
+    const sy = VH - pad - sr;
+    TC.zones = {
+      move: { x: -VIEW.ml, y: VH * .34, w: VW * .46 + VIEW.ml, h: VH * .66 + VIEW.mb },
+      aim: { x: VW * .54, y: VH * .34, w: VW * .46 + VIEW.mr, h: VH * .66 + VIEW.mb }
+    };
+    TC.moveHome = { x: max(sr + pad, VW * .13), y: sy };
+    TC.aimHome = { x: min(VW - sr - pad, VW * .87), y: sy };
+    const ring = sr + br * 1.35, dg = .7071;             // Aktionstasten im Bogen um die Sticks
+    add('dash', TC.aimHome.x, TC.aimHome.y - ring);
+    add('interact', TC.aimHome.x - ring * dg, TC.aimHome.y - ring * dg);
+    add('potion', TC.moveHome.x + ring * dg, TC.moveHome.y - ring * dg);
+    const gx = 8 + br, gy = 86 + br, gp = br * 2.3;   // zwei Zeilen: bleibt ueber dem Dialogfenster
+    for (let i = 0; i < 6; i++) add(SYS[i], gx + (i % 3) * gp, gy + floor(i / 3) * gp);
+  }
+}
+function tcZoneHit(z, x, y) { return z && x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h; }
+function tcAction(id) {
+  switch (id) {
+    case 'interact': if (!UI.modal) doInteract(); break;
+    case 'dash': if (!UI.modal) cast('dash'); break;
+    case 'potion': if (!UI.modal) quickPotion(); break;
+    case 'inv': UI.modal = UI.modal === 'inv' ? null : 'inv'; break;
+    case 'skill': UI.modal = UI.modal === 'skill' ? null : 'skill'; break;
+    case 'quest': UI.modal = UI.modal === 'quest' ? null : 'quest'; break;
+    case 'map': if (UI.modal === 'map') UI.modal = null; else { UI.modal = 'map'; UI.mapX = PL.x / TS; UI.mapY = PL.y / TS; } break;
+    case 'menu': if (UI.modal) { UI.modal = null; } else { UI.modal = 'menu'; UI.menuSel = 0; } break;
+    case 'full': toggleFullscreen(); break;
+  }
+  sfx('uiSel');
+}
+/* Bereiche im Spielfeld, die auch per Finger direkt bedienbar bleiben */
+function tcUiHit(x, y) {
+  if (y > VH - 44 && y < VH - 2 && x > VW / 2 - 130 && x < VW / 2 + 92) return 1;   // Zauberleiste
+  if (x > VW - 84 && y < 84) return 2;                                             // Minikarte
+  return 0;
+}
+function tcUiPts() {
+  const a = [];
+  for (const k in TC.pts) if (TC.pts[k].role === 'ui') a.push(TC.pts[k]);
+  return a;
+}
+function tcStart(id, x, y) {
+  TC.pts[id] = { x: x, y: y, sx: x, sy: y, ay: y, drag: 0, role: 'ui' };
+  TC.pd = 0;
+  for (let i = 0; i < TC.btns.length; i++) {
+    const b = TC.btns[i];
+    if (tcBtnOff(b)) continue;
+    if (dist2(x, y, b.x, b.y) < pow(b.r * 1.25, 2)) {
+      TC.pts[id].role = 'btn'; TC.pts[id].btn = b.id; b.flash = .18;
+      tcAction(b.id);
+      return;
+    }
+  }
+  if (UI.modal || tcLocked()) {
+    /* In Menues zaehlt erst das Loslassen als Klick - so kann man wischen */
+    MOUSE.x = x; MOUSE.y = y; MOUSE.inside = 1; MOUSE.down = 1;
+    return;
+  }
+  const u = tcUiHit(x, y);
+  if (u === 2) { UI.modal = 'map'; UI.mapX = PL.x / TS; UI.mapY = PL.y / TS; sfx('ui'); return; }
+  if (u === 1) { MOUSE.x = x; MOUSE.y = y; MOUSE.inside = 1; return; }
+  if (tcZoneHit(TC.zones.move, x, y) && !TC.move.act) {
+    TC.pts[id].role = 'move';
+    TC.move.id = id; TC.move.act = 1; TC.move.cx = x; TC.move.cy = y; TC.move.dx = 0; TC.move.dy = 0;
+  } else if (tcZoneHit(TC.zones.aim, x, y) && !TC.aim.act) {
+    TC.pts[id].role = 'aim';
+    TC.aim.id = id; TC.aim.act = 1; TC.aim.cx = x; TC.aim.cy = y; TC.aim.dx = 0; TC.aim.dy = 0; TC.aim.tap = 1;
+  }
+}
+function tcMove(id, x, y) {
+  const p = TC.pts[id];
+  if (!p) return;
+  p.x = x; p.y = y;
+  if (p.role === 'ui') {
+    MOUSE.x = x; MOUSE.y = y;
+    if (hypot(x - p.sx, y - p.sy) > TC.tol) p.drag = 1;
+    const ps = tcUiPts();
+    if (ps.length > 1) {
+      /* Zwei Finger auf der Karte: stufenweise zoomen statt verschieben */
+      const d = hypot(ps[0].x - ps[1].x, ps[0].y - ps[1].y);
+      if (!TC.pd) TC.pd = d;
+      ps.forEach(function (q) { q.drag = 1; });
+      if (UI.modal === 'map') {
+        MOUSE.down = 0; UI.dragX = null;
+        if (d > TC.pd * 1.28) { UI.mapZoom = mapZoomStep(1); TC.pd = d; TC.pinched = 1; sfx('ui'); }
+        else if (d < TC.pd * .78) { UI.mapZoom = mapZoomStep(-1); TC.pd = d; TC.pinched = 1; sfx('ui'); }
+      }
+    } else if (UI.modal === 'inv' || UI.modal === 'shop' || UI.modal === 'quest') {
+      const dy = y - p.ay;
+      if (abs(dy) > TC.step) { uiScroll(dy < 0 ? 1 : -1, x); p.ay = y; p.drag = 1; sfx('ui'); }
+    }
+    return;
+  }
+  const st = p.role === 'move' ? TC.move : p.role === 'aim' ? TC.aim : null;
+  if (!st) return;
+  let dx = x - st.cx, dy = y - st.cy;
+  const d = hypot(dx, dy);
+  if (d > TC.r) { st.cx += dx * (1 - TC.r / d); st.cy += dy * (1 - TC.r / d); dx *= TC.r / d; dy *= TC.r / d; }
+  st.dx = dx / TC.r; st.dy = dy / TC.r;
+  if (d > TC.r * .35) st.tap = 0;
+  if (p.role === 'aim' && d > .5) st.ang = atan2(dy, dx);
+}
+function tcEnd(id) {
+  const p = TC.pts[id];
+  if (!p) return;
+  delete TC.pts[id];
+  TC.pd = 0;
+  if (p.role === 'ui') {
+    MOUSE.down = 0;
+    if (!p.drag && !TC.pinched) { MOUSE.x = p.x; MOUSE.y = p.y; MOUSE.inside = 1; MOUSE.click = 1; }
+    if (!tcUiPts().length) TC.pinched = 0;
+    return;
+  }
+  if (p.role === 'move' && TC.move.id === id) { TC.move.act = 0; TC.move.id = -1; TC.move.dx = TC.move.dy = 0; }
+  if (p.role === 'aim' && TC.aim.id === id) { TC.aim.act = 0; TC.aim.id = -1; TC.aim.dx = TC.aim.dy = 0; }
+}
+function tcTouchEvent(e, kind) {
+  audioInit(); audioResume();
+  if (!TC.on) { MOUSE.moved = 0; setTouchMode(1); }
+  const list = e.changedTouches;
+  for (let i = 0; i < list.length; i++) {
+    const t = list[i];
+    toLogical(t.clientX, t.clientY, _lp);
+    if (kind === 0) tcStart(t.identifier, _lp[0], _lp[1]);
+    else if (kind === 1) tcMove(t.identifier, _lp[0], _lp[1]);
+    else tcEnd(t.identifier);
+  }
+  e.preventDefault();
+}
+CV.addEventListener('touchstart', function (e) { tcTouchEvent(e, 0); }, { passive: false });
+CV.addEventListener('touchmove', function (e) { tcTouchEvent(e, 1); }, { passive: false });
+CV.addEventListener('touchend', function (e) { tcTouchEvent(e, 2); }, { passive: false });
+CV.addEventListener('touchcancel', function (e) { tcTouchEvent(e, 2); }, { passive: false });
+
+/* ---- Darstellung der Bedienelemente -------------------------------------- */
+function tcIcon(ctx, ic, x, y, r, c) {
+  G(ctx);
+  const u = r / 15;
+  switch (ic) {
+    case 'hand':
+      RR(x - 4 * u, y - 6 * u, 8 * u, 11 * u, 3 * u, c, null);
+      RR(x - 7 * u, y - 1 * u, 4 * u, 7 * u, 2 * u, c, null);
+      break;
+    case 'dash':
+      for (let i = 0; i < 3; i++) RR(x - 7 * u + i * 5 * u, y - 5 * u + i * u, 2.6 * u, 10 * u - i * 2 * u, u, rgba(c, .4 + i * .3));
+      break;
+    case 'flask': {
+      const p = new Path2D();
+      p.moveTo(x - 2.4 * u, y - 7 * u); p.lineTo(x - 2.4 * u, y - 3 * u);
+      p.quadraticCurveTo(x - 6.5 * u, y + 2 * u, x - 4.5 * u, y + 6 * u);
+      p.lineTo(x + 4.5 * u, y + 6 * u);
+      p.quadraticCurveTo(x + 6.5 * u, y + 2 * u, x + 2.4 * u, y - 3 * u);
+      p.lineTo(x + 2.4 * u, y - 7 * u); p.closePath();
+      fillP(p, c);
+      break;
+    }
+    case 'bag':
+      RR(x - 6 * u, y - 3 * u, 12 * u, 9 * u, 2.4 * u, c, null);
+      strokeP(new Path2D('M' + (x - 3 * u) + ' ' + (y - 3 * u) + ' a' + (3 * u) + ' ' + (3 * u) + ' 0 0 1 ' + (6 * u) + ' 0'), c, 1.6 * u);
+      break;
+    case 'spark':
+      POLY([x - 1.5 * u, y - 7 * u, x + 4 * u, y - 7 * u, x + .5 * u, y - u, x + 4 * u, y - u,
+      x - 2 * u, y + 7 * u, x, y + u, x - 3.5 * u, y + u], c);
+      break;
+    case 'scroll':
+      RR(x - 5 * u, y - 6 * u, 10 * u, 12 * u, 2 * u, c, null);
+      LINE(x - 2.5 * u, y - 2.5 * u, x + 2.5 * u, y - 2.5 * u, 'rgba(20,27,48,.7)', 1.4 * u);
+      LINE(x - 2.5 * u, y + u, x + 1.5 * u, y + u, 'rgba(20,27,48,.7)', 1.4 * u);
+      break;
+    case 'map':
+      POLY([x - 7 * u, y - 5 * u, x - 2.4 * u, y - 7 * u, x + 2.4 * u, y - 5 * u, x + 7 * u, y - 7 * u,
+      x + 7 * u, y + 5 * u, x + 2.4 * u, y + 7 * u, x - 2.4 * u, y + 5 * u, x - 7 * u, y + 7 * u], c);
+      break;
+    case 'menu':
+      for (let i = 0; i < 3; i++) RR(x - 6 * u, y - 5.5 * u + i * 4.5 * u, 12 * u, 2.2 * u, 1.1 * u, c);
+      break;
+    case 'full':
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (d) {
+        PLINE([x + d[0] * 2 * u, y + d[1] * 6.5 * u, x + d[0] * 6.5 * u, y + d[1] * 6.5 * u, x + d[0] * 6.5 * u, y + d[1] * 2 * u], c, 2 * u);
+      });
+      break;
+  }
+}
+function drawStick(ctx, st, home, r) {
+  G(ctx);
+  const cx = st.act ? st.cx : home.x, cy = st.act ? st.cy : home.y;
+  const a = st.act ? .5 : .26;
+  CIR(cx, cy, r, 'rgba(20,27,48,' + (a * .7) + ')');
+  RING(cx, cy, r, 'rgba(169,190,240,' + (a + .18) + ')', max(1, r * .045));
+  const kx = cx + st.dx * r * .68, ky = cy + st.dy * r * .68;
+  CIR(kx, ky, r * .42, 'rgba(122,150,215,' + (a + .22) + ')');
+  RING(kx, ky, r * .42, 'rgba(230,238,255,' + (a + .35) + ')', max(1, r * .05));
+}
+function drawTouchControls(ctx, t) {
+  if (!TC.on) return;
+  G(ctx);
+  if (TC.bar) {
+    const by = VH, bh = VIEW.bar + VIEW.sb;
+    ctx.fillStyle = lgrad(0, by, 0, by + bh, [0, 'rgba(36,49,86,.55)', 1, 'rgba(14,20,36,.75)']);
+    ctx.fillRect(-VIEW.ml, by, VIEW.cw, bh);
+    LINE(-VIEW.ml, by + .5, VW + VIEW.mr, by + .5, 'rgba(122,150,215,.25)', 1);
+  }
+  if (!UI.modal && !tcLocked()) {
+    drawStick(ctx, TC.move, TC.moveHome, TC.r);
+    drawStick(ctx, TC.aim, TC.aimHome, TC.r);
+  }
+  for (let i = 0; i < TC.btns.length; i++) {
+    const b = TC.btns[i];
+    if (tcBtnOff(b)) continue;
+    if (b.flash > 0) b.flash -= 1 / 60;
+    const pressed = b.flash > 0;
+    const a = pressed ? .8 : (TC.bar ? .5 : .34);
+    CIR(b.x, b.y, b.r, 'rgba(20,27,48,' + (a * .85) + ')');
+    RING(b.x, b.y, b.r, pressed ? P.arcglow : 'rgba(169,190,240,' + (a + .2) + ')', max(1, b.r * .07));
+    tcIcon(ctx, b.icon, b.x, b.y, b.r * .72, 'rgba(230,238,255,' + (a + .45) + ')');
+  }
+}
+/* Bewegungs- und Zielvorgabe aus den Sticks */
+function tcApply() {
+  TC.fire = 0;
+  if (!TC.on) return;
+  if (TC.aim.act) {
+    const m = hypot(TC.aim.dx, TC.aim.dy);
+    if (m > .22) { PL.aim = TC.aim.ang; TC.fire = 1; }
+  }
+}
 /* --------------------------------------------------------------------------
    26. SPEICHERN UND LADEN
    -------------------------------------------------------------------------- */
@@ -7150,7 +7562,7 @@ function newGame() {
   showArea('Turm der Ersten Kerze');
   updateMood(1);
   GAME.hintT = 26;
-  toast('Sprich mit Meisterin Sylva.', P.gold2, 'Taste E in ihrer Nähe.');
+  toast('Sprich mit Meisterin Sylva.', P.gold2, TC.on ? 'Handtaste in ihrer Nähe.' : 'Taste E in ihrer Nähe.');
   try { localStorage.removeItem(SAVEKEY); } catch (e) { }
 }
 function updateMood(force) {
@@ -7197,8 +7609,9 @@ function update(dt, t) {
   }
   GAME.time += dt;
   PL.aim = angTo(PL.x - camX(), PL.y - 12 - camY(), MOUSE.x, MOUSE.y);
+  tcApply();
   if (!PL.dead) {
-    if ((MOUSE.down && MOUSE.inside) || key('Space')) {
+    if ((MOUSE.down && MOUSE.inside) || key('Space') || TC.fire) {
       const k = PL.bar[UI.selSpell || 0];
       if (k) cast(k);
     }
@@ -7250,14 +7663,33 @@ function update(dt, t) {
   if (GAME.autoT <= 0) { GAME.autoT = 60; if (!PL.dead) saveGameSilent(); }
 }
 function saveGameSilent() { saveGame(1); }
+function drawMargins(ctx) {
+  G(ctx);
+  const ml = VIEW.ml, mt = VIEW.mt, mr = VIEW.mr, mb = VIEW.mb, bg = '#0e1424';
+  if (mt > .01) R(-ml, -mt, VIEW.cw, mt + .5, bg);
+  if (mb > .01) R(-ml, VH - .5, VIEW.cw, mb + 1, bg);
+  if (ml > .01) R(-ml, -.5, ml + .5, VH + 1, bg);
+  if (mr > .01) R(VW, -.5, mr + .5, VH + 1, bg);
+  if (ml > .6 || mt > .6 || mr > .6 || mb > .6) {
+    ctx.strokeStyle = 'rgba(122,150,215,.16)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(.5, .5, VW - 1, VH - 1);
+  }
+}
 function render(t, dt) {
   const ctx = CTX;
   ctx.save();
-  ctx.imageSmoothingEnabled = false;
+  try { drawScene(ctx, t, dt); }
+  finally { ctx.restore(); }                  // Zuschnitt loesen, auch wenn etwas schiefgeht
+  drawMargins(ctx);
+  drawTouchControls(ctx, t);
+  drawCursor(ctx);
+}
+function drawScene(ctx, t, dt) {
+  ctx.beginPath(); ctx.rect(0, 0, VW, VH); ctx.clip();
   if (GAME.title) {
     drawTitle(ctx, t);
     if (UI.modal === 'help') drawHelp(ctx);
-    ctx.restore();
     return;
   }
   UI.tip = null;
@@ -7287,7 +7719,6 @@ function render(t, dt) {
   }
   if (PL.dead) drawDeath(ctx, t);
   if (GAME.won) drawVictory(ctx, t);
-  ctx.restore();
 }
 let LAST = 0, ACC = 0;
 function frame(now) {
@@ -7315,6 +7746,10 @@ function setBoot(p, msg) {
   if (m && msg) m.textContent = msg;
 }
 function boot() {
+  /* Geraete ohne Maus zeigen die Fingersteuerung sofort an */
+  if (window.matchMedia && matchMedia('(hover: none) and (pointer: coarse)').matches) {
+    TC.on = 1; INPUT.mode = 'touch';
+  }
   resize();
   const steps = [
     ['Formen werden gezeichnet', function () { initGroundColors(); buildProps(); }],
