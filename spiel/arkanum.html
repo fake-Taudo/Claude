@@ -2795,14 +2795,23 @@ function buildPOIs() {
         break;
       }
       case 'crater': {
+        /* Der Kampfplatz in der Mitte bleibt frei begehbar. Die Lava liegt als
+           unterbrochener Ring darum herum, mit drei Zugaengen in den Krater -
+           sonst steckt der Boss in festem Gestein und ist nicht zu erreichen. */
         clearArea(d.x, d.y, 16, T.EMBER);
         for (let y = -15; y <= 15; y++) for (let x = -15; x <= 15; x++) {
           const dd = dist(x, y, 0, 0);
           if (dd > 15) continue;
           const i = idx(d.x + x, d.y + y);
-          W.tile[i] = dd < 4 ? T.LAVA : (dd < 6.5 && fbm((d.x + x) * .2, (d.y + y) * .2, 2, 3) > .48) ? T.LAVA : T.EMBER;
+          let t2 = T.EMBER;
+          if (dd > 8.5 && dd < 12.4 && abs(sin(atan2(y, x) * 1.5)) > .3 &&
+            fbm((d.x + x) * .2, (d.y + y) * .2, 2, 3) > .44) t2 = T.LAVA;
+          W.tile[i] = t2;
         }
-        for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; addProp((d.x + cos(a) * 14) * TS, (d.y + sin(a) * 14) * TS, 'rock_ash', i % 2); }
+        for (let i = 0; i < 12; i++) {
+          const a = (i + .5) / 12 * TAU;                    // Felsen neben den Zugaengen, nicht davor
+          addProp((d.x + cos(a) * 14) * TS, (d.y + sin(a) * 14) * TS, 'rock_ash', i % 2);
+        }
         poi.arena = 15;
         break;
       }
@@ -3627,6 +3636,9 @@ function hurtFoe(f, dmg, el, o) {
 function killFoe(f, el) {
   if (f.dead) return;
   f.dead = 1; f.deadT = .5;
+  /* Sieg sofort vermerken - sonst setzt updateBossSpots() den Boss noch in
+     derselben Runde wieder in die Arena, weil kein lebender mehr da ist. */
+  if (f.boss && GAME.bossKilled && !GAME.bossKilled[f.k]) GAME.bossKilled[f.k] = 1;
   PL.kills++;
   gainXp(f.xp);
   sfx(f.boss ? 'die' : 'edie');
@@ -3663,6 +3675,7 @@ function dropLoot(f) {
 }
 let DUID = 1;
 function dropItem(x, y, o) {
+  if (blockedAt(x, y, 4)) { const sp2 = freeSpotNear(x, y, 4, 3); x = sp2[0]; y = sp2[1]; }
   drops.push({
     uid: DUID++, x: x, y: y, z: 8, vz: rr(28, 52), vx: rr(-24, 24), vy: rr(-18, 18),
     item: o.item || null, gold: o.gold || 0, t: 0, life: 300, big: o.big || 0, mag: 0
@@ -4217,6 +4230,19 @@ function summonAdds(f, k, n) {
    16. KOLLISION, BEWEGUNG, ZAUBERN
    -------------------------------------------------------------------------- */
 const _pn = [];
+/* Naechster freier Platz - damit nichts Wichtiges im Gestein landet */
+function freeSpotNear(x, y, r, rings) {
+  if (!blockedAt(x, y, r)) return [x, y];
+  const n = rings || 10;
+  for (let ring = 1; ring <= n; ring++) {
+    for (let i = 0; i < 12; i++) {
+      const a = i / 12 * TAU + ring * .27;
+      const nx = x + cos(a) * ring * TS, ny = y + sin(a) * ring * TS;
+      if (!blockedAt(nx, ny, r)) return [nx, ny];
+    }
+  }
+  return [x, y];
+}
 function blockedAt(x, y, r) {
   r = r || 5;
   const t0 = floor((x - r) / TS), t1 = floor((x + r) / TS);
@@ -5600,7 +5626,8 @@ function enterCitadel() {
   foes.length = 0;
   sfx('door'); flashScreen('rgba(0,0,0,.8)', 1);
   schedule(.8, function () {
-    const f = spawnFoe('malakar', p.x, p.y - 4 * TS, 26, { drop: null, spawnFx: 1 });
+    const sp2 = freeSpotNear(p.x, p.y - 4 * TS, (BOSSDEF.malakar || {}).r || 20);
+    const f = spawnFoe('malakar', sp2[0], sp2[1], 26, { drop: null, spawnFx: 1 });
     if (f) { f.aggro = 1; startBoss(f); }
   });
 }
@@ -5624,7 +5651,8 @@ function updateBossSpots() {
       let exists = 0;
       for (let k = 0; k < foes.length; k++) if (foes[k].k === b.k && !foes[k].dead) exists = 1;
       if (!exists) {
-        const f = spawnFoe(b.k, p.x, p.y - 20, b.lv, { drop: b.drop, spawnFx: 1 });
+        const sp2 = freeSpotNear(p.x, p.y - 20, (BOSSDEF[b.k] || {}).r || 16);
+        const f = spawnFoe(b.k, sp2[0], sp2[1], b.lv, { drop: b.drop, spawnFx: 1 });
         if (f) { f.aggro = 1; startBoss(f); }
       }
       return;
@@ -8058,7 +8086,8 @@ function update(dt, t) {
   }
   if (BOSSACTIVE) {
     if (BOSSACTIVE.dead) {
-      if (!GAME.bossKilled[BOSSACTIVE.k]) {
+      if (!BOSSACTIVE.gefeiert) {
+        BOSSACTIVE.gefeiert = 1;
         GAME.bossKilled[BOSSACTIVE.k] = 1;
         toast(BOSSACTIVE.n + ' ist bezwungen!', P.gold2);
         if (BOSSACTIVE.k === 'malakar') { GAME.won = 1; GAME.everWon = 1; GAME.winT = 0; GAME.inCitadel = 0; }
