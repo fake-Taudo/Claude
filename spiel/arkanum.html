@@ -6693,6 +6693,13 @@ function drawDialog(ctx, t, dt) {
     const blink2 = sin(t * 6) > 0;
     text(ctx, (TC.on ? 'Tippen: ' : '[E] ') + (DLG.pi < DLG.pages.length - 1 ? 'weiter' : 'beenden'), x + w - 8, y + h - 12, blink2 ? P.gold2 : P.uidim, { right: 1 });
   }
+  /* Weiterblaettern per Zeigegeraet: mit dem Finger zaehlt das ganze Spielfeld,
+     mit der Maus das Dialogfenster. Ohne das kaeme man ohne Tastatur nicht
+     ans Ende eines Gespraechs - und damit nicht an die Questbelohnung. */
+  if (MOUSE.click && (TC.on ? hit(0, 0, VW, VH) : hit(x, y, w, h))) {
+    MOUSE.click = 0;
+    dlgNext();
+  }
 }
 
 /* ---- Menues und Bildschirme ---------------------------------------------- */
