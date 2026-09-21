@@ -508,6 +508,24 @@ function polyPath(pts) {
 }
 function POLY(pts, fill, ink, lw) { const p = polyPath(pts); if (ink) strokeP(p, ink, lw); if (fill) fillP(p, fill); return p; }
 function TRI(x0, y0, x1, y1, x2, y2, c, ink, lw) { return POLY([x0, y0, x1, y1, x2, y2], c, ink, lw); }
+/* Stern mit n Zacken - fuer Konstellationen und Symbole */
+function starPath(cx, cy, ro, ri, n, rot) {
+  const p = new Path2D();
+  const a0 = rot === undefined ? -PI / 2 : rot;
+  for (let i = 0; i < n * 2; i++) {
+    const a = a0 + i * PI / n, r = i % 2 ? ri : ro;
+    const x = cx + cos(a) * r, y = cy + sin(a) * r;
+    if (i === 0) p.moveTo(x, y); else p.lineTo(x, y);
+  }
+  p.closePath();
+  return p;
+}
+function star(cx, cy, ro, ri, n, fill, ink, lw, rot) {
+  const p = starPath(cx, cy, ro, ri, n, rot);
+  if (ink) strokeP(p, ink, lw);
+  if (fill) fillP(p, fill);
+  return p;
+}
 function LINE(x0, y0, x1, y1, c, th) {
   const p = new Path2D(); p.moveTo(x0, y0); p.lineTo(x1, y1);
   strokeP(p, c, th || OUT);
@@ -2993,6 +3011,24 @@ const SPELLS = [
     d: 'Ruft brennende Sterne auf einen Bereich herab. Die Krone deiner Kunst.',
     base: 1.55, maxR: 5,
     rk: ['5 Meteore über 2s.', '7 Meteore.', 'Meteore hinterlassen Brandflächen.', '10 Meteore.', 'Ein gewaltiger Endmeteor.']
+  },
+  {
+    k: 'familiar', n: 'Sternenvertrauter', el: 'arc', mana: 26, cd: 15, c: P.arcglow, icon: 'familiar',
+    d: 'Ein Funkengeist löst sich aus deinem Stab, schwebt an deiner Seite und beschießt, was dir zu nahe kommt.',
+    base: .62, maxR: 5,
+    rk: ['Ein Vertrauter für 12s.', '+35% Schaden des Vertrauten.', 'Er bleibt 18s.', 'Zwei Vertraute.', 'Seine Funken durchschlagen, +40% Schaden.']
+  },
+  {
+    k: 'aegis', n: 'Sternenaegis', el: 'arc', mana: 45, cd: 42, c: P.cry3, icon: 'aegis', ult: 1,
+    d: 'Ein Sternenkranz schließt sich um dich: nichts dringt hindurch, und die Welle stößt alles von dir fort.',
+    base: 2.8, maxR: 5,
+    rk: ['3.5s unverwundbar, Druckwelle stößt zurück.', 'Heilt danach 25% deines Lebens.', 'Hält 5s.', 'Die Welle betäubt getroffene Gegner.', 'Hält 6.5s, heilt 45% und lässt einen Schild zurück.']
+  },
+  {
+    k: 'timestop', n: 'Stunde des Stillstands', el: 'frost', mana: 50, cd: 46, c: P.frost2, icon: 'timestop', ult: 1,
+    d: 'Du greifst in den Lauf der Dinge: ringsum bleibt jede Bewegung stehen, nur du gehst weiter.',
+    base: 1.1, maxR: 5,
+    rk: ['3s Stillstand im weiten Umkreis.', '+40% Radius.', 'Hält 4.5s.', 'Stehende Ziele erleiden +35% Schaden.', 'Hält 6s und zersplittert beim Auftauen.']
   }
 ];
 const SPELLBY = {}; SPELLS.forEach(function (s, i) { s.i = i; SPELLBY[s.k] = s; });
@@ -3005,6 +3041,123 @@ const TALENTS = [
   { k: 'agi', n: 'Gewandtheit', d: '+5% Bewegungstempo je Rang.', max: 5, c: P.grass4 },
   { k: 'war', n: 'Schutzgeist', d: '+8 Rüstung und +2% Schadensreduktion je Rang.', max: 5, c: P.steel }
 ];
+
+/* --------------------------------------------------------------------------
+   11b. STERNENKARTE - der verzweigte Fertigkeitsbaum
+   Drei Arme gehen vom Funken in der Mitte aus. Jeder Knoten braucht seinen
+   Vorgaenger; am Ende jedes Arms wartet eine Ultimative, die zusaetzlich
+   genug investierte Punkte im eigenen Zweig verlangt.
+   -------------------------------------------------------------------------- */
+const BRANCHES = {
+  core: { n: 'Der Funke', d: 'Von hier geht alles aus', c: P.arc5, row: 0 },
+  off: { n: 'Offensiv', d: 'Angriffszauber', c: P.fire, row: -40 },
+  def: { n: 'Defensiv', d: 'Schild und Heilung', c: P.cry3, row: 0 },
+  uti: { n: 'Utility', d: 'Bewegung und Beschwörung', c: P.arcglow, row: 40 }
+};
+/* t: 'spell' oder 'talent' - k verweist auf SPELLBY bzw. TALBY.
+   p: Vorgaengerknoten. need: Punkte im Zweig fuer eine Ultimative. */
+const TREE = [
+  { id: 'arcane', t: 'spell', k: 'arcane', b: 'core', p: null, step: 0 },
+
+  { id: 'foc', t: 'talent', k: 'foc', b: 'off', p: 'arcane', step: 1 },
+  { id: 'fire', t: 'spell', k: 'fire', b: 'off', p: 'foc', step: 2 },
+  { id: 'pre', t: 'talent', k: 'pre', b: 'off', p: 'fire', step: 3 },
+  { id: 'bolt', t: 'spell', k: 'bolt', b: 'off', p: 'pre', step: 4 },
+  { id: 'frost', t: 'spell', k: 'frost', b: 'off', p: 'bolt', step: 5 },
+  { id: 'meteor', t: 'spell', k: 'meteor', b: 'off', p: 'frost', step: 6, need: 8 },
+
+  { id: 'vit', t: 'talent', k: 'vit', b: 'def', p: 'arcane', step: 1 },
+  { id: 'shield', t: 'spell', k: 'shield', b: 'def', p: 'vit', step: 2 },
+  { id: 'war', t: 'talent', k: 'war', b: 'def', p: 'shield', step: 3 },
+  { id: 'heal', t: 'spell', k: 'heal', b: 'def', p: 'war', step: 4 },
+  { id: 'aegis', t: 'spell', k: 'aegis', b: 'def', p: 'heal', step: 5, need: 8 },
+
+  { id: 'res', t: 'talent', k: 'res', b: 'uti', p: 'arcane', step: 1 },
+  { id: 'dash', t: 'spell', k: 'dash', b: 'uti', p: 'res', step: 2 },
+  { id: 'agi', t: 'talent', k: 'agi', b: 'uti', p: 'dash', step: 3 },
+  { id: 'familiar', t: 'spell', k: 'familiar', b: 'uti', p: 'agi', step: 4 },
+  { id: 'timestop', t: 'spell', k: 'timestop', b: 'uti', p: 'familiar', step: 5, need: 8 }
+];
+const TALBY = {}; TALENTS.forEach(function (t) { TALBY[t.k] = t; });
+const TREEBY = {};
+/* Lage der Sterne: der Funke steht links, von ihm fächern drei Ketten nach
+   rechts. Ein kleiner Höhenversatz je Stern macht daraus ein Sternbild. */
+TREE.forEach(function (nd, i) {
+  TREEBY[nd.id] = nd;
+  nd.py = nd.step ? BRANCHES[nd.b].row + (((i * 7919) % 11) - 5) * .8 : 0;
+  nd.def = nd.t === 'spell' ? SPELLBY[nd.k] : TALBY[nd.k];
+  nd.maxR = nd.t === 'spell' ? nd.def.maxR : nd.def.max;
+  nd.c = nd.def.c;
+});
+/* Die Sternbildflaeche wird beim Zeichnen gesetzt: im Querformat bleibt links
+   Platz fuer die Fingertasten, am Rechner steht die volle Breite zur Verfügung. */
+const TREEL = { cx: 50, x0: 104, sp: 54, y: 90 };
+function treeX(nd) { return nd.step ? TREEL.x0 + (nd.step - 1) * TREEL.sp : TREEL.cx; }
+function treeY(nd) { return TREEL.y + nd.py; }
+function nodeRank(nd) { return nd.t === 'spell' ? (PL.ranks[nd.k] || 0) : (PL.tal[nd.k] || 0); }
+function nodeGift(nd) { return nd.t === 'spell' ? (PL.gift[nd.k] || 0) : 0; }
+/* Punkte, die im Zweig stecken - geschenkte Ränge zählen nicht mit */
+function branchPoints(b) {
+  let n = 0;
+  TREE.forEach(function (nd) { if (nd.b === b) n += max(0, nodeRank(nd) - nodeGift(nd)); });
+  return n;
+}
+function spentPoints() { let n = 0; Object.keys(BRANCHES).forEach(function (b) { n += branchPoints(b); }); return n; }
+/* Warum ein Knoten (noch) nicht steigerbar ist - null heisst: geht */
+function nodeBlock(nd) {
+  const r = nodeRank(nd);
+  if (r >= nd.maxR) return 'Meisterschaft erreicht';
+  const par = nd.p ? TREEBY[nd.p] : null;
+  if (par && nodeRank(par) < 1) return par.def.n + ' zuerst erwecken';
+  if (nd.need && r < 1 && branchPoints(nd.b) < nd.need) {
+    return BRANCHES[nd.b].n + ': ' + branchPoints(nd.b) + '/' + nd.need + ' Punkte';
+  }
+  if (PL.sp < 1) return 'Kein Punkt frei';
+  return null;
+}
+function nodeReady(nd) { return !nodeBlock(nd); }
+function learnNode(nd) {
+  if (!nodeReady(nd)) { sfx('err'); return 0; }
+  PL.sp--;
+  if (nd.t === 'spell') {
+    const neu = PL.ranks[nd.k] < 1;
+    PL.ranks[nd.k] = (PL.ranks[nd.k] || 0) + 1;
+    if (neu) {
+      toast('Neuer Zauber: ' + nd.def.n, nd.c, 'Auf eine Schnelltaste legen.');
+      if (PL.bar.indexOf(nd.k) < 0) {
+        for (let i = 0; i < PL.bar.length; i++) if (!PL.bar[i] || (PL.ranks[PL.bar[i]] || 0) < 1) { PL.bar[i] = nd.k; break; }
+      }
+    } else toast(nd.def.n + ' auf Rang ' + PL.ranks[nd.k], nd.c);
+  } else {
+    PL.tal[nd.k] = (PL.tal[nd.k] || 0) + 1;
+    toast(nd.def.n + ' auf Rang ' + PL.tal[nd.k], nd.c);
+    refreshStats(1);
+  }
+  sfx('level');
+  burst(PL.x, PL.y - 12, 20, [nd.c, P.white], 60, .7, 'spark', { g: -20 });
+  return 1;
+}
+/* Zurücksetzen gegen Gold - Preis waechst mit dem, was schon verteilt ist */
+function respecCost() { return 80 + spentPoints() * 30; }
+function respecTree() {
+  const back = spentPoints();
+  const cost = respecCost();
+  if (PL.gold < cost) { sfx('err'); toast('Nicht genug Gold.', P.gold2); return 0; }
+  PL.gold -= cost;
+  PL.sp += back;
+  TREE.forEach(function (nd) {
+    if (nd.t === 'spell') PL.ranks[nd.k] = nodeGift(nd);
+    else PL.tal[nd.k] = 0;
+  });
+  for (let i = 0; i < PL.bar.length; i++) if (PL.bar[i] && (PL.ranks[PL.bar[i]] || 0) < 1) PL.bar[i] = null;
+  if (PL.bar.indexOf('arcane') < 0) PL.bar[0] = 'arcane';
+  PL.cds = {};
+  refreshStats(1);
+  sfx('rune');
+  toast('Sternenkarte gelöscht', P.arcglow, back + ' Punkte zurück - ' + fmt(cost) + ' Gold');
+  for (let i = 0; i < 30; i++) { const a = rnd() * TAU; addPart(PL.x, PL.y - 12, cos(a) * rr(20, 90), sin(a) * rr(20, 90), 1, P.arcglow, rr(1, 2.4), 'spark', { g: -20 }); }
+  return 1;
+}
 
 function spellIcon(ctx, sp, x, y, dim) {
   G(ctx);
@@ -3057,6 +3210,32 @@ function spellIcon(ctx, sp, x, y, dim) {
       glow(cx + 2.6 * u, cy - 3 * u, 6 * u, c, .6);
       CIR(cx + 2.6 * u, cy - 3 * u, 3.6 * u, c, INK, .9);
       break;
+    case 'familiar':
+      glow(cx, cy, 7 * u, c, .45);
+      star(cx, cy - .5 * u, 5.8 * u, 2.4 * u, 5, c, INK, .8);
+      CIR(cx, cy - .5 * u, 1.4 * u, P.white);
+      break;
+    case 'aegis': {
+      RING(cx, cy, 6.6 * u, rgba(c, .5), 1.2);
+      const p2 = new Path2D();
+      p2.moveTo(cx - 4.6 * u, cy - 4.4 * u); p2.lineTo(cx + 4.6 * u, cy - 4.4 * u);
+      p2.lineTo(cx + 3.6 * u, cy + 2.4 * u); p2.lineTo(cx, cy + 6 * u); p2.lineTo(cx - 3.6 * u, cy + 2.4 * u);
+      p2.closePath();
+      strokeP(p2, INK, .9); fillP(p2, c);
+      star(cx, cy - .6 * u, 3 * u, 1.2 * u, 4, P.white);
+      break;
+    }
+    case 'timestop': {
+      const p3 = new Path2D();
+      p3.moveTo(cx - 4.6 * u, cy - 6 * u); p3.lineTo(cx + 4.6 * u, cy - 6 * u);
+      p3.lineTo(cx - 4.6 * u, cy + 6 * u); p3.lineTo(cx + 4.6 * u, cy + 6 * u);
+      p3.closePath();
+      strokeP(p3, INK, .9); fillP(p3, c);
+      LINE(cx - 5.4 * u, cy - 6.4 * u, cx + 5.4 * u, cy - 6.4 * u, INK, 1.6 * u);
+      LINE(cx - 5.4 * u, cy + 6.4 * u, cx + 5.4 * u, cy + 6.4 * u, INK, 1.6 * u);
+      CIR(cx, cy + 3.4 * u, 1.5 * u, P.white);
+      break;
+    }
   }
 }
 /* --------------------------------------------------------------------------
@@ -3068,7 +3247,8 @@ const PL = {
   hp: 100, mp: 70, maxHp: 100, maxMp: 70,
   eq: { staff: null, robe: null, hood: null, boots: null, amulet: null, ring: null },
   inv: [], invMax: 48,
-  ranks: { arcane: 1, fire: 0, frost: 0, bolt: 0, shield: 0, dash: 0, heal: 0, meteor: 0 },
+  ranks: { arcane: 1, fire: 0, frost: 0, bolt: 0, shield: 0, dash: 0, heal: 0, meteor: 0, familiar: 0, aegis: 0, timestop: 0 },
+  gift: { arcane: 1 },                 // geschenkte Ränge: kosten keinen Punkt und bleiben beim Zurücksetzen
   tal: { vit: 0, res: 0, foc: 0, pre: 0, agi: 0, war: 0 },
   bar: ['arcane', 'fire', 'frost', 'bolt', 'shield', 'meteor'],
   cds: {}, charges: {}, buffs: [], shield: 0, shieldMax: 0, shieldT: 0,
@@ -3157,7 +3337,7 @@ function hasBuff(k) { return PL.buffs.some(function (b) { return b.k === k; }); 
 /* --------------------------------------------------------------------------
    13. PARTIKEL, GESCHOSSE, EFFEKTE
    -------------------------------------------------------------------------- */
-const parts = [], projs = [], foes = [], npcs = [], drops = [], dmgs = [], fxs = [], areas = [];
+const parts = [], projs = [], foes = [], npcs = [], drops = [], dmgs = [], fxs = [], areas = [], allies = [];
 let PARTCAP = 1400;
 function addPart(x, y, vx, vy, life, col, size, kind, o) {
   if (parts.length >= PARTCAP) parts.shift();
@@ -3423,6 +3603,7 @@ function hurtFoe(f, dmg, el, o) {
   let crit = o.crit || 0;
   if (!o.noCrit && rnd() * 100 < ST.crit) { crit = 1; d *= ST.critd / 100; }
   if (f.freeze > 0 && PL.ranks.frost >= 4) d *= 1.6;
+  if (f.freeze > 0 && f.timestop) d *= 1.35;
   d = max(1, round(d));
   f.hp -= d;
   f.flash = .16; f.hurtT = .16;
@@ -4128,7 +4309,7 @@ function respawn() {
   const wp = nearestWaypoint(PL.x, PL.y);
   PL.x = wp ? wp.x : 170 * TS; PL.y = wp ? wp.y + 20 : 404 * TS;
   PL.gold = floor(PL.gold * .9);
-  foes.length = 0; projs.length = 0; areas.length = 0;
+  foes.length = 0; projs.length = 0; areas.length = 0; allies.length = 0;
   BOSSACTIVE = null; GAME.inCitadel = 0;
   refreshStats(); updateMood(1);
   toast('Du erwachst am Wegstein. Etwas Gold ist verloren.', P.uidim);
@@ -4251,9 +4432,107 @@ function cast(k) {
       sfx('meteor');
       break;
     }
+    case 'familiar': {
+      const n = rank >= 4 ? 2 : 1;
+      const dur = rank >= 3 ? 18 : 12;
+      const dm = spellDmg(sp, 1 + (rank >= 2 ? .35 : 0) + (rank >= 5 ? .4 : 0));
+      for (let i = 0; i < n; i++) summonFamiliar(dur, dm, rank, i / n * TAU);
+      sfx('rune');
+      addFx('ring', PL.x, PL.y - 12, { r: 24, life: .4, col: P.arcglow });
+      burst(PL.x, PL.y - 12, 16, [P.arcglow, P.white], 60, .6, 'spark', { g: -30 });
+      break;
+    }
+    case 'aegis': {
+      const dur = rank >= 5 ? 6.5 : rank >= 3 ? 5 : 3.5;
+      PL.invuln = max(PL.invuln, dur);
+      addBuff('aegis', dur, 'Sternenaegis', P.cry3);
+      PL.aegisEnd = { heal: rank >= 5 ? .45 : rank >= 2 ? .25 : 0, shield: rank >= 5 ? spellDmg(sp, 1.8) : 0 };
+      addFx('ring', PL.x, PL.y - 12, { r: 46, life: .5, col: P.cry3 });
+      addFx('nova', PL.x, PL.y - 8, { r: 60, life: .5, col: P.cry4 });
+      for (let i = 0; i < foes.length; i++) {
+        const f = foes[i];
+        if (f.dead || dist(PL.x, PL.y - 8, f.x, f.y - f.h * .4) > 66 + f.r) continue;
+        hurtFoe(f, spellDmg(sp, .5), 'arc', { kb: 130, kbx: f.x - PL.x, kby: f.y - PL.y, stun: rank >= 4 ? .9 : 0 });
+      }
+      burst(PL.x, PL.y - 12, 26, [P.cry3, P.cry4, P.white], 90, .8, 'shard', { g: -10 });
+      sfx('shield'); shake(3, .25);
+      break;
+    }
+    case 'timestop': {
+      const rad = (rank >= 2 ? 150 : 108) * 1;
+      const dur = rank >= 5 ? 6 : rank >= 3 ? 4.5 : 3;
+      let n = 0;
+      for (let i = 0; i < foes.length; i++) {
+        const f = foes[i];
+        if (f.dead || dist(PL.x, PL.y - 8, f.x, f.y - f.h * .4) > rad + f.r) continue;
+        n++;
+        if (f.boss) { f.slow = max(f.slow || 0, .6); f.slowT = max(f.slowT || 0, dur); hurtFoe(f, spellDmg(sp, 1.2), 'frost', {}); continue; }
+        f.freeze = max(f.freeze || 0, dur);
+        f.timestop = rank >= 4 ? 1 : 0;
+        hurtFoe(f, spellDmg(sp), 'frost', { freeze: dur });
+        if (rank >= 5) schedule(dur, function () { if (!f.dead) explode(f.x, f.y - f.h * .4, 34, spellDmg(sp, .9), 'frost', 'pl', P.frost2, { falloff: 1 }); });
+      }
+      addFx('nova', PL.x, PL.y - 8, { r: rad, life: .7, col: P.frost2 });
+      addFx('ring', PL.x, PL.y - 8, { r: rad * .7, life: .55, col: P.ice1 });
+      burst(PL.x, PL.y - 10, 30, [P.frost, P.frost2, P.white], rad * 1.4, 1, 'shard', { g: 10 });
+      flashScreen(rgba(P.ice1, .3), .45);
+      sfx('frost'); shake(3.4, .3);
+      if (n) toast('Die Zeit hält an.', P.frost2, n + (n === 1 ? ' Gegner steht still' : ' Gegner stehen still'));
+      break;
+    }
   }
   questEvent('cast', k);
   return 1;
+}
+/* ---- Sternenvertrauter ---------------------------------------------------- */
+function summonFamiliar(dur, dmg, rank, ang) {
+  allies.push({ x: PL.x, y: PL.y - 16, a: ang, t: dur, life: dur, dmg: dmg, rank: rank, cd: .5, sp: 0 });
+  while (allies.length > 4) allies.shift();
+}
+function updateAllies(dt) {
+  for (let i = allies.length - 1; i >= 0; i--) {
+    const m = allies[i];
+    m.t -= dt;
+    if (m.t <= 0 || PL.dead) {
+      burst(m.x, m.y, 10, [P.arcglow, P.white], 40, .5, 'spark', { g: -20 });
+      allies.splice(i, 1);
+      continue;
+    }
+    m.a += dt * 1.15;
+    const tx = PL.x + cos(m.a) * 24, ty = PL.y - 15 + sin(m.a) * 11;
+    const k = min(1, dt * 4.5);
+    m.x += (tx - m.x) * k; m.y += (ty - m.y) * k;
+    m.sp += dt;
+    if (rnd() < dt * 6) addPart(m.x + rr(-2, 2), m.y + rr(-2, 2), rr(-6, 6), rr(-14, -2), .5, P.arcglow, rr(.8, 1.6), 'spark', { g: -12 });
+    m.cd -= dt;
+    if (m.cd > 0) continue;
+    let best = null, bd = 160 * 160;
+    for (let j = 0; j < foes.length; j++) {
+      const f = foes[j];
+      if (f.dead) continue;
+      const d = dist2(m.x, m.y, f.x, f.y - f.h * .4);
+      if (d < bd) { bd = d; best = f; }
+    }
+    if (!best) continue;
+    m.cd = .8;
+    const a = angTo(m.x, m.y, best.x, best.y - best.h * .45);
+    addProj({
+      x: m.x, y: m.y, vx: cos(a) * 215, vy: sin(a) * 215, dmg: m.dmg, el: 'arc', r: 3,
+      col: P.arcglow, sz: 2.6, pierce: m.rank >= 5 ? 1 : 0, life: 1.3, kind: 'arrow'
+    });
+    sfx('arcane', 140);
+  }
+}
+function drawAlly(ctx, m, cx, cy, t) {
+  G(ctx);
+  const x = m.x - cx, y = m.y - cy + sin(t * 3 + m.a) * 1.4;
+  const fade = min(1, m.t / .6);
+  ctx.globalAlpha = fade;
+  glow(x, y, 11, P.arcglow, .4);
+  star(x, y, 6.2, 2.4, 5, P.arcglow, INK, .9, m.sp * .8);
+  star(x, y, 3, 1.2, 5, P.white, null, 0, -m.sp * 1.2);
+  ELL(x, m.y - cy + 8, 4, 1.6, 'rgba(10,14,26,.22)');
+  ctx.globalAlpha = 1;
 }
 function staffEl() { const s = PL.eq.staff; return (s && s.el) || 'arc'; }
 function staffCol() { const s = PL.eq.staff; return (s && s.staff && s.staff.gem) || P.arc5; }
@@ -4518,15 +4797,30 @@ function updatePlayer(dt, t) {
   // Nebel des Krieges
   revealFog(PL.x, PL.y, bioAtPx(PL.x, PL.y) === B.CAVE ? 5 : 9);
   updateMeteor(dt);
+  updateAllies(dt);
   discoverPOIs();
 }
 function refreshBuffs(dt) {
   let changed = 0;
   for (let i = PL.buffs.length - 1; i >= 0; i--) {
     PL.buffs[i].t -= dt;
-    if (PL.buffs[i].t <= 0) { PL.buffs.splice(i, 1); changed = 1; }
+    if (PL.buffs[i].t <= 0) {
+      if (PL.buffs[i].k === 'aegis') aegisFade();
+      PL.buffs.splice(i, 1); changed = 1;
+    }
   }
   if (changed) refreshStats(true);
+}
+/* Wenn der Sternenkranz erlischt, bleibt seine Kraft zurueck */
+function aegisFade() {
+  const e = PL.aegisEnd;
+  PL.aegisEnd = null;
+  if (!e) return;
+  if (e.heal) healPlayer(PL.maxHp * e.heal);
+  if (e.shield) { PL.shield = PL.shieldMax = round(e.shield); PL.shieldT = 8; }
+  addFx('ring', PL.x, PL.y - 12, { r: 30, life: .5, col: P.cry4 });
+  burst(PL.x, PL.y - 12, 14, [P.cry3, P.white], 60, .7, 'spark', { g: -20 });
+  sfx('potion');
 }
 function inCombat() {
   for (let i = 0; i < foes.length; i++) {
@@ -4739,6 +5033,7 @@ function turnInQuest(id) {
 function unlockSpell(k) {
   if (PL.ranks[k] >= 1) { PL.sp += 1; return; }
   PL.ranks[k] = 1;
+  PL.gift[k] = 1;
   const sp = SPELLBY[k];
   toast('Neuer Zauber: ' + sp.n, sp.c, 'Auf eine Schnelltaste legen (Taste K).');
   sfx('rune');
@@ -5464,6 +5759,7 @@ function drawWorld(ctx, t) {
     RENDER.push({ y: f.y, k: 3, o: f });
   }
   if (!PL.dead || PL.deadT < 1.2) RENDER.push({ y: PL.y, k: 4, o: PL });
+  for (let i = 0; i < allies.length; i++) RENDER.push({ y: allies[i].y + 10, k: 5, o: allies[i] });
   RENDER.sort(function (a, b) { return a.y - b.y; });
   drawAreas(ctx, cx, cy, t);
   for (let i = 0; i < RENDER.length; i++) {
@@ -5472,6 +5768,7 @@ function drawWorld(ctx, t) {
     else if (r.k === 1) drawDrop(ctx, r.o, cx, cy, t);
     else if (r.k === 2) drawNPC(ctx, r.o, cx, cy, t);
     else if (r.k === 3) drawFoe(ctx, r.o, cx, cy, t);
+    else if (r.k === 5) drawAlly(ctx, r.o, cx, cy, t);
     else drawPlayer(ctx, cx, cy, t);
   }
   drawProjectiles(ctx, cx, cy, t);
@@ -5607,7 +5904,8 @@ function drawPlayer(ctx, cx, cy, t) {
     ctx.globalAlpha = 1;
     return;
   }
-  const blink = PL.invuln > 0 && floor(PL.invuln * 22) % 2 === 0;
+  const aeg = hasBuff('aegis');
+  const blink = PL.invuln > 0 && !aeg && floor(PL.invuln * 22) % 2 === 0;
   const st = PL.eq.staff;
   const oa = ctx.globalAlpha;
   if (blink) ctx.globalAlpha = oa * .45;
@@ -5626,6 +5924,18 @@ function drawPlayer(ctx, cx, cy, t) {
   });
   ctx.globalAlpha = oa;
   if (tip && PL.castAnim > .1) glow(tip[0], tip[1], 8 + PL.castAnim * 14, staffCol(), .5 * PL.castAnim);
+  if (aeg) {
+    // Sternenkranz: ein Ring aus kreisenden Sternen statt des Trefferblinkens
+    const rr3 = 17 + sin(t * 3) * .8;
+    ctx.globalAlpha = .55;
+    RING(x, y - 12, rr3, rgba(P.cry4, .8), 1.3);
+    RING(x, y - 12, rr3 - 3.5, rgba(P.cry3, .35), .8);
+    ctx.globalAlpha = 1;
+    for (let i = 0; i < 6; i++) {
+      const a = -t * 1.5 + i / 6 * TAU;
+      star(x + cos(a) * rr3, y - 12 + sin(a) * rr3 * .9, 2.6, 1, 4, rgba(P.white, .9), null, 0, a);
+    }
+  }
   if (PL.shield > 0) {
     const p = PL.shield / max(1, PL.shieldMax);
     const rr2 = 15 + sin(t * 4) * .6;
@@ -5932,7 +6242,7 @@ function drawWeather(ctx, cx, cy, t) {
    24. BENUTZEROBERFLAECHE
    -------------------------------------------------------------------------- */
 const UI = {
-  modal: null, invSel: 0, invTab: 0, eqSel: -1, skillSel: 0, skillTab: 0, qsel: 0, qtrack: null,
+  modal: null, invSel: 0, invTab: 0, eqSel: -1, treeSel: 'arcane', qsel: 0, qtrack: null,
   mapZoom: .45, mapX: 256, mapY: 256, mapMode: null, mapSel: 0, confirm: null, tip: null,
   shopSide: 0, shopSel: 0, barAssign: null, menuSel: 0, hint: 0, hintT: 0
 };
@@ -6103,7 +6413,7 @@ function drawHUD(ctx, t, compact) {
     ] : [
       ['WASD', 'laufen'], ['Maus', 'zielen'], ['Linksklick', 'zaubern'],
       ['1-6', 'Zauber wählen'], ['Umschalt', 'ausweichen'], ['E', 'reden / benutzen'],
-      ['Q', 'Heiltrank'], ['I', 'Gepäck'], ['K', 'Zauber & Talente'],
+      ['Q', 'Heiltrank'], ['I', 'Gepäck'], ['K', 'Sternenkarte'],
       ['J', 'Questbuch'], ['M', 'Karte']
     ];
     const w = TC.on ? 168 : 152, hh = 12 + hints.length * 9;
@@ -6341,87 +6651,179 @@ function drawInventory(ctx, t) {
     : '[K] Fähigkeiten   [J] Quests   [M] Karte', x + w - 8, y + h - 12, P.uidim, { right: 1 });
 }
 /* ---- Fähigkeiten -------------------------------------------------------- */
-function drawSkills(ctx, t) {
-  const w = 300, h = 210, x = floor((VW - w) / 2), y = floor((VH - h) / 2) - 6;
-  R(0, 0, VW, VH, 'rgba(4,6,12,.5)');
-  panel(ctx, x, y, w, h, { title: 'Zauber und Talente', right: 'Punkte: ' + PL.sp + '   ' + kclose('K', 'Blitz'), bg: 'rgba(26,35,60,1)' });
+/* Passive Knoten bekommen einen geschliffenen Stein statt eines Zaubersymbols */
+function talentGem(ctx, tl, x, y, dim) {
   G(ctx);
-  text(ctx, 'Zauber', x + 8, y + 18, P.uidim);
-  SPELLS.forEach(function (sp, i) {
-    const sy = y + 27 + i * 18;
-    const r = PL.ranks[sp.k], has = r >= 1;
-    const on = UI.skillSel === i;
-    RR(x + 6, sy - 2, 150, 17, 4, on ? 'rgba(58,74,124,.8)' : 'rgba(18,24,42,.5)');
-    if (on) RR(x + 6, sy - 2, 2, 17, 1, P.gold);
-    RR(x + 8, sy, 16, 16, 4, has ? 'rgba(26,35,60,.9)' : 'rgba(18,22,38,.7)');
-    if (has) spellIcon(ctx, sp, x + 8, sy, 16); else text(ctx, '?', x + 16, sy + 4, P.ui4, { center: 1 });
-    text(ctx, sp.n, x + 28, sy + 1, has ? P.uitx : P.uidim);
-    if (has) {
-      for (let k = 0; k < sp.maxR; k++) CIR(x + 30 + k * 6, sy + 12, 2, k < r ? P.gold2 : P.ui3);
-      text(ctx, sp.mana + ' MP', x + 152, sy + 1, P.mp, { right: 1 });
-    } else text(ctx, 'gesperrt', x + 152, sy + 1, P.ui4, { right: 1 });
-    if (hit(x + 6, sy - 2, 150, 17)) {
-      if (MOUSE.click) { UI.skillSel = i; sfx('ui'); MOUSE.click = 0; }
+  const cx = x + dim / 2, cy = y + dim / 2, u = dim / 18;
+  glow(cx, cy, 6 * u, tl.c, .3);
+  POLY([cx, cy - 6 * u, cx + 4.8 * u, cy, cx, cy + 6 * u, cx - 4.8 * u, cy], tl.c, INK, .9);
+  LINE(cx - 2.2 * u, cy - 1.4 * u, cx - .2 * u, cy - 4 * u, rgba(P.white, .75), 1.3 * u);
+}
+function nodeIcon(ctx, nd, x, y, dim) {
+  if (nd.t === 'spell') spellIcon(ctx, nd.def, x, y, dim);
+  else talentGem(ctx, nd.def, x, y, dim);
+}
+function treeSelNode() { return TREEBY[UI.treeSel] || TREEBY.arcane; }
+/* Fingerfreundlich: es zaehlt der naechstgelegene Stern, nicht der exakte Treffer */
+function treeNodeAt(mx, my) {
+  let best = null, bd = (TC.on ? 21 : 16);
+  bd *= bd;
+  TREE.forEach(function (nd) {
+    const d = dist2(mx, my, treeX(nd), treeY(nd));
+    if (d < bd) { bd = d; best = nd; }
+  });
+  return best;
+}
+function drawSkills(ctx, t) {
+  const w = 452, h = 244, x = floor((VW - w) / 2), y = floor((VH - h) / 2);
+  R(0, 0, VW, VH, 'rgba(4,6,12,.62)');
+  panel(ctx, x, y, w, h, { title: 'Sternenkarte der Künste', right: PL.sp + (PL.sp === 1 ? ' Punkt' : ' Punkte') + '   ' + kclose('K', 'Blitz'), bg: 'rgba(20,27,48,1)' });
+  G(ctx);
+  const sel = treeSelNode();
+  // Nachthimmel hinter der Konstellation
+  const skyY = y + 16, skyH = 130;
+  const touchPad = (TC.on && !TC.bar) ? 118 : 0;      // linke Fingertasten freihalten
+  const left = x + 4 + touchPad, right = x + w - 70;
+  TREEL.y = y + 77;
+  TREEL.cx = left + 18;
+  TREEL.x0 = left + 72;
+  TREEL.sp = (right - TREEL.x0) / 5;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x + 4, skyY, w - 8, skyH); ctx.clip();
+  R(x + 4, skyY, w - 8, skyH, 'rgba(12,17,34,.72)');
+  for (let i = 0; i < 54; i++) {
+    const px = x + 8 + hash2(i, 1, 7) * (w - 16), py = skyY + 3 + hash2(i, 2, 5) * (skyH - 6);
+    D(px, py, rgba(P.silver, .08 + abs(sin(t * .7 + i * 1.7)) * .2));
+  }
+  ctx.restore();
+  // Zweignamen am Ende der jeweiligen Kette
+  ['off', 'def', 'uti'].forEach(function (b) {
+    const br = BRANCHES[b], pts = branchPoints(b);
+    const ly2 = TREEL.y + br.row;
+    text(ctx, br.n, x + w - 8, ly2 - 7, rgba(br.c, .95), { right: 1, weight: 600 });
+    text(ctx, pts + (pts === 1 ? ' Punkt' : ' Punkte'), x + w - 8, ly2 + 2, P.uidim, { right: 1, scale: .92 });
+  });
+  text(ctx, 'Der Funke', TREEL.cx, TREEL.y + 22, rgba(P.arc5, .85), { center: 1, scale: .92 });
+  // Verbindungslinien
+  TREE.forEach(function (nd) {
+    if (!nd.p) return;
+    const pa = TREEBY[nd.p];
+    const x0 = treeX(pa), y0 = treeY(pa), x1 = treeX(nd), y1 = treeY(nd);
+    const open = nodeRank(pa) >= 1;
+    const lit = nodeRank(nd) >= 1;
+    LINE(x0, y0, x1, y1, lit ? rgba(BRANCHES[nd.b].c, .55) : open ? 'rgba(122,150,215,.24)' : 'rgba(122,150,215,.1)', lit ? 1.4 : 1);
+    if (lit) {
+      const f = (t * .35 + nd.step * .2) % 1;                 // Funke wandert nach aussen
+      D(lerp(x0, x1, f), lerp(y0, y1, f), rgba(P.white, .5));
     }
   });
-  // Detail
-  const sp = SPELLS[UI.skillSel];
-  const dx = x + 164, dy = y + 20;
-  RR(dx - 4, dy - 2, 136, 104, 5, 'rgba(18,24,42,.6)');
-  text(ctx, sp.n, dx, dy + 1, sp.c);
-  const r = PL.ranks[sp.k];
-  wrap(sp.d, 128).forEach(function (l, i) { text(ctx, l, dx, dy + 12 + i * 8, P.silver); });
-  let ly = dy + 12 + wrap(sp.d, 128).length * 8 + 4;
-  if (r >= 1) {
-    text(ctx, 'Rang ' + r + ': ' + sp.rk[r - 1], dx, ly, P.uitx);
-    ly += wrap('Rang ' + r + ': ' + sp.rk[r - 1], 128).length * 8;
-  }
-  if (r < sp.maxR) {
-    const nxt = 'Rang ' + (r + 1) + ': ' + sp.rk[r];
-    wrap(nxt, 128).forEach(function (l, i) { text(ctx, l, dx, ly + 4 + i * 8, P.gold2); });
-    ly += 4 + wrap(nxt, 128).length * 8;
-  }
-  const canUp = r >= 1 && r < sp.maxR && PL.sp > 0;
-  const bx = dx, by = y + 128;
-  const upHov = canUp && hit(bx, by, 128, 14);
-  RR(bx, by, 128, 14, 7, canUp ? (upHov ? P.arc4 : 'rgba(74,92,146,.95)') : 'rgba(28,36,58,.7)', canUp ? 'rgba(160,185,240,.4)' : null, 1);
-  text(ctx, r < 1 ? 'Noch nicht erlernt' : r >= sp.maxR ? 'Meisterschaft erreicht' : (PL.sp > 0 ? 'Verbessern (1 Punkt)' : 'Kein Punkt frei'), bx + 64, by + 3.5, canUp ? P.white : P.uidim, { center: 1, weight: 600 });
-  if (canUp && hit(bx, by, 128, 14) && MOUSE.click) {
-    MOUSE.click = 0; PL.sp--; PL.ranks[sp.k]++; sfx('level');
-    toast(sp.n + ' auf Rang ' + PL.ranks[sp.k], sp.c);
-    burst(PL.x, PL.y - 12, 20, [sp.c, P.white], 60, .7, 'spark', { g: -20 });
-  }
-  // Schnellleiste
-  text(ctx, 'Schnellleiste (Feld klicken)', dx, by + 18, P.uidim);
-  for (let i = 0; i < PL.bar.length; i++) {
-    const sx2 = dx + i * 21, sy2 = by + 28;
-    const k = PL.bar[i];
-    RR(sx2, sy2, 19, 19, 5, 'rgba(26,35,60,.9)', 'rgba(122,150,215,.25)', 1);
-    if (k && PL.ranks[k] >= 1) spellIcon(ctx, SPELLBY[k], sx2 + 1, sy2 + 1, 17);
-    text(ctx, '' + (i + 1), sx2 + 2, sy2 + 20, P.uidim);
-    if (hit(sx2, sy2, 19, 19) && MOUSE.click) {
-      MOUSE.click = 0;
-      if (PL.ranks[sp.k] >= 1) { PL.bar[i] = sp.k; sfx('uiSel'); }
-      else sfx('err');
+  // Sterne
+  TREE.forEach(function (nd) {
+    const nx = treeX(nd), ny = treeY(nd);
+    const r = nodeRank(nd), has = r >= 1;
+    const ult = !!nd.need, core = nd.b === 'core';
+    const rad = ult ? 10 : core ? 9.5 : 8;
+    const ready = nodeReady(nd);
+    const on = sel === nd;
+    if (has) glow(nx, ny, rad * 2.2, nd.c, .35);
+    else if (ready) glow(nx, ny, rad * 1.8, P.gold2, .16 + .1 * sin(t * 4));
+    CIR(nx, ny, rad, has ? 'rgba(28,38,66,.96)' : 'rgba(18,24,42,.92)',
+      has ? rgba(nd.c, .85) : ready ? rgba(P.gold2, .6) : 'rgba(122,150,215,.25)', has ? 1.4 : 1);
+    if (ult) star(nx, ny, rad + 4.5, rad + 1.4, 8, null, has ? rgba(nd.c, .5) : 'rgba(122,150,215,.2)', .8, t * .25);
+    if (has) nodeIcon(ctx, nd, nx - rad * .72, ny - rad * .72, rad * 1.44);
+    else {
+      ctx.globalAlpha = .38;
+      nodeIcon(ctx, nd, nx - rad * .66, ny - rad * .66, rad * 1.32);
+      ctx.globalAlpha = 1;
     }
+    if (on) { RING(nx, ny, rad + 3, rgba(P.gold2, .9), 1.2); RING(nx, ny, rad + 5.5, rgba(P.gold2, .3), .8); }
+    // Rangpunkte unter dem Stern
+    const mx = nd.maxR, pw = (mx - 1) * 3.4;
+    for (let k = 0; k < mx; k++) {
+      CIR(nx - pw / 2 + k * 3.4, ny + rad + 4.4, 1.25, k < r ? nd.c : 'rgba(122,150,215,.25)');
+    }
+  });
+  // Auswahl per Zeiger
+  if (MOUSE.inside && MOUSE.y < skyY + skyH && MOUSE.y > skyY) {
+    const hovered = treeNodeAt(MOUSE.x, MOUSE.y);
+    if (hovered && MOUSE.click) { MOUSE.click = 0; UI.treeSel = hovered.id; sfx('ui'); }
   }
-  // Talente
-  text(ctx, 'Talente  (' + PL.sp + ' Punkte frei)', x + 8, y + 174, P.uidim);
-  TALENTS.forEach(function (tl, i) {
-    const tyy = y + 184;
-    const xx = x + 8 + i * 25;
-    RR(xx, tyy, 22, 22, 5, 'rgba(18,24,42,.7)', PL.tal[tl.k] > 0 ? rgba(tl.c, .5) : 'rgba(122,150,215,.2)', 1);
-    CIR(xx + 11, tyy + 8.5, 5.4, rgba(tl.c, .3)); CIR(xx + 11, tyy + 8.5, 3.6, tl.c);
-    text(ctx, PL.tal[tl.k] + '/' + tl.max, xx + 11, tyy + 15, PL.tal[tl.k] >= tl.max ? P.gold2 : P.uitx, { center: 1 });
-    if (hit(xx, tyy, 22, 22)) {
-      UI.tip = { t: tl.n, s: tl.d + (PL.sp > 0 && PL.tal[tl.k] < tl.max ? '  [' + kw() + ': +1]' : ''), x: MOUSE.x, y: MOUSE.y, w: 150 };
-      if (MOUSE.click) {
-        MOUSE.click = 0;
-        if (PL.sp > 0 && PL.tal[tl.k] < tl.max) { PL.sp--; PL.tal[tl.k]++; refreshStats(1); sfx('level'); }
-        else sfx('err');
+  /* ---- Anzeige des gewählten Sterns ---------------------------------- */
+  const s0 = y + 152, sx = x + 10;
+  RR(x + 6, s0 - 6, w - 12, h - (s0 - 6 - y) - 6, 6, 'rgba(14,19,36,.6)', 'rgba(122,150,215,.18)', 1);
+  const r = nodeRank(sel);
+  nodeIcon(ctx, sel, sx, s0, 18);
+  text(ctx, sel.def.n, sx + 24, s0 + 1, sel.c, { weight: 600 });
+  const art = sel.t === 'spell' ? (sel.need ? 'Ultimative' : 'Zauber') : 'Talent';
+  text(ctx, art + ' · ' + BRANCHES[sel.b].n, sx + 24, s0 + 11, P.uidim, { scale: .92 });
+  text(ctx, r > 0 ? 'Rang ' + r + '/' + sel.maxR : 'Noch nicht erweckt', x + w - 10, s0 + 1, r >= sel.maxR ? P.gold2 : P.uitx, { right: 1 });
+  if (sel.t === 'spell') text(ctx, sel.def.mana + ' MP · ' + sel.def.cd + 's', x + w - 10, s0 + 11, P.mp, { right: 1 });
+  else text(ctx, 'wirkt dauerhaft', x + w - 10, s0 + 11, P.uidim, { right: 1 });
+  const desc = sel.t === 'spell' ? sel.def.d : sel.def.d;
+  wrap(desc, 330).slice(0, 2).forEach(function (l, i) { text(ctx, l, sx, s0 + 22 + i * 9, P.silver); });
+  let ly = s0 + 39;
+  if (sel.t === 'spell') {
+    if (r >= 1) { text(ctx, 'Rang ' + r + ': ' + sel.def.rk[r - 1], sx, ly, P.uitx); ly += 9; }
+    if (r < sel.maxR) text(ctx, 'Rang ' + (r + 1) + ': ' + sel.def.rk[r], sx, ly, P.gold2);
+  } else {
+    text(ctx, r > 0 ? 'Erweckt: Rang ' + r + ' von ' + sel.maxR : 'Dieser Stein ist noch dunkel.', sx, ly, P.uitx);
+    if (r < sel.maxR) text(ctx, 'Nächster Rang: ' + (r + 1) + ' von ' + sel.maxR, sx, ly + 9, P.gold2);
+  }
+  // Grund, falls gesperrt
+  const block = nodeBlock(sel);
+  if (block && r < sel.maxR) text(ctx, block, sx, s0 + 58, sel.need && block.indexOf('Punkte') > 0 ? P.gold2 : P.ui4);
+  /* ---- Schaltflächen -------------------------------------------------- */
+  const bw2 = 132, by2 = s0 + 70;
+  const canUp = !block;
+  const upHov = hit(sx, by2, bw2, 16);
+  RR(sx, by2, bw2, 16, 8, canUp ? (upHov ? P.arc4 : 'rgba(74,92,146,.95)') : 'rgba(28,36,58,.7)', canUp ? 'rgba(160,185,240,.45)' : null, 1);
+  text(ctx, canUp ? (r < 1 ? 'Erwecken (1 Punkt)' : 'Verstärken (1 Punkt)') : (r >= sel.maxR ? 'Meisterschaft' : 'Gesperrt'),
+    sx + bw2 / 2, by2 + 4, canUp ? P.white : P.uidim, { center: 1, weight: 600 });
+  if (canUp && upHov && MOUSE.click) { MOUSE.click = 0; learnNode(sel); }
+  // Zurücksetzen
+  const rw = 152, rx = sx + bw2 + 8;
+  const cost = respecCost(), spent = spentPoints();
+  const canRe = spent > 0 && PL.gold >= cost;
+  const reHov = hit(rx, by2, rw, 16);
+  RR(rx, by2, rw, 16, 8, canRe ? (reHov ? 'rgba(122,72,54,.95)' : 'rgba(64,48,74,.9)') : 'rgba(28,36,58,.7)', canRe ? rgba(P.gold2, .4) : null, 1);
+  text(ctx, spent > 0 ? 'Zurücksetzen · ' + fmt(cost) + ' G' : 'Nichts verteilt', rx + rw / 2, by2 + 4, canRe ? P.gold2 : P.uidim, { center: 1, weight: 600 });
+  if (reHov) {
+    UI.tip = { t: 'Sternenkarte löschen', s: 'Alle ' + spent + ' verteilten Punkte kommen zurück. Geschenke aus Quests bleiben erhalten. Kostet ' + fmt(cost) + ' Gold.', x: MOUSE.x, y: MOUSE.y, w: 160 };
+    if (MOUSE.click) {
+      MOUSE.click = 0;
+      if (!spent) sfx('err');
+      else if (PL.gold < cost) { sfx('err'); toast('Nicht genug Gold.', P.gold2, fmt(cost) + ' Gold nötig'); }
+      else {
+        UI.confirm = {
+          t: 'Sternenkarte löschen?', s: spent + ' Punkte kommen zurück, ' + fmt(cost) + ' Gold sind fällig.',
+          yes: function () { respecTree(); UI.modal = 'skill'; }, no: function () { UI.modal = 'skill'; }
+        };
+        UI.modal = 'confirm';
       }
     }
-  });
+  }
+  /* ---- Schnellleiste --------------------------------------------------- */
+  const qw = 6 * 20, qx = x + w - 10 - qw + 1;
+  text(ctx, 'Schnellleiste', qx, by2 - 10, P.uidim);
+  for (let i = 0; i < PL.bar.length; i++) {
+    const cx2 = qx + i * 20, cy2 = by2 - 1;
+    const k = PL.bar[i], known = k && (PL.ranks[k] || 0) >= 1;
+    RR(cx2, cy2, 18, 18, 5, 'rgba(26,35,60,.9)', known ? 'rgba(122,150,215,.35)' : 'rgba(122,150,215,.16)', 1);
+    if (known) spellIcon(ctx, SPELLBY[k], cx2 + 1, cy2 + 1, 16);
+    text(ctx, '' + (i + 1), cx2 + 1.5, cy2 + 19, P.uidim, { scale: .9 });
+    if (hit(cx2, cy2, 18, 18)) {
+      UI.tip = { t: 'Platz ' + (i + 1), s: sel.t === 'spell' && nodeRank(sel) >= 1 ? kw() + ': ' + sel.def.n + ' hierher legen' : 'Erst einen erweckten Zauber wählen', x: MOUSE.x, y: MOUSE.y, w: 140 };
+      if (MOUSE.click) {
+        MOUSE.click = 0;
+        if (sel.t === 'spell' && nodeRank(sel) >= 1) {
+          const old2 = PL.bar.indexOf(sel.k);
+          if (old2 >= 0 && old2 !== i) PL.bar[old2] = PL.bar[i];
+          PL.bar[i] = sel.k;
+          sfx('uiSel');
+        } else sfx('err');
+      }
+    }
+  }
 }
 function clipTxt(str, maxW) {
   str = '' + str;
@@ -6596,7 +6998,7 @@ function travelTo(p) {
   sfx('tele');
   burst(PL.x, PL.y - 10, 30, [P.arc5, P.arcglow], 80, .7, 'spark');
   PL.x = p.x; PL.y = p.y + 24;
-  foes.length = 0; projs.length = 0; areas.length = 0;
+  foes.length = 0; projs.length = 0; areas.length = 0; allies.length = 0;
   CAM.x = PL.x - VW / 2; CAM.y = PL.y - VH / 2;
   burst(PL.x, PL.y - 10, 30, [P.arc5, P.arcglow], 80, .7, 'spark');
   showArea(p.n);
@@ -6754,7 +7156,7 @@ const TOUCHLINES = [
   ['Pfeile', 'Phasenschritt (Ausweichen)'],
   ['Flasche', 'Schnellster Heiltrank'],
   ['Beutel', 'Inventar und Ausrüstung'],
-  ['Blitz', 'Zauber und Talente'],
+  ['Blitz', 'Sternenkarte (Fertigkeiten)'],
   ['Schriftrolle', 'Questbuch'],
   ['Karte', 'Übersichtskarte  (zwei Finger: Zoom)'],
   ['Balken', 'Menü, Speichern und Laden'],
@@ -6769,7 +7171,7 @@ const HELPLINES = [
   ['E', 'Reden / Benutzen / Öffnen'],
   ['Q', 'Schnellster Heiltrank'],
   ['I', 'Inventar und Ausrüstung'],
-  ['K', 'Zauber und Talente'],
+  ['K', 'Sternenkarte (Fertigkeiten)'],
   ['J', 'Questbuch'],
   ['M', 'Übersichtskarte'],
   ['F5 / F9', 'Speichern / Laden'],
@@ -7106,7 +7508,14 @@ window.addEventListener('keydown', function (e) {
     case 'F9': loadGame(); break;
     case 'Digit1': case 'Digit2': case 'Digit3': case 'Digit4': case 'Digit5': case 'Digit6': {
       const i = parseInt(c.slice(5), 10) - 1;
-      if (UI.modal === 'skill') { const sp = SPELLS[UI.skillSel]; if (PL.ranks[sp.k] >= 1) { PL.bar[i] = sp.k; sfx('uiSel'); } }
+      if (UI.modal === 'skill') {
+        const nd = treeSelNode();
+        if (nd.t === 'spell' && nodeRank(nd) >= 1) {
+          const old2 = PL.bar.indexOf(nd.k);
+          if (old2 >= 0 && old2 !== i) PL.bar[old2] = PL.bar[i];
+          PL.bar[i] = nd.k; sfx('uiSel');
+        } else sfx('err');
+      }
       else if (!UI.modal) { UI.selSpell = i; cast(PL.bar[i]); }
       break;
     }
@@ -7463,7 +7872,7 @@ function saveGame(silent) {
       v: 1, t: Date.now(), seed: GAME.seed, time: GAME.time,
       pl: {
         x: PL.x, y: PL.y, lvl: PL.lvl, xp: PL.xp, xpNext: PL.xpNext, gold: PL.gold, sp: PL.sp,
-        hp: PL.hp, mp: PL.mp, eq: PL.eq, inv: PL.inv, ranks: PL.ranks, tal: PL.tal, bar: PL.bar,
+        hp: PL.hp, mp: PL.mp, eq: PL.eq, inv: PL.inv, ranks: PL.ranks, gift: PL.gift, tal: PL.tal, bar: PL.bar,
         kills: PL.kills, q: PL.q
       },
       pois: W.pois.map(function (p) { return [p.found ? 1 : 0, p.wpOn ? 1 : 0]; }),
@@ -7485,7 +7894,10 @@ function loadGame() {
     const p = d.pl;
     PL.x = p.x; PL.y = p.y; PL.lvl = p.lvl; PL.xp = p.xp; PL.xpNext = p.xpNext;
     PL.gold = p.gold; PL.sp = p.sp; PL.eq = p.eq; PL.inv = p.inv;
-    PL.ranks = p.ranks; PL.tal = p.tal; PL.bar = p.bar; PL.kills = p.kills || 0; PL.q = p.q || {};
+    PL.ranks = p.ranks; PL.tal = p.tal; PL.bar = p.bar;
+    SPELLS.forEach(function (sp) { if (PL.ranks[sp.k] === undefined) PL.ranks[sp.k] = 0; });
+    TALENTS.forEach(function (tl) { if (PL.tal[tl.k] === undefined) PL.tal[tl.k] = 0; });
+    PL.gift = p.gift || { arcane: 1, shield: min(1, PL.ranks.shield), dash: min(1, PL.ranks.dash) }; PL.kills = p.kills || 0; PL.q = p.q || {};
     PL.buffs = []; PL.cds = {}; PL.shield = 0; PL.dead = 0; PL.deadT = 0;
     let maxUid = 1;
     PL.inv.forEach(function (i) { maxUid = max(maxUid, i.uid || 0); });
@@ -7509,7 +7921,7 @@ function loadGame() {
       W.special[i].done = v;
       if (v && W.special[i].prop) { if (W.special[i].k === 'katze') W.special[i].prop.gone = 1; else W.special[i].prop.v = 1; }
     });
-    foes.length = 0; projs.length = 0; parts.length = 0; drops.length = 0; areas.length = 0;
+    foes.length = 0; projs.length = 0; parts.length = 0; drops.length = 0; areas.length = 0; allies.length = 0;
     BOSSACTIVE = null; GAME.title = 0; GAME.won = 0; UI.modal = null;
     refreshStats();
     CAM.x = PL.x - VW / 2; CAM.y = PL.y - VH / 2;
@@ -7541,7 +7953,8 @@ function newGame() {
   UI.modal = null; UI.confirm = null;
   PL.lvl = 1; PL.xp = 0; PL.xpNext = xpForLevel(2); PL.gold = 45; PL.sp = 0; PL.kills = 0;
   PL.inv = []; PL.q = {}; PL.buffs = []; PL.cds = {}; PL.shield = 0; PL.dead = 0; PL.deadT = 0;
-  PL.ranks = { arcane: 1, fire: 0, frost: 0, bolt: 0, shield: 1, dash: 1, heal: 0, meteor: 0 };
+  PL.ranks = { arcane: 1, fire: 0, frost: 0, bolt: 0, shield: 1, dash: 1, heal: 0, meteor: 0, familiar: 0, aegis: 0, timestop: 0 };
+  PL.gift = { arcane: 1, shield: 1, dash: 1 };
   PL.tal = { vit: 0, res: 0, foc: 0, pre: 0, agi: 0, war: 0 };
   PL.bar = ['arcane', 'shield', 'dash', 'fire', 'frost', 'bolt'];
   PL.eq = { staff: null, robe: null, hood: null, boots: null, amulet: null, ring: null };
@@ -7561,7 +7974,7 @@ function newGame() {
   W.special.forEach(function (s) { s.done = 0; if (s.prop) { s.prop.gone = 0; s.prop.v = s.k === 'katze' ? 2 : 0; } });
   GAME.time = 60; GAME.title = 0; GAME.won = 0; GAME.winT = 0; GAME.citadelOpen = 0;
   GAME.bossKilled = {}; GAME.inCitadel = 0;
-  foes.length = 0; projs.length = 0; parts.length = 0; drops.length = 0; areas.length = 0; dmgs.length = 0;
+  foes.length = 0; projs.length = 0; parts.length = 0; drops.length = 0; areas.length = 0; dmgs.length = 0; allies.length = 0;
   TOASTS.length = 0;
   BOSSACTIVE = null;
   CAM.x = PL.x - VW / 2; CAM.y = PL.y - VH / 2;

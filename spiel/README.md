@@ -34,13 +34,44 @@ Ortsmarkierungen, Questziel und Schnellreise zwischen berührten Wegsteinen.
 
 ## Der Magier
 
-* **8 Zauber** mit je 5 Rängen: Arkanpfeil, Feuerball, Frostnova, Kettenblitz,
-  Arkanschild, Phasenschritt, Lebensquell und Sternenfall. Höhere Ränge ändern das
-  Verhalten (Mehrfachgeschosse, Zielsuche, Einfrieren, zusätzliche Sprünge,
-  Reflexion, Detonation beim Ausweichen …).
+* **11 Zauber** mit je 5 Rängen: Arkanpfeil, Feuerball, Frostnova, Kettenblitz,
+  Arkanschild, Phasenschritt, Lebensquell, Sternenfall, Sternenvertrauter,
+  Sternenaegis und Stunde des Stillstands. Höhere Ränge ändern das Verhalten
+  (Mehrfachgeschosse, Zielsuche, Einfrieren, zusätzliche Sprünge, Reflexion,
+  Detonation beim Ausweichen …).
 * **6 Talente** (Vitalität, Arkane Reserve, Fokus, Präzision, Gewandtheit,
   Schutzgeist) mit je 5 Rängen.
 * Fertigkeitspunkte gibt es pro Stufe und aus Quests.
+
+### Die Sternenkarte
+
+Alle Zauber und Talente liegen als Sternbild auf einer Karte (`K`): links steht
+**Der Funke**, von ihm gehen drei Ketten nach rechts.
+
+| Zweig | Kette |
+| --- | --- |
+| **Offensiv** | Fokus → Feuerball → Präzision → Kettenblitz → Frostnova → *Sternenfall* |
+| **Defensiv** | Vitalität → Arkanschild → Schutzgeist → Lebensquell → *Sternenaegis* |
+| **Utility** | Arkane Reserve → Phasenschritt → Gewandtheit → Sternenvertrauter → *Stunde des Stillstands* |
+
+Jeder Stern braucht seinen Vorgänger: ohne Fokus kein Feuerball, ohne
+Phasenschritt kein Vertrauter. Am Ende jeder Kette wartet eine **Ultimative**,
+die zusätzlich **8 investierte Punkte im eigenen Zweig** verlangt:
+
+* **Sternenfall** – ein Meteorregen auf einen Bereich.
+* **Sternenaegis** – ein Sternenkranz macht dich mehrere Sekunden unverwundbar,
+  stößt alles von dir fort und heilt beim Verklingen.
+* **Stunde des Stillstands** – alles im weiten Umkreis bleibt stehen.
+
+Der **Sternenvertraute** ist eine Beschwörung: ein Funkengeist kreist um dich
+und beschießt selbständig, was in seine Nähe kommt.
+
+Zauber, die eine Quest schenkt, bleiben Geschenke – sie kosten keinen Punkt und
+überstehen auch das Zurücksetzen.
+
+**Zurücksetzen:** Auf der Sternenkarte lässt sich alles gegen Gold löschen
+(80 Gold plus 30 je verteiltem Punkt). Alle selbst investierten Punkte kommen
+zurück und können neu verteilt werden.
 
 ## Inventar
 
@@ -83,7 +114,7 @@ Meteorregen, Schattenklonen und Leerenkristallen, die ihn heilen, solange sie st
 | `E` | Reden / Benutzen / Öffnen |
 | `Q` | Heiltrank |
 | `I` | Gepäck und Ausrüstung |
-| `K` | Zauber und Talente |
+| `K` | Sternenkarte (Fertigkeiten) |
 | `J` | Questbuch |
 | `M` / `Tab` | Übersichtskarte |
 | `F5` / `F9` | Speichern / Laden |
@@ -104,7 +135,7 @@ runde Tasten, alle mindestens 46 CSS-Pixel groß:
 | Hand | Reden / Benutzen / Öffnen |
 | Pfeile | Phasenschritt |
 | Flasche | Heiltrank |
-| Beutel · Blitz · Schriftrolle · Karte | Gepäck, Zauber, Questbuch, Übersichtskarte |
+| Beutel · Blitz · Schriftrolle · Karte | Gepäck, Sternenkarte, Questbuch, Übersichtskarte |
 | Balken | Menü (Speichern, Laden, Ton) |
 | Rahmen | Vollbild an oder aus |
 
