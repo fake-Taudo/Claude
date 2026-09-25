@@ -1,0 +1,5 @@
+# Nach dem Livegang die Domain in der Sitemap-Zeile anpassen
+User-agent: *
+Allow: /
+
+Sitemap: https://studio-kern.de/sitemap.xml

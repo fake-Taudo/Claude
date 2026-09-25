@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- ===== Seitentitel & Beschreibung (für Google und beim Teilen) ===== -->
+  <title>Studio Kern – Websites, die verkaufen | Webdesign aus Meerbusch</title>
+  <meta name="description" content="Studio Kern gestaltet und entwickelt moderne Websites, Landingpages und Online-Shops für Selbstständige und Unternehmen in Meerbusch, Düsseldorf und ganz NRW – zum Festpreis.">
+  <link rel="canonical" href="https://studio-kern.de/">
+  <meta name="theme-color" content="#000000">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:site_name" content="Studio Kern">
+  <meta property="og:title" content="Studio Kern – Websites, die verkaufen">
+  <meta property="og:description" content="Moderne Websites für Selbstständige und Unternehmen. Webdesign aus Meerbusch, NRW.">
+  <meta property="og:url" content="https://studio-kern.de/">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <!-- Markiert, dass JavaScript läuft (nur dann werden Elemente zum Einblenden versteckt) -->
+  <script>document.documentElement.classList.add("js");</script>
+  <script src="assets/js/main.js" defer></script>
+
+  <!-- Strukturierte Daten für Suchmaschinen -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "Studio Kern",
+    "description": "Webdesign, Landingpages, Online-Shops sowie Wartung und Hosting von Websites.",
+    "url": "https://studio-kern.de/",
+    "email": "Paulmatuszek@icloud.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Meerbusch",
+      "addressRegion": "Nordrhein-Westfalen",
+      "addressCountry": "DE"
+    },
+    "areaServed": ["Meerbusch", "Düsseldorf", "Nordrhein-Westfalen"]
+  }
+  </script>
+</head>
+<body class="page--dark-top">
+  <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+  <!-- ==================================================================
+       HINWEIS-LEISTE ganz oben (scrollt mit weg)
+       ================================================================== -->
+  <aside class="ribbon" aria-label="Hinweis">
+    <p>
+      Kostenloses Erstgespräch – Antwort in der Regel innerhalb von 24 Stunden.
+      <a class="ribbon__link" href="#kontakt">Jetzt anfragen</a>
+    </p>
+  </aside>
+
+  <!-- ==================================================================
+       NAVIGATION – schwebende Glasleiste, bleibt beim Scrollen oben
+       ================================================================== -->
+  <header class="nav" data-nav>
+    <div class="nav__bar">
+      <a class="logo" href="#top" aria-label="Studio Kern – zum Seitenanfang">Studio Kern<span class="logo__dot" aria-hidden="true"></span></a>
+
+      <nav class="nav__menu" id="menu" aria-label="Hauptnavigation">
+        <ul class="nav__list" role="list">
+          <li><a href="#leistungen">Leistungen</a></li>
+          <li><a href="#arbeiten">Arbeiten</a></li>
+          <li><a href="#ablauf">Ablauf</a></li>
+          <li><a href="#ueber-mich">Über mich</a></li>
+          <li><a href="#kontakt">Kontakt</a></li>
+        </ul>
+      </nav>
+
+      <a class="btn btn--small nav__cta" href="#kontakt">Projekt starten</a>
+
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Menü öffnen" data-nav-toggle>
+        <span class="nav__toggle-bar"></span>
+        <span class="nav__toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="inhalt">
+
+    <!-- ================================================================
+         1. HERO (dunkel)
+         Der blaue Punkt (class="punkt") ist das Markenzeichen von
+         Studio Kern und beendet jede große Überschrift.
+         Wörter in <strong> leuchten im grauen Fließtext hell auf.
+         ================================================================ -->
+    <section class="hero section--dark" id="top" aria-labelledby="hero-title">
+      <div class="container hero__intro">
+        <h1 class="hero__title" id="hero-title">
+          <span class="hero__kicker">Webdesign aus Meerbusch</span>
+          Websites, die verkaufen<span class="punkt">.</span>
+        </h1>
+        <p class="hero__lead">
+          Design, Technik und Texte aus einer Hand –
+          <strong>für Unternehmen, die online mehr Kunden gewinnen wollen.</strong>
+        </p>
+        <div class="hero__actions">
+          <a class="btn btn--large" href="#kontakt">Projekt starten</a>
+          <a class="btn btn--large btn--outline" href="#arbeiten">Arbeiten ansehen</a>
+        </div>
+      </div>
+
+      <!-- Geräte: Laptop + Smartphone ab Tablet, auf dem Handy drei aufgefächerte
+           Smartphones. Die Benachrichtigung ist ein eigenes, animiertes Element. -->
+      <div class="hero__visual" role="img"
+           aria-label="Websites von Studio Kern auf Laptop und Smartphones, dazu die Meldung über einen neuen Online-Termin">
+        <img class="fan__side fan__side--left" src="assets/img/phone-brandt.svg" width="218" height="442"
+             alt="" loading="lazy" decoding="async">
+        <picture class="hero__main">
+          <source media="(max-width: 733px)" srcset="assets/img/phone-nordlicht.svg" width="218" height="442">
+          <img src="assets/img/hero-geraete.svg" width="1120" height="720" alt="" fetchpriority="high" decoding="async">
+        </picture>
+        <img class="fan__side fan__side--right" src="assets/img/phone-mira.svg" width="218" height="442"
+             alt="" loading="lazy" decoding="async">
+
+        <div class="notify" aria-hidden="true">
+          <span class="notify__icon">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="notify__text">
+            <strong>Neuer Online-Termin</strong>
+            <span>Di, 10:30 Uhr · Praxis Nordlicht</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Belege: Messwerte DIESER Seite. Nach größeren Änderungen neu messen
+           (Chrome → Entwicklertools → Lighthouse, Gerät „Mobil“). -->
+      <div class="container">
+        <div class="proof" data-reveal>
+          <p class="proof__intro">
+            <strong>Die beste Arbeitsprobe ist diese Seite selbst.</strong>
+            Gemessen mit Google Lighthouse auf dem Handy.
+          </p>
+          <dl class="stats">
+            <div class="stat">
+              <dt>Ladetempo</dt>
+              <dd>99<small>/100</small></dd>
+            </div>
+            <div class="stat">
+              <dt>Barrierefreiheit</dt>
+              <dd>100<small>/100</small></dd>
+            </div>
+            <div class="stat">
+              <dt>Suchmaschinen&shy;optimierung</dt>
+              <dd>100<small>/100</small></dd>
+            </div>
+            <div class="stat">
+              <dt>Tracking-Cookies</dt>
+              <dd>0</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         2. LEISTUNGEN
+         ================================================================ -->
+    <section class="section section--alt" id="leistungen" aria-labelledby="leistungen-title">
+      <div class="container">
+        <header class="section-head" data-reveal>
+          <h2 class="section-title section-title--wide" id="leistungen-title">
+            Alles, was Ihre Website braucht.<br>
+            Alles aus einer Hand<span class="punkt">.</span>
+          </h2>
+          <p class="section-lead">
+            Von der ersten Skizze bis zum laufenden Betrieb –
+            <strong>mit einem festen Ansprechpartner, der Ihr Projekt kennt.</strong>
+          </p>
+        </header>
+
+        <div class="services">
+          <article class="card service service--wide" data-reveal>
+            <div class="service__body">
+              <h3 class="service__name">Website-Design</h3>
+              <p class="service__headline">Individuell gestaltet. Kein Baukasten.</p>
+              <p class="service__text">
+                Ein Auftritt, der zu Ihrer Marke passt: klar strukturiert, auf jedem Gerät
+                gut lesbar und darauf ausgelegt, aus Besuchern Anfragen zu machen.
+              </p>
+            </div>
+            <div class="service__media">
+              <img src="assets/img/leistung-design.svg" width="640" height="400" alt="" loading="lazy" decoding="async">
+            </div>
+          </article>
+
+          <article class="card service" data-reveal>
+            <div class="service__body">
+              <h3 class="service__name">Landingpages</h3>
+              <p class="service__headline">Eine Seite. Ein Ziel. Mehr Anfragen.</p>
+              <p class="service__text">
+                Für Ihre Kampagne, Ihr neues Angebot oder Ihre Anzeigen: fokussierte Seiten
+                mit einer klaren Handlungsaufforderung – schnell umgesetzt und messbar.
+              </p>
+            </div>
+            <div class="service__media">
+              <img src="assets/img/leistung-landingpage.svg" width="640" height="400" alt="" loading="lazy" decoding="async">
+            </div>
+          </article>
+
+          <article class="card service" data-reveal style="--delay: .1s">
+            <div class="service__body">
+              <h3 class="service__name">E-Commerce</h3>
+              <p class="service__headline">Ihr Shop. Schnell, sicher, verkaufsstark.</p>
+              <p class="service__text">
+                Übersichtliche Produktseiten, ein reibungsloser Bestellprozess und gängige
+                Zahlungsarten – damit aus Interesse ein Kauf wird.
+              </p>
+            </div>
+            <div class="service__media">
+              <img src="assets/img/leistung-shop.svg" width="640" height="400" alt="" loading="lazy" decoding="async">
+            </div>
+          </article>
+
+          <article class="card service service--wide service--flip" data-reveal>
+            <div class="service__body">
+              <h3 class="service__name">Wartung &amp; Hosting</h3>
+              <p class="service__headline">Läuft. Auch nach dem Launch.</p>
+              <p class="service__text">
+                Updates, Backups, Sicherheit und kleine Änderungen übernehme ich für Sie.
+                Eine kurze Nachricht genügt – Sie konzentrieren sich auf Ihr Geschäft.
+              </p>
+            </div>
+            <div class="service__media">
+              <img src="assets/img/leistung-wartung.svg" width="640" height="400" alt="" loading="lazy" decoding="async">
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         3. ARBEITEN – horizontale Galerie (wischen, scrollen oder Pfeile)
+         Platzhalter-Projekte: Vor dem Livegang durch echte Referenzen ersetzen.
+         Echte Screenshots (z. B. 1600 × 1000 px als .webp) nach assets/img/
+         legen und unten bei src eintragen. Anleitung: README.md
+         ================================================================ -->
+    <section class="section section--dark" id="arbeiten" aria-labelledby="arbeiten-title">
+      <div class="container">
+        <header class="section-head section-head--split" data-reveal>
+          <h2 class="section-title" id="arbeiten-title">Ausgewählte Projekte<span class="punkt">.</span></h2>
+          <p class="section-lead">
+            Konzepte und Entwürfe für <strong>Praxen, Handwerksbetriebe, Beratungen und Gastronomie.</strong>
+          </p>
+        </header>
+      </div>
+
+      <div class="gallery" data-gallery data-reveal>
+        <div class="gallery__track" id="projekte" tabindex="0" role="region" aria-label="Projekte" data-gallery-track>
+          <figure class="slide">
+            <div class="slide__media">
+              <img src="assets/img/projekt-nordlicht.svg" width="1280" height="800"
+                   alt="Startseite der Praxis Nordlicht mit Online-Terminbuchung" loading="lazy" decoding="async">
+            </div>
+            <figcaption class="slide__caption">
+              <strong>Praxis Nordlicht.</strong>
+              Website für eine Hausarztpraxis – mit Online-Terminbuchung, die rund um die Uhr funktioniert.
+            </figcaption>
+          </figure>
+
+          <figure class="slide">
+            <div class="slide__media">
+              <img src="assets/img/projekt-brandt.svg" width="1280" height="800"
+                   alt="Startseite der Tischlerei Brandt mit Referenzgalerie" loading="lazy" decoding="async">
+            </div>
+            <figcaption class="slide__caption">
+              <strong>Tischlerei Brandt.</strong>
+              Auftritt für einen Handwerksbetrieb – Referenzen im Mittelpunkt und ein direkter Weg zur Anfrage.
+            </figcaption>
+          </figure>
+
+          <figure class="slide">
+            <div class="slide__media">
+              <img src="assets/img/projekt-aurum.svg" width="1280" height="800"
+                   alt="Startseite von Aurum Consulting in Dunkelblau und Gold" loading="lazy" decoding="async">
+            </div>
+            <figcaption class="slide__caption">
+              <strong>Aurum Consulting.</strong>
+              Corporate Website für eine Strategieberatung – seriös, klar und auf Erstgespräche ausgelegt.
+            </figcaption>
+          </figure>
+
+          <figure class="slide">
+            <div class="slide__media">
+              <img src="assets/img/projekt-mira.svg" width="1280" height="800"
+                   alt="Startseite des Café Mira mit Speisekarte und Tischreservierung" loading="lazy" decoding="async">
+            </div>
+            <figcaption class="slide__caption">
+              <strong>Café Mira.</strong>
+              One-Pager für ein Café – mit Speisekarte, Öffnungszeiten und Tischreservierung.
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="container gallery__controls">
+          <button class="gallery__paddle" type="button" aria-label="Vorheriges Projekt" aria-controls="projekte" data-gallery-prev>
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="gallery__paddle" type="button" aria-label="Nächstes Projekt" aria-controls="projekte" data-gallery-next>
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="work-cta" data-reveal>
+          <p class="work-cta__text">Ihr Projekt könnte das nächste sein<span class="punkt">.</span></p>
+          <a class="link-arrow" href="#kontakt">Projekt starten</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         4. ABLAUF
+         Die blaue Linie füllt sich beim Scrollen (main.js, data-steps).
+         ================================================================ -->
+    <section class="section" id="ablauf" aria-labelledby="ablauf-title">
+      <div class="container process">
+        <div class="process__intro" data-reveal>
+          <h2 class="section-title" id="ablauf-title">In vier Schritten online<span class="punkt">.</span></h2>
+          <p class="section-lead">
+            Transparent, planbar und ohne Fachchinesisch.
+            <strong>Sie wissen jederzeit, woran gerade gearbeitet wird.</strong>
+          </p>
+          <a class="btn process__cta" href="#kontakt">Erstgespräch vereinbaren</a>
+        </div>
+
+        <ol class="steps" role="list" data-steps>
+          <li class="step">
+            <span class="step__num">Schritt 1</span>
+            <h3 class="step__title">Kostenloses Erstgespräch</h3>
+            <p class="step__text">
+              Wir sprechen über Ihr Vorhaben, Ihre Zielgruppe und Ihr Budget. Sie erhalten eine
+              ehrliche Einschätzung – unverbindlich.
+            </p>
+          </li>
+          <li class="step">
+            <span class="step__num">Schritt 2</span>
+            <h3 class="step__title">Konzept &amp; Festpreis</h3>
+            <p class="step__text">
+              Sie bekommen eine klare Struktur für Ihre Website und ein Angebot zum Festpreis.
+              Keine versteckten Kosten, keine Stundenzettel.
+            </p>
+          </li>
+          <li class="step">
+            <span class="step__num">Schritt 3</span>
+            <h3 class="step__title">Design &amp; Umsetzung</h3>
+            <p class="step__text">
+              Ich gestalte und entwickle Ihre Website. Nach dem ersten Entwurf folgt eine
+              Feedback-Runde, danach der Feinschliff.
+            </p>
+          </li>
+          <li class="step">
+            <span class="step__num">Schritt 4</span>
+            <h3 class="step__title">Livegang &amp; Betreuung</h3>
+            <p class="step__text">
+              Domain verbinden, Technik prüfen, online gehen. Auf Wunsch kümmere ich mich danach
+              um Hosting, Updates und Änderungen.
+            </p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         5. ÜBER MICH
+         Tipp: Die Illustration lässt sich durch ein echtes Foto ersetzen
+         (Hochformat 4:5, z. B. 960 × 1200 px als .webp oder .jpg).
+         ================================================================ -->
+    <section class="section section--dark" id="ueber-mich" aria-labelledby="ueber-mich-title">
+      <div class="container">
+        <div class="about">
+          <div class="about__media" data-reveal>
+            <img src="assets/img/ueber-mich.svg" width="800" height="1000"
+                 alt="Aufgeräumter Arbeitsplatz mit Monitor, auf dem ein Website-Entwurf zu sehen ist"
+                 loading="lazy" decoding="async">
+          </div>
+
+          <div class="about__text" data-reveal style="--delay: .1s">
+            <p class="eyebrow">Über mich</p>
+            <h2 class="section-title" id="ueber-mich-title">Ein Ansprechpartner. Von der Idee bis zum Launch<span class="punkt">.</span></h2>
+            <div class="about__copy">
+              <p>
+                Hinter Studio Kern steht
+                <strong>kein großes Agenturteam, sondern ein fester Ansprechpartner: ich.</strong>
+                Von Meerbusch aus gestalte und entwickle ich Websites für Selbstständige, Praxen,
+                Handwerksbetriebe und kleine Unternehmen.
+              </p>
+              <p>
+                Mein Anspruch ist einfach: <strong>Eine Website soll Ihnen Kunden bringen.</strong>
+                Deshalb denke ich jede Seite vom Besucher aus – mit einer klaren Botschaft, kurzen
+                Ladezeiten und einer Bedienung, die einfach funktioniert.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <ul class="values" role="list" data-reveal>
+          <li><strong>Direkter Draht.</strong> Sie sprechen immer mit der Person, die Ihre Website auch umsetzt.</li>
+          <li><strong>Faire Festpreise.</strong> Sie wissen vor dem Start, was Ihr Projekt kostet.</li>
+          <li><strong>Saubere Technik.</strong> Schnell, sicher und ohne unnötigen Ballast.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         6. KONTAKT
+         ================================================================ -->
+    <section class="section section--alt" id="kontakt" aria-labelledby="kontakt-title">
+      <div class="container contact">
+        <div class="contact__intro" data-reveal>
+          <h2 class="section-title" id="kontakt-title">Lassen Sie uns starten<span class="punkt">.</span></h2>
+          <p class="section-lead">
+            Erzählen Sie mir kurz von Ihrem Vorhaben.
+            <strong>Sie erhalten eine persönliche Antwort mit einer ersten Einschätzung</strong>
+            – kostenlos und unverbindlich.
+          </p>
+          <dl class="contact__details">
+            <div>
+              <dt>E-Mail</dt>
+              <dd><a href="mailto:Paulmatuszek@icloud.com">Paulmatuszek@icloud.com</a></dd>
+            </div>
+            <div>
+              <dt>Standort</dt>
+              <dd>Meerbusch, Nordrhein-Westfalen</dd>
+            </div>
+            <div>
+              <dt>Antwortzeit</dt>
+              <dd>In der Regel innerhalb von 24 Stunden</dd>
+            </div>
+          </dl>
+        </div>
+
+        <!--
+          KONTAKTFORMULAR
+          Versand über Web3Forms (https://web3forms.com, kostenlos):
+          1. Auf web3forms.com Ihre E-Mail-Adresse eingeben → Sie erhalten einen Access Key.
+          2. Den Key unten bei name="access_key" statt DEIN-ACCESS-KEY eintragen. Fertig.
+          Solange dort DEIN-ACCESS-KEY steht, öffnet das Formular ersatzweise das
+          E-Mail-Programm des Besuchers mit einer vorbereiteten Nachricht an data-fallback-email.
+        -->
+        <form class="card form" action="https://api.web3forms.com/submit" method="POST" novalidate
+              data-contact-form data-fallback-email="Paulmatuszek@icloud.com" data-reveal style="--delay: .1s">
+          <input type="hidden" name="access_key" value="DEIN-ACCESS-KEY">
+          <input type="hidden" name="subject" value="Neue Projektanfrage über die Website">
+          <input type="hidden" name="from_name" value="Website Studio Kern">
+          <input type="checkbox" name="botcheck" class="hp" tabindex="-1" aria-hidden="true">
+
+          <div class="form__fields" data-form-fields>
+            <div class="form__grid">
+              <div class="field">
+                <label class="field__label" for="f-name">Name</label>
+                <input class="input" id="f-name" name="name" type="text" autocomplete="name" required
+                       aria-describedby="f-name-error">
+                <p class="field__error" id="f-name-error"></p>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="f-email">E-Mail</label>
+                <input class="input" id="f-email" name="email" type="email" autocomplete="email" required
+                       aria-describedby="f-email-error">
+                <p class="field__error" id="f-email-error"></p>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="f-company">Unternehmen <span class="field__optional">(optional)</span></label>
+                <input class="input" id="f-company" name="company" type="text" autocomplete="organization">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="f-type">Projektart</label>
+                <select class="input" id="f-type" name="project_type">
+                  <option>Neue Website</option>
+                  <option>Relaunch einer bestehenden Website</option>
+                  <option>Landingpage</option>
+                  <option>Online-Shop</option>
+                  <option>Wartung &amp; Hosting</option>
+                  <option>Noch unklar</option>
+                </select>
+              </div>
+
+              <div class="field field--full">
+                <label class="field__label" for="f-budget">Budget-Rahmen</label>
+                <select class="input" id="f-budget" name="budget">
+                  <option>Noch unklar</option>
+                  <option>bis 1.500 €</option>
+                  <option>1.500 – 3.000 €</option>
+                  <option>3.000 – 6.000 €</option>
+                  <option>über 6.000 €</option>
+                </select>
+              </div>
+
+              <div class="field field--full">
+                <label class="field__label" for="f-message">Worum geht es?</label>
+                <textarea class="input" id="f-message" name="message" rows="5" minlength="10" required
+                          placeholder="Kurz zu meinem Vorhaben: …" aria-describedby="f-message-error"></textarea>
+                <p class="field__error" id="f-message-error"></p>
+              </div>
+
+              <div class="field field--full">
+                <label class="check">
+                  <input id="f-privacy" name="datenschutz" type="checkbox" value="akzeptiert" required
+                         aria-describedby="f-privacy-error">
+                  <span>Ich habe die <a href="datenschutz.html">Datenschutzerklärung</a> gelesen und bin
+                  einverstanden, dass meine Angaben zur Bearbeitung der Anfrage verwendet werden.</span>
+                </label>
+                <p class="field__error" id="f-privacy-error"></p>
+              </div>
+            </div>
+
+            <button class="btn btn--block btn--large form__submit" type="submit">Anfrage senden</button>
+            <p class="form__status" role="status" aria-live="polite" data-form-status></p>
+          </div>
+
+          <div class="form__success" tabindex="-1" hidden data-form-success>
+            <div class="form__success-icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3 class="form__success-title">Vielen Dank für Ihre Anfrage!</h3>
+            <p class="form__success-text">
+              Ich melde mich in der Regel innerhalb von 24 Stunden bei Ihnen. Bitte schauen Sie
+              sicherheitshalber auch in Ihren Spam-Ordner.
+            </p>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================================================================
+       FOOTER
+       ================================================================== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p>© <span data-year>2026</span> Studio Kern · Webdesign aus Meerbusch, NRW</p>
+      <nav class="footer__links" aria-label="Rechtliches">
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

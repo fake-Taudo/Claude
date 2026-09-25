@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <!-- Portfolio-Platzhalter „Aurum Consulting“ – durch echten Screenshot ersetzen -->
+  <defs>
+    <linearGradient id="stage" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e6eaf1"/>
+      <stop offset="1" stop-color="#ccd4e1"/>
+    </linearGradient>
+    <linearGradient id="gold-area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9a45c" stop-opacity=".32"/>
+      <stop offset="1" stop-color="#c9a45c" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="win"><rect x="100" y="90" width="1080" height="760" rx="20"/></clipPath>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="20" stdDeviation="28" flood-color="#0e1726" flood-opacity=".25"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="800" fill="url(#stage)"/>
+  <rect x="100" y="90" width="1080" height="760" rx="20" fill="#0e1726" filter="url(#shadow)"/>
+
+  <g clip-path="url(#win)">
+    <!-- Browserleiste -->
+    <rect x="100" y="90" width="1080" height="48" fill="#1a2333"/>
+    <circle cx="128" cy="114" r="6" fill="#36435c"/>
+    <circle cx="148" cy="114" r="6" fill="#36435c"/>
+    <circle cx="168" cy="114" r="6" fill="#36435c"/>
+    <rect x="440" y="102" width="400" height="24" rx="12" fill="#0f1726"/>
+    <text x="640" y="118.5" font-size="13" fill="#8a97ad" text-anchor="middle">aurum-consulting.de</text>
+
+    <!-- Navigation -->
+    <rect x="153" y="161" width="14" height="14" fill="#c9a45c" transform="rotate(45 160 168)"/>
+    <text x="180" y="176" font-size="19" font-weight="700" fill="#f4efe6" letter-spacing="4">AURUM</text>
+    <g font-size="14" fill="#8a97ad">
+      <text x="680" y="175">Leistungen</text>
+      <text x="776" y="175">Insights</text>
+      <text x="852" y="175">Über uns</text>
+    </g>
+    <rect x="950" y="152" width="180" height="36" rx="18" fill="#c9a45c"/>
+    <text x="1040" y="175" font-size="13.5" font-weight="600" fill="#0e1726" text-anchor="middle">Gespräch vereinbaren</text>
+    <rect x="100" y="198" width="1080" height="1" fill="#1a2638"/>
+
+    <!-- Hero -->
+    <text x="150" y="268" font-size="15" font-weight="600" fill="#c9a45c">Strategieberatung für den Mittelstand</text>
+    <g font-size="52" font-weight="700" fill="#f4efe6" letter-spacing="-1.4">
+      <text x="150" y="328">Klarheit für</text>
+      <text x="150" y="388">Ihre nächste</text>
+      <text x="150" y="448">Entscheidung.</text>
+    </g>
+    <g font-size="18" fill="#8a97ad">
+      <text x="150" y="494">Wir begleiten Unternehmen von der</text>
+      <text x="150" y="520">Analyse bis zur Umsetzung.</text>
+    </g>
+    <rect x="150" y="548" width="210" height="50" rx="25" fill="#c9a45c"/>
+    <text x="255" y="578.5" font-size="15.5" font-weight="600" fill="#0e1726" text-anchor="middle">Erstgespräch buchen</text>
+
+    <!-- Diagramm -->
+    <rect x="740.5" y="232.5" width="389" height="329" rx="24" fill="#152238" stroke="#22314b"/>
+    <text x="772" y="274" font-size="13" fill="#8a97ad">Umsatzentwicklung</text>
+    <text x="772" y="308" font-size="28" font-weight="700" fill="#f4efe6" letter-spacing="-.5">+38 %</text>
+    <g fill="#22314b">
+      <rect x="772" y="360" width="326" height="1"/>
+      <rect x="772" y="410" width="326" height="1"/>
+      <rect x="772" y="460" width="326" height="1"/>
+      <rect x="772" y="510" width="326" height="1"/>
+    </g>
+    <path d="M772 500 L826 478 L880 486 L934 440 L988 448 L1042 392 L1098 360 V530 H772 Z" fill="url(#gold-area)"/>
+    <path d="M772 500 L826 478 L880 486 L934 440 L988 448 L1042 392 L1098 360" fill="none" stroke="#c9a45c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="1098" cy="360" r="11" fill="#c9a45c" fill-opacity=".22"/>
+    <circle cx="1098" cy="360" r="5" fill="#c9a45c"/>
+
+    <!-- Leistungs-Karten -->
+    <g>
+      <rect x="150" y="626" width="310" height="150" rx="18" fill="#152238"/>
+      <rect x="178" y="656" width="32" height="3" fill="#c9a45c"/>
+      <text x="178" y="702" font-size="20" font-weight="600" fill="#f4efe6">Strategie</text>
+      <text x="178" y="730" font-size="14.5" fill="#8a97ad">Ziele klar definieren</text>
+
+      <rect x="485" y="626" width="310" height="150" rx="18" fill="#152238"/>
+      <rect x="513" y="656" width="32" height="3" fill="#c9a45c"/>
+      <text x="513" y="702" font-size="20" font-weight="600" fill="#f4efe6">Finanzen</text>
+      <text x="513" y="730" font-size="14.5" fill="#8a97ad">Zahlen, die tragen</text>
+
+      <rect x="820" y="626" width="310" height="150" rx="18" fill="#152238"/>
+      <rect x="848" y="656" width="32" height="3" fill="#c9a45c"/>
+      <text x="848" y="702" font-size="20" font-weight="600" fill="#f4efe6">Wachstum</text>
+      <text x="848" y="730" font-size="14.5" fill="#8a97ad">Chancen gezielt nutzen</text>
+    </g>
+  </g>
+</svg>

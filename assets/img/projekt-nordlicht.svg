@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <!-- Portfolio-Platzhalter „Praxis Nordlicht“ – durch echten Screenshot ersetzen -->
+  <defs>
+    <linearGradient id="stage" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e5f1f2"/>
+      <stop offset="1" stop-color="#c9dfe2"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5eead4"/>
+      <stop offset="1" stop-color="#0f766e"/>
+    </linearGradient>
+    <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a2029"/>
+      <stop offset="1" stop-color="#15505a"/>
+    </linearGradient>
+    <linearGradient id="aur1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5eead4" stop-opacity=".1"/>
+      <stop offset=".5" stop-color="#5eead4" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#67e8f9" stop-opacity=".3"/>
+    </linearGradient>
+    <linearGradient id="aur2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a7f3d0" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#a7f3d0" stop-opacity=".05"/>
+    </linearGradient>
+    <clipPath id="win"><rect x="100" y="90" width="1080" height="760" rx="20"/></clipPath>
+    <clipPath id="img"><rect x="680" y="232" width="450" height="330" rx="24"/></clipPath>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="20" stdDeviation="28" flood-color="#0b3b3f" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="800" fill="url(#stage)"/>
+  <rect x="100" y="90" width="1080" height="760" rx="20" fill="#fff" filter="url(#shadow)"/>
+
+  <g clip-path="url(#win)">
+    <!-- Browserleiste -->
+    <rect x="100" y="90" width="1080" height="48" fill="#f1f3f4"/>
+    <circle cx="128" cy="114" r="6" fill="#d7dcdd"/>
+    <circle cx="148" cy="114" r="6" fill="#d7dcdd"/>
+    <circle cx="168" cy="114" r="6" fill="#d7dcdd"/>
+    <rect x="440" y="102" width="400" height="24" rx="12" fill="#fff"/>
+    <text x="640" y="118.5" font-size="13" fill="#6b7b7b" text-anchor="middle">praxis-nordlicht.de</text>
+
+    <!-- Navigation -->
+    <circle cx="166" cy="170" r="13" fill="url(#mark)"/>
+    <text x="190" y="176" font-size="18" font-weight="700" fill="#10302f" letter-spacing="-.3">Praxis Nordlicht</text>
+    <g font-size="14" fill="#4b5b5b">
+      <text x="720" y="175">Leistungen</text>
+      <text x="816" y="175">Team</text>
+      <text x="876" y="175">Kontakt</text>
+    </g>
+    <rect x="966" y="152" width="164" height="36" rx="18" fill="#0f766e"/>
+    <text x="1048" y="175" font-size="14" font-weight="600" fill="#fff" text-anchor="middle">Termin buchen</text>
+    <rect x="100" y="198" width="1080" height="1" fill="#edf2f2"/>
+
+    <!-- Hero -->
+    <text x="150" y="272" font-size="15" font-weight="600" fill="#0f766e">Hausarztpraxis</text>
+    <g font-size="54" font-weight="700" fill="#10302f" letter-spacing="-1.5">
+      <text x="150" y="336">Ihre Gesundheit</text>
+      <text x="150" y="398">in guten Händen.</text>
+    </g>
+    <g font-size="18" fill="#5b6b6b">
+      <text x="150" y="446">Moderne Medizin, persönliche Betreuung</text>
+      <text x="150" y="472">und Termine rund um die Uhr online.</text>
+    </g>
+    <rect x="150" y="504" width="214" height="52" rx="26" fill="#0f766e"/>
+    <text x="257" y="535.5" font-size="16" font-weight="600" fill="#fff" text-anchor="middle">Termin online buchen</text>
+    <text x="392" y="535.5" font-size="16" font-weight="500" fill="#0f766e">Sprechzeiten ›</text>
+
+    <!-- Bild: Nordlicht -->
+    <rect x="680" y="232" width="450" height="330" rx="24" fill="url(#night)"/>
+    <g clip-path="url(#img)">
+      <g fill="#fff" fill-opacity=".7">
+        <circle cx="720" cy="268" r="1.6"/><circle cx="790" cy="252" r="1.2"/><circle cx="868" cy="280" r="1.6"/>
+        <circle cx="950" cy="258" r="1.2"/><circle cx="1030" cy="276" r="1.6"/><circle cx="1100" cy="252" r="1.2"/>
+        <circle cx="1060" cy="310" r="1"/><circle cx="760" cy="316" r="1"/>
+      </g>
+      <path d="M680 350 C800 262 920 362 1130 252 V302 C940 392 820 302 680 412 Z" fill="url(#aur2)"/>
+      <path d="M680 402 C780 302 880 422 1130 302 V382 C960 472 820 382 680 472 Z" fill="url(#aur1)"/>
+      <path d="M680 562 V502 C760 472 820 492 880 482 C960 468 1040 502 1130 472 V562 Z" fill="#06171c"/>
+    </g>
+
+    <!-- Info-Karten -->
+    <g>
+      <rect x="150" y="606" width="310" height="170" rx="18" fill="#f1f7f7"/>
+      <circle cx="190" cy="650" r="20" fill="#d5ecea"/>
+      <path d="M190 641 V650 L196 655" fill="none" stroke="#0f766e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="174" y="710" font-size="19" font-weight="600" fill="#10302f">Sprechzeiten</text>
+      <text x="174" y="738" font-size="14.5" fill="#5b6b6b">Mo–Fr 8–18 Uhr</text>
+
+      <rect x="485" y="606" width="310" height="170" rx="18" fill="#f1f7f7"/>
+      <circle cx="525" cy="650" r="20" fill="#d5ecea"/>
+      <path d="M525 643 V657 M518 650 H532" stroke="#0f766e" stroke-width="2.5" stroke-linecap="round"/>
+      <text x="509" y="710" font-size="19" font-weight="600" fill="#10302f">Leistungen</text>
+      <text x="509" y="738" font-size="14.5" fill="#5b6b6b">Vorsorge, Impfungen, Check-ups</text>
+
+      <rect x="820" y="606" width="310" height="170" rx="18" fill="#f1f7f7"/>
+      <circle cx="860" cy="650" r="20" fill="#d5ecea"/>
+      <rect x="851" y="643" width="18" height="16" rx="3" fill="none" stroke="#0f766e" stroke-width="2.2"/>
+      <path d="M851 648.5 H869 M856 640 V645 M864 640 V645" stroke="#0f766e" stroke-width="2.2" stroke-linecap="round"/>
+      <text x="844" y="710" font-size="19" font-weight="600" fill="#10302f">Online-Termin</text>
+      <text x="844" y="738" font-size="14.5" fill="#5b6b6b">In wenigen Klicks gebucht</text>
+    </g>
+  </g>
+</svg>

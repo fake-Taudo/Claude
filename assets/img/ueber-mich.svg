@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <!-- „Über mich“: Arbeitsplatz mit Monitor. Tipp: durch ein echtes Foto ersetzen (4:5). -->
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0ede8"/>
+      <stop offset="1" stop-color="#dcd5cb"/>
+    </linearGradient>
+    <linearGradient id="light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdb99d"/>
+      <stop offset="1" stop-color="#b29a7b"/>
+    </linearGradient>
+    <linearGradient id="stand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c3c3c8"/>
+      <stop offset=".5" stop-color="#e2e2e6"/>
+      <stop offset="1" stop-color="#b9b9bf"/>
+    </linearGradient>
+    <clipPath id="screen"><rect x="156" y="256" width="488" height="288" rx="3"/></clipPath>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#5a4a36" flood-opacity=".2"/>
+    </filter>
+  </defs>
+
+  <!-- Wand, Lichteinfall, Tisch -->
+  <rect width="800" height="1000" fill="url(#wall)"/>
+  <path d="M0 0 H420 L150 720 H0 Z" fill="url(#light)"/>
+  <rect y="720" width="800" height="280" fill="url(#desk)"/>
+  <rect y="714" width="800" height="8" fill="#dccbb2"/>
+
+  <!-- Bild an der Wand -->
+  <rect x="64" y="84" width="150" height="196" rx="4" fill="#fbfaf8" filter="url(#shadow)"/>
+  <rect x="80" y="100" width="118" height="164" fill="#e8eef7"/>
+  <circle cx="139" cy="160" r="28" fill="#0071e3" fill-opacity=".9"/>
+  <rect x="100" y="214" width="78" height="4" rx="2" fill="#1d1d1f" fill-opacity=".7"/>
+  <rect x="112" y="226" width="54" height="4" rx="2" fill="#1d1d1f" fill-opacity=".35"/>
+
+  <!-- Monitor -->
+  <ellipse cx="400" cy="716" rx="120" ry="7" fill="#000" fill-opacity=".12"/>
+  <rect x="372" y="556" width="56" height="150" fill="url(#stand)"/>
+  <rect x="318" y="702" width="164" height="14" rx="6" fill="#c9c9ce"/>
+  <g filter="url(#shadow)">
+    <rect x="140" y="240" width="520" height="320" rx="16" fill="#d4d4d9"/>
+  </g>
+  <rect x="146" y="246" width="508" height="308" rx="11" fill="#111"/>
+  <g clip-path="url(#screen)">
+    <rect x="156" y="256" width="488" height="288" fill="#fff"/>
+    <rect x="172" y="263" width="10" height="10" rx="2.5" fill="#1d1d1f"/>
+    <text x="187" y="271.5" font-size="9" font-weight="600" fill="#1d1d1f">Studio Kern</text>
+    <g fill="#c7c7cc"><rect x="470" y="266" width="24" height="4" rx="2"/><rect x="502" y="266" width="24" height="4" rx="2"/><rect x="534" y="266" width="24" height="4" rx="2"/></g>
+    <rect x="570" y="262" width="58" height="12" rx="6" fill="#0071e3"/>
+    <rect x="156" y="280" width="488" height="1" fill="#f0f0f3"/>
+    <g font-size="32" font-weight="700" fill="#1d1d1f" text-anchor="middle" letter-spacing="-.9">
+      <text x="400" y="330">Websites, die</text>
+      <text x="400" y="366">verkaufen.</text>
+    </g>
+    <rect x="304" y="380" width="192" height="6" rx="3" fill="#c7c7cc"/>
+    <rect x="364" y="398" width="72" height="20" rx="10" fill="#0071e3"/>
+    <rect x="276" y="440" width="248" height="130" rx="8" fill="#1d1d1f"/>
+    <rect x="283" y="447" width="234" height="120" rx="3" fill="#f5f5f7"/>
+    <rect x="296" y="462" width="96" height="10" rx="3" fill="#1d1d1f" fill-opacity=".8"/>
+    <rect x="296" y="478" width="70" height="10" rx="3" fill="#1d1d1f" fill-opacity=".8"/>
+    <rect x="296" y="498" width="42" height="12" rx="6" fill="#0071e3"/>
+    <rect x="410" y="460" width="94" height="72" rx="6" fill="#e8eef7"/>
+  </g>
+
+  <!-- Pflanze -->
+  <g>
+    <ellipse cx="700" cy="522" rx="16" ry="72" fill="#4f7d5c"/>
+    <ellipse cx="666" cy="540" rx="14" ry="62" fill="#6a9b74" transform="rotate(-28 666 540)"/>
+    <ellipse cx="734" cy="538" rx="14" ry="62" fill="#3f6b4c" transform="rotate(26 734 538)"/>
+    <ellipse cx="646" cy="574" rx="12" ry="44" fill="#5b8c66" transform="rotate(-56 646 574)"/>
+    <ellipse cx="754" cy="572" rx="12" ry="44" fill="#4f7d5c" transform="rotate(56 754 572)"/>
+    <path d="M700 596 V460" stroke="#fff" stroke-opacity=".25" stroke-width="2"/>
+    <path d="M650 606 H750 L738 716 H662 Z" fill="#f4f2ee"/>
+    <rect x="644" y="598" width="112" height="14" rx="4" fill="#fbfaf8"/>
+  </g>
+
+  <!-- Tasse -->
+  <path d="M86 672 H79 A12 12 0 0 0 79 696 H86" fill="none" stroke="#ebe6df" stroke-width="7"/>
+  <rect x="86" y="660" width="54" height="56" rx="8" fill="#fbfaf8"/>
+  <path d="M104 646 C98 636 110 628 104 616 M120 646 C114 636 126 628 120 616" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Tastatur & Trackpad -->
+  <rect x="258" y="770" width="284" height="42" rx="9" fill="#f2f2f5" stroke="#d6d6db"/>
+  <g fill="#dfdfe4">
+    <rect x="272" y="781" width="256" height="6" rx="2"/>
+    <rect x="272" y="794" width="256" height="6" rx="2"/>
+  </g>
+  <rect x="566" y="772" width="84" height="44" rx="9" fill="#f2f2f5" stroke="#d6d6db"/>
+
+  <!-- Notizbuch mit Skizze -->
+  <g transform="rotate(-6 170 850)">
+    <rect x="92" y="800" width="164" height="112" rx="5" fill="#fbfaf8"/>
+    <g fill="none" stroke="#9a9aa0" stroke-width="1.5">
+      <rect x="108" y="816" width="132" height="22" rx="2"/>
+      <rect x="108" y="846" width="62" height="50" rx="2"/>
+      <path d="M180 852 H238 M180 864 H230 M180 876 H236"/>
+    </g>
+  </g>
+  <rect x="226" y="918" width="120" height="8" rx="4" fill="#f5b642" transform="rotate(-18 286 922)"/>
+</svg>

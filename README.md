@@ -1,298 +1,256 @@
-# Studio Kern – One-Page-Website
+# Studio Kern – Website
 
-Moderne, vollständig responsive Agentur-Website mit Dark Mode als Standard.
-Gebaut mit **Next.js (App Router)**, **Tailwind CSS v4**, **Framer Motion** und **TypeScript**.
+Minimalistische One-Page-Website im Apple-Stil für ein Webdesign-Business.
+Reines **HTML, CSS und JavaScript**: kein Framework, kein Build-Schritt, kein npm.
 
-Lighthouse (Produktions-Build, mobile Emulation):
+Lighthouse (mobil, lokal gemessen):
 
 | Performance | Accessibility | Best Practices | SEO |
 | ----------- | ------------- | -------------- | --- |
-| 96          | 100           | 100            | 100 |
+| 99          | 100           | 100            | 100 |
+
+Gesamtgewicht der Startseite: ca. 140 KB. Auf Apple-Geräten sind es ca. 90 KB, weil dort die
+Systemschrift genutzt und keine Schrift nachgeladen wird.
+
+**Gestaltung angelehnt an Apples Produktseiten:**
+
+- Dunkler Hero mit leuchtenden Geräten.
+- Die Navigation ist eine schwebende Glas-Kapsel. Über dunklen Sektionen ist sie dunkel,
+  über hellen hell.
+- Oben eine graue Hinweis-Leiste.
+- Grauer Fließtext, in dem die Kernaussagen hell hervortreten.
+- Kennzahlen mit feiner Linie darüber.
+- Die Projekte als horizontale Galerie mit Bildunterschriften.
+
+**Markenzeichen – der „Kern-Punkt“:** Ein blauer Punkt beendet die Wortmarke, jede große
+Überschrift und die Aufzählungen und markiert die Stationen im Ablauf. Auch das Favicon ist
+dieser Punkt. Bei neuen Überschriften den Schlusspunkt so schreiben:
+
+```html
+<h2 class="section-title">Neue Überschrift<span class="punkt">.</span></h2>
+```
 
 ---
 
-## Schnellstart
+## Anschauen
+
+`index.html` per Doppelklick im Browser öffnen, fertig.
+
+Mit lokalem Server (empfohlen, verhält sich wie später online):
 
 ```bash
-npm install
-npm run dev      # http://localhost:3000
+python3 -m http.server 8000
+# → http://localhost:8000
 ```
 
-Weitere Befehle:
+---
 
-```bash
-npm run build    # Produktions-Build erzeugen
-npm run start    # Produktions-Build lokal starten
-npm run lint     # ESLint
-npm run html     # Eigenständige HTML-Dateien nach dist/ (siehe Abschnitt 4b)
+## Dateien
+
+```
+index.html          Startseite mit allen Sektionen (Texte stehen direkt hier)
+impressum.html      Impressum (Platzhalter!)
+datenschutz.html    Datenschutzerklärung (Platzhalter!)
+favicon.svg         Browser-Icon
+robots.txt          Hinweise für Suchmaschinen
+sitemap.xml         Seitenverzeichnis für Suchmaschinen
+
+assets/css/style.css   Gestaltung – Farben & Abstände ganz oben in :root
+assets/js/main.js      Menü, Einblend-Effekte, Zeitleiste im Ablauf, Kontaktformular
+assets/fonts/          Schrift Inter (nur für Nicht-Apple-Geräte) + Lizenz
+assets/img/            Mockups und Illustrationen (SVG)
+  hero-geraete.svg     Hero auf Tablet/Desktop (Laptop + Smartphone)
+  phone-*.svg          Hero auf dem Handy: drei aufgefächerte Smartphones
 ```
 
 ---
 
 ## 1. Texte ändern
 
-**Alle** Texte, Preise, FAQ-Einträge, Kontaktdaten und Links stehen in einer einzigen Datei:
+Alle Texte stehen direkt in `index.html`. Jede Sektion ist mit einem großen Kommentar
+markiert (`1. HERO`, `2. LEISTUNGEN`, `3. ARBEITEN` …). Einfach den Text zwischen den
+Tags ersetzen.
 
-```
-content/site.ts
-```
+Die Seite spricht Besucher mit **„Sie“** an. Bei neuen Texten bitte beibehalten.
 
-Die Datei ist nach Sektionen gegliedert und kommentiert:
+Auch anpassen, wenn sich etwas Grundlegendes ändert:
 
-| Abschnitt      | Inhalt                                                |
-| -------------- | ----------------------------------------------------- |
-| `brand`        | Name, Claim, Domain                                   |
-| `seo`          | Seitentitel, Beschreibung, Keywords                   |
-| `nav`          | Menüpunkte im Header                                  |
-| `hero`         | Headline, Subline, Buttons, Vertrauenszeile, Kennzahlen |
-| `services`     | Leistungs-Karten                                      |
-| `process`      | Ablauf-Schritte                                       |
-| `portfolio`    | Projekte                                              |
-| `pricing`      | Pakete und Preise                                     |
-| `testimonials` | Kundenstimmen                                         |
-| `faq`          | Fragen und Antworten                                  |
-| `contact`      | E-Mail, Telefon, Formular-Beschriftungen              |
-| `footer`       | Footer-Spalten und Social-Links                       |
-| `legal`        | Daten für Impressum und Datenschutz                   |
+- `<title>` und `<meta name="description">` oben in `index.html` (Google-Vorschau)
+- der Block `application/ld+json` im `<head>` (Firmendaten für Suchmaschinen)
 
-**Beispiel – Headline ändern:**
+### Die Messwerte im Hero
 
-```ts
-hero: {
-  headlineBefore: "Websites, die aus Besuchern",
-  headlineHighlight: "zahlende Kunden",   // dieser Teil ist farbig
-  headlineAfter: "machen.",
-  ...
-}
-```
+Unter dem Hero steht: „Die beste Arbeitsprobe ist diese Seite selbst“, darunter die
+Lighthouse-Werte **dieser** Seite (99 / 100 / 100, 0 Tracking-Cookies). Die Zahlen müssen
+stimmen. Nach größeren Änderungen daher neu messen und in `index.html` (Block `proof`)
+anpassen:
 
-**Ein Paket hinzufügen:** einfach einen weiteren Eintrag im Array `pricing.plans`
-anlegen. `featured: true` hebt eine Karte hervor (nur bei einer Karte setzen).
-
-**Eine FAQ-Frage hinzufügen:** neuen `{ question, answer }`-Eintrag in `faq.items`.
-Die strukturierten Daten für Google aktualisieren sich automatisch mit.
-
-> Nach dem Umbenennen der Marke auch `brand.url` auf die echte Domain setzen –
-> davon hängen Open-Graph-Bild, Canonical-URL und `sitemap.xml` ab.
+Chrome → Rechtsklick → *Untersuchen* → Reiter *Lighthouse* → Gerät *Mobil* → *Analyse*.
+Am besten die veröffentlichte Seite messen und nicht die lokale Datei.
 
 ---
 
 ## 2. Farben ändern
 
-Das komplette Farbschema liegt als CSS-Variablen in `app/globals.css`, ganz oben im
-Block `:root`:
+Alle Farben liegen als Variablen ganz oben in `assets/css/style.css`:
 
 ```css
 :root {
-  --bg: #07070c;        /* Seitenhintergrund       */
-  --bg-soft: #0b0b14;   /* abwechselnde Sektionen  */
-  --surface: #12121c;   /* Karten                  */
-  --fg: #f6f6f9;        /* Überschriften           */
-  --muted: #a3a7bd;     /* Fließtext               */
-  --accent: #8b5cf6;    /* Akzent 1 (Violett)      */
-  --accent-2: #3b82f6;  /* Akzent 2 (Blau)         */
+  --c-accent: #0071e3;          /* Akzentfarbe: Buttons, Links, Ziffern */
+  --c-accent-hover: #0077ed;    /* Button beim Überfahren */
+  --c-accent-on-dark: #2997ff;  /* Links auf schwarzen Flächen */
+  --c-bg-alt: #f5f5f7;          /* hellgraue Sektionen */
+  --c-dark-bg: #000000;         /* schwarze Sektionen */
+  ...
 }
 ```
 
-Für ein anderes Farbthema reicht es, `--accent` und `--accent-2` zu tauschen –
-alle Verläufe, Buttons, Icons und Hover-Effekte ziehen automatisch mit.
-
-Beispiele:
-
-```css
---accent: #06b6d4;  --accent-2: #3b82f6;   /* Cyan → Blau      */
---accent: #10b981;  --accent-2: #14b8a6;   /* Smaragd → Teal   */
---accent: #f43f5e;  --accent-2: #f97316;   /* Rosé → Orange    */
-```
-
-Heller Hintergrund gewünscht? `--bg`, `--bg-soft`, `--surface` aufhellen und
-`--fg`/`--muted` abdunkeln – außerdem `color-scheme: dark` auf `light` ändern
-und in `app/layout.tsx` `viewport.colorScheme` anpassen.
-
-**Schrift ändern:** in `app/layout.tsx` den Import tauschen, z. B.
-
-```ts
-import { Manrope as Inter } from "next/font/google";
-```
+Für eine andere Akzentfarbe reichen die drei `--c-accent…`-Werte.
+Die SVG-Illustrationen in `assets/img/` nutzen das Blau `#0071e3` ebenfalls.
+Bei einem Farbwechsel dort per Suchen & Ersetzen mit tauschen.
 
 ---
 
 ## 3. Bilder austauschen
 
-Die Portfolio-Vorschauen sind derzeit **per CSS gezeichnete Platzhalter**
-(`components/ui/Mockup.tsx`) – dadurch lädt die Seite ohne einen einzigen Bild-Request.
+Alle Bilder sind derzeit **gezeichnete Platzhalter** (SVG, je 3–10 KB).
 
-Für echte Screenshots:
+### Portfolio (Sektion „Arbeiten“)
 
-1. Bilder nach `public/projekte/` legen (z. B. `praxis-nordlicht.webp`, ca. 1200 × 750 px).
-2. In `content/site.ts` beim Projekt statt `mockup` ein Bild angeben:
+Die Projekte stehen in einer horizontalen Galerie: Wischen, Trackpad oder die
+Pfeil-Knöpfe unten rechts. Jedes Projekt ist ein `<figure class="slide">`. Für ein
+weiteres Projekt einfach einen Block kopieren. Die Bildunterschrift beginnt mit dem Namen
+in `<strong>`, das hebt ihn hervor.
 
-   ```ts
-   { title: "Praxis Nordlicht", image: "/projekte/praxis-nordlicht.webp", ... }
+Die vier Projekte (Praxis Nordlicht, Tischlerei Brandt, Aurum Consulting, Café Mira) sind
+**erfunden**. Vor dem Livegang bitte durch echte Referenzen ersetzen oder entfernen.
+
+1. Screenshot im Format 16:10 anlegen, z. B. 1600 × 1000 px, als `.webp` oder `.jpg`
+   (Tipp: [squoosh.app](https://squoosh.app) verkleinert Bilder ohne sichtbaren Verlust).
+2. Datei nach `assets/img/` legen, z. B. `projekt-mueller.webp`.
+3. In `index.html` beim Projekt `src`, `alt`, Titel und Beschreibung anpassen:
+
+   ```html
+   <img src="assets/img/projekt-mueller.webp" width="1600" height="1000"
+        alt="Startseite von Müller Immobilien" loading="lazy" decoding="async">
    ```
 
-3. In `components/Portfolio.tsx` die Zeile
+`width`/`height` sollten zum echten Bild passen. Das verhindert Springen beim Laden.
+`loading="lazy"` sorgt dafür, dass das Bild erst beim Scrollen geladen wird.
 
-   ```tsx
-   <Mockup variant={project.mockup} />
+### Hero
+
+Die Geräte im Hero zeigen die Platzhalter-Projekte:
+
+- **Desktop:** `hero-geraete.svg` (1120 × 720) mit Laptop und Smartphone, beide mit
+  „Praxis Nordlicht“.
+- **Handy:** drei Smartphones. In der Mitte `phone-nordlicht.svg`, links
+  `phone-brandt.svg`, rechts `phone-mira.svg` (je 218 × 442).
+
+Die Meldung „Neuer Online-Termin“ ist kein Bild, sondern HTML (`class="notify"` in
+`index.html`). Der Text lässt sich dort direkt ändern.
+
+Sobald echte Projekte da sind:
+
+- **Einfach:** Die SVGs durch eigene Bilder mit Geräte-Mockups ersetzen, z. B. als
+  `.webp`. Die Smartphones müssen im Hochformat 218 × 442 bleiben. Dann in `index.html`
+  im Hero `src`/`srcset` und `width`/`height` anpassen.
+- Kostenlose Geräte-Rahmen für eigene Screenshots gibt es z. B. bei
+  [mockuuups.studio](https://mockuuups.studio) oder als Figma-Vorlagen.
+
+### Über mich
+
+`assets/img/ueber-mich.svg` lässt sich durch ein Foto ersetzen, z. B. Portrait oder
+Arbeitsplatz. Format 4:5 im Hochformat, z. B. 960 × 1200 px.
+
+### Favicon
+
+`favicon.svg` ersetzen.
+
+---
+
+## 4. Kontaktformular einrichten (Web3Forms)
+
+Eine reine HTML-Seite hat keinen eigenen Server, der E-Mails verschickt. Den Versand
+übernimmt der kostenlose Dienst [Web3Forms](https://web3forms.com)
+(250 Anfragen/Monat gratis, kein Konto nötig).
+
+1. Auf [web3forms.com](https://web3forms.com) die eigene E-Mail-Adresse eingeben.
+   Der **Access Key** kommt per Mail.
+2. In `index.html` diese Zeile suchen und `DEIN-ACCESS-KEY` ersetzen:
+
+   ```html
+   <input type="hidden" name="access_key" value="DEIN-ACCESS-KEY">
    ```
 
-   ersetzen durch:
+3. Fertig. Anfragen landen ab jetzt per E-Mail im Postfach.
 
-   ```tsx
-   <Image
-     src={project.image}
-     alt={`Website-Projekt ${project.title}`}
-     width={1200}
-     height={750}
-     className="h-auto w-full rounded-xl"
-   />
-   ```
+**Solange kein Key eingetragen ist**, funktioniert das Formular trotzdem: Es öffnet das
+E-Mail-Programm des Besuchers mit einer fertig ausgefüllten Nachricht an
+`Paulmatuszek@icloud.com`. Die Adresse steht im `<form>`-Tag unter
+`data-fallback-email`.
 
-   (oben ergänzen: `import Image from "next/image";`)
-
-**Favicon:** `app/icon.svg` ersetzen.
-**Social-Vorschaubild:** wird in `app/opengraph-image.tsx` erzeugt – Text und Farben
-dort anpassen, oder die Datei löschen und stattdessen ein fertiges
-`app/opengraph-image.png` (1200 × 630 px) ablegen.
+Das Formular enthält eine Prüfung aller Pflichtfelder mit deutschen Fehlermeldungen und
+eine unsichtbare Spam-Falle (Honeypot).
 
 ---
 
-## 4. Kontaktformular
+## 5. Vor dem Livegang – Checkliste
 
-Das Formular postet an die Route `app/api/kontakt/route.ts` (inkl. Validierung und
-Honeypot-Spamschutz).
-
-- **Ohne `RESEND_API_KEY`** läuft alles im Demo-Modus: Anfragen landen im Server-Log,
-  der Besucher sieht trotzdem die Erfolgsmeldung.
-- **Mit API-Key** wird die Anfrage per E-Mail zugestellt.
-
-Dafür `.env.example` nach `.env.local` kopieren und ausfüllen:
-
-```bash
-cp .env.example .env.local
-```
-
-Auf [resend.com](https://resend.com) registrieren, API-Key erzeugen, eintragen –
-fertig. Die gleichen Variablen später in Vercel unter *Settings → Environment
-Variables* hinterlegen.
+- [ ] **Impressum** (`impressum.html`) ausfüllen: alle farbig markierten `[Platzhalter]`
+- [ ] **Datenschutzerklärung** (`datenschutz.html`) ausfüllen, v. a. Hoster und Web3Forms,
+      und rechtlich prüfen lassen
+- [ ] **Portfolio und Hero** durch echte Projekte ersetzen (siehe Abschnitt 3)
+- [ ] **Messwerte im Hero** auf der veröffentlichten Seite nachmessen (siehe Abschnitt 1)
+- [ ] **Web3Forms-Key** eintragen und eine Test-Anfrage schicken
+- [ ] **Domain** anpassen. `studio-kern.de` steht als Platzhalter in:
+      `index.html` (canonical, og:url, JSON-LD), `robots.txt`, `sitemap.xml`
 
 ---
 
-## 4b. Eigenständige HTML-Fassung (ohne Node.js)
+## 6. Veröffentlichen
 
-Wenn du die Seite als reine HTML-Dateien brauchst – z. B. für klassisches
-Webhosting per FTP oder zum lokalen Anschauen per Doppelklick:
+Die Seite besteht nur aus statischen Dateien und läuft auf jedem Webspace.
 
-```bash
-npm run build     # einmalig nötig (liefert die Schriftdateien)
-npm run html
-```
+**Netlify (am einfachsten):** Auf [app.netlify.com/drop](https://app.netlify.com/drop)
+den ganzen Projektordner ins Browserfenster ziehen. Die Seite ist sofort online, die eigene
+Domain lässt sich danach verbinden.
 
-Ergebnis im Ordner `dist/`:
+**Klassisches Hosting (IONOS, Strato, All-Inkl …):** Alle Dateien und den Ordner
+`assets/` per FTP in das Hauptverzeichnis des Webspace laden.
 
-| Datei | Größe |
-| ----- | ----- |
-| `index.html` | ~194 KB |
-| `impressum.html` | ~124 KB |
-| `datenschutz.html` | ~124 KB |
+**GitHub Pages / Vercel / Cloudflare Pages:** Repository verbinden. Es gibt keinen
+Build-Befehl, das Ausgabeverzeichnis ist das Hauptverzeichnis (`/`).
 
-Jede Datei enthält CSS, Schriftart und JavaScript eingebettet – **keine
-externen Anfragen, kein Internet, kein Server nötig**. Einfach alle drei
-Dateien in denselben Ordner legen und `index.html` öffnen oder hochladen.
-
-Lighthouse dieser Fassung: **Performance 94 · Accessibility 100 ·
-Best Practices 100 · SEO 100**
-
-Inhalte kommen unverändert aus `content/site.ts` – nach jeder Textänderung
-einfach `npm run html` erneut ausführen.
-
-**Unterschiede zur Next.js-Version**
-
-| | Next.js (`npm run dev`) | HTML-Export (`npm run html`) |
-| --- | --- | --- |
-| Kontaktformular | serverseitig, E-Mail-Versand über Resend | öffnet das E-Mail-Programm des Besuchers (`mailto:`) |
-| Animationen | Framer Motion | gleichwertig in CSS und Vanilla-JS nachgebaut |
-| sitemap.xml / robots.txt | automatisch | nicht enthalten |
-| Social-Vorschaubild | automatisch erzeugt | nicht enthalten |
-
-Optik, Texte und Bedienung (mobiles Menü, FAQ-Akkordeon, Einblende-Effekte)
-sind in beiden Fassungen identisch.
-
-Der Generator liegt in `scripts/build-html.ts` und `scripts/sections.ts`.
-Die Schriftart wird nur im lateinischen Zeichensatz eingebettet; brauchst du
-osteuropäische Sonderzeichen, ist die Stelle in `build-html.ts` kommentiert.
+Tipp: Die meisten Hoster komprimieren Dateien automatisch (gzip/Brotli). Das verkleinert
+CSS und HTML noch einmal um rund zwei Drittel.
 
 ---
 
-## 5. Veröffentlichen (Vercel)
+## 7. Technik
 
-1. Projekt auf GitHub pushen.
-2. Auf [vercel.com](https://vercel.com) mit GitHub anmelden → **Add New… → Project**
-   → Repository auswählen.
-3. Vercel erkennt Next.js automatisch – Einstellungen unverändert lassen, **Deploy**.
-4. Unter *Settings → Environment Variables* die Werte aus `.env.local` eintragen
-   und einmal neu deployen.
-5. Unter *Settings → Domains* die eigene Domain verbinden und die DNS-Einträge
-   beim Domain-Anbieter setzen (Vercel zeigt sie an).
-6. In `content/site.ts` `brand.url` auf die finale Domain setzen und pushen –
-   jeder Push auf `main` deployt automatisch.
-
-Alternativ per CLI:
-
-```bash
-npx vercel          # Vorschau-Deployment
-npx vercel --prod   # Produktion
-```
-
----
-
-## 6. Projektstruktur
-
-```
-app/
-  layout.tsx           Metadaten, Open-Graph, strukturierte Daten, Font, Header/Footer
-  page.tsx             Reihenfolge der Sektionen
-  globals.css          Farben, Design-Tokens, Animationen
-  not-found.tsx        404-Seite
-  icon.svg             Favicon
-  opengraph-image.tsx  Social-Vorschaubild (wird beim Build erzeugt)
-  robots.ts            robots.txt
-  sitemap.ts           sitemap.xml
-  impressum/           Impressum (Platzhalter)
-  datenschutz/         Datenschutzerklärung (Platzhalter)
-  api/kontakt/         Endpoint des Kontaktformulars
-
-components/
-  Header.tsx           Sticky-Header mit mobilem Menü
-  Hero.tsx             Fullscreen-Hero (CSS-Animation, kein JS → schnelles Laden)
-  Leistungen.tsx       Leistungs-Karten
-  Ablauf.tsx           Ablauf in 4 Schritten
-  Portfolio.tsx        Projekte
-  Preise.tsx           Preispakete
-  Stimmen.tsx          Kundenstimmen
-  FAQ.tsx              Akkordeon
-  Kontakt.tsx          Kontaktformular
-  Footer.tsx           Footer mit Rechts-Links
-  ui/                  Bausteine: Section, Reveal, Button, Icons, Mockup, GradientMesh
-
-content/
-  site.ts              ← ALLE Inhalte
-
-scripts/
-  build-html.ts        Erzeugt die eigenständige HTML-Fassung in dist/
-  sections.ts          Markup dafür (identische CSS-Klassen wie components/)
-  icons.ts             Icons als SVG-Strings
-```
-
----
-
-## 7. Hinweise
-
-- **Barrierefreiheit:** semantisches HTML, Skip-Link, sichtbare Fokus-Ringe,
-  ARIA-Attribute am Akkordeon und am mobilen Menü. Alle Animationen respektieren
-  `prefers-reduced-motion`.
-- **Rechtstexte:** Impressum und Datenschutzerklärung sind Platzhalter. Vor dem
-  Livegang mit echten Daten füllen und rechtlich prüfen lassen.
-- **Kundenstimmen und Projekte** sind ebenfalls Platzhalter – vor dem Livegang
-  durch echte Referenzen ersetzen (erfundene Bewertungen sind wettbewerbswidrig).
+- **Design:** viel Weißraum, Systemschrift (SF Pro auf Apple-Geräten, sonst Inter),
+  hell/dunkel wechselnde Sektionen, eine Akzentfarbe, abgerundete Karten, dezente Schatten.
+- **Responsive:** Mobile-first mit Umbrüchen bei 734 px und 1068 px (wie apple.com),
+  getestet von 320 px bis 1440 px Breite.
+- **Material:** Navigation und Menü sind Glasflächen (`backdrop-filter`).
+  - Das offene Menü wächst aus dem Menü-Knopf heraus und dunkelt die Seite ab. Ein Tipp
+    daneben schließt es.
+  - Bei „Transparenz reduzieren“ werden die Flächen massiv, bei „Kontrast erhöhen“
+    bekommen sie deutliche Kanten.
+- **Bewegung:**
+  - Übergänge folgen einer kritisch gedämpften Feder (`--ease-spring` in `style.css`),
+    so wie Apple Oberflächen ohne Überschwingen bewegt.
+  - Der Hero blendet beim Laden ein.
+  - Kurz danach schwebt die Termin-Meldung ein.
+  - Beim Scrollen kommen die Geräte im Hero auf den Betrachter zu. Das läuft über
+    CSS-Scroll-Timelines ohne JavaScript; Browser ohne diese Technik zeigen die Bilder
+    einfach statisch.
+  - Im Ablauf füllt sich die Zeitleiste mit dem Scrollen, erreichte Schritte werden blau.
+  - Bei „Bewegung reduzieren“ im Betriebssystem ist alles sofort und ohne Effekte
+    sichtbar. Ohne JavaScript ist ebenfalls alles sichtbar.
+- **Barrierefreiheit:** Sprunglink, sinnvolle Überschriften-Struktur, sichtbare
+  Fokus-Ringe, beschriftete Formularfelder mit angekündigten Fehlern, Tastaturbedienung
+  des mobilen Menüs (Esc schließt, Hintergrund wird gesperrt).
+- **Datenschutz:** keine Cookies, kein Tracking, keine externen Schriften oder Skripte.
+  Externe Verbindungen gibt es nur beim Absenden des Formulars (Web3Forms).
