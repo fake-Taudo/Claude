@@ -9,8 +9,18 @@ Lighthouse (mobil, lokal gemessen):
 | ----------- | ------------- | -------------- | --- |
 | 99          | 100           | 100            | 100 |
 
-Gesamtgewicht der Startseite: ca. 125 KB. Auf Apple-Geräten sind es ca. 75 KB, weil dort die
+Gesamtgewicht der Startseite: ca. 140 KB. Auf Apple-Geräten sind es ca. 90 KB, weil dort die
 Systemschrift genutzt und keine Schrift nachgeladen wird.
+
+**Gestaltung angelehnt an Apples Produktseiten:**
+
+- Dunkler Hero mit leuchtenden Geräten.
+- Die Navigation ist eine schwebende Glas-Kapsel. Über dunklen Sektionen ist sie dunkel,
+  über hellen hell.
+- Oben eine graue Hinweis-Leiste.
+- Grauer Fließtext, in dem die Kernaussagen hell hervortreten.
+- Kennzahlen mit feiner Linie darüber.
+- Die Projekte als horizontale Galerie mit Bildunterschriften.
 
 **Markenzeichen – der „Kern-Punkt“:** Ein blauer Punkt beendet die Wortmarke, jede große
 Überschrift und die Aufzählungen und markiert die Stationen im Ablauf. Auch das Favicon ist
@@ -50,7 +60,7 @@ assets/js/main.js      Menü, Einblend-Effekte, Zeitleiste im Ablauf, Kontaktfor
 assets/fonts/          Schrift Inter (nur für Nicht-Apple-Geräte) + Lizenz
 assets/img/            Mockups und Illustrationen (SVG)
   hero-geraete.svg     Hero auf Tablet/Desktop (Laptop + Smartphone)
-  hero-mobil.svg       Hero auf dem Handy (großes Smartphone)
+  phone-*.svg          Hero auf dem Handy: drei aufgefächerte Smartphones
 ```
 
 ---
@@ -107,6 +117,11 @@ Alle Bilder sind derzeit **gezeichnete Platzhalter** (SVG, je 3–10 KB).
 
 ### Portfolio (Sektion „Arbeiten“)
 
+Die Projekte stehen in einer horizontalen Galerie: Wischen, Trackpad oder die
+Pfeil-Knöpfe unten rechts. Jedes Projekt ist ein `<figure class="slide">`. Für ein
+weiteres Projekt einfach einen Block kopieren. Die Bildunterschrift beginnt mit dem Namen
+in `<strong>`, das hebt ihn hervor.
+
 Die vier Projekte (Praxis Nordlicht, Tischlerei Brandt, Aurum Consulting, Café Mira) sind
 **erfunden**. Vor dem Livegang bitte durch echte Referenzen ersetzen oder entfernen.
 
@@ -125,12 +140,21 @@ Die vier Projekte (Praxis Nordlicht, Tischlerei Brandt, Aurum Consulting, Café 
 
 ### Hero
 
-Laptop und Smartphone im Hero zeigen das Platzhalter-Projekt „Praxis Nordlicht“.
-Sobald ein echtes Projekt da ist, zeigt der Hero am besten dieses:
+Die Geräte im Hero zeigen die Platzhalter-Projekte:
 
-- **Einfach:** `hero-geraete.svg` (1120 × 720) und `hero-mobil.svg` (400 × 600) durch
-  eigene Bilder mit Geräte-Mockups ersetzen, z. B. als `.webp`. Dann in `index.html` im
-  Hero `src`/`srcset`, `width`/`height` und den `alt`-Text anpassen.
+- **Desktop:** `hero-geraete.svg` (1120 × 720) mit Laptop und Smartphone, beide mit
+  „Praxis Nordlicht“.
+- **Handy:** drei Smartphones. In der Mitte `phone-nordlicht.svg`, links
+  `phone-brandt.svg`, rechts `phone-mira.svg` (je 218 × 442).
+
+Die Meldung „Neuer Online-Termin“ ist kein Bild, sondern HTML (`class="notify"` in
+`index.html`). Der Text lässt sich dort direkt ändern.
+
+Sobald echte Projekte da sind:
+
+- **Einfach:** Die SVGs durch eigene Bilder mit Geräte-Mockups ersetzen, z. B. als
+  `.webp`. Die Smartphones müssen im Hochformat 218 × 442 bleiben. Dann in `index.html`
+  im Hero `src`/`srcset` und `width`/`height` anpassen.
 - Kostenlose Geräte-Rahmen für eigene Screenshots gibt es z. B. bei
   [mockuuups.studio](https://mockuuups.studio) oder als Figma-Vorlagen.
 
@@ -209,14 +233,20 @@ CSS und HTML noch einmal um rund zwei Drittel.
   hell/dunkel wechselnde Sektionen, eine Akzentfarbe, abgerundete Karten, dezente Schatten.
 - **Responsive:** Mobile-first mit Umbrüchen bei 734 px und 1068 px (wie apple.com),
   getestet von 320 px bis 1440 px Breite.
+- **Material:** Navigation und Menü sind Glasflächen (`backdrop-filter`).
+  - Das offene Menü wächst aus dem Menü-Knopf heraus und dunkelt die Seite ab. Ein Tipp
+    daneben schließt es.
+  - Bei „Transparenz reduzieren“ werden die Flächen massiv, bei „Kontrast erhöhen“
+    bekommen sie deutliche Kanten.
 - **Bewegung:**
+  - Übergänge folgen einer kritisch gedämpften Feder (`--ease-spring` in `style.css`),
+    so wie Apple Oberflächen ohne Überschwingen bewegt.
   - Der Hero blendet beim Laden ein.
-  - Beim Scrollen kommen die Geräte im Hero auf den Betrachter zu, und die Projektbilder
-    „setzen sich“. Das läuft über CSS-Scroll-Timelines ohne JavaScript; Browser ohne diese
-    Technik zeigen die Bilder einfach statisch.
+  - Kurz danach schwebt die Termin-Meldung ein.
+  - Beim Scrollen kommen die Geräte im Hero auf den Betrachter zu. Das läuft über
+    CSS-Scroll-Timelines ohne JavaScript; Browser ohne diese Technik zeigen die Bilder
+    einfach statisch.
   - Im Ablauf füllt sich die Zeitleiste mit dem Scrollen, erreichte Schritte werden blau.
-  - Auf dem Handy erscheint der Header-Button erst, wenn der große Button im Hero aus dem
-    Bild ist.
   - Bei „Bewegung reduzieren“ im Betriebssystem ist alles sofort und ohne Effekte
     sichtbar. Ohne JavaScript ist ebenfalls alles sichtbar.
 - **Barrierefreiheit:** Sprunglink, sinnvolle Überschriften-Struktur, sichtbare

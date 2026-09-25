@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="876 235 218 442" width="218" height="442" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <!-- Smartphone mit der mobilen Website „Café Mira“ (Platzhalter-Projekt) -->
+  <defs>
+    <linearGradient id="ti" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4a4a4e"/><stop offset="1" stop-color="#1c1c1e"/>
+    </linearGradient>
+    <clipPath id="screen"><rect x="890" y="246" width="190" height="420" rx="27"/></clipPath>
+    <clipPath id="img"><rect x="900" y="328" width="170" height="132" rx="14"/></clipPath>
+    <radialGradient id="coffee"><stop offset="0" stop-color="#8b5a3c"/><stop offset="1" stop-color="#5e3520"/></radialGradient>
+  </defs>
+  <rect x="880" y="236" width="210" height="440" rx="36" fill="url(#ti)"/>
+  <rect x="880.5" y="236.5" width="209" height="439" rx="35.5" fill="none" stroke="#fff" stroke-opacity=".16"/>
+  <rect x="877" y="330" width="3" height="40" rx="1.5" fill="#3a3a3c"/>
+  <rect x="1090" y="350" width="3" height="60" rx="1.5" fill="#3a3a3c"/>
+  <rect x="884" y="240" width="202" height="432" rx="32" fill="#000"/>
+  <g clip-path="url(#screen)">
+    <rect x="890" y="246" width="190" height="420" fill="#fbf6ef"/>
+    <text x="910" y="270" font-size="11" font-weight="600" fill="#3b2016">9:41</text>
+    <rect x="1048.5" y="262.5" width="18" height="9" rx="2.5" fill="none" stroke="#3b2016"/>
+    <rect x="1050.5" y="264.5" width="12" height="5" rx="1" fill="#3b2016"/>
+    <rect x="1028" y="266" width="3" height="5" rx=".8" fill="#3b2016"/>
+    <rect x="1033" y="264" width="3" height="7" rx=".8" fill="#3b2016"/>
+    <rect x="1038" y="262" width="3" height="9" rx=".8" fill="#3b2016"/>
+    <text x="906" y="307" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-style="italic" fill="#5a2e1f">Café Mira</text>
+    <path d="M1046 297 H1064 M1046 303 H1064" stroke="#5a2e1f" stroke-width="1.6" stroke-linecap="round"/>
+    <rect x="890" y="318" width="190" height="1" fill="#efe5d8"/>
+    <rect x="900" y="328" width="170" height="132" rx="14" fill="#efdcc9"/>
+    <g clip-path="url(#img)">
+      <g fill="#6b3f26"><ellipse cx="920" cy="440" rx="5" ry="3.4" transform="rotate(-30 920 440)"/><ellipse cx="932" cy="450" rx="5" ry="3.4" transform="rotate(20 932 450)"/><ellipse cx="1050" cy="346" rx="5" ry="3.4" transform="rotate(40 1050 346)"/></g>
+      <circle cx="924" cy="352" r="13" fill="#d9a86c"/>
+      <circle cx="985" cy="394" r="52" fill="#fff"/>
+      <circle cx="985" cy="394" r="44" fill="none" stroke="#f1e8de" stroke-width="1.2"/>
+      <rect x="1014" y="388" width="26" height="12" rx="6" fill="#fff" stroke="#eadfd2" stroke-width="1.2"/>
+      <circle cx="985" cy="394" r="35" fill="#fff" stroke="#eadfd2" stroke-width="2.4"/>
+      <circle cx="985" cy="394" r="29" fill="url(#coffee)"/>
+      <circle cx="985" cy="394" r="27.5" fill="none" stroke="#b07a50" stroke-opacity=".6" stroke-width="2.6"/>
+      <path d="M985 407 C970 397 972 382 981 382 C984 382 985 385 985 387 C985 385 986 382 989 382 C998 382 1000 397 985 407 Z" fill="#f3e3cf"/>
+    </g>
+    <text x="906" y="482" font-size="10.5" font-weight="600" fill="#c65d3b">Frühstück · Kuchen · Kaffee</text>
+    <g font-family="Georgia, 'Times New Roman', serif" font-size="19.5" fill="#3b2016"><text x="906" y="507">Kaffee, Kuchen</text><text x="906" y="531">&amp; gute Gespräche.</text></g>
+    <text x="906" y="553" font-size="11" fill="#8a6a5a">Hausgemacht und frisch geröstet.</text>
+    <rect x="906" y="566" width="158" height="36" rx="18" fill="#c65d3b"/>
+    <text x="985" y="588.5" font-size="12" font-weight="600" fill="#fff" text-anchor="middle">Tisch reservieren</text>
+    <rect x="906" y="612" width="158" height="36" rx="10" fill="#f4ebe0"/>
+    <text x="918" y="634" font-family="Georgia, 'Times New Roman', serif" font-size="12" fill="#3b2016">Cappuccino</text>
+    <text x="1054" y="634" font-size="11.5" font-weight="600" fill="#c65d3b" text-anchor="end">3,60 €</text>
+    <rect x="950" y="656" width="70" height="4" rx="2" fill="#3b2016" fill-opacity=".85"/>
+  </g>
+  <rect x="955" y="256" width="60" height="18" rx="9" fill="#000"/>
+</svg>

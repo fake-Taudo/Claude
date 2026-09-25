@@ -2,15 +2,16 @@
    Studio Kern – Stylesheet
    --------------------------------------------------------------------------
    Aufbau
-   1. Design-Tokens   ← Farben, Schrift, Abstände hier zentral ändern
+   1. Design-Tokens   ← Farben, Schrift, Abstände, Bewegung zentral ändern
    2. Schrift
    3. Basis
    4. Layout
    5. Bausteine (Kern-Punkt, Buttons, Links, Karten)
-   6. Navigation
+   6. Hinweis-Leiste & Navigation
    7. Sektionen (Hero, Leistungen, Arbeiten, Ablauf, Über mich, Kontakt, Footer)
    8. Unterseiten (Impressum, Datenschutz)
    9. Bewegung
+   10. Barrierefreiheit (weniger Bewegung, weniger Transparenz, mehr Kontrast)
    ========================================================================== */
 
 
@@ -27,8 +28,8 @@
   --c-dark-bg: #000000;
   --c-dark-surface: #1d1d1f;
   --c-dark-text: #f5f5f7;
-  --c-dark-text-muted: #a1a1a6;
-  --c-dark-line: #424245;
+  --c-dark-text-muted: #86868b;           /* Apple-Grau für Fließtext auf Schwarz */
+  --c-dark-line: rgba(255, 255, 255, 0.24);
 
   /* Akzentfarbe – Buttons, Links und der „Kern-Punkt“ */
   --c-accent: #0071e3;
@@ -39,6 +40,11 @@
   /* Rückmeldungen im Formular */
   --c-error: #d70015;
   --c-success: #1a7f37;
+
+  /* Glas-Material der Navigation (dunkel über dunklen, hell über hellen Flächen) */
+  --glass-dark: rgba(22, 22, 23, 0.8);
+  --glass-light: rgba(250, 250, 252, 0.8);
+  --glass-edge: rgba(255, 255, 255, 0.1);
 
   /* Schrift: SF Pro auf Apple-Geräten, sonst Inter (liegt lokal in assets/fonts) */
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
@@ -53,10 +59,10 @@
   --fs-h1: clamp(3rem, 1.4rem + 7vw, 6.5rem);             /* 48 → 104 px */
 
   /* Abstände */
-  --gutter: clamp(1.375rem, 5vw, 3rem);             /* Seitenrand */
-  --max-width: 75rem;                               /* 1200 px */
+  --gutter: clamp(1.375rem, 5vw, 3rem);                 /* Seitenrand */
+  --max-width: 75rem;                                   /* 1200 px */
   --section-space: clamp(4.5rem, 2.5rem + 7vw, 8.5rem); /* 72 → 136 px */
-  --nav-height: 3.25rem;                            /* 52 px */
+  --nav-height: 4.25rem;                                /* Glasleiste + Abstand oben */
 
   /* Formen */
   --radius-lg: 1.75rem;
@@ -65,11 +71,24 @@
   --radius-pill: 980px;
   --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.05);
 
-  /* Bewegung */
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Bewegung. --ease-spring ist eine kritisch gedämpfte Feder (kein
+     Überschwingen, Ansprechzeit 0,45 s) – so bewegen sich Apple-Oberflächen,
+     wenn keine Wischbewegung Schwung mitgibt. */
+  --ease-spring: linear(0, 0.004 1%, 0.032 3%, 0.098 5.7%, 0.203 9%, 0.334 12.9%,
+    0.473 17.2%, 0.605 22.1%, 0.718 27.3%, 0.808 33%, 0.875 39%, 0.922 45.5%,
+    0.953 52.3%, 0.973 59.4%, 0.985 66.9%, 0.992 74.7%, 0.996 82.8%, 0.998 91.3%, 1);
+  --spring: 0.66s;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);   /* Ersatz für ältere Browser */
   --duration: 0.9s;
 
   color-scheme: light;
+}
+
+/* Browser ohne linear()-Kurven nutzen eine ähnliche Bézierkurve */
+@supports not (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: var(--ease);
+  }
 }
 
 
@@ -103,7 +122,7 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-behavior: smooth;
-  scroll-padding-top: var(--nav-height); /* Anker landen unter dem Header */
+  scroll-padding-top: calc(var(--nav-height) + 0.5rem); /* Anker landen unter der Leiste */
 }
 
 body {
@@ -116,6 +135,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Startseite mit dunklem Kopf: beim Überziehen (iPhone) oben schwarz, unten grau */
+.page--dark-top {
+  background: linear-gradient(var(--c-dark-bg) 50%, var(--c-bg-alt) 50%);
 }
 
 img,
@@ -139,6 +163,7 @@ textarea {
   letter-spacing: inherit;
 }
 
+/* Große Schrift braucht engere Laufweite, kleine etwas mehr Luft */
 h1,
 h2,
 h3 {
@@ -153,13 +178,18 @@ p {
 }
 
 ::selection {
-  background: rgba(0, 113, 227, 0.2);
+  background: rgba(0, 113, 227, 0.24);
 }
 
 :focus-visible {
   outline: 2px solid var(--c-accent);
   outline-offset: 3px;
   border-radius: 4px;
+}
+
+.section--dark :focus-visible,
+.nav :focus-visible {
+  outline-color: var(--c-accent-on-dark);
 }
 
 [hidden] {
@@ -205,6 +235,7 @@ p {
 
 .section {
   padding-block: var(--section-space);
+  background: var(--c-bg);
 }
 
 .section--alt {
@@ -240,19 +271,44 @@ p {
 
 .section-title {
   font-size: var(--fs-h2);
-  font-weight: 700;
-  line-height: 1.04;
-  letter-spacing: -0.035em;
+  line-height: 1.05;
+  letter-spacing: -0.028em;
 }
 
+/* Einleitungen im Apple-Stil: graue Schrift, Schlüsselstellen in <strong> leuchten auf */
 .section-lead {
+  max-width: 40rem;
   margin-top: 1.25rem;
   font-size: var(--fs-lead);
-  line-height: 1.4;
+  font-weight: 600;
+  line-height: 1.38;
+  letter-spacing: -0.016em;
   color: var(--c-text-muted);
 }
 
+.section-lead strong {
+  font-weight: inherit;
+  color: var(--c-text);
+}
+
 .section--dark .section-lead {
+  color: var(--c-dark-text-muted);
+}
+
+.section--dark .section-lead strong {
+  color: var(--c-dark-text);
+}
+
+/* Kleine Dachzeile, sparsam eingesetzt */
+.eyebrow {
+  margin-bottom: 0.625rem;
+  font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.3125rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--c-text-muted);
+}
+
+.section--dark .eyebrow {
   color: var(--c-dark-text-muted);
 }
 
@@ -268,7 +324,7 @@ p {
   color: var(--c-accent-on-dark);
 }
 
-/* Button (Pill-Form) */
+/* Button (Pill-Form). Rückmeldung schon beim Drücken, nicht erst beim Loslassen. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -283,15 +339,14 @@ p {
   font-weight: 500;
   line-height: 1.2;
   cursor: pointer;
-  transition: background-color 0.2s ease, scale 0.2s ease, opacity 0.2s ease;
-}
-
-.btn:hover {
-  background: var(--c-accent-hover);
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, scale 0.3s var(--ease-spring),
+    opacity 0.2s ease;
 }
 
 .btn:active {
   scale: 0.97;
+  transition-duration: 0.1s;
 }
 
 .btn[disabled] {
@@ -299,16 +354,34 @@ p {
   cursor: progress;
 }
 
+/* Umriss-Variante („Entdecken“-Stil) – passt sich hellem und dunklem Grund an */
+.btn--outline {
+  background: transparent;
+  color: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 45%, transparent);
+}
+
+@media (hover: hover) {
+  .btn:hover {
+    background: var(--c-accent-hover);
+  }
+
+  .btn--outline:hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 70%, transparent);
+  }
+}
+
 .btn--small {
-  min-height: 2rem;
-  padding: 0.375rem 0.9375rem;
-  font-size: var(--fs-small);
+  min-height: 2.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9375rem;
   font-weight: 400;
 }
 
 .btn--large {
   min-height: 3.25rem;
-  padding: 0.875rem 1.875rem;
+  padding: 0.875rem 1.75rem;
   font-size: 1.125rem;
 }
 
@@ -316,7 +389,7 @@ p {
   width: 100%;
 }
 
-/* Textlink mit Pfeil, z. B. „Arbeiten ansehen ›“ */
+/* Textlink mit Pfeil, z. B. „Projekt starten ›“ */
 .link-arrow {
   display: inline-flex;
   align-items: center;
@@ -325,23 +398,29 @@ p {
   font-size: 1.125rem;
 }
 
-.link-arrow::after {
+.link-arrow::after,
+.ribbon__link::after {
   content: "";
+  display: inline-block;
   width: 0.42em;
   height: 0.42em;
   border-top: 1.5px solid currentColor;
   border-right: 1.5px solid currentColor;
   rotate: 45deg;
-  transition: translate 0.3s var(--ease);
+  transition: translate 0.3s var(--ease-spring);
 }
 
-.link-arrow:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
+@media (hover: hover) {
+  .link-arrow:hover,
+  .ribbon__link:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
 
-.link-arrow:hover::after {
-  translate: 3px 0;
+  .link-arrow:hover::after,
+  .ribbon__link:hover::after {
+    translate: 3px 0;
+  }
 }
 
 .section--dark .link-arrow {
@@ -357,47 +436,94 @@ p {
 }
 
 
-/* 6. NAVIGATION ============================================================ */
-.nav {
-  position: fixed;
-  inset: 0 0 auto;
-  z-index: 50;
-  height: var(--nav-height);
+/* 6. HINWEIS-LEISTE & NAVIGATION ========================================== */
+
+/* Graue Leiste ganz oben, wie Apples Hinweis auf Aktionen */
+.ribbon {
+  padding: 0.8125rem var(--gutter);
+  background: var(--c-dark-surface);
+  color: #d2d2d7;
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  text-align: center;
 }
 
-/* Milchglas-Hintergrund liegt auf einem Pseudo-Element, damit das
-   mobile Menü (position: fixed) sich weiter am Fenster ausrichtet. */
-.nav::before {
+.ribbon__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  color: var(--c-accent-on-dark);
+  white-space: nowrap;
+}
+
+/* Die Leiste liegt als schwebende Glas-Kapsel über dem Inhalt. Sie klebt oben
+   (sticky) und überlagert per negativem Außenabstand den Anfang des Heros. */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--nav-height);
+  margin-bottom: calc(-1 * var(--nav-height));
+  padding: 0.75rem 0.75rem 0;
+  pointer-events: none; /* nur die Kapsel selbst ist klickbar */
+}
+
+.nav__bar {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: calc(var(--max-width) + 2.5rem);
+  height: 3.5rem;
+  margin-inline: auto;
+  padding: 0 0.5rem 0 1.25rem;
+  border-radius: 1.25rem;
+  color: var(--c-dark-text);
+  pointer-events: auto;
+  transition: color 0.4s ease;
+}
+
+/* Das Glas-Material: dunkel, unscharf, mit feiner Lichtkante */
+.nav__bar::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: rgba(255, 255, 255, 0.8);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid transparent;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  border-radius: inherit;
+  background: var(--glass-dark);
+  -webkit-backdrop-filter: saturate(180%) blur(30px);
+  backdrop-filter: saturate(180%) blur(30px);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.18);
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Abdunkelung hinter dem offenen Menü („dim to focus“). Ein Tipp darauf
+   schließt das Menü (main.js). */
+.nav__bar::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: rgba(0, 0, 0, 0.45);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+
+.nav.is-open .nav__bar::after {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.35s ease, visibility 0s;
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .nav::before {
-    background: rgba(255, 255, 255, 0.96);
+  .nav__bar::before {
+    background: rgba(22, 22, 23, 0.96);
   }
-}
-
-.nav.is-scrolled::before {
-  border-bottom-color: rgba(0, 0, 0, 0.08);
-}
-
-.nav.is-open::before {
-  background: #fff;
-}
-
-.nav__inner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  height: 100%;
 }
 
 /* Wortmarke mit Kern-Punkt */
@@ -406,8 +532,8 @@ p {
   align-items: baseline;
   margin-right: auto;
   font-size: 1.1875rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-weight: 600;
+  letter-spacing: -0.022em;
 }
 
 .logo__dot {
@@ -416,6 +542,10 @@ p {
   margin-left: 0.06em;
   border-radius: 50%;
   background: var(--c-accent);
+}
+
+.nav .logo__dot {
+  background: var(--c-accent-on-dark);
 }
 
 .nav__cta {
@@ -428,54 +558,43 @@ p {
   }
 }
 
-/* Auf dem Handy erscheint der Header-Button der Startseite erst, wenn der
-   große Button im Hero aus dem Bild ist – so gibt es nie zwei gleichzeitig. */
-@media (max-width: 833px) {
-  .js .nav[data-cta-auto] .nav__cta {
-    opacity: 0;
-    visibility: hidden;
-    translate: 0 -0.25rem;
-    transition: opacity 0.3s ease, translate 0.3s var(--ease), visibility 0s linear 0.3s,
-      background-color 0.2s ease;
-  }
-
-  .js .nav[data-cta-auto].show-cta .nav__cta {
-    opacity: 1;
-    visibility: visible;
-    translate: 0 0;
-    transition: opacity 0.3s ease, translate 0.3s var(--ease), visibility 0s,
-      background-color 0.2s ease;
-  }
-}
-
-/* Burger-Button (zwei Linien, die sich zum X drehen) */
+/* Runder Menü-Knopf mit Umriss; die zwei Linien drehen sich zum X */
 .nav__toggle {
   display: grid;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  margin-right: -0.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
   padding: 0;
   border: 0;
-  background: none;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  color: inherit;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, scale 0.3s var(--ease-spring);
+}
+
+.nav__toggle:active {
+  scale: 0.92;
+  transition-duration: 0.1s;
 }
 
 .nav__toggle-bar {
   grid-area: 1 / 1;
-  width: 1.125rem;
+  width: 0.875rem;
   height: 1.5px;
   border-radius: 1px;
   background: currentColor;
-  transition: transform 0.35s var(--ease);
+  transition: transform var(--spring) var(--ease-spring);
 }
 
 .nav__toggle-bar:first-child {
-  transform: translateY(-3.5px);
+  transform: translateY(-2.75px);
 }
 
 .nav__toggle-bar:last-child {
-  transform: translateY(3.5px);
+  transform: translateY(2.75px);
 }
 
 .nav.is-open .nav__toggle-bar:first-child {
@@ -486,55 +605,97 @@ p {
   transform: rotate(-45deg);
 }
 
-/* Mobiles Menü: Vollbild-Panel unter dem Header */
+/* Mobiles Menü: eine Glas-Karte, die aus dem Menü-Knopf heraus wächst
+   (transform-origin am Knopf) und auf demselben Weg wieder verschwindet. */
 .nav__menu {
-  position: fixed;
-  inset: var(--nav-height) 0 0;
-  overflow-y: auto;
-  padding: 1.5rem var(--gutter) 2.5rem;
-  background: #fff;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  padding: 0.5rem 1.25rem 0.75rem;
+  border-radius: 1.25rem;
+  background: rgba(22, 22, 23, 0.94);
+  -webkit-backdrop-filter: saturate(180%) blur(30px);
+  backdrop-filter: saturate(180%) blur(30px);
+  box-shadow: inset 0 0 0 1px var(--glass-edge), 0 16px 48px rgba(0, 0, 0, 0.3);
+  transform-origin: calc(100% - 1.625rem) -0.5rem;
   visibility: hidden;
   opacity: 0;
-  transition: opacity 0.35s var(--ease), visibility 0s linear 0.35s;
+  scale: 0.92;
+  filter: blur(6px);
+  transition:
+    opacity 0.3s ease,
+    scale var(--spring) var(--ease-spring),
+    filter 0.3s ease,
+    visibility 0s linear var(--spring);
 }
 
 .nav.is-open .nav__menu {
   visibility: visible;
   opacity: 1;
-  transition: opacity 0.35s var(--ease), visibility 0s;
+  scale: 1;
+  filter: none;
+  transition:
+    opacity 0.3s ease,
+    scale var(--spring) var(--ease-spring),
+    filter 0.3s ease,
+    visibility 0s;
 }
 
 .nav__list {
   display: grid;
-  gap: 0.25rem;
   padding: 0;
   list-style: none;
 }
 
 .nav__list a {
   display: block;
-  padding: 0.5rem 0;
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  padding: 0.875rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.022em;
 }
 
-/* Menüpunkte gleiten nacheinander herein */
-.nav__list li {
-  opacity: 0;
-  translate: 0 -0.5rem;
-  transition: opacity 0.4s var(--ease), translate 0.4s var(--ease);
+.nav__list li + li {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.nav.is-open .nav__list li {
-  opacity: 1;
-  translate: 0 0;
+/* Helles Glas – über hellen Sektionen (main.js) und auf den Unterseiten */
+.nav--light .nav__bar {
+  color: var(--c-text);
 }
 
-.nav.is-open .nav__list li:nth-child(2) { transition-delay: 0.04s; }
-.nav.is-open .nav__list li:nth-child(3) { transition-delay: 0.08s; }
-.nav.is-open .nav__list li:nth-child(4) { transition-delay: 0.12s; }
-.nav.is-open .nav__list li:nth-child(5) { transition-delay: 0.16s; }
+.nav--light .nav__bar::before {
+  background: var(--glass-light);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.nav--light .logo__dot {
+  background: var(--c-accent);
+}
+
+.nav--light .nav__toggle {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+/* Helle Menü-Karte nur auf dem Handy – auf dem Desktop steht das Menü in der Leiste */
+@media (max-width: 833px) {
+  .nav--light .nav__menu {
+    background: rgba(250, 250, 252, 0.96);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.07), 0 16px 48px rgba(0, 0, 0, 0.14);
+  }
+
+  .nav--light .nav__list li + li {
+    border-top-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.nav--light :focus-visible {
+  outline-color: var(--c-accent);
+}
 
 /* Seite hinter dem offenen Menü nicht scrollen */
 html.menu-open {
@@ -546,26 +707,30 @@ html.menu-open {
     display: none;
   }
 
-  .nav__menu {
+  .nav__menu,
+  .nav--light .nav__menu {
     position: static;
-    overflow: visible;
-    margin-right: 0.75rem;
+    margin-right: 0.5rem;
     padding: 0;
+    border-radius: 0;
     background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
     visibility: visible;
     opacity: 1;
+    scale: none;
+    filter: none;
     transition: none;
   }
 
   .nav__list {
     display: flex;
-    gap: clamp(1.25rem, 2.5vw, 2.25rem);
+    gap: clamp(1.25rem, 2.2vw, 2rem);
   }
 
-  .nav__list li {
-    opacity: 1;
-    translate: none;
-    transition: none;
+  .nav__list li + li {
+    border-top: 0;
   }
 
   .nav__list a {
@@ -573,50 +738,56 @@ html.menu-open {
     font-size: var(--fs-small);
     font-weight: 400;
     letter-spacing: -0.01em;
-    color: rgba(29, 29, 31, 0.8);
-    transition: color 0.2s ease;
+    color: inherit;
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
   }
 
   .nav__list a:hover {
-    color: var(--c-text);
+    opacity: 1;
   }
 }
 
 
 /* 7. SEKTIONEN ============================================================= */
 
-/* --- Hero --------------------------------------------------------------- */
+/* --- Hero (dunkel) ------------------------------------------------------ */
 .hero {
   overflow: clip; /* nicht „hidden“: das würde die Scroll-Timeline im Hero blockieren */
-  padding-top: calc(var(--nav-height) + clamp(2rem, 0.5rem + 4.5vw, 4.5rem));
-  padding-bottom: clamp(3.5rem, 2rem + 5vw, 6.5rem);
+  padding-top: calc(var(--nav-height) + clamp(2.5rem, 1rem + 5vw, 5rem));
+  padding-bottom: var(--section-space);
   text-align: center;
+}
+
+/* Ortsangabe steht für Google mit in der H1, sieht aber aus wie ein Produktname */
+.hero__kicker {
+  display: block;
+  margin-bottom: 0.625rem;
+  font-size: clamp(1.375rem, 1.15rem + 1vw, 2rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .hero__title {
   font-size: var(--fs-h1);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.042em;
-}
-
-/* Ortsangabe steht für Google mit in der H1, sieht aber aus wie eine Dachzeile */
-.hero__kicker {
-  display: block;
-  margin-bottom: 0.875rem;
-  font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.3125rem);
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  color: var(--c-text-muted);
+  line-height: 1.03;
+  letter-spacing: -0.032em;
 }
 
 .hero__lead {
-  max-width: 44rem;
+  max-width: 42rem;
   margin: 1.5rem auto 0;
   font-size: var(--fs-lead);
-  line-height: 1.4;
-  color: var(--c-text-muted);
+  font-weight: 600;
+  line-height: 1.38;
+  letter-spacing: -0.016em;
+  color: var(--c-dark-text-muted);
+}
+
+.hero__lead strong {
+  font-weight: inherit;
+  color: var(--c-dark-text);
 }
 
 .hero__actions {
@@ -624,7 +795,7 @@ html.menu-open {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 1rem 2rem;
+  gap: 0.875rem;
   margin-top: 2rem;
 }
 
@@ -632,96 +803,203 @@ html.menu-open {
   position: relative;
   isolation: isolate;
   max-width: 72rem;
-  margin: clamp(2.5rem, 1rem + 4vw, 4.5rem) auto 0;
+  margin: clamp(3rem, 1.5rem + 4.5vw, 5rem) auto 0;
   padding-inline: var(--gutter);
 }
 
-/* Dezenter Lichtschein in der Akzentfarbe hinter den Geräten */
+/* Blauer Lichtschein hinter den Geräten – wirkt auf Schwarz wie Leuchten */
 .hero__visual::before {
   content: "";
   position: absolute;
-  inset: 5% 10% 0;
+  inset: 0 5% -10%;
   z-index: -1;
-  background: radial-gradient(closest-side, rgba(0, 113, 227, 0.14), transparent);
+  background: radial-gradient(closest-side, rgba(41, 151, 255, 0.3), rgba(41, 151, 255, 0.08) 55%, transparent);
 }
 
-.hero__visual img {
+.hero__main {
+  display: block;
+}
+
+.hero__main img {
   width: 100%;
   transform-origin: 50% 100%;
 }
 
-/* Handy: das hohe Smartphone-Motiv nicht übermäßig groß werden lassen */
+/* Die beiden seitlichen Smartphones gibt es nur auf dem Handy */
+.fan__side {
+  display: none;
+}
+
+/* Handy: drei aufgefächerte Smartphones, das mittlere vorn */
 @media (max-width: 733px) {
-  .hero__visual picture {
+  .hero__visual {
+    display: grid;
+    justify-items: center;
+    perspective: 1100px;
+  }
+
+  .hero__main,
+  .fan__side {
+    grid-area: 1 / 1;
+  }
+
+  .hero__main {
+    position: relative;
+    z-index: 2;
+    width: min(54%, 15rem);
+  }
+
+  .fan__side {
     display: block;
-    max-width: 24rem;
-    margin-inline: auto;
+    z-index: 1;
+    width: min(46%, 13rem);
+    margin-top: 9%;
+  }
+
+  .fan__side--left {
+    justify-self: start;
+    transform-origin: 100% 50%;
+    transform: translateX(6%) rotateY(28deg);
+  }
+
+  .fan__side--right {
+    justify-self: end;
+    transform-origin: 0% 50%;
+    transform: translateX(-6%) rotateY(-28deg);
   }
 }
 
-/* Belege: Messwerte dieser Seite */
-.proof {
-  margin-top: clamp(3rem, 2rem + 4vw, 5rem);
-  padding-top: clamp(2rem, 1.5rem + 2vw, 3rem);
-  border-top: 1px solid var(--c-line);
-}
-
-.proof__intro {
-  font-size: var(--fs-lead);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.proof__list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2rem 1rem;
-  margin-top: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
-}
-
-@media (min-width: 734px) {
-  .proof__list {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-/* Zahl oben, Bezeichnung darunter – im Quelltext bleibt die Reihenfolge dt → dd */
-.proof__item {
+/* Benachrichtigung „Neuer Online-Termin“ – schwebt kurz nach dem Laden ein */
+.notify {
+  position: absolute;
+  z-index: 3;
+  top: 58%;
+  left: calc(var(--gutter) + 1%);
   display: flex;
-  flex-direction: column-reverse;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem 0.75rem 0.75rem;
+  border-radius: 1.25rem;
+  background: rgba(245, 245, 247, 0.8);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 12px 40px rgba(0, 0, 0, 0.35);
+  color: var(--c-text);
+  text-align: left;
+  animation: notify-in 0.8s var(--ease-spring) 1.4s both;
 }
 
-.proof__item dd {
-  font-size: clamp(2.75rem, 2rem + 3vw, 4.5rem);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.045em;
-  font-variant-numeric: tabular-nums;
+.notify__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 0.625rem;
+  background: linear-gradient(135deg, #5eead4, #0f766e);
+  color: #fff;
 }
 
-.proof__item dd small {
-  margin-left: 0.08em;
-  font-size: 0.36em;
+.notify__text strong {
+  display: block;
+  font-size: 0.9375rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--c-text-muted);
+  letter-spacing: -0.012em;
 }
 
-.proof__item dt {
-  font-size: var(--fs-small);
-  color: var(--c-text-muted);
-  hyphens: manual;
-}
-
-.proof__note {
-  margin-top: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
+.notify__text span {
   font-size: 0.8125rem;
   color: var(--c-text-muted);
 }
 
+@media (max-width: 733px) {
+  .notify {
+    top: auto;
+    bottom: 10%;
+    left: 0.25rem;
+    padding: 0.625rem 1rem 0.625rem 0.625rem;
+  }
+
+  .notify__icon {
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+
+  .notify__text strong {
+    font-size: 0.875rem;
+  }
+
+  .notify__text span {
+    font-size: 0.75rem;
+  }
+}
+
+/* Belege: Messwerte dieser Seite – Bezeichnung über der Zahl, feine Linie darüber */
+.proof {
+  margin-top: clamp(3.5rem, 2rem + 5vw, 6rem);
+  text-align: left;
+}
+
+.proof__intro {
+  max-width: 40rem;
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  line-height: 1.38;
+  letter-spacing: -0.016em;
+  color: var(--c-dark-text-muted);
+}
+
+.proof__intro strong {
+  font-weight: inherit;
+  color: var(--c-dark-text);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.5rem 1.5rem;
+  margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+}
+
+@media (min-width: 734px) {
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.stat {
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--c-dark-line);
+}
+
+.stat dt {
+  font-size: clamp(0.9375rem, 0.9rem + 0.2vw, 1.0625rem);
+  font-weight: 600;
+  color: var(--c-dark-text-muted);
+  hyphens: manual;
+}
+
+.stat dd {
+  margin-top: 0.25rem;
+  font-size: clamp(2.75rem, 2rem + 3vw, 4.5rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat dd small {
+  margin-left: 0.06em;
+  font-size: 0.4em;
+  letter-spacing: -0.01em;
+  color: var(--c-dark-text-muted);
+}
+
 /* --- Leistungen (Bento-Raster) ----------------------------------------- */
+.section-title--wide {
+  max-width: none;
+}
+
 .services {
   display: grid;
   gap: 1.25rem;
@@ -757,9 +1035,9 @@ html.menu-open {
 .service__headline {
   margin-top: 0.5rem;
   font-size: clamp(1.625rem, 1.3rem + 1vw, 2.125rem);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.026em;
   text-wrap: balance;
 }
 
@@ -813,84 +1091,102 @@ html.menu-open {
   }
 }
 
-/* --- Arbeiten (Portfolio) ----------------------------------------------- */
-.work-grid {
-  display: grid;
-  gap: clamp(2.5rem, 2rem + 2vw, 3.5rem) 1.25rem;
+/* --- Arbeiten: horizontale Galerie -------------------------------------- */
+/* Die Galerie reicht bis an den Bildschirmrand, beginnt aber bündig mit dem
+   Inhalt. Wischen, Trackpad und Mausrad funktionieren nativ – inklusive des
+   Schwungs und Einrastens, das der Browser selbst mitbringt. */
+.gallery__track {
+  --edge: max(var(--gutter), calc((100% - var(--max-width)) / 2));
+  display: flex;
+  gap: clamp(1rem, 0.5rem + 1.5vw, 1.5rem);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--edge);
+  padding: 0 var(--edge) 0.5rem;
+  scrollbar-width: none;
 }
 
-@media (min-width: 734px) {
-  .work-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .work--feature {
-    grid-column: 1 / -1;
-  }
+.gallery__track::-webkit-scrollbar {
+  display: none;
 }
 
-.work__media {
-  overflow: clip; /* nicht „hidden“: siehe Scroll-Animation „settle“ */
+.gallery__track:focus-visible {
+  outline-offset: -2px;
+}
+
+.slide {
+  flex: 0 0 min(86%, 58rem);
+  scroll-snap-align: start;
+}
+
+.slide__media {
+  overflow: clip;
   aspect-ratio: 16 / 10;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--c-dark-surface);
 }
 
-.work__media img {
+.slide__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: top;
 }
 
-/* Das Hauptprojekt breiter und flacher zuschneiden */
-@media (min-width: 734px) {
-  .work--feature .work__media {
-    aspect-ratio: 2 / 1;
-    border-radius: var(--radius-lg);
-  }
-}
-
-.work__title {
-  margin-top: 1.25rem;
-  font-size: clamp(1.1875rem, 1.05rem + 0.5vw, 1.5rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-}
-
-.work__meta {
-  margin-top: 0.25rem;
-  font-size: clamp(0.9375rem, 0.9rem + 0.2vw, 1.0625rem);
+/* Bildunterschrift wie bei Apple: fetter Einstieg, danach grau */
+.slide__caption {
+  max-width: 36rem;
+  margin-top: 1.5rem;
+  padding-inline: clamp(0rem, 2vw, 2rem);
+  font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.3125rem);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.014em;
   color: var(--c-dark-text-muted);
 }
 
-.work__caption {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem 2rem;
+.slide__caption strong {
+  font-weight: inherit;
+  color: var(--c-dark-text);
 }
 
-.work--feature .work__title {
-  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
-  letter-spacing: -0.035em;
+/* Pfeil-Knöpfe unten rechts */
+.gallery__controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
 }
 
-.work__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.gallery__paddle {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
-  list-style: none;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--c-dark-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, opacity 0.3s ease, scale 0.3s var(--ease-spring);
 }
 
-.work__tags li {
-  padding: 0.375rem 0.875rem;
-  border: 1px solid var(--c-dark-line);
-  border-radius: var(--radius-pill);
-  font-size: 0.8125rem;
-  color: var(--c-dark-text-muted);
+.gallery__paddle:active:not([disabled]) {
+  scale: 0.92;
+  transition-duration: 0.1s;
+}
+
+.gallery__paddle[disabled] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .gallery__paddle:not([disabled]):hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
 }
 
 .work-cta {
@@ -901,8 +1197,8 @@ html.menu-open {
 .work-cta__text {
   margin-bottom: 1rem;
   font-size: var(--fs-h3);
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-weight: 600;
+  letter-spacing: -0.026em;
   text-wrap: balance;
 }
 
@@ -977,7 +1273,7 @@ html.menu-open {
   border-radius: 50%;
   background: var(--c-accent);
   box-shadow: 0 0 0 5px var(--c-bg);
-  transition: background-color 0.4s ease, scale 0.4s var(--ease);
+  transition: background-color 0.4s ease, scale var(--spring) var(--ease-spring);
 }
 
 .step__num {
@@ -1002,8 +1298,8 @@ html.menu-open {
 .step__title {
   margin-top: 0.375rem;
   font-size: var(--fs-h3);
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-weight: 600;
+  letter-spacing: -0.026em;
 }
 
 .step__text {
@@ -1035,47 +1331,53 @@ html.menu-open {
   font-size: clamp(2rem, 1.3rem + 2.4vw, 3rem);
 }
 
+/* Großer grauer Fließtext mit hell hervorgehobenen Kernaussagen */
 .about__copy {
   margin-top: 1.75rem;
-  font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.3125rem);
-  line-height: 1.5;
+  font-size: clamp(1.1875rem, 1.05rem + 0.55vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.016em;
   color: var(--c-dark-text-muted);
+}
+
+.about__copy strong {
+  font-weight: inherit;
+  color: var(--c-dark-text);
 }
 
 .about__copy p + p {
   margin-top: 1.25rem;
 }
 
+/* Werte als Kennzahlen-Reihe mit feiner Linie darüber */
 .values {
   display: grid;
-  gap: 1.25rem;
-  margin-top: 2.5rem;
-  padding: 2rem 0 0;
-  border-top: 1px solid var(--c-dark-line);
+  gap: 2rem;
+  margin-top: clamp(3.5rem, 2.5rem + 4vw, 6rem);
+  padding: 0;
   list-style: none;
   color: var(--c-dark-text-muted);
 }
 
-/* Aufzählungspunkte als Kern-Punkte */
-.values li {
-  position: relative;
-  padding-left: 1.5rem;
+@media (min-width: 734px) {
+  .values {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem 1.5rem;
+  }
 }
 
-.values li::before {
-  content: "";
-  position: absolute;
-  top: 0.5em;
-  left: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--c-accent-on-dark);
+.values li {
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--c-dark-line);
 }
 
 .values strong {
   display: block;
+  margin-bottom: 0.375rem;
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
   font-weight: 600;
+  letter-spacing: -0.022em;
   color: var(--c-dark-text);
 }
 
@@ -1184,8 +1486,10 @@ html.menu-open {
   color: #86868b;
 }
 
-.input:hover {
-  border-color: #aeaeb2;
+@media (hover: hover) {
+  .input:hover {
+    border-color: #aeaeb2;
+  }
 }
 
 .input:focus {
@@ -1358,8 +1662,7 @@ textarea.input {
 
 .legal h1 {
   font-size: clamp(2.25rem, 1.75rem + 2.5vw, 3.5rem);
-  font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
 }
 
 .legal__updated {
@@ -1433,10 +1736,26 @@ textarea.input {
   }
 }
 
-.hero__title   { animation: rise 1s var(--ease) 0.05s both; }
-.hero__lead    { animation: rise 1s var(--ease) 0.15s both; }
-.hero__actions { animation: rise 1s var(--ease) 0.25s both; }
-.hero__visual  { animation: rise-scale 1.4s var(--ease) 0.2s both; }
+/* Die Benachrichtigung „materialisiert“ sich: Unschärfe und Größe zusammen */
+@keyframes notify-in {
+  from {
+    opacity: 0;
+    translate: 0 -0.75rem;
+    scale: 0.92;
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+    filter: none;
+  }
+}
+
+.hero__title   { animation: rise 1s var(--ease-spring) 0.05s both; }
+.hero__lead    { animation: rise 1s var(--ease-spring) 0.15s both; }
+.hero__actions { animation: rise 1s var(--ease-spring) 0.25s both; }
+.hero__visual  { animation: rise-scale 1.4s var(--ease-spring) 0.2s both; }
 
 /* Einblenden beim Scrollen. Die Klasse .js setzt ein kleines Skript im <head>,
    ohne JavaScript bleibt also alles sichtbar. .is-visible setzt main.js.
@@ -1445,8 +1764,8 @@ textarea.input {
   opacity: 0;
   translate: 0 1.5rem;
   transition:
-    opacity var(--duration) var(--ease) var(--delay, 0s),
-    translate var(--duration) var(--ease) var(--delay, 0s);
+    opacity var(--duration) var(--ease-spring) var(--delay, 0s),
+    translate var(--duration) var(--ease-spring) var(--delay, 0s);
 }
 
 .js [data-reveal].is-visible {
@@ -1471,13 +1790,6 @@ textarea.input {
       animation-timeline: scroll(root);
       animation-range: 0 55vh;
     }
-
-    /* Projektbilder „setzen sich“ beim Hereinscrollen */
-    .work__media img {
-      animation: settle linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 45%;
-    }
   }
 }
 
@@ -1493,12 +1805,10 @@ textarea.input {
   }
 }
 
-@keyframes settle {
-  from { scale: 1.12; }
-  to   { scale: 1; }
-}
 
-/* Wer reduzierte Bewegung eingestellt hat, sieht alles sofort und ohne Effekte */
+/* 10. BARRIEREFREIHEIT ===================================================== */
+
+/* Weniger Bewegung: alles sofort sichtbar, keine Effekte */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -1516,5 +1826,75 @@ textarea.input {
   .js [data-reveal] {
     opacity: 1;
     translate: none;
+  }
+}
+
+/* Weniger Transparenz: Glasflächen werden massiv */
+@media (prefers-reduced-transparency: reduce) {
+  .nav__bar::before {
+    background: var(--c-dark-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .nav--light .nav__bar::before {
+    background: var(--c-bg);
+  }
+
+  @media (max-width: 833px) {
+    .nav__menu {
+      background: var(--c-dark-surface);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    .nav--light .nav__menu {
+      background: var(--c-bg);
+    }
+  }
+
+  .notify {
+    background: var(--c-bg-alt);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Mehr Kontrast: deutliche Kanten und Linien */
+@media (prefers-contrast: more) {
+  .nav__bar::before {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+
+  @media (max-width: 833px) {
+    .nav__menu {
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    }
+
+    .nav--light .nav__menu {
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .nav--light .nav__bar::before {
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+  }
+
+  .stat,
+  .values li {
+    border-top-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .btn--outline,
+  .nav__toggle {
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+
+  .section-lead,
+  .hero__lead,
+  .about__copy,
+  .proof__intro,
+  .slide__caption {
+    color: inherit;
   }
 }

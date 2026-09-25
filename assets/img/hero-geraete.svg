@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 720" width="1120" height="720" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-  <!-- Hero (Desktop): Laptop und Smartphone zeigen das Projekt „Praxis Nordlicht“, dazu eine eingehende Terminbuchung -->
+  <!-- Hero (Tablet/Desktop): Laptop und Smartphone zeigen das Projekt „Praxis Nordlicht“ -->
   <defs>
     <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#0f766e"/>
@@ -23,9 +23,6 @@
     <clipPath id="phone-img"><rect x="900" y="328" width="170" height="132" rx="14"/></clipPath>
     <filter id="phone-shadow" x="-40%" y="-15%" width="180%" height="140%">
       <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".2"/>
-    </filter>
-    <filter id="card-shadow" x="-30%" y="-60%" width="160%" height="260%">
-      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#0b2530" flood-opacity=".16"/>
     </filter>
     <linearGradient id="alu" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#e6e6ea"/><stop offset="1" stop-color="#cdcdd2"/>
@@ -95,6 +92,7 @@
   <g filter="url(#phone-shadow)">
     <rect x="880" y="236" width="210" height="440" rx="36" fill="url(#ti)"/>
   </g>
+  <rect x="880.5" y="236.5" width="209" height="439" rx="35.5" fill="none" stroke="#fff" stroke-opacity=".16"/>
   <rect x="877" y="330" width="3" height="40" rx="1.5" fill="#2c2c2e"/>
   <rect x="1090" y="350" width="3" height="60" rx="1.5" fill="#2c2c2e"/>
   <rect x="884" y="240" width="202" height="432" rx="32" fill="#000"/>
@@ -132,15 +130,4 @@
     <rect x="950" y="656" width="70" height="4" rx="2" fill="#10302f" fill-opacity=".85"/>
   </g>
   <rect x="955" y="256" width="60" height="18" rx="9" fill="#000"/>
-
-  <!-- Benachrichtigung -->
-  <g transform="translate(0 -12)">
-    <g filter="url(#card-shadow)">
-      <rect x="36" y="452" width="292" height="76" rx="19.8" fill="#fff"/>
-    </g>
-    <circle cx="73.0" cy="490.0" r="19.0" fill="#0f766e"/>
-    <path d="M65.0 490.4 L71.1 496.5 L81.7 484.3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="106.0" y="487.0" font-size="16" font-weight="600" fill="#1d1d1f">Neuer Online-Termin</text>
-    <text x="106.0" y="506.8" font-size="13" fill="#6e6e73">Di, 10:30 Uhr · Praxis Nordlicht</text>
-  </g>
 </svg>

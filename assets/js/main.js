@@ -3,13 +3,13 @@
  * ---------------------------------------------------------------------------
  * Reines JavaScript ohne Abhängigkeiten. Wird mit `defer` geladen.
  *
- * 1. Header: feine Linie nach dem Scrollen
- * 2. Mobiles Menü
- * 3. Header-Button erst nach dem Hero einblenden
- * 4. Einblenden beim Scrollen
- * 5. Ablauf: Zeitleiste folgt dem Scrollen
- * 6. Kontaktformular (Web3Forms, ersatzweise E-Mail-Programm)
- * 7. Jahreszahl im Footer
+ * 1. Mobiles Menü
+ * 1b. Navigation: helles oder dunkles Glas je nach Sektion darunter
+ * 2. Einblenden beim Scrollen
+ * 3. Galerie: Pfeil-Knöpfe
+ * 4. Ablauf: Zeitleiste folgt dem Scrollen
+ * 5. Kontaktformular (Web3Forms, ersatzweise E-Mail-Programm)
+ * 6. Jahreszahl im Footer
  */
 (() => {
   "use strict";
@@ -17,20 +17,13 @@
   const root = document.documentElement;
   const nav = document.querySelector("[data-nav]");
 
-  /* 1. HEADER ------------------------------------------------------------ */
-  if (nav) {
-    const updateNav = () => nav.classList.toggle("is-scrolled", window.scrollY > 8);
-    window.addEventListener("scroll", updateNav, { passive: true });
-    updateNav();
-  }
-
-  /* 2. MOBILES MENÜ ------------------------------------------------------ */
+  /* 1. MOBILES MENÜ ------------------------------------------------------ */
   const toggle = document.querySelector("[data-nav-toggle]");
 
   if (nav && toggle) {
     const menu = document.getElementById(toggle.getAttribute("aria-controls"));
-    // Solange das Menü offen ist, sind Inhalt und Footer für Tastatur und Screenreader gesperrt
-    const background = document.querySelectorAll("main, footer");
+    // Solange das Menü offen ist, ist der Rest der Seite für Tastatur und Screenreader gesperrt
+    const background = document.querySelectorAll(".ribbon, main, footer");
     const desktop = window.matchMedia("(min-width: 834px)");
 
     const setMenu = (open) => {
@@ -50,6 +43,13 @@
       if (event.target.closest("a")) setMenu(false);
     });
 
+    // Tipp neben das Menü (auf die Abdunkelung) schließt es ebenfalls
+    document.addEventListener("click", (event) => {
+      if (!nav.classList.contains("is-open")) return;
+      if (event.target.closest(".nav__menu, [data-nav-toggle]")) return;
+      setMenu(false);
+    });
+
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && nav.classList.contains("is-open")) {
         setMenu(false);
@@ -63,25 +63,35 @@
     });
   }
 
-  /* 3. HEADER-BUTTON ERST NACH DEM HERO ---------------------------------- */
-  // Solange der große Button im Hero zu sehen ist, bleibt der im Header verborgen.
-  const heroCta = document.querySelector("[data-hero-cta]");
+  /* 1b. NAVIGATION: MATERIAL PASST SICH AN ----------------------------- */
+  // Wie Apples Glas-Material: über dunklen Sektionen dunkel, über hellen hell.
+  // Beobachtet wird eine 1 px hohe Linie auf Höhe der Leistenmitte.
+  const themedSections = document.querySelectorAll("main > section, .ribbon");
 
-  if (nav && nav.hasAttribute("data-cta-auto")) {
-    if (heroCta && "IntersectionObserver" in window) {
-      new IntersectionObserver(
-        ([entry]) => {
-          const scrolledPast = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-          nav.classList.toggle("show-cta", scrolledPast);
+  if (nav && themedSections.length && "IntersectionObserver" in window) {
+    let observer;
+    const watch = () => {
+      if (observer) observer.disconnect();
+      // Mitte der Kapsel: 0,75rem Abstand + halbe Höhe von 3,5rem = 2,5rem = 40 px.
+      // Fester Wert, damit beim Start nichts gemessen werden muss.
+      const line = 40;
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const dark = entry.target.matches(".section--dark, .ribbon");
+            nav.classList.toggle("nav--light", !dark);
+          });
         },
-        { rootMargin: `-${nav.offsetHeight}px 0px 0px 0px` }
-      ).observe(heroCta);
-    } else {
-      nav.classList.add("show-cta");
-    }
+        { rootMargin: `-${line}px 0px -${window.innerHeight - line - 1}px 0px` }
+      );
+      themedSections.forEach((section) => observer.observe(section));
+    };
+    watch();
+    window.addEventListener("resize", watch);
   }
 
-  /* 4. EINBLENDEN BEIM SCROLLEN ------------------------------------------ */
+  /* 2. EINBLENDEN BEIM SCROLLEN ------------------------------------------ */
   const revealItems = document.querySelectorAll("[data-reveal]");
 
   if ("IntersectionObserver" in window) {
@@ -101,14 +111,64 @@
     revealItems.forEach((el) => el.classList.add("is-visible"));
   }
 
-  /* 5. ABLAUF: ZEITLEISTE FOLGT DEM SCROLLEN ----------------------------- */
+  /* 3. GALERIE: PFEIL-KNÖPFE ---------------------------------------------- */
+  // Wischen, Trackpad und Mausrad erledigt der Browser nativ – mit Schwung und
+  // Einrasten. Die Pfeile blättern um genau eine Karte und sind am Ende ausgegraut.
+  const gallery = document.querySelector("[data-gallery]");
+
+  if (gallery) {
+    const track = gallery.querySelector("[data-gallery-track]");
+    const prev = gallery.querySelector("[data-gallery-prev]");
+    const next = gallery.querySelector("[data-gallery-next]");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let queued = false;
+
+    // Abstand von einer Karte zur nächsten (Kartenbreite + Lücke)
+    const stepWidth = () => {
+      const [first, second] = track.children;
+      return second ? second.offsetLeft - first.offsetLeft : track.clientWidth;
+    };
+
+    const updatePaddles = () => {
+      queued = false;
+      const end = track.scrollWidth - track.clientWidth;
+      prev.disabled = track.scrollLeft <= 2;
+      next.disabled = track.scrollLeft >= end - 2;
+    };
+
+    const page = (direction) => {
+      track.scrollBy({
+        left: direction * stepWidth(),
+        behavior: reduceMotion.matches ? "auto" : "smooth",
+      });
+    };
+
+    prev.addEventListener("click", () => page(-1));
+    next.addEventListener("click", () => page(1));
+
+    track.addEventListener("scroll", () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(updatePaddles);
+    }, { passive: true });
+
+    // Der ResizeObserver meldet sich direkt nach dem ersten Layout und bei jeder Größenänderung
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(updatePaddles).observe(track);
+    } else {
+      requestAnimationFrame(updatePaddles);
+      window.addEventListener("resize", updatePaddles);
+    }
+  }
+
+  /* 4. ABLAUF: ZEITLEISTE FOLGT DEM SCROLLEN ----------------------------- */
   // Die blaue Linie wächst bis zur „Lesehöhe“ (60 % der Fensterhöhe);
   // jeder Schritt, dessen Punkt diese Höhe erreicht hat, wird aktiv.
   const steps = document.querySelector("[data-steps]");
 
   if (steps) {
     const items = [...steps.querySelectorAll(".step")];
-    const dotCenter = parseFloat(getComputedStyle(steps).getPropertyValue("--dot-center")) || 10.5;
+    const dotCenter = 10.5; // muss zu --dot-center in style.css passen
     let dots = []; // Position jedes Punktes innerhalb der Liste (ändert sich beim Scrollen nicht)
     let queued = false;
 
@@ -150,7 +210,7 @@
     }
   }
 
-  /* 6. KONTAKTFORMULAR --------------------------------------------------- */
+  /* 5. KONTAKTFORMULAR --------------------------------------------------- */
   const form = document.querySelector("[data-contact-form]");
 
   if (form) {
@@ -275,7 +335,7 @@
     });
   }
 
-  /* 7. JAHRESZAHL IM FOOTER ---------------------------------------------- */
+  /* 6. JAHRESZAHL IM FOOTER ---------------------------------------------- */
   const year = String(new Date().getFullYear());
   document.querySelectorAll("[data-year]").forEach((el) => { el.textContent = year; });
 })();
