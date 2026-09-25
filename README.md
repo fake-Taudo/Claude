@@ -9,8 +9,16 @@ Lighthouse (mobil, lokal gemessen):
 | ----------- | ------------- | -------------- | --- |
 | 99          | 100           | 100            | 100 |
 
-Gesamtgewicht der Startseite: ca. 120 KB. Auf Apple-Geräten sind es ca. 70 KB, weil dort die
+Gesamtgewicht der Startseite: ca. 125 KB. Auf Apple-Geräten sind es ca. 75 KB, weil dort die
 Systemschrift genutzt und keine Schrift nachgeladen wird.
+
+**Markenzeichen – der „Kern-Punkt“:** Ein blauer Punkt beendet die Wortmarke, jede große
+Überschrift und die Aufzählungen und markiert die Stationen im Ablauf. Auch das Favicon ist
+dieser Punkt. Bei neuen Überschriften den Schlusspunkt so schreiben:
+
+```html
+<h2 class="section-title">Neue Überschrift<span class="punkt">.</span></h2>
+```
 
 ---
 
@@ -38,9 +46,11 @@ robots.txt          Hinweise für Suchmaschinen
 sitemap.xml         Seitenverzeichnis für Suchmaschinen
 
 assets/css/style.css   Gestaltung – Farben & Abstände ganz oben in :root
-assets/js/main.js      Menü, Einblend-Effekte, Kontaktformular
+assets/js/main.js      Menü, Einblend-Effekte, Zeitleiste im Ablauf, Kontaktformular
 assets/fonts/          Schrift Inter (nur für Nicht-Apple-Geräte) + Lizenz
 assets/img/            Mockups und Illustrationen (SVG)
+  hero-geraete.svg     Hero auf Tablet/Desktop (Laptop + Smartphone)
+  hero-mobil.svg       Hero auf dem Handy (großes Smartphone)
 ```
 
 ---
@@ -57,6 +67,16 @@ Auch anpassen, wenn sich etwas Grundlegendes ändert:
 
 - `<title>` und `<meta name="description">` oben in `index.html` (Google-Vorschau)
 - der Block `application/ld+json` im `<head>` (Firmendaten für Suchmaschinen)
+
+### Die Messwerte im Hero
+
+Unter dem Hero steht: „Die beste Arbeitsprobe ist diese Seite selbst“, darunter die
+Lighthouse-Werte **dieser** Seite (99 / 100 / 100, 0 Tracking-Cookies). Die Zahlen müssen
+stimmen. Nach größeren Änderungen daher neu messen und in `index.html` (Block `proof`)
+anpassen:
+
+Chrome → Rechtsklick → *Untersuchen* → Reiter *Lighthouse* → Gerät *Mobil* → *Analyse*.
+Am besten die veröffentlichte Seite messen und nicht die lokale Datei.
 
 ---
 
@@ -103,6 +123,17 @@ Die vier Projekte (Praxis Nordlicht, Tischlerei Brandt, Aurum Consulting, Café 
 `width`/`height` sollten zum echten Bild passen. Das verhindert Springen beim Laden.
 `loading="lazy"` sorgt dafür, dass das Bild erst beim Scrollen geladen wird.
 
+### Hero
+
+Laptop und Smartphone im Hero zeigen das Platzhalter-Projekt „Praxis Nordlicht“.
+Sobald ein echtes Projekt da ist, zeigt der Hero am besten dieses:
+
+- **Einfach:** `hero-geraete.svg` (1120 × 720) und `hero-mobil.svg` (400 × 600) durch
+  eigene Bilder mit Geräte-Mockups ersetzen, z. B. als `.webp`. Dann in `index.html` im
+  Hero `src`/`srcset`, `width`/`height` und den `alt`-Text anpassen.
+- Kostenlose Geräte-Rahmen für eigene Screenshots gibt es z. B. bei
+  [mockuuups.studio](https://mockuuups.studio) oder als Figma-Vorlagen.
+
 ### Über mich
 
 `assets/img/ueber-mich.svg` lässt sich durch ein Foto ersetzen, z. B. Portrait oder
@@ -145,7 +176,8 @@ eine unsichtbare Spam-Falle (Honeypot).
 - [ ] **Impressum** (`impressum.html`) ausfüllen: alle farbig markierten `[Platzhalter]`
 - [ ] **Datenschutzerklärung** (`datenschutz.html`) ausfüllen, v. a. Hoster und Web3Forms,
       und rechtlich prüfen lassen
-- [ ] **Portfolio** durch echte Projekte ersetzen (siehe Abschnitt 3)
+- [ ] **Portfolio und Hero** durch echte Projekte ersetzen (siehe Abschnitt 3)
+- [ ] **Messwerte im Hero** auf der veröffentlichten Seite nachmessen (siehe Abschnitt 1)
 - [ ] **Web3Forms-Key** eintragen und eine Test-Anfrage schicken
 - [ ] **Domain** anpassen. `studio-kern.de` steht als Platzhalter in:
       `index.html` (canonical, og:url, JSON-LD), `robots.txt`, `sitemap.xml`
@@ -177,10 +209,16 @@ CSS und HTML noch einmal um rund zwei Drittel.
   hell/dunkel wechselnde Sektionen, eine Akzentfarbe, abgerundete Karten, dezente Schatten.
 - **Responsive:** Mobile-first mit Umbrüchen bei 734 px und 1068 px (wie apple.com),
   getestet von 320 px bis 1440 px Breite.
-- **Animationen:** Hero blendet beim Laden ein. Sektionen erscheinen beim Scrollen sanft
-  (IntersectionObserver, reines CSS für die Bewegung).
-  Bei „Bewegung reduzieren“ im Betriebssystem ist alles sofort und ohne Effekte sichtbar.
-  Ohne JavaScript ist ebenfalls alles sichtbar.
+- **Bewegung:**
+  - Der Hero blendet beim Laden ein.
+  - Beim Scrollen kommen die Geräte im Hero auf den Betrachter zu, und die Projektbilder
+    „setzen sich“. Das läuft über CSS-Scroll-Timelines ohne JavaScript; Browser ohne diese
+    Technik zeigen die Bilder einfach statisch.
+  - Im Ablauf füllt sich die Zeitleiste mit dem Scrollen, erreichte Schritte werden blau.
+  - Auf dem Handy erscheint der Header-Button erst, wenn der große Button im Hero aus dem
+    Bild ist.
+  - Bei „Bewegung reduzieren“ im Betriebssystem ist alles sofort und ohne Effekte
+    sichtbar. Ohne JavaScript ist ebenfalls alles sichtbar.
 - **Barrierefreiheit:** Sprunglink, sinnvolle Überschriften-Struktur, sichtbare
   Fokus-Ringe, beschriftete Formularfelder mit angekündigten Fehlern, Tastaturbedienung
   des mobilen Menüs (Esc schließt, Hintergrund wird gesperrt).

@@ -48,13 +48,12 @@
 
   <!-- ==================================================================
        HEADER / NAVIGATION
+       Der Button „Projekt starten“ erscheint erst, wenn der Button im
+       Hero aus dem Bild gescrollt ist (data-cta-auto).
        ================================================================== -->
-  <header class="nav" data-nav>
+  <header class="nav" data-nav data-cta-auto>
     <div class="container nav__inner">
-      <a class="logo" href="#top" aria-label="Studio Kern – zum Seitenanfang">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#1d1d1f"/><path d="M8.6 6.5v11M8.6 12.7l6.4-6.2M11 10.4l4.4 7.1" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Studio Kern
-      </a>
+      <a class="logo" href="#top" aria-label="Studio Kern – zum Seitenanfang">Studio Kern<span class="logo__dot" aria-hidden="true"></span></a>
 
       <nav class="nav__menu" id="menu" aria-label="Hauptnavigation">
         <ul class="nav__list" role="list">
@@ -79,26 +78,60 @@
 
     <!-- ================================================================
          1. HERO
+         Der blaue Punkt (class="punkt") ist das Markenzeichen von
+         Studio Kern und beendet jede große Überschrift.
          ================================================================ -->
     <section class="hero" id="top" aria-labelledby="hero-title">
-      <div class="container">
-        <p class="eyebrow hero__eyebrow">Webdesign aus Meerbusch</p>
-        <h1 class="hero__title" id="hero-title">Websites, die verkaufen.</h1>
+      <div class="container hero__intro">
+        <h1 class="hero__title" id="hero-title">
+          <span class="hero__kicker">Webdesign aus Meerbusch</span>
+          Websites, die verkaufen<span class="punkt">.</span>
+        </h1>
         <p class="hero__lead">
-          Durchdachtes Design, schnelle Technik und klare Botschaften – für Selbstständige
-          und Unternehmen, die online mehr Kunden gewinnen möchten.
+          Design, Technik und Texte aus einer Hand – für Selbstständige und Unternehmen,
+          die online mehr Kunden gewinnen wollen.
         </p>
-        <div class="hero__actions">
-          <a class="btn" href="#kontakt">Projekt starten</a>
+        <div class="hero__actions" data-hero-cta>
+          <a class="btn btn--large" href="#kontakt">Projekt starten</a>
           <a class="link-arrow" href="#arbeiten">Arbeiten ansehen</a>
         </div>
       </div>
 
-      <!-- Großes Geräte-Mockup. Wird sofort geladen, weil es direkt sichtbar ist. -->
+      <!-- Geräte-Mockup: auf dem Handy eine eigene Fassung mit großem Smartphone -->
       <div class="hero__visual">
-        <img src="assets/img/hero-geraete.svg" width="1120" height="720"
-             alt="Laptop und Smartphone zeigen dieselbe moderne Website – einmal am Desktop, einmal mobil"
-             fetchpriority="high" decoding="async">
+        <picture>
+          <source media="(max-width: 733px)" srcset="assets/img/hero-mobil.svg" width="400" height="600">
+          <img src="assets/img/hero-geraete.svg" width="1120" height="720"
+               alt="Die Website der Praxis Nordlicht auf Laptop und Smartphone, daneben die Meldung über einen neuen Online-Termin"
+               fetchpriority="high" decoding="async">
+        </picture>
+      </div>
+
+      <!-- Belege: Messwerte DIESER Seite. Nach größeren Änderungen neu messen
+           (Chrome → Entwicklertools → Lighthouse, Gerät „Mobil“). -->
+      <div class="container">
+        <div class="proof" data-reveal>
+          <p class="proof__intro">Die beste Arbeitsprobe ist diese Seite selbst.</p>
+          <dl class="proof__list">
+            <div class="proof__item">
+              <dt>Ladetempo</dt>
+              <dd>99<small>/100</small></dd>
+            </div>
+            <div class="proof__item">
+              <dt>Barrierefreiheit</dt>
+              <dd>100<small>/100</small></dd>
+            </div>
+            <div class="proof__item">
+              <dt>Suchmaschinen&shy;optimierung</dt>
+              <dd>100<small>/100</small></dd>
+            </div>
+            <div class="proof__item">
+              <dt>Tracking-Cookies</dt>
+              <dd>0</dd>
+            </div>
+          </dl>
+          <p class="proof__note">Gemessen mit Google Lighthouse auf dem Handy.</p>
+        </div>
       </div>
     </section>
 
@@ -107,9 +140,8 @@
          ================================================================ -->
     <section class="section section--alt" id="leistungen" aria-labelledby="leistungen-title">
       <div class="container">
-        <header class="section-head" data-reveal>
-          <p class="eyebrow">Leistungen</p>
-          <h2 class="section-title" id="leistungen-title">Alles, was Ihre Website braucht.</h2>
+        <header class="section-head section-head--split" data-reveal>
+          <h2 class="section-title" id="leistungen-title">Alles, was Ihre Website braucht<span class="punkt">.</span></h2>
           <p class="section-lead">
             Von der ersten Skizze bis zum laufenden Betrieb – aus einer Hand und mit einem
             festen Ansprechpartner.
@@ -117,7 +149,7 @@
         </header>
 
         <div class="services">
-          <article class="card card--lift service" data-reveal>
+          <article class="card service service--wide" data-reveal>
             <div class="service__body">
               <h3 class="service__name">Website-Design</h3>
               <p class="service__headline">Individuell gestaltet. Kein Baukasten.</p>
@@ -131,7 +163,7 @@
             </div>
           </article>
 
-          <article class="card card--lift service" data-reveal style="--delay: .1s">
+          <article class="card service" data-reveal>
             <div class="service__body">
               <h3 class="service__name">Landingpages</h3>
               <p class="service__headline">Eine Seite. Ein Ziel. Mehr Anfragen.</p>
@@ -145,7 +177,7 @@
             </div>
           </article>
 
-          <article class="card card--lift service" data-reveal>
+          <article class="card service" data-reveal style="--delay: .1s">
             <div class="service__body">
               <h3 class="service__name">E-Commerce</h3>
               <p class="service__headline">Ihr Shop. Schnell, sicher, verkaufsstark.</p>
@@ -159,13 +191,13 @@
             </div>
           </article>
 
-          <article class="card card--lift service" data-reveal style="--delay: .1s">
+          <article class="card service service--wide service--flip" data-reveal>
             <div class="service__body">
               <h3 class="service__name">Wartung &amp; Hosting</h3>
               <p class="service__headline">Läuft. Auch nach dem Launch.</p>
               <p class="service__text">
                 Updates, Backups, Sicherheit und kleine Änderungen übernehme ich für Sie.
-                Sie konzentrieren sich auf Ihr Geschäft.
+                Eine kurze Nachricht genügt – Sie konzentrieren sich auf Ihr Geschäft.
               </p>
             </div>
             <div class="service__media">
@@ -181,37 +213,46 @@
          Platzhalter-Projekte: Vor dem Livegang durch echte Referenzen ersetzen.
          Echte Screenshots (z. B. 1600 × 1000 px als .webp) nach assets/img/
          legen und unten bei src eintragen. Anleitung: README.md
+         Das erste Projekt (work--feature) wird groß gezeigt.
          ================================================================ -->
     <section class="section section--dark" id="arbeiten" aria-labelledby="arbeiten-title">
       <div class="container">
-        <header class="section-head" data-reveal>
-          <p class="eyebrow">Arbeiten</p>
-          <h2 class="section-title" id="arbeiten-title">Ausgewählte Projekte.</h2>
+        <header class="section-head section-head--split" data-reveal>
+          <h2 class="section-title" id="arbeiten-title">Ausgewählte Projekte<span class="punkt">.</span></h2>
           <p class="section-lead">
-            Ein Einblick in Entwürfe für Praxen, Handwerksbetriebe, Beratungen und Gastronomie.
+            Konzepte und Entwürfe für Praxen, Handwerksbetriebe, Beratungen und Gastronomie.
           </p>
         </header>
 
         <div class="work-grid">
-          <article class="work" data-reveal>
+          <article class="work work--feature" data-reveal>
             <div class="work__media">
               <img src="assets/img/projekt-nordlicht.svg" width="1280" height="800"
                    alt="Startseite der Praxis Nordlicht mit Online-Terminbuchung" loading="lazy" decoding="async">
             </div>
-            <h3 class="work__title">Praxis Nordlicht</h3>
-            <p class="work__meta">Arztpraxis · Website mit Online-Terminbuchung</p>
+            <div class="work__caption">
+              <div>
+                <h3 class="work__title">Praxis Nordlicht</h3>
+                <p class="work__meta">Arztpraxis · Website mit Online-Terminbuchung</p>
+              </div>
+              <ul class="work__tags" role="list">
+                <li>Webdesign</li>
+                <li>Terminbuchung</li>
+                <li>Mobil optimiert</li>
+              </ul>
+            </div>
           </article>
 
-          <article class="work" data-reveal style="--delay: .1s">
+          <article class="work" data-reveal>
             <div class="work__media">
               <img src="assets/img/projekt-brandt.svg" width="1280" height="800"
                    alt="Startseite der Tischlerei Brandt mit Referenzgalerie" loading="lazy" decoding="async">
             </div>
             <h3 class="work__title">Tischlerei Brandt</h3>
-            <p class="work__meta">Handwerk · Referenz-Website mit Anfragestrecke</p>
+            <p class="work__meta">Handwerk · Referenzen und Anfragestrecke</p>
           </article>
 
-          <article class="work" data-reveal>
+          <article class="work" data-reveal style="--delay: .08s">
             <div class="work__media">
               <img src="assets/img/projekt-aurum.svg" width="1280" height="800"
                    alt="Startseite von Aurum Consulting in Dunkelblau und Gold" loading="lazy" decoding="async">
@@ -220,7 +261,7 @@
             <p class="work__meta">Beratung · Corporate Website</p>
           </article>
 
-          <article class="work" data-reveal style="--delay: .1s">
+          <article class="work" data-reveal style="--delay: .16s">
             <div class="work__media">
               <img src="assets/img/projekt-mira.svg" width="1280" height="800"
                    alt="Startseite des Café Mira mit Speisekarte und Tischreservierung" loading="lazy" decoding="async">
@@ -231,7 +272,7 @@
         </div>
 
         <div class="work-cta" data-reveal>
-          <p class="work-cta__text">Ihr Projekt könnte das nächste sein.</p>
+          <p class="work-cta__text">Ihr Projekt könnte das nächste sein<span class="punkt">.</span></p>
           <a class="link-arrow" href="#kontakt">Projekt starten</a>
         </div>
       </div>
@@ -239,45 +280,46 @@
 
     <!-- ================================================================
          4. ABLAUF
+         Die blaue Linie füllt sich beim Scrollen (main.js, data-steps).
          ================================================================ -->
     <section class="section" id="ablauf" aria-labelledby="ablauf-title">
-      <div class="container">
-        <header class="section-head" data-reveal>
-          <p class="eyebrow">Ablauf</p>
-          <h2 class="section-title" id="ablauf-title">In vier Schritten online.</h2>
+      <div class="container process">
+        <div class="process__intro" data-reveal>
+          <h2 class="section-title" id="ablauf-title">In vier Schritten online<span class="punkt">.</span></h2>
           <p class="section-lead">
             Transparent, planbar und ohne Fachchinesisch. Sie wissen jederzeit, woran gerade
             gearbeitet wird.
           </p>
-        </header>
+          <a class="btn process__cta" href="#kontakt">Erstgespräch vereinbaren</a>
+        </div>
 
-        <ol class="steps" role="list">
-          <li class="step" data-reveal>
-            <span class="step__num" aria-hidden="true">01</span>
+        <ol class="steps" role="list" data-steps>
+          <li class="step">
+            <span class="step__num">Schritt 1</span>
             <h3 class="step__title">Kostenloses Erstgespräch</h3>
             <p class="step__text">
               Wir sprechen über Ihr Vorhaben, Ihre Zielgruppe und Ihr Budget. Sie erhalten eine
               ehrliche Einschätzung – unverbindlich.
             </p>
           </li>
-          <li class="step" data-reveal style="--delay: .1s">
-            <span class="step__num" aria-hidden="true">02</span>
+          <li class="step">
+            <span class="step__num">Schritt 2</span>
             <h3 class="step__title">Konzept &amp; Festpreis</h3>
             <p class="step__text">
               Sie bekommen eine klare Struktur für Ihre Website und ein Angebot zum Festpreis.
               Keine versteckten Kosten, keine Stundenzettel.
             </p>
           </li>
-          <li class="step" data-reveal style="--delay: .2s">
-            <span class="step__num" aria-hidden="true">03</span>
+          <li class="step">
+            <span class="step__num">Schritt 3</span>
             <h3 class="step__title">Design &amp; Umsetzung</h3>
             <p class="step__text">
               Ich gestalte und entwickle Ihre Website. Nach dem ersten Entwurf folgt eine
               Feedback-Runde, danach der Feinschliff.
             </p>
           </li>
-          <li class="step" data-reveal style="--delay: .3s">
-            <span class="step__num" aria-hidden="true">04</span>
+          <li class="step">
+            <span class="step__num">Schritt 4</span>
             <h3 class="step__title">Livegang &amp; Betreuung</h3>
             <p class="step__text">
               Domain verbinden, Technik prüfen, online gehen. Auf Wunsch kümmere ich mich danach
@@ -302,8 +344,7 @@
         </div>
 
         <div class="about__text" data-reveal style="--delay: .1s">
-          <p class="eyebrow">Über mich</p>
-          <h2 class="section-title" id="ueber-mich-title">Ein Ansprechpartner. Von der Idee bis zum Launch.</h2>
+          <h2 class="section-title" id="ueber-mich-title">Ein Ansprechpartner. Von der Idee bis zum Launch<span class="punkt">.</span></h2>
           <div class="about__copy">
             <p>
               Hinter Studio Kern steht kein großes Agenturteam, sondern ein fester
@@ -331,8 +372,7 @@
     <section class="section section--alt" id="kontakt" aria-labelledby="kontakt-title">
       <div class="container contact">
         <div class="contact__intro" data-reveal>
-          <p class="eyebrow">Kontakt</p>
-          <h2 class="section-title" id="kontakt-title">Lassen Sie uns starten.</h2>
+          <h2 class="section-title" id="kontakt-title">Lassen Sie uns starten<span class="punkt">.</span></h2>
           <p class="section-lead">
             Erzählen Sie mir kurz von Ihrem Vorhaben. Sie erhalten eine persönliche Antwort mit
             einer ersten Einschätzung – kostenlos und unverbindlich.
@@ -430,7 +470,7 @@
               </div>
             </div>
 
-            <button class="btn btn--block form__submit" type="submit">Anfrage senden</button>
+            <button class="btn btn--block btn--large form__submit" type="submit">Anfrage senden</button>
             <p class="form__status" role="status" aria-live="polite" data-form-status></p>
           </div>
 

@@ -5,9 +5,11 @@
  *
  * 1. Header: feine Linie nach dem Scrollen
  * 2. Mobiles Menü
- * 3. Einblenden beim Scrollen
- * 4. Kontaktformular (Web3Forms, ersatzweise E-Mail-Programm)
- * 5. Jahreszahl im Footer
+ * 3. Header-Button erst nach dem Hero einblenden
+ * 4. Einblenden beim Scrollen
+ * 5. Ablauf: Zeitleiste folgt dem Scrollen
+ * 6. Kontaktformular (Web3Forms, ersatzweise E-Mail-Programm)
+ * 7. Jahreszahl im Footer
  */
 (() => {
   "use strict";
@@ -61,7 +63,25 @@
     });
   }
 
-  /* 3. EINBLENDEN BEIM SCROLLEN ------------------------------------------ */
+  /* 3. HEADER-BUTTON ERST NACH DEM HERO ---------------------------------- */
+  // Solange der große Button im Hero zu sehen ist, bleibt der im Header verborgen.
+  const heroCta = document.querySelector("[data-hero-cta]");
+
+  if (nav && nav.hasAttribute("data-cta-auto")) {
+    if (heroCta && "IntersectionObserver" in window) {
+      new IntersectionObserver(
+        ([entry]) => {
+          const scrolledPast = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+          nav.classList.toggle("show-cta", scrolledPast);
+        },
+        { rootMargin: `-${nav.offsetHeight}px 0px 0px 0px` }
+      ).observe(heroCta);
+    } else {
+      nav.classList.add("show-cta");
+    }
+  }
+
+  /* 4. EINBLENDEN BEIM SCROLLEN ------------------------------------------ */
   const revealItems = document.querySelectorAll("[data-reveal]");
 
   if ("IntersectionObserver" in window) {
@@ -81,7 +101,56 @@
     revealItems.forEach((el) => el.classList.add("is-visible"));
   }
 
-  /* 4. KONTAKTFORMULAR --------------------------------------------------- */
+  /* 5. ABLAUF: ZEITLEISTE FOLGT DEM SCROLLEN ----------------------------- */
+  // Die blaue Linie wächst bis zur „Lesehöhe“ (60 % der Fensterhöhe);
+  // jeder Schritt, dessen Punkt diese Höhe erreicht hat, wird aktiv.
+  const steps = document.querySelector("[data-steps]");
+
+  if (steps) {
+    const items = [...steps.querySelectorAll(".step")];
+    const dotCenter = parseFloat(getComputedStyle(steps).getPropertyValue("--dot-center")) || 10.5;
+    let dots = []; // Position jedes Punktes innerhalb der Liste (ändert sich beim Scrollen nicht)
+    let queued = false;
+
+    // Erst alles lesen, dann alles schreiben – so muss der Browser das Layout
+    // nie vorzeitig berechnen. remeasure = Positionen der Punkte neu bestimmen.
+    const sync = (remeasure) => {
+      queued = false;
+      if (remeasure) dots = items.map((item) => item.offsetTop + dotCenter);
+      const top = steps.getBoundingClientRect().top;
+      const readingLine = window.innerHeight * 0.6;
+      const span = dots[dots.length - 1] - dots[0];
+      const progress = Math.min(Math.max((readingLine - top - dots[0]) / span, 0), 1);
+
+      if (remeasure) {
+        // Linie genau vom ersten bis zum letzten Punkt spannen
+        steps.style.setProperty("--track-top", `${dots[0]}px`);
+        steps.style.setProperty("--track-h", `${span}px`);
+      }
+      steps.style.setProperty("--progress", progress.toFixed(4));
+      items.forEach((item, i) => {
+        item.classList.toggle("is-active", top + dots[i] <= readingLine + 1);
+      });
+    };
+
+    window.addEventListener("scroll", () => {
+      if (queued || !dots.length) return;
+      queued = true;
+      requestAnimationFrame(() => sync(false));
+    }, { passive: true });
+
+    // Messen, sobald das Layout steht, und erneut bei Größenänderungen
+    // (Schrift geladen, Fenster gedreht …). Der ResizeObserver meldet sich
+    // auch direkt nach dem ersten Layout.
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(() => sync(true)).observe(steps);
+    } else {
+      requestAnimationFrame(() => sync(true));
+      window.addEventListener("resize", () => requestAnimationFrame(() => sync(true)));
+    }
+  }
+
+  /* 6. KONTAKTFORMULAR --------------------------------------------------- */
   const form = document.querySelector("[data-contact-form]");
 
   if (form) {
@@ -206,7 +275,7 @@
     });
   }
 
-  /* 5. JAHRESZAHL IM FOOTER ---------------------------------------------- */
+  /* 7. JAHRESZAHL IM FOOTER ---------------------------------------------- */
   const year = String(new Date().getFullYear());
   document.querySelectorAll("[data-year]").forEach((el) => { el.textContent = year; });
 })();

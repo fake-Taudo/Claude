@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <!-- Hero (Handy): Smartphone mit der mobilen Fassung von „Praxis Nordlicht“ und eingehender Terminbuchung -->
+  <defs>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#0f766e"/>
+    </linearGradient>
+    <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a2029"/><stop offset="1" stop-color="#15505a"/>
+    </linearGradient>
+    <linearGradient id="aur1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5eead4" stop-opacity=".1"/>
+      <stop offset=".5" stop-color="#5eead4" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#67e8f9" stop-opacity=".3"/>
+    </linearGradient>
+    <linearGradient id="aur2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a7f3d0" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#a7f3d0" stop-opacity=".05"/>
+    </linearGradient>
+    <linearGradient id="ti" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4a4a4e"/><stop offset="1" stop-color="#1c1c1e"/>
+    </linearGradient>
+    <clipPath id="phone-screen"><rect x="890" y="246" width="190" height="420" rx="27"/></clipPath>
+    <clipPath id="phone-img"><rect x="900" y="328" width="170" height="132" rx="14"/></clipPath>
+    <filter id="phone-shadow" x="-40%" y="-15%" width="180%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".2"/>
+    </filter>
+    <filter id="card-shadow" x="-30%" y="-60%" width="160%" height="260%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#0b2530" flood-opacity=".16"/>
+    </filter>
+  </defs>
+  <g transform="translate(115 20) scale(1.19) translate(-880 -236)">
+  <g filter="url(#phone-shadow)">
+    <rect x="880" y="236" width="210" height="440" rx="36" fill="url(#ti)"/>
+  </g>
+  <rect x="877" y="330" width="3" height="40" rx="1.5" fill="#2c2c2e"/>
+  <rect x="1090" y="350" width="3" height="60" rx="1.5" fill="#2c2c2e"/>
+  <rect x="884" y="240" width="202" height="432" rx="32" fill="#000"/>
+  <g clip-path="url(#phone-screen)">
+    <rect x="890" y="246" width="190" height="420" fill="#fff"/>
+    <text x="910" y="270" font-size="11" font-weight="600" fill="#10302f">9:41</text>
+    <rect x="1048.5" y="262.5" width="18" height="9" rx="2.5" fill="none" stroke="#10302f"/>
+    <rect x="1050.5" y="264.5" width="12" height="5" rx="1" fill="#10302f"/>
+    <rect x="1028" y="266" width="3" height="5" rx=".8" fill="#10302f"/>
+    <rect x="1033" y="264" width="3" height="7" rx=".8" fill="#10302f"/>
+    <rect x="1038" y="262" width="3" height="9" rx=".8" fill="#10302f"/>
+    <circle cx="909" cy="301" r="9" fill="url(#mark)"/>
+    <text x="924" y="305.5" font-size="12.5" font-weight="700" fill="#10302f" letter-spacing="-.2">Praxis Nordlicht</text>
+    <path d="M1046 297 H1064 M1046 303 H1064" stroke="#10302f" stroke-width="1.6" stroke-linecap="round"/>
+    <rect x="890" y="318" width="190" height="1" fill="#edf2f2"/>
+    <rect x="900" y="328" width="170" height="132" rx="14" fill="url(#night)"/>
+    <g clip-path="url(#phone-img)">
+      <g fill="#fff" fill-opacity=".7"><circle cx="918" cy="344" r="1.1"/><circle cx="962" cy="338" r=".9"/><circle cx="1012" cy="348" r="1.1"/><circle cx="1052" cy="340" r=".9"/></g>
+      <path d="M900 384 C950 344 1000 384 1070 340 V360 C1000 400 950 364 900 408 Z" fill="url(#aur2)"/>
+      <path d="M900 408 C940 366 990 416 1070 366 V398 C1010 436 950 400 900 440 Z" fill="url(#aur1)"/>
+      <path d="M900 460 V442 C930 430 960 438 990 434 C1020 428 1045 442 1070 430 V460 Z" fill="#06171c"/>
+    </g>
+    <text x="906" y="482" font-size="10.5" font-weight="600" fill="#0f766e">Hausarztpraxis</text>
+    <g font-size="19" font-weight="700" fill="#10302f" letter-spacing="-.5">
+      <text x="906" y="506">Ihre Gesundheit</text>
+      <text x="906" y="530">in guten Händen.</text>
+    </g>
+    <text x="906" y="552" font-size="11" fill="#5b6b6b">Termine rund um die Uhr online.</text>
+    <rect x="906" y="566" width="158" height="36" rx="18" fill="#0f766e"/>
+    <text x="985" y="588.5" font-size="12" font-weight="600" fill="#fff" text-anchor="middle">Termin online buchen</text>
+    <rect x="906" y="612" width="158" height="36" rx="10" fill="#f1f7f7"/>
+    <circle cx="924" cy="630" r="9" fill="#d5ecea"/>
+    <path d="M924 625 V630 L927.5 632.5" fill="none" stroke="#0f766e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="940" y="634" font-size="11" fill="#10302f">Mo–Fr 8–18 Uhr</text>
+    <rect x="950" y="656" width="70" height="4" rx="2" fill="#10302f" fill-opacity=".85"/>
+  </g>
+  <rect x="955" y="256" width="60" height="18" rx="9" fill="#000"/>
+  </g>
+  <!-- Benachrichtigung -->
+  <g transform="translate(0 90)">
+    <g filter="url(#card-shadow)">
+      <rect x="6" y="372" width="262" height="70" rx="18.2" fill="#fff"/>
+    </g>
+    <circle cx="41.5" cy="407.0" r="17.5" fill="#0f766e"/>
+    <path d="M34.1 407.4 L39.8 412.9 L49.5 401.8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="73.0" y="404.0" font-size="15" font-weight="600" fill="#1d1d1f">Neuer Online-Termin</text>
+    <text x="73.0" y="422.8" font-size="12" fill="#6e6e73">Di, 10:30 Uhr · Praxis Nordlicht</text>
+  </g>
+</svg>

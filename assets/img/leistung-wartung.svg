@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
-  <!-- Leistung „Wartung & Hosting“: Status-Übersicht mit Backups, Updates und Verfügbarkeit -->
+  <!-- Leistung „Wartung & Hosting“: Aktivitäten, Änderungswunsch per Nachricht, Erreichbarkeit -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#f7f7f9"/>
@@ -8,78 +8,78 @@
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
       <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#000" flood-opacity=".09"/>
     </filter>
+    <filter id="shadow-strong" x="-20%" y="-40%" width="140%" height="200%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000" flood-opacity=".14"/>
+    </filter>
   </defs>
   <rect width="640" height="400" fill="url(#bg)"/>
-
-  <!-- Fenster -->
   <rect x="80" y="48" width="480" height="400" rx="16" fill="#fff" filter="url(#shadow)"/>
   <circle cx="102" cy="70" r="5" fill="#e0e0e5"/>
   <circle cx="118" cy="70" r="5" fill="#e0e0e5"/>
   <circle cx="134" cy="70" r="5" fill="#e0e0e5"/>
-
-  <!-- Kopfzeile -->
   <circle cx="110" cy="106" r="5" fill="#34c759"/>
   <text x="122" y="111" font-size="14" font-weight="600" fill="#1d1d1f">Alle Systeme online</text>
   <text x="536" y="111" font-size="12" fill="#86868b" text-anchor="end">Heute, 09:41</text>
   <rect x="104" y="128" width="432" height="1" fill="#f0f0f3"/>
 
-  <!-- Erledigte Aufgaben -->
+  <!-- Aktivitäten -->
+  <text x="104" y="152" font-size="10.5" font-weight="600" fill="#86868b">Letzte Aktivitäten</text>
   <g>
-    <circle cx="120" cy="162" r="14" fill="#0071e3" fill-opacity=".1"/>
-    <path d="M113.5 162 L118 166.5 L126.5 157.5" fill="none" stroke="#0071e3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="144" y="160" font-size="13.5" font-weight="600" fill="#1d1d1f">Backup erstellt</text>
-    <text x="144" y="177" font-size="11.5" fill="#86868b">Täglich, automatisch</text>
-
-    <circle cx="120" cy="214" r="14" fill="#0071e3" fill-opacity=".1"/>
-    <path d="M113.5 214 L118 218.5 L126.5 209.5" fill="none" stroke="#0071e3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="144" y="212" font-size="13.5" font-weight="600" fill="#1d1d1f">Updates installiert</text>
-    <text x="144" y="229" font-size="11.5" fill="#86868b">Alle Komponenten aktuell</text>
-
-    <circle cx="120" cy="266" r="14" fill="#0071e3" fill-opacity=".1"/>
-    <path d="M113.5 266 L118 270.5 L126.5 261.5" fill="none" stroke="#0071e3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="144" y="264" font-size="13.5" font-weight="600" fill="#1d1d1f">SSL-Zertifikat gültig</text>
-    <text x="144" y="281" font-size="11.5" fill="#86868b">Verbindung verschlüsselt</text>
+    <circle cx="116" cy="178" r="12" fill="#0071e3" fill-opacity=".1"/>
+    <path d="M110.5 178 L114.5 182 L121.5 174.5" fill="none" stroke="#0071e3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="138" y="176" font-size="12.5" font-weight="600" fill="#1d1d1f">Backup erstellt</text>
+    <text x="138" y="192" font-size="10.5" fill="#86868b">Heute, 03:00 · automatisch</text>
+    <circle cx="116" cy="224" r="12" fill="#0071e3" fill-opacity=".1"/>
+    <path d="M110.5 224 L114.5 228 L121.5 220.5" fill="none" stroke="#0071e3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="138" y="222" font-size="12.5" font-weight="600" fill="#1d1d1f">Sicherheits-Update</text>
+    <text x="138" y="238" font-size="10.5" fill="#86868b">Gestern · 3 Komponenten</text>
+    <circle cx="116" cy="270" r="12" fill="#0071e3" fill-opacity=".1"/>
+    <path d="M110.5 270 L114.5 274 L121.5 266.5" fill="none" stroke="#0071e3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="138" y="268" font-size="12.5" font-weight="600" fill="#1d1d1f">SSL-Zertifikat erneuert</text>
+    <text x="138" y="284" font-size="10.5" fill="#86868b">Mo · verlängert sich selbst</text>
   </g>
 
-  <!-- Performance-Anzeige -->
-  <circle cx="462" cy="206" r="52" fill="none" stroke="#f0f0f3" stroke-width="10"/>
-  <circle cx="462" cy="206" r="52" fill="none" stroke="#0071e3" stroke-width="10" stroke-linecap="round"
-          stroke-dasharray="320 326.7" transform="rotate(-90 462 206)"/>
-  <text x="462" y="218" font-size="34" font-weight="600" fill="#1d1d1f" text-anchor="middle" letter-spacing="-1">98</text>
-  <text x="462" y="286" font-size="12" fill="#6e6e73" text-anchor="middle">Performance</text>
+  <!-- Änderungswunsch als Nachricht -->
+  <rect x="340" y="146" width="196" height="50" rx="14" fill="#f0f0f3"/>
+  <text x="354" y="167" font-size="11.5" fill="#1d1d1f">Können Sie unsere</text>
+  <text x="354" y="184" font-size="11.5" fill="#1d1d1f">Öffnungszeiten ändern?</text>
+  <rect x="380" y="206" width="156" height="50" rx="14" fill="#0071e3"/>
+  <text x="394" y="227" font-size="11.5" fill="#fff">Ist erledigt und</text>
+  <text x="394" y="244" font-size="11.5" fill="#fff">schon online. ✓</text>
+  <text x="536" y="276" font-size="10" fill="#86868b" text-anchor="end">Zugestellt · 09:52</text>
 
-  <!-- Verfügbarkeit der letzten 30 Tage -->
-  <text x="104" y="326" font-size="11.5" fill="#86868b">Verfügbarkeit · letzte 30 Tage</text>
+  <!-- Erreichbarkeit der letzten 30 Tage -->
+  <text x="104" y="336" font-size="10.5" fill="#86868b">Erreichbarkeit · letzte 30 Tage</text>
   <g fill="#0071e3">
-    <rect x="104" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="118.4" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="132.8" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="147.2" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="161.6" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="176" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="190.4" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="204.8" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="219.2" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="233.6" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="248" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="262.4" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="276.8" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="291.2" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="305.6" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="320" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="334.4" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="348.8" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="363.2" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="377.6" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="392" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="406.4" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="420.8" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="435.2" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="449.6" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="464" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="478.4" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="492.8" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="507.2" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
-    <rect x="521.6" y="338" width="9" height="30" rx="3" fill-opacity=".85"/>
+    <rect x="104.0" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="118.4" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="132.8" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="147.2" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="161.6" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="176.0" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="190.4" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="204.8" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="219.2" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="233.6" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="248.0" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="262.4" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="276.8" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="291.2" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="305.6" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="320.0" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="334.4" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="348.8" y="350" width="9" height="28" rx="3" fill-opacity=".35"/>
+    <rect x="363.2" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="377.6" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="392.0" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="406.4" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="420.8" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="435.2" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="449.6" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="464.0" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="478.4" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="492.8" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="507.2" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
+    <rect x="521.6" y="350" width="9" height="28" rx="3" fill-opacity=".85"/>
   </g>
 </svg>

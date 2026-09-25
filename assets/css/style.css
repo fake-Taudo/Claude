@@ -6,7 +6,7 @@
    2. Schrift
    3. Basis
    4. Layout
-   5. Bausteine (Buttons, Links, Karten)
+   5. Bausteine (Kern-Punkt, Buttons, Links, Karten)
    6. Navigation
    7. Sektionen (Hero, Leistungen, Arbeiten, Ablauf, Über mich, Kontakt, Footer)
    8. Unterseiten (Impressum, Datenschutz)
@@ -30,7 +30,7 @@
   --c-dark-text-muted: #a1a1a6;
   --c-dark-line: #424245;
 
-  /* Akzentfarbe – für Buttons, Links und Hervorhebungen */
+  /* Akzentfarbe – Buttons, Links und der „Kern-Punkt“ */
   --c-accent: #0071e3;
   --c-accent-hover: #0077ed;
   --c-accent-on-dark: #2997ff;              /* hellere Variante auf Schwarz */
@@ -48,15 +48,15 @@
   --fs-small: 0.875rem;
   --fs-body: 1.0625rem;                                   /* 17 px */
   --fs-lead: clamp(1.1875rem, 1.05rem + 0.6vw, 1.5rem);   /* 19 → 24 px */
-  --fs-h3: clamp(1.5rem, 1.25rem + 1vw, 2rem);            /* 24 → 32 px */
-  --fs-h2: clamp(2rem, 1.3rem + 3.2vw, 3.5rem);           /* 32 → 56 px */
-  --fs-h1: clamp(2.75rem, 1.5rem + 6vw, 5.5rem);          /* 44 → 88 px */
+  --fs-h3: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);        /* 24 → 36 px */
+  --fs-h2: clamp(2.25rem, 1.4rem + 3.6vw, 4rem);          /* 36 → 64 px */
+  --fs-h1: clamp(3rem, 1.4rem + 7vw, 6.5rem);             /* 48 → 104 px */
 
   /* Abstände */
-  --gutter: clamp(1.375rem, 5vw, 3rem);           /* Seitenrand */
-  --max-width: 75rem;                             /* 1200 px */
-  --section-space: clamp(5rem, 3rem + 8vw, 10rem); /* 80 → 160 px */
-  --nav-height: 3.25rem;                          /* 52 px */
+  --gutter: clamp(1.375rem, 5vw, 3rem);             /* Seitenrand */
+  --max-width: 75rem;                               /* 1200 px */
+  --section-space: clamp(4.5rem, 2.5rem + 7vw, 8.5rem); /* 72 → 136 px */
+  --nav-height: 3.25rem;                            /* 52 px */
 
   /* Formen */
   --radius-lg: 1.75rem;
@@ -64,7 +64,6 @@
   --radius-sm: 0.75rem;
   --radius-pill: 980px;
   --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.05);
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.05), 0 24px 56px rgba(0, 0, 0, 0.09);
 
   /* Bewegung */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -217,25 +216,33 @@ p {
   color: var(--c-dark-text);
 }
 
-/* Kopf einer Sektion: Eyebrow, Überschrift, Einleitung */
+/* Kopf einer Sektion. Variante --split: Überschrift links, Einleitung rechts */
 .section-head {
-  max-width: 48rem;
-  margin: 0 auto clamp(3rem, 2rem + 3vw, 5rem);
-  text-align: center;
+  margin-bottom: clamp(2.5rem, 1.5rem + 3vw, 4.5rem);
 }
 
-.eyebrow {
-  margin-bottom: 0.75rem;
-  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.1875rem);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--c-text-muted);
+.section-head--split {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1068px) {
+  .section-head--split {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: end;
+    gap: 4rem;
+  }
+
+  .section-head--split .section-lead {
+    margin: 0 0 0.35em;
+  }
 }
 
 .section-title {
   font-size: var(--fs-h2);
-  line-height: 1.07;
-  letter-spacing: -0.028em;
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
 }
 
 .section-lead {
@@ -245,13 +252,21 @@ p {
   color: var(--c-text-muted);
 }
 
-.section--dark .eyebrow,
 .section--dark .section-lead {
   color: var(--c-dark-text-muted);
 }
 
 
 /* 5. BAUSTEINE ============================================================= */
+
+/* Der „Kern-Punkt“: das Markenzeichen. Beendet jede große Überschrift. */
+.punkt {
+  color: var(--c-accent);
+}
+
+.section--dark .punkt {
+  color: var(--c-accent-on-dark);
+}
 
 /* Button (Pill-Form) */
 .btn {
@@ -276,7 +291,7 @@ p {
 }
 
 .btn:active {
-  scale: 0.98;
+  scale: 0.97;
 }
 
 .btn[disabled] {
@@ -291,6 +306,12 @@ p {
   font-weight: 400;
 }
 
+.btn--large {
+  min-height: 3.25rem;
+  padding: 0.875rem 1.875rem;
+  font-size: 1.125rem;
+}
+
 .btn--block {
   width: 100%;
 }
@@ -301,7 +322,7 @@ p {
   align-items: center;
   gap: 0.35em;
   color: var(--c-accent);
-  font-size: var(--fs-body);
+  font-size: 1.125rem;
 }
 
 .link-arrow::after {
@@ -333,17 +354,6 @@ p {
   border-radius: var(--radius-lg);
   background: var(--c-bg);
   box-shadow: var(--shadow-card);
-}
-
-.card--lift {
-  transition: scale 0.6s var(--ease), box-shadow 0.6s var(--ease);
-}
-
-@media (hover: hover) {
-  .card--lift:hover {
-    scale: 1.012;
-    box-shadow: var(--shadow-card-hover);
-  }
 }
 
 
@@ -390,19 +400,22 @@ p {
   height: 100%;
 }
 
+/* Wortmarke mit Kern-Punkt */
 .logo {
   display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: baseline;
   margin-right: auto;
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: 1.1875rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
-.logo svg {
-  width: 1.5rem;
-  height: 1.5rem;
+.logo__dot {
+  width: 0.3em;
+  height: 0.3em;
+  margin-left: 0.06em;
+  border-radius: 50%;
+  background: var(--c-accent);
 }
 
 .nav__cta {
@@ -412,6 +425,26 @@ p {
 @media (min-width: 370px) {
   .nav__cta {
     display: inline-flex;
+  }
+}
+
+/* Auf dem Handy erscheint der Header-Button der Startseite erst, wenn der
+   große Button im Hero aus dem Bild ist – so gibt es nie zwei gleichzeitig. */
+@media (max-width: 833px) {
+  .js .nav[data-cta-auto] .nav__cta {
+    opacity: 0;
+    visibility: hidden;
+    translate: 0 -0.25rem;
+    transition: opacity 0.3s ease, translate 0.3s var(--ease), visibility 0s linear 0.3s,
+      background-color 0.2s ease;
+  }
+
+  .js .nav[data-cta-auto].show-cta .nav__cta {
+    opacity: 1;
+    visibility: visible;
+    translate: 0 0;
+    transition: opacity 0.3s ease, translate 0.3s var(--ease), visibility 0s,
+      background-color 0.2s ease;
   }
 }
 
@@ -481,9 +514,9 @@ p {
 .nav__list a {
   display: block;
   padding: 0.5rem 0;
-  font-size: 1.75rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 /* Menüpunkte gleiten nacheinander herein */
@@ -554,25 +587,32 @@ html.menu-open {
 
 /* --- Hero --------------------------------------------------------------- */
 .hero {
-  overflow: hidden;
-  padding-top: calc(var(--nav-height) + clamp(3.5rem, 2rem + 6vw, 7.5rem));
-  padding-bottom: clamp(3rem, 2rem + 4vw, 6rem);
+  overflow: clip; /* nicht „hidden“: das würde die Scroll-Timeline im Hero blockieren */
+  padding-top: calc(var(--nav-height) + clamp(2rem, 0.5rem + 4.5vw, 4.5rem));
+  padding-bottom: clamp(3.5rem, 2rem + 5vw, 6.5rem);
   text-align: center;
-}
-
-.hero__eyebrow {
-  margin-bottom: 1rem;
-  font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.3125rem);
 }
 
 .hero__title {
   font-size: var(--fs-h1);
-  line-height: 1.05;
-  letter-spacing: -0.032em;
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.042em;
+}
+
+/* Ortsangabe steht für Google mit in der H1, sieht aber aus wie eine Dachzeile */
+.hero__kicker {
+  display: block;
+  margin-bottom: 0.875rem;
+  font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.3125rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--c-text-muted);
 }
 
 .hero__lead {
-  max-width: 38rem;
+  max-width: 44rem;
   margin: 1.5rem auto 0;
   font-size: var(--fs-lead);
   line-height: 1.4;
@@ -585,14 +625,14 @@ html.menu-open {
   align-items: center;
   justify-content: center;
   gap: 1rem 2rem;
-  margin-top: 2.25rem;
+  margin-top: 2rem;
 }
 
 .hero__visual {
   position: relative;
   isolation: isolate;
-  max-width: 70rem;
-  margin: clamp(3rem, 2rem + 5vw, 6rem) auto 0;
+  max-width: 72rem;
+  margin: clamp(2.5rem, 1rem + 4vw, 4.5rem) auto 0;
   padding-inline: var(--gutter);
 }
 
@@ -607,9 +647,81 @@ html.menu-open {
 
 .hero__visual img {
   width: 100%;
+  transform-origin: 50% 100%;
 }
 
-/* --- Leistungen --------------------------------------------------------- */
+/* Handy: das hohe Smartphone-Motiv nicht übermäßig groß werden lassen */
+@media (max-width: 733px) {
+  .hero__visual picture {
+    display: block;
+    max-width: 24rem;
+    margin-inline: auto;
+  }
+}
+
+/* Belege: Messwerte dieser Seite */
+.proof {
+  margin-top: clamp(3rem, 2rem + 4vw, 5rem);
+  padding-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+  border-top: 1px solid var(--c-line);
+}
+
+.proof__intro {
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.proof__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem 1rem;
+  margin-top: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
+}
+
+@media (min-width: 734px) {
+  .proof__list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Zahl oben, Bezeichnung darunter – im Quelltext bleibt die Reihenfolge dt → dd */
+.proof__item {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.proof__item dd {
+  font-size: clamp(2.75rem, 2rem + 3vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+
+.proof__item dd small {
+  margin-left: 0.08em;
+  font-size: 0.36em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--c-text-muted);
+}
+
+.proof__item dt {
+  font-size: var(--fs-small);
+  color: var(--c-text-muted);
+  hyphens: manual;
+}
+
+.proof__note {
+  margin-top: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
+/* --- Leistungen (Bento-Raster) ----------------------------------------- */
 .services {
   display: grid;
   gap: 1.25rem;
@@ -619,6 +731,10 @@ html.menu-open {
   .services {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.5rem;
+  }
+
+  .service--wide {
+    grid-column: 1 / -1;
   }
 }
 
@@ -640,15 +756,16 @@ html.menu-open {
 
 .service__headline {
   margin-top: 0.5rem;
-  font-size: var(--fs-h3);
-  font-weight: 600;
-  line-height: 1.12;
-  letter-spacing: -0.022em;
+  font-size: clamp(1.625rem, 1.3rem + 1vw, 2.125rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
 .service__text {
   margin-top: 0.875rem;
+  max-width: 32rem;
   color: var(--c-text-muted);
 }
 
@@ -662,20 +779,58 @@ html.menu-open {
   width: 100%;
 }
 
+/* Breite Karten: Text und Bild nebeneinander */
+@media (min-width: 1068px) {
+  .service--wide {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+
+  .service--wide .service__body {
+    align-self: center;
+    padding-bottom: clamp(1.75rem, 1.25rem + 2vw, 2.75rem);
+  }
+
+  .service--wide .service__headline {
+    font-size: clamp(2rem, 1.5rem + 1.2vw, 2.5rem);
+  }
+
+  /* Fläche in der oberen Farbe der Illustration, damit Bild und Fläche verschmelzen */
+  .service--wide .service__media {
+    display: flex;
+    align-items: flex-end;
+    margin-top: 0;
+    padding-top: 2.5rem;
+    background: #f7f7f9;
+  }
+
+  .service--flip {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  .service--flip .service__body {
+    order: 2;
+  }
+}
+
 /* --- Arbeiten (Portfolio) ----------------------------------------------- */
 .work-grid {
   display: grid;
-  gap: clamp(2.5rem, 2rem + 2vw, 3.5rem) 1.5rem;
+  gap: clamp(2.5rem, 2rem + 2vw, 3.5rem) 1.25rem;
 }
 
 @media (min-width: 734px) {
   .work-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .work--feature {
+    grid-column: 1 / -1;
   }
 }
 
 .work__media {
-  overflow: hidden;
+  overflow: clip; /* nicht „hidden“: siehe Scroll-Animation „settle“ */
   aspect-ratio: 16 / 10;
   border-radius: var(--radius-md);
   background: var(--c-dark-surface);
@@ -685,23 +840,56 @@ html.menu-open {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: scale 1s var(--ease);
+  object-position: top;
 }
 
-@media (hover: hover) {
-  .work:hover .work__media img {
-    scale: 1.03;
+/* Das Hauptprojekt breiter und flacher zuschneiden */
+@media (min-width: 734px) {
+  .work--feature .work__media {
+    aspect-ratio: 2 / 1;
+    border-radius: var(--radius-lg);
   }
 }
 
 .work__title {
   margin-top: 1.25rem;
-  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
-  letter-spacing: -0.018em;
+  font-size: clamp(1.1875rem, 1.05rem + 0.5vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .work__meta {
   margin-top: 0.25rem;
+  font-size: clamp(0.9375rem, 0.9rem + 0.2vw, 1.0625rem);
+  color: var(--c-dark-text-muted);
+}
+
+.work__caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+}
+
+.work--feature .work__title {
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
+  letter-spacing: -0.035em;
+}
+
+.work__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.work__tags li {
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--c-dark-line);
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
   color: var(--c-dark-text-muted);
 }
 
@@ -713,88 +901,116 @@ html.menu-open {
 .work-cta__text {
   margin-bottom: 1rem;
   font-size: var(--fs-h3);
-  font-weight: 600;
-  letter-spacing: -0.022em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 /* --- Ablauf ------------------------------------------------------------- */
-/* Handy: senkrechte Zeitleiste. Ab Tablet: waagerecht mit Linie oben. */
-.steps {
+/* Überschrift links (auf dem Desktop fixiert), Schritte rechts entlang
+   einer Zeitleiste, deren blaue Füllung dem Scrollen folgt (main.js). */
+.process {
   display: grid;
-  padding: 0;
+  gap: clamp(3rem, 2rem + 3vw, 4rem);
+}
+
+.process__cta {
+  margin-top: 2rem;
+}
+
+@media (min-width: 1068px) {
+  .process {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+    gap: 6rem;
+  }
+
+  .process__intro {
+    position: sticky;
+    top: calc(var(--nav-height) + 3rem);
+  }
+}
+
+.steps {
+  --dot-center: 10.5px;
+  position: relative;
+  display: grid;
+  gap: clamp(2.75rem, 2rem + 2.5vw, 4rem);
+  padding: 0 0 0 2.25rem;
   list-style: none;
+}
+
+/* Grauer Strich (Spur) und blaue Füllung. --track-top/--track-h und
+   --progress setzt main.js; ohne JavaScript ist die Linie komplett blau. */
+.steps::before,
+.steps::after {
+  content: "";
+  position: absolute;
+  top: var(--track-top, var(--dot-center));
+  left: 4px;
+  width: 1px;
+  height: var(--track-h, calc(100% - 2 * var(--dot-center)));
+  background: var(--c-line);
+}
+
+.steps::after {
+  left: 3.5px;
+  width: 2px;
+  background: var(--c-accent);
+  transform-origin: top;
+  scale: 1 var(--progress, 1);
 }
 
 .step {
   position: relative;
-  margin-left: 0.3125rem;
-  padding: 0 0 2.75rem 2rem;
-  border-left: 1px solid var(--c-line);
 }
 
-.step:last-child {
-  padding-bottom: 0;
-  border-left-color: transparent;
-}
-
-/* Punkt auf der Zeitleiste */
+/* Punkt auf der Zeitleiste – der Kern-Punkt */
 .step::before {
   content: "";
   position: absolute;
-  top: 0.4rem;
-  left: -0.3125rem;
-  width: 0.5625rem;
-  height: 0.5625rem;
+  top: calc(var(--dot-center) - 5.5px);
+  left: calc(-2.25rem - 1px);
+  z-index: 1;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: var(--c-accent);
-  box-shadow: 0 0 0 4px var(--c-bg);
+  box-shadow: 0 0 0 5px var(--c-bg);
+  transition: background-color 0.4s ease, scale 0.4s var(--ease);
 }
 
 .step__num {
   display: block;
-  font-size: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  font-size: 0.9375rem;
   font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.04em;
+  line-height: 1.4;
   color: var(--c-accent);
-  font-variant-numeric: tabular-nums;
+  transition: color 0.4s ease;
 }
 
-.step__title {
-  margin-top: 1rem;
-  font-size: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
-  letter-spacing: -0.018em;
+/* Noch nicht erreichte Schritte: Punkt und Nummer in Grau */
+.js .step:not(.is-active)::before {
+  background: var(--c-line);
+  scale: 0.8;
 }
 
-.step__text {
-  margin-top: 0.625rem;
+.js .step:not(.is-active) .step__num {
   color: var(--c-text-muted);
 }
 
-@media (min-width: 734px) {
-  .steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    row-gap: 3.5rem;
-  }
-
-  .step,
-  .step:last-child {
-    margin-left: 0;
-    padding: 2.25rem 2.5rem 0 0;
-    border-left: 0;
-    border-top: 1px solid var(--c-line);
-  }
-
-  .step::before {
-    top: -0.3125rem;
-    left: 0;
-  }
+.step__title {
+  margin-top: 0.375rem;
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
-@media (min-width: 1068px) {
-  .steps {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+.step__text {
+  max-width: 34rem;
+  margin-top: 0.75rem;
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+  color: var(--c-text-muted);
 }
 
 /* --- Über mich ---------------------------------------------------------- */
@@ -813,6 +1029,10 @@ html.menu-open {
 .about__media img {
   width: 100%;
   border-radius: var(--radius-lg);
+}
+
+.about .section-title {
+  font-size: clamp(2rem, 1.3rem + 2.4vw, 3rem);
 }
 
 .about__copy {
@@ -834,6 +1054,23 @@ html.menu-open {
   border-top: 1px solid var(--c-dark-line);
   list-style: none;
   color: var(--c-dark-text-muted);
+}
+
+/* Aufzählungspunkte als Kern-Punkte */
+.values li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.values li::before {
+  content: "";
+  position: absolute;
+  top: 0.5em;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-accent-on-dark);
 }
 
 .values strong {
@@ -1121,7 +1358,8 @@ textarea.input {
 
 .legal h1 {
   font-size: clamp(2.25rem, 1.75rem + 2.5vw, 3.5rem);
-  letter-spacing: -0.028em;
+  font-weight: 700;
+  letter-spacing: -0.035em;
 }
 
 .legal__updated {
@@ -1195,10 +1433,9 @@ textarea.input {
   }
 }
 
-.hero__eyebrow { animation: rise 1s var(--ease) 0.05s both; }
-.hero__title   { animation: rise 1s var(--ease) 0.12s both; }
-.hero__lead    { animation: rise 1s var(--ease) 0.19s both; }
-.hero__actions { animation: rise 1s var(--ease) 0.26s both; }
+.hero__title   { animation: rise 1s var(--ease) 0.05s both; }
+.hero__lead    { animation: rise 1s var(--ease) 0.15s both; }
+.hero__actions { animation: rise 1s var(--ease) 0.25s both; }
 .hero__visual  { animation: rise-scale 1.4s var(--ease) 0.2s both; }
 
 /* Einblenden beim Scrollen. Die Klasse .js setzt ein kleines Skript im <head>,
@@ -1209,14 +1446,56 @@ textarea.input {
   translate: 0 1.5rem;
   transition:
     opacity var(--duration) var(--ease) var(--delay, 0s),
-    translate var(--duration) var(--ease) var(--delay, 0s),
-    scale 0.6s var(--ease),
-    box-shadow 0.6s var(--ease);
+    translate var(--duration) var(--ease) var(--delay, 0s);
 }
 
 .js [data-reveal].is-visible {
   opacity: 1;
   translate: 0 0;
+}
+
+/* Scroll-gekoppelte Momente – nur in Browsern, die Scroll-Timelines
+   beherrschen, und nur ohne „Bewegung reduzieren“. Sonst bleibt alles statisch. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Die Geräte im Hero kommen beim Scrollen auf einen zu */
+    .hero__visual img {
+      animation: approach linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 55%;
+    }
+
+    /* Der Hero-Text tritt beim Weiterscrollen leicht zurück */
+    .hero__intro {
+      animation: recede linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 55vh;
+    }
+
+    /* Projektbilder „setzen sich“ beim Hereinscrollen */
+    .work__media img {
+      animation: settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+  }
+}
+
+@keyframes approach {
+  from { scale: 0.92; }
+  to   { scale: 1.03; }
+}
+
+@keyframes recede {
+  to {
+    opacity: 0.25;
+    translate: 0 -2.5rem;
+  }
+}
+
+@keyframes settle {
+  from { scale: 1.12; }
+  to   { scale: 1; }
 }
 
 /* Wer reduzierte Bewegung eingestellt hat, sieht alles sofort und ohne Effekte */
