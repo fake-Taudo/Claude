@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <!-- Portfolio-Platzhalter „Tischlerei Brandt“ – durch echten Screenshot ersetzen -->
+  <defs>
+    <linearGradient id="stage" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eee6db"/>
+      <stop offset="1" stop-color="#d9c9b4"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".16"/>
+      <stop offset=".6" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="win"><rect x="100" y="90" width="1080" height="760" rx="20"/></clipPath>
+    <clipPath id="img"><rect x="680" y="232" width="450" height="330" rx="24"/></clipPath>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="20" stdDeviation="28" flood-color="#3b2a1a" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="800" fill="url(#stage)"/>
+  <rect x="100" y="90" width="1080" height="760" rx="20" fill="#1b1714" filter="url(#shadow)"/>
+
+  <g clip-path="url(#win)">
+    <!-- Browserleiste -->
+    <rect x="100" y="90" width="1080" height="48" fill="#2e2926"/>
+    <circle cx="128" cy="114" r="6" fill="#4d4540"/>
+    <circle cx="148" cy="114" r="6" fill="#4d4540"/>
+    <circle cx="168" cy="114" r="6" fill="#4d4540"/>
+    <rect x="440" y="102" width="400" height="24" rx="12" fill="#231f1c"/>
+    <text x="640" y="118.5" font-size="13" fill="#a89b8e" text-anchor="middle">tischlerei-brandt.de</text>
+
+    <!-- Navigation -->
+    <text x="150" y="177" font-size="20" font-weight="700" fill="#f3ebe1" letter-spacing="5">BRANDT</text>
+    <g font-size="14" fill="#a89b8e">
+      <text x="700" y="175">Möbel</text>
+      <text x="766" y="175">Innenausbau</text>
+      <text x="872" y="175">Referenzen</text>
+    </g>
+    <rect x="982.75" y="152.75" width="146.5" height="34.5" rx="17.25" fill="none" stroke="#c08a54" stroke-width="1.5"/>
+    <text x="1056" y="175" font-size="14" font-weight="600" fill="#e8c9a4" text-anchor="middle">Anfrage</text>
+    <rect x="100" y="198" width="1080" height="1" fill="#2c2622"/>
+
+    <!-- Hero -->
+    <text x="150" y="272" font-size="15" font-weight="600" fill="#c08a54">Maßanfertigung aus Meisterhand</text>
+    <g font-size="58" font-weight="700" fill="#f3ebe1" letter-spacing="-1.5">
+      <text x="150" y="340">Handwerk,</text>
+      <text x="150" y="406">das bleibt.</text>
+    </g>
+    <g font-size="18" fill="#a89b8e">
+      <text x="150" y="454">Möbel und Innenausbau nach Maß –</text>
+      <text x="150" y="480">geplant, gefertigt und montiert.</text>
+    </g>
+    <rect x="150" y="512" width="196" height="52" rx="26" fill="#c08a54"/>
+    <text x="248" y="543.5" font-size="16" font-weight="600" fill="#1b1714" text-anchor="middle">Projekt anfragen</text>
+    <text x="374" y="543.5" font-size="16" font-weight="500" fill="#e8c9a4">Referenzen ansehen ›</text>
+
+    <!-- Bild: Holzpaneele -->
+    <g clip-path="url(#img)">
+      <rect x="680" y="232" width="90" height="330" fill="#8a5a34"/>
+      <rect x="770" y="232" width="90" height="330" fill="#a06b3f"/>
+      <rect x="860" y="232" width="90" height="330" fill="#7a4e2c"/>
+      <rect x="950" y="232" width="90" height="330" fill="#b07a4a"/>
+      <rect x="1040" y="232" width="90" height="330" fill="#946038"/>
+      <g fill="none" stroke="#000" stroke-opacity=".13" stroke-width="2">
+        <path d="M708 232 C722 300 698 380 714 562 M740 232 C730 320 752 420 738 562"/>
+        <path d="M798 232 C812 310 790 390 806 562 M832 232 C820 300 842 430 828 562"/>
+        <path d="M888 232 C902 300 878 380 894 562 M920 232 C910 330 932 420 918 562"/>
+        <path d="M978 232 C992 310 970 390 986 562 M1012 232 C1000 300 1022 430 1008 562"/>
+        <path d="M1068 232 C1082 300 1058 380 1074 562 M1100 232 C1090 330 1112 420 1098 562"/>
+      </g>
+      <g fill="#000" fill-opacity=".28">
+        <rect x="769" y="232" width="2" height="330"/>
+        <rect x="859" y="232" width="2" height="330"/>
+        <rect x="949" y="232" width="2" height="330"/>
+        <rect x="1039" y="232" width="2" height="330"/>
+      </g>
+      <rect x="680" y="232" width="450" height="330" fill="url(#sheen)"/>
+    </g>
+
+    <!-- Referenz-Galerie -->
+    <g>
+      <rect x="150" y="606" width="230" height="170" rx="16" fill="#3a2f28"/>
+      <rect x="176" y="640" width="178" height="56" rx="4" fill="#6b5645"/>
+      <rect x="264" y="640" width="2" height="56" fill="#3a2f28"/>
+      <rect x="248" y="662" width="10" height="3" rx="1.5" fill="#d9c3a5"/>
+      <rect x="272" y="662" width="10" height="3" rx="1.5" fill="#d9c3a5"/>
+      <text x="170" y="752" font-size="15" font-weight="600" fill="#f3ebe1">Küche</text>
+
+      <rect x="400" y="606" width="230" height="170" rx="16" fill="#4a3a2e"/>
+      <g fill="#8a6a4f"><rect x="424" y="636" width="182" height="6"/><rect x="424" y="668" width="182" height="6"/><rect x="424" y="700" width="182" height="6"/></g>
+      <g fill="#d9c3a5" fill-opacity=".75"><rect x="440" y="618" width="8" height="18"/><rect x="450" y="622" width="8" height="14"/><rect x="520" y="650" width="8" height="18"/><rect x="530" y="654" width="10" height="14"/><rect x="570" y="684" width="8" height="16"/></g>
+      <text x="420" y="752" font-size="15" font-weight="600" fill="#f3ebe1">Regalwand</text>
+
+      <rect x="650" y="606" width="230" height="170" rx="16" fill="#2f2824"/>
+      <rect x="680" y="660" width="170" height="10" rx="2" fill="#9a7552"/>
+      <rect x="692" y="670" width="6" height="42" fill="#9a7552"/>
+      <rect x="832" y="670" width="6" height="42" fill="#9a7552"/>
+      <text x="670" y="752" font-size="15" font-weight="600" fill="#f3ebe1">Esstisch</text>
+
+      <rect x="900" y="606" width="230" height="170" rx="16" fill="#54402f"/>
+      <path d="M930 716 H966 V696 H1002 V676 H1038 V656 H1074 V636 H1100 V716 Z" fill="#8a6a4f"/>
+      <text x="920" y="752" font-size="15" font-weight="600" fill="#f3ebe1">Treppe</text>
+    </g>
+  </g>
+</svg>
