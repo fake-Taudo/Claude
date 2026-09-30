@@ -9,6 +9,7 @@ import { cardEl } from './ui/cardview.js';
 import { prerenderAll } from './ui/art.js';
 import { DeckBuilder } from './ui/deckbuilder.js';
 import { openSettings } from './ui/settings.js';
+import { applyBodyFlags } from './ui/tokens.js';
 import { Game } from './game/game.js';
 
 const TIPS = [
@@ -57,15 +58,16 @@ class App {
       console.error(e);
       return;
     }
-    bar.style.width = '15%';
+    bar.style.transform = 'scaleX(0.15)';
     this.store = new Store(this.db);
     this.settings = this.store.settings;
+    applyBodyFlags(this.settings);
     this.audio = new AudioSys(this.settings);
     txt.textContent = 'Male Karten…';
     try {
       await Promise.race([document.fonts?.load('20px "Lilita One"'), new Promise((r) => setTimeout(r, 1500))]);
     } catch {}
-    await prerenderAll(this.db, (p) => (bar.style.width = `${15 + p * 85}%`));
+    await prerenderAll(this.db, (p) => (bar.style.transform = `scaleX(${0.15 + p * 0.85})`));
     this.net = new Net();
     this.bindNet();
     this.deckBuilder = new DeckBuilder(this);
@@ -323,7 +325,7 @@ class App {
     $('#menu-deck-meta').replaceChildren(
       h('span', {}, 'Ø Elixier ', h('b', {}, averageElixir(this.db, d.slots).toFixed(1).replace('.', ','))),
       h('span', {}, '4er-Zyklus ', h('b', {}, cycleCost(this.db, d.slots))),
-      ok ? h('span', { style: { color: '#2e9a43' } }, '✔ spielbereit') : h('span', { style: { color: '#c42233' } }, '✖ unvollständig'),
+      ok ? h('span', { class: 'ok' }, '✔ spielbereit') : h('span', { class: 'bad' }, '✖ unvollständig'),
     );
   }
 
@@ -369,7 +371,7 @@ class App {
       err.textContent = '';
     });
     input.addEventListener('keydown', (e) => e.key === 'Enter' && submit());
-    const body = h('div', {}, h('p', { style: { fontWeight: 800, marginTop: 0 } }, 'Gib den 6-stelligen Code deines Freundes ein:'), input, err, h('div', { class: 'row' }, h('button', { class: 'btn btn-green btn-big', onclick: submit }, 'Beitreten')));
+    const body = h('div', {}, h('p', { style: { fontWeight: 800, marginTop: 0 } }, 'Gib den 6-stelligen Code deines Freundes ein:'), input, err, h('div', { class: 'row' }, h('button', { class: 'btn btn-success btn-big', onclick: submit }, 'Beitreten')));
     this.joinModal = modal('Kampf beitreten', body, { onClose: () => (this.joinModal = null) });
     if (prefill && isValidCodeFormat(prefill)) setTimeout(submit, 50);
   }
@@ -399,7 +401,7 @@ class App {
       m.close();
     };
     input.addEventListener('keydown', (e) => e.key === 'Enter' && save());
-    const m = modal('Namen ändern', h('div', {}, input, err, h('div', { class: 'row' }, h('button', { class: 'btn btn-green', onclick: save }, 'Speichern'))));
+    const m = modal('Namen ändern', h('div', {}, input, err, h('div', { class: 'row' }, h('button', { class: 'btn btn-success', onclick: save }, 'Speichern'))));
   }
 
   leaveRoom() {
@@ -509,11 +511,11 @@ class App {
     $('#load-opp').textContent = m.names[1 - m.side];
     $('#load-tip').textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
     const bar = $('#load-bar');
-    bar.style.width = '0%';
+    bar.style.transform = 'scaleX(0)';
     const t0 = performance.now();
     const step = () => {
       const k = Math.min(1, (performance.now() - t0) / 1400);
-      bar.style.width = `${k * 100}%`;
+      bar.style.transform = `scaleX(${k})`;
       if (k < 1) requestAnimationFrame(step);
       else this.net.send(C2S.LOADED);
     };

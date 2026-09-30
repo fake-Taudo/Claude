@@ -3,9 +3,10 @@ import { EMOTES } from '/shared/protocol.js';
 import { cardArt } from '../ui/art.js';
 import { drawEmoteFace, OUTLINE, TEAM } from './sprites.js';
 import { starPath } from './renderer.js';
+import { T } from '../ui/tokens.js';
 
 const TAU = Math.PI * 2;
-const FONT = '"Lilita One", "Arial Black", sans-serif';
+const FONT = T.fontHead;
 export const RARITY_COLORS = { common: '#9fb3c8', rare: '#f39c3d', epic: '#b55cf0', legendary: '#2fd3c6' };
 export const CLASS_COLORS = { champion: '#ffd84d', hero: '#ff7a5c' };
 

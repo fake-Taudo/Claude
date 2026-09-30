@@ -1,11 +1,11 @@
 // Prozedural gezeichnete Cartoon-Figuren: Einheiten, Gebäude, Türme, Zauber-Symbole.
 // Konvention: Ursprung = Fußpunkt (Boden), y nach oben negativ. Einheit "U" = Pixelgröße.
+import { T } from '../ui/tokens.js';
+
 const TAU = Math.PI * 2;
-export const OUTLINE = '#1c1830';
-export const TEAM = {
-  blue: { main: '#3d8bff', dark: '#1f5fc9', light: '#9cc8ff' },
-  red: { main: '#ff4d57', dark: '#c42233', light: '#ffb0b5' },
-};
+export const OUTLINE = T.ink;
+// Teamfarben kommen aus den Design-Tokens (--team-blue-*, --team-red-*)
+export const TEAM = { blue: T.blue, red: T.red };
 
 // ───────────── Farbhilfen ─────────────
 const colorCache = new Map();

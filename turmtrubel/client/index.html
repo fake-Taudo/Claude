@@ -30,7 +30,7 @@
           <label for="name-input" class="panel-title">Wie heißt du?</label>
           <input id="name-input" class="text-input" maxlength="16" placeholder="Dein Spielername" autocomplete="nickname" spellcheck="false">
           <p class="error" id="name-error" role="alert"></p>
-          <button class="btn btn-yellow btn-big" type="submit">Los geht's!</button>
+          <button class="btn btn-primary btn-big" type="submit">Los geht's!</button>
         </form>
       </div>
     </section>
@@ -40,17 +40,17 @@
       <header class="topbar">
         <div class="logo small" aria-hidden="true"><span class="logo-a">Turm</span><span class="logo-b">trubel</span></div>
         <div class="topbar-right">
-          <button class="chip" id="menu-rename" title="Namen ändern"><span class="chip-dot"></span><span id="menu-name">Spieler</span> ✎</button>
+          <button class="chip" id="menu-rename" title="Namen ändern"><span class="chip-dot"></span><span id="menu-name" class="pill-text">Spieler</span> <span aria-hidden="true">✎</span></button>
           <button class="icon-btn" id="menu-settings" title="Einstellungen" aria-label="Einstellungen">⚙</button>
         </div>
       </header>
       <main class="menu-main">
         <div class="panel menu-actions">
           <h2 class="panel-title">Freundschaftskampf</h2>
-          <button class="btn btn-yellow btn-big" id="btn-create">⚔ Kampf erstellen</button>
-          <button class="btn btn-blue btn-big" id="btn-join">🔑 Beitreten</button>
+          <button class="btn btn-primary btn-big" id="btn-create"><span class="ico" aria-hidden="true">⚔</span> Kampf erstellen</button>
+          <button class="btn btn-secondary btn-big" id="btn-join"><span class="ico" aria-hidden="true">🔑</span> Beitreten</button>
           <div class="divider"><span>oder</span></div>
-          <button class="btn btn-green" id="btn-training">🎯 Training gegen Bot</button>
+          <button class="btn btn-success" id="btn-training"><span class="ico" aria-hidden="true">🎯</span> Training gegen Bot</button>
           <p class="hint small">Erstelle einen Kampf und schicke deinem Freund den 6-stelligen Code.</p>
         </div>
         <div class="panel menu-deck">
@@ -60,7 +60,7 @@
           </div>
           <div class="mini-deck" id="menu-deck"></div>
           <div class="deck-meta" id="menu-deck-meta"></div>
-          <button class="btn btn-purple" id="btn-deckbuilder">🃏 Deck-Bauer</button>
+          <button class="btn btn-accent" id="btn-deckbuilder"><span class="ico" aria-hidden="true">🃏</span> Deck-Bauer</button>
         </div>
       </main>
       <footer class="menu-footer"><span id="conn-state" class="conn-state">verbinde…</span></footer>
@@ -69,7 +69,7 @@
     <!-- Deck-Bauer -->
     <section class="screen" id="s-deck" aria-label="Deck-Bauer">
       <header class="topbar">
-        <button class="btn btn-small btn-blue" id="deck-back">← Zurück</button>
+        <button class="btn btn-small btn-secondary" id="deck-back">← Zurück</button>
         <h1 class="topbar-title">Deck-Bauer</h1>
         <div class="deck-tabs" id="deck-tabs" role="tablist"></div>
       </header>
@@ -85,9 +85,9 @@
           <p class="deck-errors" id="deck-errors"></p>
           <p class="hint small">Plätze 1–2 = <b class="evo-text">Evo-Plätze</b> · Platz 3 = <b class="special-text">Champion/Held</b>. Tippe eine Karte im Deck an und dann eine andere, um sie zu tauschen.</p>
           <div class="row wrap">
-            <button class="btn btn-small btn-purple" id="deck-random">🎲 Zufallsdeck</button>
-            <button class="btn btn-small btn-red" id="deck-clear">Leeren</button>
-            <button class="btn btn-small btn-green" id="deck-use">✔ Als aktives Deck</button>
+            <button class="btn btn-small btn-accent" id="deck-random"><span class="ico" aria-hidden="true">🎲</span> Zufallsdeck</button>
+            <button class="btn btn-small btn-danger" id="deck-clear">Leeren</button>
+            <button class="btn btn-small btn-success" id="deck-use"><span class="ico" aria-hidden="true">✔</span> Als aktives Deck</button>
           </div>
         </aside>
         <section class="collection">
@@ -117,8 +117,8 @@
             <span class="code-label">Einladungscode</span>
             <span class="code" id="lobby-code">------</span>
             <div class="row">
-              <button class="btn btn-small btn-blue" id="lobby-copy">Kopieren</button>
-              <button class="btn btn-small btn-purple" id="lobby-share">Link teilen</button>
+              <button class="btn btn-small btn-secondary" id="lobby-copy">Kopieren</button>
+              <button class="btn btn-small btn-accent" id="lobby-share">Link teilen</button>
             </div>
             <span class="hint small" id="lobby-expiry"></span>
           </div>
@@ -131,8 +131,8 @@
             <select id="lobby-deck-select" class="select"></select>
           </label>
           <div class="row">
-            <button class="btn btn-green btn-big" id="lobby-ready">Bereit!</button>
-            <button class="btn btn-red" id="lobby-leave">Verlassen</button>
+            <button class="btn btn-success btn-big" id="lobby-ready">Bereit!</button>
+            <button class="btn btn-danger" id="lobby-leave">Verlassen</button>
           </div>
         </div>
       </div>
@@ -158,10 +158,10 @@
       <div class="game-ui">
         <button class="icon-btn game-menu-btn" id="game-menu-btn" aria-label="Menü">≡</button>
         <div class="game-menu" id="game-menu" hidden>
-          <button class="btn btn-small btn-blue" id="gm-sound">🔊 Ton an</button>
-          <button class="btn btn-small btn-blue" id="gm-music">🎵 Musik an</button>
-          <button class="btn btn-small btn-purple" id="gm-settings">⚙ Einstellungen</button>
-          <button class="btn btn-small btn-red" id="gm-surrender">🏳 Aufgeben</button>
+          <button class="btn btn-small btn-secondary" id="gm-sound">🔊 Ton an</button>
+          <button class="btn btn-small btn-secondary" id="gm-music">🎵 Musik an</button>
+          <button class="btn btn-small btn-accent" id="gm-settings"><span class="ico" aria-hidden="true">⚙</span> Einstellungen</button>
+          <button class="btn btn-small btn-danger" id="gm-surrender"><span class="ico" aria-hidden="true">🏳</span> Aufgeben</button>
           <p class="hint small">Tasten: 1–4 Karte · Leertaste Fähigkeit · E Emotes · Esc abbrechen</p>
         </div>
       </div>
@@ -180,8 +180,8 @@
         <div class="res-stats" id="res-stats"></div>
         <p class="rematch-status" id="res-rematch-status"></p>
         <div class="row">
-          <button class="btn btn-yellow btn-big" id="res-rematch">↻ Rematch</button>
-          <button class="btn btn-blue" id="res-menu">Zurück zum Menü</button>
+          <button class="btn btn-primary btn-big" id="res-rematch">↻ Rematch</button>
+          <button class="btn btn-secondary" id="res-menu">Zurück zum Menü</button>
         </div>
       </div>
     </section>

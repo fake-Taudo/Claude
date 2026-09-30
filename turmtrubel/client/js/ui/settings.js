@@ -1,5 +1,6 @@
 // Einstellungen: Ton, Musik, Grafikqualität, Arena-Ausrichtung, Anzeigen.
-import { h, modal } from './dom.js';
+import { h, ico, modal } from './dom.js';
+import { applyBodyFlags } from './tokens.js';
 
 function toggle(on, onChange) {
   const b = h('button', { class: `toggle${on ? ' on' : ''}`, role: 'switch', 'aria-checked': on ? 'true' : 'false' });
@@ -30,16 +31,27 @@ function seg(options, value, onChange) {
   return root;
 }
 
-function slider(value, onChange) {
-  const i = h('input', { type: 'range', min: '0', max: '1', step: '0.05', value: String(value), 'aria-label': 'Lautstärke' });
-  i.addEventListener('input', () => onChange(Number(i.value)));
-  return i;
+function slider(value, label, onChange) {
+  const i = h('input', { type: 'range', min: '0', max: '1', step: '0.05', value: String(value), 'aria-label': label });
+  const out = h('output', { 'aria-hidden': 'true' });
+  const show = () => {
+    const pct = Math.round(Number(i.value) * 100);
+    out.textContent = `${pct} %`;
+    i.style.setProperty('--fill', `${pct}%`);
+  };
+  show();
+  i.addEventListener('input', () => {
+    show();
+    onChange(Number(i.value));
+  });
+  return h('span', { class: 'slider' }, i, out);
 }
 
 export function openSettings(app, { allowRename = true } = {}) {
   const s = app.settings;
   const save = () => {
     app.store.save();
+    applyBodyFlags(s);
     app.audio.apply();
     app.game?.settingsChanged();
   };
@@ -55,7 +67,7 @@ export function openSettings(app, { allowRename = true } = {}) {
         save();
       }),
       h('span', {}, 'Musik-Lautstärke'),
-      slider(s.musicVol, (v) => {
+      slider(s.musicVol, 'Musik-Lautstärke', (v) => {
         s.musicVol = v;
         save();
       }),
@@ -66,7 +78,7 @@ export function openSettings(app, { allowRename = true } = {}) {
         if (v) app.audio.sfx('click');
       }),
       h('span', {}, 'Effekt-Lautstärke'),
-      slider(s.sfxVol, (v) => {
+      slider(s.sfxVol, 'Effekt-Lautstärke', (v) => {
         s.sfxVol = v;
         save();
       }),
@@ -95,8 +107,8 @@ export function openSettings(app, { allowRename = true } = {}) {
     h(
       'div',
       { class: 'row wrap', style: { marginTop: '14px' } },
-      allowRename ? h('button', { class: 'btn btn-small btn-blue', onclick: () => (m.close(), app.openRename()) }, '✎ Namen ändern') : null,
-      h('button', { class: 'btn btn-small btn-red', id: 'settings-leave', onclick: () => (m.close(), app.confirmLeave()) }, '🚪 Raum verlassen'),
+      allowRename ? h('button', { class: 'btn btn-small btn-secondary', onclick: () => (m.close(), app.openRename()) }, ico('✎'), 'Namen ändern') : null,
+      h('button', { class: 'btn btn-small btn-danger', id: 'settings-leave', onclick: () => (m.close(), app.confirmLeave()) }, ico('🚪'), 'Raum verlassen'),
     ),
     h(
       'p',

@@ -233,7 +233,7 @@ export class DeckBuilder {
       this.renderSlots();
       openCardDetail(this.app, id, {
         evo: EVO_SLOTS.includes(i) && !!this.db.card(id)?.evo,
-        actions: [{ label: 'Aus dem Deck entfernen', cls: 'btn-red', onClick: () => this.removeSlot(i) }],
+        actions: [{ label: 'Aus dem Deck entfernen', cls: 'btn-danger', onClick: () => this.removeSlot(i) }],
       });
       return;
     }
@@ -270,10 +270,10 @@ export class DeckBuilder {
     }
     const card = this.db.card(id);
     const actions = [];
-    if (pos >= 0) actions.push({ label: 'Aus dem Deck entfernen', cls: 'btn-red', onClick: () => this.removeSlot(pos) });
+    if (pos >= 0) actions.push({ label: 'Aus dem Deck entfernen', cls: 'btn-danger', onClick: () => this.removeSlot(pos) });
     else {
-      actions.push({ label: 'Ins Deck', cls: 'btn-green', onClick: () => this.addCard(id) });
-      if (card.evo) actions.push({ label: 'In Evo-Platz', cls: 'btn-purple', onClick: () => this.addCard(id, true) });
+      actions.push({ label: 'Ins Deck', cls: 'btn-success', onClick: () => this.addCard(id) });
+      if (card.evo) actions.push({ label: 'In Evo-Platz', cls: 'btn-accent', onClick: () => this.addCard(id, true) });
     }
     openCardDetail(this.app, id, { evo: pos >= 0 && EVO_SLOTS.includes(pos) && !!card.evo, actions });
   }

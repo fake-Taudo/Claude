@@ -2,3 +2,5 @@ node_modules/
 npm-debug.log*
 .DS_Store
 docs/ui-referenz/*.png
+docs/ui-nachher/*.png
+docs/ui-nachher/checks.json

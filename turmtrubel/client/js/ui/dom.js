@@ -22,6 +22,9 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+/** Symbol, das bei Kontur-Schrift keine Kontur bekommt (Emoji in Buttons). */
+export const ico = (s) => h('span', { class: 'ico', 'aria-hidden': 'true' }, s);
+
 let current = 's-boot';
 export function showScreen(id) {
   if (current === id) return;
@@ -34,43 +37,139 @@ export function currentScreen() {
   return current;
 }
 
-export function toast(msg, kind = 'info', ms = 2400) {
+// ───── Toast: genau einer sichtbar, ein neuer ersetzt den alten ─────
+const TOAST_ICONS = { info: 'i', ok: '✓', warn: '!', error: '✕' };
+let toastEl = null;
+let toastTimer = 0;
+
+/** kind: info | ok | warn | error (optional zusätzlich 'team-blue' / 'team-red'). ms = Sichtdauer. */
+export function toast(msg, kind = 'info', ms = 1400) {
   if (!msg) return;
   const root = document.getElementById('toasts');
-  while (root.children.length > 3) root.firstChild.remove();
-  const el = h('div', { class: `toast ${kind}`, role: kind === 'error' ? 'alert' : 'status' }, msg);
-  root.append(el);
-  setTimeout(() => {
+  const base = kind.split(' ')[0];
+  clearTimeout(toastTimer);
+  if (toastEl && toastEl.isConnected && toastEl.dataset.msg === msg && !toastEl.classList.contains('out')) {
+    // Gleiche Meldung erneut → nur kurz anstupsen und Zeit verlängern
+    toastEl.classList.remove('bump');
+    void toastEl.offsetWidth;
+    toastEl.classList.add('bump');
+  } else {
+    root.replaceChildren();
+    toastEl = h('div', { class: `toast ${kind}`, role: base === 'error' ? 'alert' : 'status', dataset: { msg } }, h('span', { class: 'toast-ico', 'aria-hidden': 'true' }, TOAST_ICONS[base] || 'i'), h('span', {}, msg));
+    root.append(toastEl);
+  }
+  const el = toastEl;
+  toastTimer = setTimeout(() => {
     el.classList.add('out');
-    setTimeout(() => el.remove(), 260);
+    setTimeout(() => el.remove(), 160);
   }, ms);
 }
 
-/** Öffnet ein Modal. Gibt { close, el } zurück. */
+// ───── Modal / Bottom-Sheet ─────
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const stack = [];
+
+function onGlobalKey(e) {
+  const top = stack.at(-1);
+  if (!top) return;
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    top.close();
+  } else if (e.key === 'Tab') {
+    // Fokus-Falle: Tab bleibt im obersten Modal
+    const items = [...top.el.querySelectorAll(FOCUSABLE)].filter((x) => x.offsetParent !== null);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items.at(-1);
+    if (e.shiftKey && (document.activeElement === first || !top.el.contains(document.activeElement))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (document.activeElement === last || !top.el.contains(document.activeElement))) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+}
+
+export function modalOpen() {
+  return stack.length > 0;
+}
+
+/** Öffnet ein Modal (am Handy hochkant als Bottom-Sheet). Gibt { close, el } zurück. */
 export function modal(title, body, { onClose, wide } = {}) {
   const root = document.getElementById('modal-root');
+  const opener = document.activeElement;
   let closed = false;
   const close = () => {
     if (closed) return;
     closed = true;
-    back.remove();
-    document.removeEventListener('keydown', onKey);
+    const i = stack.indexOf(api);
+    if (i >= 0) stack.splice(i, 1);
+    if (!stack.length) {
+      document.removeEventListener('keydown', onGlobalKey, true);
+      document.getElementById('app').inert = false;
+    }
+    back.classList.add('closing');
+    setTimeout(() => back.remove(), 130);
+    if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus({ preventScroll: true });
     onClose?.();
   };
-  const onKey = (e) => {
-    if (e.key === 'Escape') close();
-  };
-  const panel = h(
+  const titleId = `mt-${Math.random().toString(36).slice(2, 8)}`;
+  const head = h(
     'div',
-    { class: 'panel modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': title, style: wide ? { width: 'min(720px, 100%)' } : null },
-    h('div', { class: 'modal-head' }, h('h2', { class: 'panel-title' }, title), h('button', { class: 'icon-btn modal-close', 'aria-label': 'Schließen', onclick: close }, '✕')),
-    body,
+    { class: 'modal-head' },
+    h('span', { class: 'sheet-grip', 'aria-hidden': 'true' }),
+    h('h2', { class: 'panel-title', id: titleId }, title),
+    h('button', { class: 'icon-btn modal-close', 'aria-label': 'Schließen', onclick: close }, '✕'),
   );
+  const panel = h('div', { class: `panel modal${wide ? ' wide' : ''}`, role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId }, head, body);
   const back = h('div', { class: 'modal-back', onclick: (e) => e.target === back && close() }, panel);
   root.append(back);
-  document.addEventListener('keydown', onKey);
-  setTimeout(() => panel.querySelector('input, button:not(.modal-close)')?.focus(), 30);
-  return { close, el: panel };
+  enableSwipeClose(head, panel, close);
+  const api = { close, el: panel };
+  if (!stack.length) {
+    document.addEventListener('keydown', onGlobalKey, true);
+    document.getElementById('app').inert = true;
+  }
+  stack.push(api);
+  setTimeout(() => {
+    if (closed) return;
+    const first = panel.querySelector('input, select, button:not(.modal-close)') || panel.querySelector('.modal-close');
+    first?.focus({ preventScroll: true });
+  }, 30);
+  return api;
+}
+
+/** Bottom-Sheet: am Kopf nach unten wischen schließt (nur wenn als Sheet dargestellt). */
+function enableSwipeClose(handle, panel, close) {
+  let y0 = null;
+  let t0 = 0;
+  let dy = 0;
+  const isSheet = () => matchMedia('(max-width: 600px) and (min-height: 480px)').matches;
+  handle.addEventListener('pointerdown', (e) => {
+    if (!isSheet() || e.target.closest('button')) return;
+    y0 = e.clientY;
+    t0 = performance.now();
+    dy = 0;
+    handle.setPointerCapture(e.pointerId);
+    panel.style.transition = 'none';
+  });
+  handle.addEventListener('pointermove', (e) => {
+    if (y0 == null) return;
+    dy = Math.max(0, e.clientY - y0);
+    panel.style.transform = `translateY(${dy}px)`;
+  });
+  const end = () => {
+    if (y0 == null) return;
+    y0 = null;
+    const v = dy / Math.max(1, performance.now() - t0);
+    panel.style.transition = '';
+    if (dy > 90 || v > 0.6) close();
+    else panel.style.transform = '';
+  };
+  handle.addEventListener('pointerup', end);
+  handle.addEventListener('pointercancel', end);
 }
 
 export function confirmDialog(title, text, okLabel = 'OK', danger = false) {
@@ -81,12 +180,12 @@ export function confirmDialog(title, text, okLabel = 'OK', danger = false) {
       h(
         'div',
         {},
-        h('p', { style: { fontWeight: 800 } }, text),
+        h('p', { style: { fontWeight: 800, fontSize: '17px' } }, text),
         h(
           'div',
-          { class: 'row' },
-          h('button', { class: `btn ${danger ? 'btn-red' : 'btn-green'}`, onclick: () => ((result = true), m.close()) }, okLabel),
-          h('button', { class: 'btn btn-blue', onclick: () => m.close() }, 'Abbrechen'),
+          { class: 'row wrap' },
+          h('button', { class: 'btn btn-ghost', onclick: () => m.close() }, 'Abbrechen'),
+          h('button', { class: `btn ${danger ? 'btn-danger' : 'btn-success'}`, onclick: () => ((result = true), m.close()) }, okLabel),
         ),
       ),
       { onClose: () => resolve(result) },

@@ -138,7 +138,7 @@ export function openCardDetail(app, id, { evo = false, actions = [] } = {}) {
           h('p', { class: 'hint small', style: { marginTop: '4px' } }, card.class === 'champion' ? `Kosten: ${card.ability.cost} Elixier · Abklingzeit: ${card.ability.cooldown} s · Nur 1 Champion pro Deck.` : 'Einmal pro Einsatz, kostenlos · Nur 1 Held pro Deck.'),
         )
       : null,
-    actions.length ? h('div', { class: 'row wrap' }, actions.map((a) => h('button', { class: `btn ${a.cls || 'btn-green'}`, onclick: () => (a.onClick(), m.close()) }, a.label))) : null,
+    actions.length ? h('div', { class: 'row wrap' }, actions.map((a) => h('button', { class: `btn ${a.cls || 'btn-success'}`, onclick: () => (a.onClick(), m.close()) }, a.label))) : null,
   );
   const m = modal(evo && card.evo ? card.evo.name : card.name, body);
   return m;
