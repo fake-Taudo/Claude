@@ -68,6 +68,49 @@ test('Einheiten laufen zum nächsten Turm und greifen ihn an', () => {
   assert.equal(giant.targetId, target.id);
 });
 
+test('Nach dem Tod des Ziels sucht eine Truppe ein neues Ziel und läuft weiter', () => {
+  const m = newMatch();
+  const knight = spawn(m, 'knappe', 0, 3.5, 18);
+  const skel = spawn(m, 'knochenwichte', 1, 3.5, 16.2);
+  runUntil(m, () => skel.dead && !m.entities.includes(skel), 5);
+  assert.ok(skel.dead, 'Skelett besiegt');
+  const y0 = knight.y;
+  runSeconds(m, 2);
+  assert.ok(knight.targetId !== 0, 'hat wieder ein Ziel');
+  assert.ok(knight.y < y0 - 1, 'läuft weiter Richtung Gegnerturm');
+  const pr = tower(m, 1, 'princess', 0);
+  runUntil(m, () => pr.hp < pr.maxHp, 20);
+  assert.ok(pr.hp < pr.maxHp, 'greift danach den Wachturm an');
+});
+
+test('Türme wechseln nach einem Kill auf das nächste Ziel', () => {
+  const m = newMatch();
+  const t = tower(m, 0, 'princess', 0);
+  const a = spawn(m, 'knochenwichte', 1, 3.5, 19.5);
+  a.def = { ...a.def, speed: 0 };
+  runUntil(m, () => a.dead, 5);
+  assert.ok(a.dead);
+  runSeconds(m, 0.2);
+  const b = spawn(m, 'knappe', 1, 4.5, 20);
+  b.def = { ...b.def, speed: 0 };
+  runSeconds(m, 3);
+  assert.equal(t.targetId, b.id);
+  assert.ok(b.hp < b.maxHp, 'zweites Ziel wird beschossen');
+});
+
+test('Einheit, deren Zielturm fällt, zieht zum nächsten Turm weiter', () => {
+  const m = newMatch();
+  const giant = spawn(m, 'steinkoloss', 0, 3.5, 11);
+  const pr = tower(m, 1, 'princess', 0);
+  runUntil(m, () => giant.targetId === pr.id && giant.locked, 10);
+  m.damage(pr, 1e7, null, 0);
+  runSeconds(m, 0.5);
+  const king = tower(m, 1, 'king');
+  assert.equal(giant.targetId, king.id);
+  runUntil(m, () => king.hp < king.maxHp, 25);
+  assert.ok(king.hp < king.maxHp);
+});
+
 test('Gebäudejäger ignorieren Truppen', () => {
   const m = newMatch();
   const giant = spawn(m, 'steinkoloss', 0, 3.5, 18);
@@ -275,13 +318,22 @@ test('Bot gegen Bot: 20 Kämpfe laufen fehlerfrei bis zum Ende', () => {
     const m = new Match({ db, rules: rules(), decks: [randomDeck(db, rng), randomDeck(db, rng)], seed: g });
     m.started = true;
     const bots = [new Bot(m, 0, g * 2 + 1), new Bot(m, 1, g * 2 + 2)];
+    const idle = new Map();
     while (!m.result && m.tick < 20 * 320) {
       bots[0].update();
       bots[1].update();
       m.step();
       m.snapshot(0);
       m.flushEvents();
-      for (const e of m.entities) assert.ok(Number.isFinite(e.x) && Number.isFinite(e.y) && Number.isFinite(e.hp));
+      for (const e of m.entities) {
+        assert.ok(Number.isFinite(e.x) && Number.isFinite(e.y) && Number.isFinite(e.hp));
+        // Keine Einheit darf ohne gültiges Ziel "einfrieren"
+        const active = e.kind === 'unit' && !e.dead && e.deployT <= 0 && e.stunT <= 0 && !e.dash;
+        const lost = !e.targetId || !m.byId.has(e.targetId);
+        const n = active && lost ? (idle.get(e.id) || 0) + 1 : 0;
+        idle.set(e.id, n);
+        assert.ok(n <= 2, `${e.def.key} (#${e.id}) steht ohne Ziel herum`);
+      }
     }
     assert.ok(m.result, 'Kampf endet spätestens nach der Verlängerung');
     reasons.add(m.result.reason);

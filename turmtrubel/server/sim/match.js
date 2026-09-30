@@ -630,8 +630,9 @@ export class Match {
   }
 
   updateCombat(e, dt) {
-    let t = e.targetId ? this.byId.get(e.targetId) : null;
-    if (t && (!this.canTarget(e, t) || (isStruct(e) && rangeDist(e, t) > e.def.range + 0.05))) {
+    // Ziel kann gestorben und bereits entfernt sein → dann Sperre lösen und neu suchen
+    let t = (e.targetId && this.byId.get(e.targetId)) || null;
+    if (!t || !this.canTarget(e, t) || (isStruct(e) && rangeDist(e, t) > e.def.range + 0.05)) {
       t = null;
       e.locked = false;
     }
