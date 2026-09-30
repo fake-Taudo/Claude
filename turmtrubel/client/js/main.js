@@ -30,6 +30,14 @@ class App {
     this.joinModal = null;
     this.expiryTimer = null;
     this.netStarted = false;
+    this.serverInRoom = false; // was der Server zuletzt gemeldet hat
+    this.leaving = false; // Raum wird gerade verlassen → späte Raum-Nachrichten ignorieren
+    this.pendingLeave = false; // Verlassen nachholen, sobald die Verbindung wieder steht
+  }
+
+  /** Ist man (laut Client oder Server) noch in einem Raum? */
+  inRoom() {
+    return !!(this.room || this.game || this.result || this.serverInRoom);
   }
 
   toast(msg, kind, ms) {
@@ -218,6 +226,7 @@ class App {
       if (this.game) this.game.ping = rtt;
     });
     n.on(S2C.ERROR, (m) => {
+      if (m.code === 'ALREADY_IN_ROOM') this.serverInRoom = true;
       if (this.joinModal) {
         const err = this.joinModal.el.querySelector('.error');
         if (err) err.textContent = m.message;
@@ -227,14 +236,28 @@ class App {
       toast(m.message, 'error', 3500);
     });
     n.on(S2C.NOTICE, (m) => toast(m.message, 'info', 3000));
-    n.on(S2C.LOBBY, (m) => this.onLobby(m));
-    n.on(S2C.COUNTDOWN, (m) => this.onCountdown(m));
-    n.on(S2C.MATCH_INIT, (m) => this.onMatchInit(m));
-    n.on(S2C.MATCH_START, (m) => this.onMatchStart(m));
+    n.on(S2C.WELCOME, (m) => {
+      this.serverInRoom = !!m.inRoom;
+      if (this.pendingLeave) {
+        this.pendingLeave = false;
+        if (m.inRoom) n.send(C2S.LEAVE);
+        else this.leaving = false;
+      } else this.leaving = false;
+    });
+    // Raum-Nachrichten, die nach „Raum verlassen“ noch eintreffen, verwerfen
+    const roomMsg = (fn) => (m) => {
+      if (this.leaving) return;
+      this.serverInRoom = true;
+      fn(m);
+    };
+    n.on(S2C.LOBBY, roomMsg((m) => this.onLobby(m)));
+    n.on(S2C.COUNTDOWN, roomMsg((m) => this.onCountdown(m)));
+    n.on(S2C.MATCH_INIT, roomMsg((m) => this.onMatchInit(m)));
+    n.on(S2C.MATCH_START, roomMsg((m) => this.onMatchStart(m)));
     n.on(S2C.SNAP, (m) => this.game?.onSnapshot(m));
     n.on(S2C.REJECT, (m) => this.game?.onReject(m));
-    n.on(S2C.MATCH_END, (m) => this.onMatchEnd(m));
-    n.on(S2C.REMATCH, (m) => this.onRematchState(m));
+    n.on(S2C.MATCH_END, roomMsg((m) => this.onMatchEnd(m)));
+    n.on(S2C.REMATCH, roomMsg((m) => this.onRematchState(m)));
     n.on(S2C.PRESENCE, (m) => {
       if (this.game && !this.game.ended) {
         this.game.oppDisconnected = !m.connected;
@@ -243,6 +266,8 @@ class App {
     });
     n.on(S2C.CLOSED, (m) => {
       const wasIn = !!this.room || !!this.game;
+      this.serverInRoom = false;
+      this.leaving = false;
       this.resetRoomState();
       if (m.reason !== 'left') {
         if (m.message) toast(m.message, 'warn', 4000);
@@ -378,9 +403,26 @@ class App {
   }
 
   leaveRoom() {
-    this.net.send(C2S.LEAVE);
+    this.leaving = true;
+    this.serverInRoom = false;
+    this.result = null;
+    if (!this.net.send(C2S.LEAVE)) this.pendingLeave = true;
     this.resetRoomState();
     this.goMenu();
+  }
+
+  /** „Raum verlassen“ aus den Einstellungen – mit Rückfrage. */
+  async confirmLeave() {
+    const inMatch = !!(this.game && !this.game.ended);
+    const known = this.inRoom();
+    const text = inMatch
+      ? 'Der laufende Kampf wird als Aufgabe gewertet – dein Gegner erhält 3 Kronen.'
+      : known
+        ? 'Du verlässt den aktuellen Raum und kehrst ins Hauptmenü zurück.'
+        : 'Du bist laut Anzeige in keinem Raum. Falls du trotzdem irgendwo festhängst, wirst du jetzt daraus entfernt.';
+    if (!(await confirmDialog('Raum verlassen?', text, 'Verlassen', true))) return;
+    this.leaveRoom();
+    toast('Du hast den Raum verlassen.', 'ok');
   }
 
   // ───────────── Lobby ─────────────
@@ -558,6 +600,8 @@ class App {
   }
 
   onRematchState(m) {
+    // Kommt vor dem Ergebnis-Screen an (z. B. Gegner verlässt den Kampf) → fürs Anzeigen merken
+    if (this.result && !m.available) this.result.rematchAvailable = false;
     if (currentScreen() !== 's-result' || !this.result) return;
     const you = this.result.you;
     const btn = $('#res-rematch');

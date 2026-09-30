@@ -72,7 +72,7 @@ export const ERRORS = Object.freeze({
   ROOM_FULL: 'Dieser Raum ist bereits voll.',
   ROOM_EXPIRED: 'Dieser Code ist abgelaufen (Codes gelten 10 Minuten).',
   ROOM_BUSY: 'In diesem Raum läuft bereits ein Kampf.',
-  ALREADY_IN_ROOM: 'Du bist bereits in einem Raum.',
+  ALREADY_IN_ROOM: 'Du bist noch in einem Raum. Verlasse ihn über ⚙ Einstellungen → „Raum verlassen“.',
   NOT_IN_ROOM: 'Du bist in keinem Raum.',
   INVALID_DECK: 'Dein Deck ist ungültig.',
   INVALID_NAME: 'Bitte gib einen Namen mit 2–16 Zeichen ein.',

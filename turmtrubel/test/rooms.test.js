@@ -203,6 +203,20 @@ test('Rematch nur, wenn beide zustimmen', () => {
   assert.equal(a.last('matchInit').matchNo, 2);
 });
 
+test('Verlassen mitten im Kampf: Gegner gewinnt, kein Rematch möglich, Raum ist frei', () => {
+  const { a, b, room, clock, mgr } = readyRoom();
+  clock.advance(3000);
+  room.onLoaded(a.s);
+  room.onLoaded(b.s);
+  room.leave(a.s, 'leave');
+  const end = b.last('matchEnd');
+  assert.equal(end.winner, 1);
+  assert.equal(end.reason, 'forfeit');
+  assert.equal(end.rematchAvailable, false);
+  assert.equal(a.s.room, null);
+  assert.ok(mgr.createRoom(a.s, DECK).ok, 'Verlassender kann sofort einen neuen Raum erstellen');
+});
+
 test('Verlassen: Gastgeber schließt die Lobby, Gast macht Platz frei', () => {
   const env = setup();
   const a = env.client('A');

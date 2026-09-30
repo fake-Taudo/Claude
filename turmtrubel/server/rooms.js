@@ -202,6 +202,7 @@ export class Room {
     this.timers = new Set();
     this.lastResult = null;
     this.matchNo = 0;
+    this.departing = null;
   }
 
   get db() {
@@ -416,7 +417,7 @@ export class Room {
       stats: r.stats,
       time: r.time,
       rematch: this.rematch.slice(),
-      rematchAvailable: !!(this.players[0] && this.players[1]),
+      rematchAvailable: !!(this.players[0] && this.players[1]) && this.departing == null,
       training: this.training,
     };
   }
@@ -457,7 +458,9 @@ export class Room {
       this.state = 'playing';
       this.match.started = true;
       this.sendSnapshots();
+      this.departing = side; // Ergebnis meldet: kein Rematch möglich
       this.finishMatch();
+      this.departing = null;
     }
     this.players[side] = null;
     this.decks[side] = null;

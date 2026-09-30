@@ -92,7 +92,17 @@ export function openSettings(app, { allowRename = true } = {}) {
       }),
     ),
     h('p', { class: 'hint small', style: { marginTop: '12px' } }, '„Auto“ nutzt auf Handys im Querformat eine gedrehte Arena, damit alles gut lesbar bleibt. „Niedrig“ spart Akku auf älteren Geräten.'),
-    allowRename ? h('div', { class: 'row' }, h('button', { class: 'btn btn-small btn-blue', onclick: () => (m.close(), app.openRename()) }, '✎ Namen ändern')) : null,
+    h(
+      'div',
+      { class: 'row wrap', style: { marginTop: '14px' } },
+      allowRename ? h('button', { class: 'btn btn-small btn-blue', onclick: () => (m.close(), app.openRename()) }, '✎ Namen ändern') : null,
+      h('button', { class: 'btn btn-small btn-red', id: 'settings-leave', onclick: () => (m.close(), app.confirmLeave()) }, '🚪 Raum verlassen'),
+    ),
+    h(
+      'p',
+      { class: 'hint small', style: { marginTop: '8px', textAlign: 'center' } },
+      app.game && !app.game.ended ? 'Achtung: Im laufenden Kampf zählt Verlassen als Aufgabe.' : app.inRoom() ? 'Du bist gerade in einem Raum.' : 'Hilft auch, wenn du in einem alten Raum festhängst.',
+    ),
   );
   const m = modal('Einstellungen', body);
   return m;
