@@ -330,6 +330,10 @@ export class Room {
         elixir: this.mgr.rules.elixir,
         suddenDeath: this.mgr.rules.suddenDeath,
         emoteCooldown: this.mgr.rules.emoteCooldown,
+        towers: {
+          king: { size: this.mgr.rules.towers.king.size },
+          princess: { size: this.mgr.rules.towers.princess.size },
+        },
       },
     };
   }

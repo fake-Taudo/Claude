@@ -50,7 +50,7 @@
       "id": "flattermotten", "name": "Flattermotten", "type": "troop", "rarity": "common", "elixir": 2, "count": 5,
       "description": "Ein Schwarm flinker Motten, der Boden- und Luftziele umflattert.",
       "unit": { "hp": 80, "damage": 80, "hitSpeed": 1.1, "range": 0.8, "speed": 2.0, "flying": true, "targets": "both", "radius": 0.3, "mass": 1,
-        "look": { "body": "moth", "cloth": "#8e6cc4", "accent": "#f1e08a", "scale": 0.8 } },
+        "look": { "body": "moth", "cloth": "#8e6cc4", "accent": "#f1e08a", "scale": 1.05 } },
       "evo": { "cycles": 2, "name": "Evo-Flattermotten", "description": "Heilen sich um 100 % des verursachten Schadens.",
         "unit": { "hp": 100, "traits": { "onHit": { "lifesteal": 1.0 } }, "look": { "cloth": "#d0487a", "accent": "#ffd1f0" } } }
     },
@@ -542,7 +542,7 @@
       "look": { "body": "golem", "cloth": "#8d8f94", "accent": "#6fd36b", "scale": 0.75 } },
     "glutblaeschen": { "name": "Glutbläschen", "hp": 180, "damage": 45, "hitSpeed": 1.7, "range": 1.6, "speed": 1.5, "flying": true, "targets": "both", "radius": 0.35, "mass": 1, "deployTime": 0.3,
       "projectile": { "kind": "spit", "speed": 10 },
-      "look": { "body": "whale", "cloth": "#e0603a", "accent": "#ffcf6b", "scale": 0.5 } },
+      "look": { "body": "whale", "cloth": "#e0603a", "accent": "#ffcf6b", "scale": 0.65 } },
     "pulverfass": { "name": "Pulverfässchen", "hp": 150, "damage": 220, "hitSpeed": 0.5, "firstHit": 0.1, "range": 0.5, "speed": 1.5, "targets": "buildings", "splash": 1.5, "radius": 0.4, "mass": 3, "deployTime": 0.3,
       "traits": { "kamikaze": true },
       "look": { "body": "barrel", "cloth": "#8b5a2b", "accent": "#5a3fa0" } },

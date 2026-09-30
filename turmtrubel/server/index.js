@@ -29,12 +29,16 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
   '.webmanifest': 'application/manifest+json',
 };
 
 function makeStaticHandler(data) {
   const dirs = {
     '/shared/': path.join(ROOT, 'shared'),
+    '/fonts/lilita/': path.join(ROOT, 'node_modules/@fontsource/lilita-one/files'),
+    '/fonts/nunito/': path.join(ROOT, 'node_modules/@fontsource/nunito/files'),
   };
   const clientDir = path.join(ROOT, 'client');
   return (req, res) => {

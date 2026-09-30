@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#2a2466">
+  <meta name="description" content="Turmtrubel – 1v1-Echtzeit-Kartenspiel im Browser. Freundschaftskämpfe per Einladungscode.">
+  <title>Turmtrubel</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/lilita/lilita-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Ladebildschirm (Start) -->
+    <section class="screen active" id="s-boot" aria-label="Ladebildschirm">
+      <div class="center-col">
+        <div class="logo big" aria-hidden="true"><span class="logo-a">Turm</span><span class="logo-b">trubel</span></div>
+        <div class="progress"><div class="bar" id="boot-bar"></div></div>
+        <p class="hint" id="boot-text">Lade Karten…</p>
+      </div>
+    </section>
+
+    <!-- Startbildschirm: Name -->
+    <section class="screen" id="s-name" aria-label="Startbildschirm">
+      <div class="center-col">
+        <div class="logo big" aria-hidden="true"><span class="logo-a">Turm</span><span class="logo-b">trubel</span></div>
+        <p class="tagline">Das 1-gegen-1-Kartenduell um Türme, Kronen und Ruhm!</p>
+        <form class="panel name-panel" id="name-form" autocomplete="off">
+          <label for="name-input" class="panel-title">Wie heißt du?</label>
+          <input id="name-input" class="text-input" maxlength="16" placeholder="Dein Spielername" autocomplete="nickname" spellcheck="false">
+          <p class="error" id="name-error" role="alert"></p>
+          <button class="btn btn-yellow btn-big" type="submit">Los geht's!</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Hauptmenü -->
+    <section class="screen" id="s-menu" aria-label="Hauptmenü">
+      <header class="topbar">
+        <div class="logo small" aria-hidden="true"><span class="logo-a">Turm</span><span class="logo-b">trubel</span></div>
+        <div class="topbar-right">
+          <button class="chip" id="menu-rename" title="Namen ändern"><span class="chip-dot"></span><span id="menu-name">Spieler</span> ✎</button>
+          <button class="icon-btn" id="menu-settings" title="Einstellungen" aria-label="Einstellungen">⚙</button>
+        </div>
+      </header>
+      <main class="menu-main">
+        <div class="panel menu-actions">
+          <h2 class="panel-title">Freundschaftskampf</h2>
+          <button class="btn btn-yellow btn-big" id="btn-create">⚔ Kampf erstellen</button>
+          <button class="btn btn-blue btn-big" id="btn-join">🔑 Beitreten</button>
+          <div class="divider"><span>oder</span></div>
+          <button class="btn btn-green" id="btn-training">🎯 Training gegen Bot</button>
+          <p class="hint small">Erstelle einen Kampf und schicke deinem Freund den 6-stelligen Code.</p>
+        </div>
+        <div class="panel menu-deck">
+          <div class="deck-head">
+            <h2 class="panel-title">Aktives Deck</h2>
+            <select id="menu-deck-select" class="select" aria-label="Deck wählen"></select>
+          </div>
+          <div class="mini-deck" id="menu-deck"></div>
+          <div class="deck-meta" id="menu-deck-meta"></div>
+          <button class="btn btn-purple" id="btn-deckbuilder">🃏 Deck-Bauer</button>
+        </div>
+      </main>
+      <footer class="menu-footer"><span id="conn-state" class="conn-state">verbinde…</span></footer>
+    </section>
+
+    <!-- Deck-Bauer -->
+    <section class="screen" id="s-deck" aria-label="Deck-Bauer">
+      <header class="topbar">
+        <button class="btn btn-small btn-blue" id="deck-back">← Zurück</button>
+        <h1 class="topbar-title">Deck-Bauer</h1>
+        <div class="deck-tabs" id="deck-tabs" role="tablist"></div>
+      </header>
+      <div class="deck-layout">
+        <aside class="panel deck-panel">
+          <input id="deck-name" class="text-input deck-name" maxlength="20" aria-label="Deckname">
+          <div class="deck-slots" id="deck-slots"></div>
+          <div class="deck-stats">
+            <div><span class="stat-label">Ø Elixier</span><b id="deck-avg">0</b></div>
+            <div><span class="stat-label">4er-Zyklus</span><b id="deck-cycle">0</b></div>
+            <div><span class="stat-label">Karten</span><b id="deck-count">0/8</b></div>
+          </div>
+          <p class="deck-errors" id="deck-errors"></p>
+          <p class="hint small">Plätze 1–2 = <b class="evo-text">Evo-Plätze</b> · Platz 3 = <b class="special-text">Champion/Held</b>. Tippe eine Karte im Deck an und dann eine andere, um sie zu tauschen.</p>
+          <div class="row wrap">
+            <button class="btn btn-small btn-purple" id="deck-random">🎲 Zufallsdeck</button>
+            <button class="btn btn-small btn-red" id="deck-clear">Leeren</button>
+            <button class="btn btn-small btn-green" id="deck-use">✔ Als aktives Deck</button>
+          </div>
+        </aside>
+        <section class="collection">
+          <div class="filters">
+            <input id="flt-search" class="text-input search" placeholder="Karte suchen…" aria-label="Karten suchen">
+            <div class="chips" id="flt-type"></div>
+            <div class="chips" id="flt-elixir"></div>
+            <div class="chips" id="flt-rarity"></div>
+            <select id="flt-sort" class="select" aria-label="Sortierung">
+              <option value="elixir">Nach Elixier</option>
+              <option value="rarity">Nach Seltenheit</option>
+              <option value="name">Nach Name</option>
+            </select>
+          </div>
+          <p class="hint small" id="grid-count"></p>
+          <div class="card-grid" id="card-grid"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Lobby -->
+    <section class="screen" id="s-lobby" aria-label="Wartelobby">
+      <div class="center-col">
+        <div class="panel lobby-panel">
+          <h2 class="panel-title" id="lobby-title">Freundschaftskampf</h2>
+          <div class="code-box" id="lobby-codebox">
+            <span class="code-label">Einladungscode</span>
+            <span class="code" id="lobby-code">------</span>
+            <div class="row">
+              <button class="btn btn-small btn-blue" id="lobby-copy">Kopieren</button>
+              <button class="btn btn-small btn-purple" id="lobby-share">Link teilen</button>
+            </div>
+            <span class="hint small" id="lobby-expiry"></span>
+          </div>
+          <div class="versus">
+            <div class="player-card blue" id="lobby-p0"></div>
+            <div class="vs">VS</div>
+            <div class="player-card red" id="lobby-p1"></div>
+          </div>
+          <label class="lobby-deck">Dein Deck:
+            <select id="lobby-deck-select" class="select"></select>
+          </label>
+          <div class="row">
+            <button class="btn btn-green btn-big" id="lobby-ready">Bereit!</button>
+            <button class="btn btn-red" id="lobby-leave">Verlassen</button>
+          </div>
+        </div>
+      </div>
+      <div class="countdown" id="countdown" aria-live="assertive"></div>
+    </section>
+
+    <!-- Ladebildschirm vor dem Kampf -->
+    <section class="screen" id="s-loading" aria-label="Kampf wird geladen">
+      <div class="vs-screen">
+        <div class="vs-side blue"><span class="vs-name" id="load-me">Du</span></div>
+        <div class="vs-mid">VS</div>
+        <div class="vs-side red"><span class="vs-name" id="load-opp">Gegner</span></div>
+      </div>
+      <div class="load-bottom">
+        <div class="progress"><div class="bar" id="load-bar"></div></div>
+        <p class="hint" id="load-tip"></p>
+      </div>
+    </section>
+
+    <!-- Kampf -->
+    <section class="screen" id="s-game" aria-label="Kampf">
+      <canvas id="game-canvas"></canvas>
+      <div class="game-ui">
+        <button class="icon-btn game-menu-btn" id="game-menu-btn" aria-label="Menü">≡</button>
+        <div class="game-menu" id="game-menu" hidden>
+          <button class="btn btn-small btn-blue" id="gm-sound">🔊 Ton an</button>
+          <button class="btn btn-small btn-blue" id="gm-music">🎵 Musik an</button>
+          <button class="btn btn-small btn-purple" id="gm-settings">⚙ Einstellungen</button>
+          <button class="btn btn-small btn-red" id="gm-surrender">🏳 Aufgeben</button>
+          <p class="hint small">Tasten: 1–4 Karte · Leertaste Fähigkeit · E Emotes · Esc abbrechen</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ergebnis -->
+    <section class="screen" id="s-result" aria-label="Ergebnis">
+      <canvas id="confetti" aria-hidden="true"></canvas>
+      <div class="center-col result-col">
+        <h1 class="result-title" id="res-title">Sieg!</h1>
+        <p class="result-reason" id="res-reason"></p>
+        <div class="result-board">
+          <div class="res-side red"><span class="res-name" id="res-opp"></span><div class="res-crowns" id="res-crowns-opp"></div></div>
+          <div class="res-side blue"><span class="res-name" id="res-me"></span><div class="res-crowns" id="res-crowns-me"></div></div>
+        </div>
+        <div class="res-stats" id="res-stats"></div>
+        <p class="rematch-status" id="res-rematch-status"></p>
+        <div class="row">
+          <button class="btn btn-yellow btn-big" id="res-rematch">↻ Rematch</button>
+          <button class="btn btn-blue" id="res-menu">Zurück zum Menü</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="conn-banner" hidden></div>
+  <div id="rotate-hint" hidden>Tipp: Dreh dein Handy ins Querformat 📱↻</div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
