@@ -50,3 +50,12 @@ Alle UI-Änderungen der Überarbeitung, in verständlichem Deutsch. Die Befund-I
 - **Filter:** Der Knopf „Filter (n)“ zeigt, wie viele Filter aktiv sind. Mit „Zurücksetzen“ ist alles wieder frei, und bei null Treffern gibt es einen freundlichen Hinweis.
 - **Deckname:** Ein Tipp auf den Namen öffnet das Umbenennen.
 - **Kartendetail (B-16):** Die Werte haben Symbole und kleine Balken, die den Wert im Vergleich zu allen Karten zeigen. Die Evo-Fähigkeit steht in einer eigenen Box, die anzeigt, ob sie aktiv ist und nach wie vielen Einsätzen sie auslöst. Ist das Deck voll, sind „Ins Deck“ und „In Evo-Platz“ gesperrt und nennen den Grund. Am Handy öffnet sich das Detail als Blatt von unten.
+
+## Phase 5 – Feinschliff
+
+- **Vibration:** Ausspielen, Fehlversuche, zerstörte Türme und das Kampfende geben ein kurzes Vibrationssignal, falls dein Gerät das kann (abschaltbar).
+- **Weniger Bewegung:** Mit der Systemeinstellung „Bewegung reduzieren“ wackelt nichts mehr, es gibt kein Konfetti und keine Parallaxe. Effekte werden durch sanfte Überblendungen ersetzt.
+- **Grafikqualität wirkt spürbar:** „Niedrig“ verzichtet auf weiche Schatten, Schimmer und Konfetti. Nur „Hoch“ nutzt den weichgezeichneten Hintergrund hinter Dialogen.
+- **Flüssiger:** Beschriftungen und Elixier-Tropfen im Kampf werden zwischengespeichert statt jedes Bild neu gezeichnet.
+- **Aufgeräumt:** Ungenutzte Styles wurden entfernt. Die README beschreibt die neuen Layouts und das Screenshot-Werkzeug.
+- **Prüfbar:** `node tools/ui-shots.mjs` prüft alle 8 Bildschirmgrößen automatisch. Aktuell gibt es 0 Überdeckungen, 0 zu kleine Tippziele und 0 abgeschnittene Elemente. `--perf` misst die Bildrate.

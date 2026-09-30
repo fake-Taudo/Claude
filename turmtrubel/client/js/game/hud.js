@@ -53,8 +53,32 @@ export function drawCrown(ctx, x, y, size, filled, color = T.gold.main) {
   }
 }
 
-/** Elixier-Tropfen (eine Komponente für Karte, Leiste, Fähigkeit). tint 'red' = nicht bezahlbar. */
+/** Elixier-Tropfen (eine Komponente für Karte, Leiste, Fähigkeit). tint 'red' = nicht bezahlbar.
+ *  Wird als kleines Bild zwischengespeichert – Verlauf, Kontur und Zahl kosten sonst jeden Frame. */
+const dropCache = new Map();
 export function drawElixirDrop(ctx, x, y, r, label, tint = null) {
+  const ps = Math.max(1, Math.round((ctx.getTransform?.().a || 1) * 2) / 2);
+  const rq = Math.round(r * 2) / 2;
+  const key = `${rq}|${label ?? ''}|${tint || ''}|${ps}`;
+  let sp = dropCache.get(key);
+  if (!sp) {
+    const pad = Math.ceil(rq * 0.3) + 3;
+    const w = Math.ceil(rq * 2.4 + pad * 2);
+    const h = Math.ceil(rq * 2.3 + pad * 2);
+    const cv = document.createElement('canvas');
+    cv.width = Math.ceil(w * ps);
+    cv.height = Math.ceil(h * ps);
+    const c = cv.getContext('2d');
+    c.scale(ps, ps);
+    paintDrop(c, w / 2, pad + rq * 1.25, rq, label, tint);
+    sp = { cv, w, h, ax: w / 2, ay: pad + rq * 1.25 };
+    if (dropCache.size >= 300) dropCache.delete(dropCache.keys().next().value);
+    dropCache.set(key, sp);
+  }
+  ctx.drawImage(sp.cv, x - sp.ax, y - sp.ay, sp.w, sp.h);
+}
+
+function paintDrop(ctx, x, y, r, label, tint) {
   ctx.beginPath();
   ctx.moveTo(x, y - r * 1.25);
   ctx.bezierCurveTo(x + r * 1.1, y - r * 0.1, x + r * 0.9, y + r, x, y + r);
@@ -835,11 +859,13 @@ export class Hud {
     const tc = team === 'red' ? T.red : T.blue;
     const g = this.game;
     ctx.save();
-    const gr = ctx.createLinearGradient(0, r.y, 0, r.y + r.h);
-    gr.addColorStop(0, tc.main);
-    gr.addColorStop(1, tc.dark);
+    if (!r.grad) {
+      r.grad = ctx.createLinearGradient(0, r.y, 0, r.y + r.h);
+      r.grad.addColorStop(0, tc.main);
+      r.grad.addColorStop(1, tc.dark);
+    }
     rr(ctx, r.x, r.y, r.w, r.h, r.h / 2);
-    ctx.fillStyle = gr;
+    ctx.fillStyle = r.grad;
     ctx.fill();
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = OUTLINE;

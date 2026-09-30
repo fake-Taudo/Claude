@@ -71,3 +71,30 @@ Laufendes Protokoll der UI-Überarbeitung: Entscheidungen mit Begründung, Vorsc
 | Kartendetail | Stat-Tabelle mit Symbolen und relativen Mini-Balken: Wert ÷ Höchstwert aller Karten desselben Typs (Truppe/Gebäude/Zauber, Evo eingeschlossen), einmal pro Datenbank berechnet. Balken gibt es nur für „mehr ist mehr“-Werte (Leben, Schaden, DPS, Reichweite, Tempo, Lebensdauer, Radius, Dauer). Der Text bleibt für Screenreader lesbar, Symbole und Balken sind `aria-hidden`. | B-16. Angriffstempo hat keinen Balken, weil ein kleinerer Wert besser ist und ein Balken dort irreführen würde. |
 | Evo-Box | Eigene Karte mit Status „✓ Aktiv im Evo-Platz“ oder „Inaktiv – nur in Platz 1 oder 2“ und Fortschrittspunkten („● ● → EVO“). | §9.4 |
 | Aktionen | „Ins Deck“ / „In Evo-Platz“ sind bei vollem Deck deaktiviert, der Grund steht darunter („Deck voll – tippe zuerst eine Deckkarte an …“). Champions und Helden bleiben erlaubt, weil sie den ★-Platz ersetzen. | §9.4 |
+
+## Phase 5 – Feinschliff und Verifikation
+
+| Thema | Entscheidung | Begründung |
+| --- | --- | --- |
+| Haptik | `navigator.vibrate` mit 10 ms beim Ausspielen, 15 ms bei Fehlversuchen, 20 ms bei zerstörtem Turm, beim Kampfende `[15, 60, 15]` (Sieg) bzw. 20 ms. Nur wenn unterstützt und `settings.haptics` an ist (neu, Default an). | §10 |
+| Reduzierte Bewegung | CSS: alle Animationen und Übergänge werden global auf 0,01 ms gesetzt. Canvas: kein Bildschirmwackeln, kein Leisten-/Kartenwackeln, kein Timer-Puls und kein Schimmer. Glanz und Zyklus werden zur Überblendung, Konfetti und Parallaxe entfallen. `body[data-motion]` folgt live der Systemeinstellung. | §10 |
+| Qualitätsstufen | **Niedrig:** keine Schatten-Blurs im HUD, kein Leisten-Schimmer, keine Parallaxe, kein Konfetti, weniger Partikel, DPR 1. **Mittel:** Standard-Animationen, kein Backdrop-Blur, DPR 1,5. **Hoch:** alles inkl. Backdrop-Blur (3 px) und Konfetti, DPR 2. | §10. Konfetti gibt es schon ab „Mittel“, wie in §9.10 verlangt. §10 nennt es nur für „Hoch“, §9.10 ist aber spezifischer. |
+| Text-Cache | Canvas-Beschriftungen (Timer, Turm-LP, Elixierzahl, Namen, Tastenkappen) und Elixier-Tropfen werden einmal als kleine Bitmaps gerendert und dann nur kopiert (LRU, 500 bzw. 300 Einträge, Schlüssel inkl. Pixeldichte). Nach dem Nachladen der Schrift wird der Cache geleert. | Kontur + Füllung sind ohne GPU teuer. |
+| Performance-Messung | `--perf`: 10 s Bot-Kampf mit eigenen Ausspielungen, rAF-Frame-Zeiten und `longtask`-Observer, CPU-Drosselung per CDP. Ergebnis in der Sandbox: ungedrosselt **60 fps, 0 Long Tasks**. Mit 4× Drosselung 18–23 fps (alter Stand 19–26 fps), JS-Anteil pro Frame 4–5 ms, davon HUD 1,3–1,8 ms. Der Rest ist Software-Rasterung ohne GPU. | §12.3. Das Ziel „60 fps auf Mittelklasse-Android“ lässt sich hier ohne GPU nicht belastbar messen, deshalb bleibt es ein offener Punkt. |
+| Tote Styles | Entfernt: `.display`, `.game-menu`, `.btn.pressed`, `.btn.is-ready` + `@keyframes pulse`, `.join-code-input`, `.settings-grid`, `.sr-only`, das alte Vollbild-`.countdown`. | Aufräumen (§11 Phase 5) |
+| Barrierefreiheit | Modals haben `role="dialog"`, `aria-modal`, `aria-labelledby`, Fokus-Falle und Fokus-Rückgabe. Toggles sind `role="switch"` mit Label, Segmente `radiogroup`, Filterchips `aria-pressed`, Slider haben `aria-valuetext`. Toasts `status` bzw. `alert`, der Ladebalken ist `role="progressbar"`. Zustände sind nie nur Farbe (✓/✕ im Toggle, Schraffur, Symbole). | §12.4. Ein automatischer Kontrasttest (axe) wurde bewusst nicht als Abhängigkeit ergänzt. Die Textfarben sind gegen ihre Flächen geprüft (Hinweistext auf Creme ≈ 6:1, auf Indigo ≈ 10:1). |
+
+### Sound-Hooks
+
+Alle UI-Sounds nutzen das vorhandene Web-Audio-System und die bestehenden Lautstärke-Regler: `click` (Knöpfe, Chips, Toggles, Segmente, Tabs), `select` (Karte wählen, Karte ins Deck, Tausch), `error` (Fehlversuch, falscher Code), `deploy`/`cast` (Ausspielen), `towerDown` und `crown` (Krone), `count`/`go` (Countdown), `win`/`lose`/`draw`, `emote`. **Keine neuen Audiodateien.** Als Vorschläge ohne vorhandenes Asset:
+
+* ein eigener, leiser „Karte bezahlbar“-Ton passend zum Glanz,
+* ein „Kopiert!“-Bestätigungston in der Lobby,
+* ein kurzer Wisch-Ton beim Schließen eines Bottom-Sheets.
+
+### Offene Punkte / Vorschläge
+
+* **Performance auf echten Geräten** (Mittelklasse-Android, iPhone SE) messen. Der Text-Cache ist vorbereitet. Als Nächstes käme ein Offscreen-Layer für die statischen Panel-Hintergründe.
+* **Avatare/Embleme pro Spieler** gibt es als Spiellogik nicht. Der VS-Screen zeigt deshalb nur Teamfarbe + Burgturm. Ein wählbares Emblem wäre ein neues Profil-Feld (abwärtskompatibel mit Default).
+* **Drag & Drop im Deck-Bauer** ist nicht umgesetzt, der Tausch per Tippen reicht und ist am Handy robuster.
+* **Echte Pause** gibt es im Multiplayer bewusst nicht (Serverlogik). Im Training wäre sie denkbar, wurde aber nicht erfunden.

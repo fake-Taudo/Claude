@@ -53,6 +53,16 @@ class App {
     toast(msg, kind, ms);
   }
 
+  /** Kurzes haptisches Feedback (10–20 ms), nur wenn unterstützt und in den Einstellungen erlaubt. */
+  haptic(pattern = 12) {
+    if (!this.settings?.haptics || typeof navigator.vibrate !== 'function') return;
+    try {
+      navigator.vibrate(pattern);
+    } catch {
+      /* z. B. ohne Nutzergeste blockiert */
+    }
+  }
+
   // ───────────── Start ─────────────
   async boot() {
     const bar = $('#boot-bar');
@@ -106,7 +116,7 @@ class App {
     window.addEventListener('pointerdown', unlock);
     window.addEventListener('keydown', unlock);
     document.addEventListener('click', (e) => {
-      if (e.target.closest?.('.btn, .icon-btn, .chip, .deck-tab, .fchip')) this.audio.sfx('click', 0.6);
+      if (e.target.closest?.('.btn, .icon-btn, .chip, .deck-tab, .fchip, .toggle, .seg button, .deck-name-btn')) this.audio.sfx('click', 0.6);
     });
 
     const ni = $('#name-input');
@@ -737,6 +747,7 @@ class App {
     const draw = m.winner == null;
     this.audio.music(null);
     setTimeout(() => this.audio.sfx(draw ? 'draw' : win ? 'win' : 'lose'), 300);
+    this.haptic(win ? [15, 60, 15] : 20);
     if (this.game && currentScreen() === 's-game') {
       this.game.onEnd(m);
       const g = this.game;

@@ -42,13 +42,13 @@ Dann im Browser **http://localhost:3000** öffnen.
 | ------ | ------------ | -------- |
 | Karte spielen | Karte aufs Feld **ziehen** *oder* Karte **antippen**, dann Feld antippen | `1`–`4` wählt die Karte, dann Klick aufs Feld |
 | Auswahl abbrechen | Karte erneut antippen oder zurück auf die Hand ziehen | `Esc` |
-| Champion-/Helden-Fähigkeit | runder Knopf unten rechts in der Arena | `Leertaste` oder `Q` |
+| Champion-/Helden-Fähigkeit | runder Knopf neben dem Emote-Knopf (Kartenpanel bzw. neben der Arena) | `Leertaste` oder `Q` |
 | Emote | Smiley-Knopf, dann eines von 6 Emotes | `E` |
-| Menü, Ton, Aufgeben | `≡` oben links | – |
+| Menü, Ton, Aufgeben | `≡` oben links bzw. oben im Kartenpanel | – |
 
-Solange eine Karte ausgewählt ist, färbt sich der gesperrte Bereich rot, und eine Vorschau zeigt Formation, Reichweite bzw. Zauberradius. Liegt der Finger auf der gegnerischen Hälfte, rastet die Truppe am Flussufer ein.
+Solange eine Karte ausgewählt ist, ist der gesperrte Bereich rot schraffiert, die Elixierleiste markiert die Kosten, und eine Vorschau zeigt Formation, Reichweite bzw. Zauberradius. Liegt der Finger auf der gegnerischen Hälfte, rastet die Truppe am Flussufer ein.
 
-**Layouts:** Die Arena steht immer hochkant. Auf Desktop und Tablet quer sitzt das Kartenpanel rechts neben der Arena, im Hochformat unter ihr. Auf Handys im Querformat wird die Arena automatisch um 90° gedreht (die eigene Seite liegt rechts), damit sie groß genug bleibt. Einstellbar unter *Einstellungen → Arena-Ausrichtung*.
+**Layouts:** Kein Bedienelement liegt über der Arena. Bei *Auto* wählt das Spiel die größte lesbare Arena. Auf breiten Bildschirmen (Desktop, Handy quer) ist die Arena um 90° gedreht (die eigene Seite liegt rechts), das Kartenpanel mit Timer, Kronen und Hand steht rechts. Auf Tablets quer steht die Arena hochkant mit Panel rechts, im Hochformat gibt es oben eine Kopfleiste und unten die Hand. Einstellbar unter *Einstellungen → Grafik & Anzeige → Arena-Ausrichtung*.
 
 ---
 
@@ -123,8 +123,10 @@ turmtrubel/
 ├─ client/js/net.js         WebSocket, Reconnect, Ping
 ├─ client/js/audio.js       Web-Audio-SFX + prozedurale Musik
 ├─ client/js/store.js       localStorage (Name, Einstellungen, 5 Deck-Plätze)
-├─ client/js/ui/…           Deck-Bauer, Kartenansicht, Einstellungen, DOM-Helfer
-├─ client/js/game/…         game.js (Interpolation, Eingabe), renderer.js, hud.js, sprites.js, particles.js
+├─ client/js/ui/…           Deck-Bauer, Kartenansicht, Einstellungen, DOM-Helfer (Modal, Toast), tokens.js (Design-Tokens fürs Canvas)
+├─ client/js/game/…         game.js (Interpolation, Eingabe), renderer.js, hud.js (Layout-Engine), canvastext.js, sprites.js, particles.js
+├─ tools/ui-shots.mjs       Screenshots aller Zustände in 8 Viewports + automatische UI-Prüfungen
+├─ docs/ui-*.md             UI-Audit, Entscheidungen, Vorher/Nachher
 └─ test/…                   node:test-Tests
 ```
 
@@ -179,6 +181,18 @@ Die Tests laufen mit dem eingebauten `node:test`, ohne zusätzliche Abhängigkei
 * **rooms**: Codeformat und Eindeutigkeit, Fehler (ungültig, unbekannt, voll, abgelaufen), Countdown, Lade-Timeout, Reconnect innerhalb und nach 30 s, Rematch, Verlassen, Training
 * **integration**: echter Server auf zufälligem Port mit zwei WebSocket-Clients: Lobby, Kampf, gültige und ungültige Züge, Emote, Ping, Reconnect, Aufgabe, Rematch
 
+### UI-Screenshots und Prüfungen
+
+```bash
+node tools/ui-shots.mjs                          # alle 8 Viewports → docs/ui-nachher/ (+ checks.json)
+node tools/ui-shots.mjs --only=phone-360x640     # nur einzelne Viewports
+node tools/ui-shots.mjs --perf                   # FPS und Long Tasks im Bot-Kampf, CPU 4× gedrosselt
+```
+
+Das Skript startet selbst einen Server auf einem freien Port und spielt pro Viewport den ganzen Ablauf durch: Name → Menü → Einstellungen → Beitreten → Deck-Bauer → Kartendetail → Training → Countdown → Laden → Kampf → Karte wählen/ziehen/ausspielen → Fehlertoast → Emote → Pause → letzte 10 s → zerstörter Turm → Aufgeben → Ergebnis (Niederlage und Sieg) → Multiplayer-Lobby mit zwei Seiten. Jeder Zustand wird geprüft: Touch-Ziele unter 44 px, Elemente außerhalb des Bildschirms, abgeschnittene Texte ohne Volltext, HUD über der Arena (über `hud.blocks()`), Toast über dem Kampfgeschehen und Konsolenfehler. Ein nicht leerer Befund bei Arena-Überdeckung oder Seitenfehlern führt zu Exit-Code 1.
+
+Playwright ist **keine** Projektabhängigkeit (damit `npm install` schlank bleibt). Nötig ist eine lokale oder globale Installation, z. B. `npm i -g playwright && npx playwright install chromium`. Einen eigenen Browser setzt `CHROMIUM_PATH=/pfad/zu/chrome`.
+
 ---
 
 ## Bekannte Einschränkungen
@@ -192,6 +206,7 @@ Die Tests laufen mit dem eingebauten `node:test`, ohne zusätzliche Abhängigkei
 * **Anti-Cheat** prüft alle Eingaben auf dem Server. Gegen automatisierte Clients (Bots), die gültige Eingaben senden, schützt er nicht.
 * **Grafik vollständig prozedural:** Das sieht charmant aus, ist aber einfacher als handgezeichnete Sprites. Auf sehr alten Geräten hilft *Grafikqualität: Niedrig*.
 * **Audio:** Browser (besonders iOS) starten Ton erst nach der ersten Berührung. Musik und Effekte sind synthetisch.
+* **Oberfläche:** Im Hochformat erscheint der Hinweis-Toast (z. B. „Nicht genug Elixier!“) für 1,4 s am unteren Arenarand über dem eigenen Burgturm. Vibration gibt es nur, wo der Browser `navigator.vibrate` anbietet (nicht auf iOS). Die Performance ist bisher nur in Chromium gemessen (siehe `docs/ui-vorher-nachher.md`).
 * **Designentscheidungen:** Helden lösen ihre einmalige Fähigkeit per Knopf aus. Evo-Karten starten ungeladen (`evo.startCharged` in `rules.json`). Turmnamen und Kartennamen sind bewusst eigenständig.
 
 ---

@@ -5,7 +5,7 @@ import { View, Renderer } from './renderer.js';
 import { Hud } from './hud.js';
 import { Particles } from './particles.js';
 import { cardArt } from '../ui/art.js';
-import { safeInsets } from '../ui/tokens.js';
+import { safeInsets, reducedMotion } from '../ui/tokens.js';
 
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -475,6 +475,7 @@ export class Game {
           fx.debris(x, y, isKing ? 2.2 : 1.6);
           this.shake = isKing ? 22 : 14;
           A.sfx('towerDown');
+          this.app.haptic(20);
           const [sx, sy] = this.view.toScreen(x, y);
           this.hud.flyCrown(sx, sy - this.view.s * 2, owner !== this.side);
           break;
@@ -864,16 +865,19 @@ export class Game {
     if (!pos.valid) {
       this.app.toast('Hier nicht möglich!', 'warn', 1400);
       this.audio.sfx('error');
+      this.app.haptic(15);
       return false;
     }
     if (this.elixirNow() + 1e-6 < card.elixir) {
       this.hud.flashElixir(slot);
       this.app.toast('Nicht genug Elixier!', 'warn', 1400);
       this.audio.sfx('error');
+      this.app.haptic(15);
       return false;
     }
     const seq = ++this.seq;
     this.net.send(C2S.PLAY, { slot, card: id, x: pos.x, y: pos.y, seq });
+    this.app.haptic(10);
     this.pendingSlot.set(slot, { card: id, cost: card.elixir, seq, until: performance.now() + 1500 });
     this.ghosts.push({ ...this.ghostFor(card, pos), seq, card: id, until: this.clock + 1.2 });
     return true;
@@ -967,8 +971,11 @@ export class Game {
     let oy = 0;
     if (this.shake > 0) {
       this.shake = Math.max(0, this.shake - dt * 40);
-      ox = (Math.random() - 0.5) * this.shake;
-      oy = (Math.random() - 0.5) * this.shake;
+      // Reduzierte Bewegung: kein Bildschirmwackeln
+      if (!reducedMotion()) {
+        ox = (Math.random() - 0.5) * this.shake;
+        oy = (Math.random() - 0.5) * this.shake;
+      }
     }
     ctx.save();
     ctx.translate(ox, oy);

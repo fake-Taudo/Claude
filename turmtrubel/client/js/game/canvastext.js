@@ -8,20 +8,56 @@ export function setFont(ctx, size) {
   ctx.font = `${Math.round(size)}px ${FONT}`;
 }
 
-/** Text mit Kontur (paint-order: erst Kontur, dann Füllung). */
+/** Text mit Kontur (paint-order: erst Kontur, dann Füllung) – über den Sprite-Cache. */
 export function text(ctx, str, x, y, size, color = '#ffffff', align = 'center', stroke = 3) {
-  setFont(ctx, size);
-  ctx.textAlign = align;
-  ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
-  if (stroke) {
-    ctx.lineWidth = stroke;
-    ctx.strokeStyle = OUTLINE;
-    ctx.strokeText(str, x, y);
+  return cached(ctx, str, x, y, size, color, align, stroke, false);
+}
+
+// ───── Sprite-Cache für Texte ─────
+// Kontur + Füllung von Canvas-Text sind teuer (v. a. ohne GPU). Einmal gerenderte Beschriftungen
+// werden als kleines Bild gemerkt und nur noch kopiert. Schlüssel enthält die Pixeldichte.
+const sprites = new Map();
+const MAX_SPRITES = 500;
+function pixelScale(ctx) {
+  const a = ctx.getTransform?.().a || 1;
+  return Math.max(1, Math.round(a * 2) / 2);
+}
+function cached(ctx, str, x, y, size, color, align, stroke, tab) {
+  size = Math.round(size);
+  const ps = pixelScale(ctx);
+  const key = `${tab ? 1 : 0}|${str}|${size}|${color}|${stroke}|${ps}`;
+  let sp = sprites.get(key);
+  if (!sp) {
+    const w = tab ? tnumWidth(ctx, str, size) : (setFont(ctx, size), ctx.measureText(str).width);
+    const pad = Math.ceil(stroke / 2) + 2;
+    const cw = Math.ceil(w + pad * 2);
+    const ch = Math.ceil(size * 1.5 + pad * 2);
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.ceil(cw * ps));
+    cv.height = Math.max(1, Math.ceil(ch * ps));
+    const c = cv.getContext('2d');
+    c.scale(ps, ps);
+    if (tab) drawTabular(c, str, pad, ch / 2, size, color, stroke);
+    else {
+      setFont(c, size);
+      c.textAlign = 'left';
+      c.textBaseline = 'middle';
+      c.lineJoin = 'round';
+      if (stroke) {
+        c.lineWidth = stroke;
+        c.strokeStyle = OUTLINE;
+        c.strokeText(str, pad, ch / 2);
+      }
+      c.fillStyle = color;
+      c.fillText(str, pad, ch / 2);
+    }
+    sp = { cv, w, cw, ch, pad };
+    if (sprites.size >= MAX_SPRITES) sprites.delete(sprites.keys().next().value);
+    sprites.set(key, sp);
   }
-  ctx.fillStyle = color;
-  ctx.fillText(str, x, y);
-  ctx.textBaseline = 'alphabetic';
+  const left = align === 'center' ? x - sp.w / 2 : align === 'right' ? x - sp.w : x;
+  ctx.drawImage(sp.cv, left - sp.pad, y - sp.ch / 2, sp.cw, sp.ch);
+  return sp.w;
 }
 
 // Breite der breitesten Ziffer je Schriftgröße (Lilita One hat keine tabellarischen Ziffern)
@@ -38,7 +74,10 @@ function digitAdvance(ctx, size) {
 /** Nach dem Laden der Schrift aufrufen, falls vorher mit Ersatzschrift gemessen wurde. */
 export function resetTextCache() {
   advCache.clear();
+  sprites.clear();
 }
+// Nachgeladene Schrift → mit Ersatzschrift gerenderte Sprites verwerfen
+if (typeof document !== 'undefined') document.fonts?.addEventListener?.('loadingdone', resetTextCache);
 
 /** Breite eines Strings mit tabellarischen Ziffern. */
 export function tnumWidth(ctx, str, size) {
@@ -52,10 +91,13 @@ export function tnumWidth(ctx, str, size) {
 
 /** Zahlen mit fester Ziffernbreite – springen nicht beim Hoch-/Runterzählen (B-18). */
 export function tnum(ctx, str, x, y, size, color = '#ffffff', align = 'center', stroke = 3) {
-  size = Math.round(size);
+  return cached(ctx, str, x, y, size, color, align, stroke, true);
+}
+
+function drawTabular(ctx, str, x, y, size, color, stroke) {
   const total = tnumWidth(ctx, str, size);
   const adv = digitAdvance(ctx, size);
-  let cx = align === 'center' ? x - total / 2 : align === 'right' ? x - total : x;
+  let cx = x;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';

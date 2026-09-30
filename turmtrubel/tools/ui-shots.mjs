@@ -5,6 +5,7 @@
 //   node tools/ui-shots.mjs --only=phone-844x390,desk-1280x800
 //   node tools/ui-shots.mjs --out=/tmp/shots --jpeg
 //   node tools/ui-shots.mjs --url=http://localhost:3000   # vorhandenen Server nutzen
+//   node tools/ui-shots.mjs --perf                         # nur Performance: 10 s Bot-Kampf, CPU 4× gedrosselt
 //
 // Startet (ohne --url) selbst einen Server auf einem freien Port, spielt pro Viewport den
 // kompletten Ablauf durch (Name → Menü → Deck-Bauer → Training → Kampf → Pause → Ergebnis,
@@ -413,6 +414,57 @@ async function runViewport(browser, url, vp, report) {
   await ctx.close();
 }
 
+// ───────────── Performance (§12.3) ─────────────
+async function runPerf(browser, url, vp) {
+  const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.touch ? 2 : 1, hasTouch: !!vp.touch, isMobile: !!vp.touch && vp.width < 1100 });
+  const page = await ctx.newPage();
+  const cdp = await ctx.newCDPSession(page);
+  await page.goto(url);
+  await page.waitForSelector('#s-name.active', { timeout: 20000 });
+  await page.fill('#name-input', 'Messung');
+  await page.click('#name-form button[type=submit]');
+  await page.waitForFunction(() => window.turmtrubel?.net?.welcomed, null, { timeout: 8000 });
+  await page.click('#btn-training');
+  await page.waitForSelector('#s-game.active', { timeout: 15000 });
+  await page.waitForTimeout(800);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: Number(args.cpu || 4) });
+  await page.evaluate(() => {
+    const P = (window.__perf = { frames: [], long: [] });
+    try {
+      new PerformanceObserver((l) => l.getEntries().forEach((e) => P.long.push(e.duration))).observe({ entryTypes: ['longtask'] });
+    } catch {}
+    let last = performance.now();
+    const f = (t) => {
+      P.frames.push(t - last);
+      last = t;
+      if (!P.stop) requestAnimationFrame(f);
+    };
+    requestAnimationFrame(f);
+  });
+  // 10 s Kampf mit eigenen Karten (Last durch Einheiten, Partikel, Schadenszahlen)
+  for (let i = 0; i < 5; i++) {
+    await page.evaluate(() => {
+      const g = window.turmtrubel.game;
+      if (!g?.me) return;
+      const e = g.elixirNow();
+      const i = g.me.h.findIndex((id) => (g.db.card(id)?.elixir ?? 99) <= e);
+      if (i < 0) return;
+      g.sel = i;
+      g.tryPlay(i % 2 ? 4 : 14, g.side === 0 ? 20 : 12);
+    });
+    await page.waitForTimeout(2000);
+  }
+  const r = await page.evaluate(() => {
+    const P = window.__perf;
+    P.stop = true;
+    const f = P.frames.slice(3).sort((a, b) => a - b);
+    const avg = f.reduce((a, b) => a + b, 0) / Math.max(1, f.length);
+    return { frames: f.length, fps: Math.round(1000 / avg), p95ms: Math.round(f[Math.floor(f.length * 0.95)] || 0), worstMs: Math.round(f.at(-1) || 0), longTasks: P.long.length, longMaxMs: Math.round(Math.max(0, ...P.long)) };
+  });
+  await ctx.close();
+  return r;
+}
+
 // ───────────── Hauptprogramm ─────────────
 const pw = await loadPlaywright();
 fs.mkdirSync(OUT, { recursive: true });
@@ -426,6 +478,22 @@ const exe = process.env.CHROMIUM_PATH;
 const browser = await pw.chromium.launch({ executablePath: exe || undefined, args: ['--autoplay-policy=no-user-gesture-required', '--mute-audio'] });
 const only = args.only ? String(args.only).split(',') : null;
 const report = {};
+if (args.perf) {
+  const perf = {};
+  try {
+    for (const vp of VIEWPORTS) {
+      if (only ? !only.includes(vp.name) : !['desk-1280x800', 'phone-844x390', 'phone-360x640'].includes(vp.name)) continue;
+      perf[vp.name] = await runPerf(browser, url, vp);
+      const p = perf[vp.name];
+      console.log(`${vp.name.padEnd(16)} CPU ${Number(args.cpu || 4)}× · ${p.fps} fps · p95 ${p.p95ms} ms · schlechtester Frame ${p.worstMs} ms · Long Tasks ${p.longTasks} (max ${p.longMaxMs} ms)`);
+    }
+  } finally {
+    await browser.close();
+    server?.proc.kill();
+  }
+  fs.writeFileSync(path.join(OUT, 'perf.json'), JSON.stringify(perf, null, 1));
+  process.exit(0);
+}
 try {
   for (const vp of VIEWPORTS) {
     if (only && !only.includes(vp.name)) continue;
