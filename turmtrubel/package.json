@@ -1,0 +1,19 @@
+{
+  "name": "turmtrubel",
+  "version": "1.0.0",
+  "description": "Turmtrubel – 1v1-Echtzeit-Kartenspiel für den Browser (autoritativer Node.js-Server, HTML5-Canvas-Client)",
+  "type": "module",
+  "main": "server/index.js",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

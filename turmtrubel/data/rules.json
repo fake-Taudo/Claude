@@ -1,0 +1,51 @@
+{
+  "_info": "Spielregeln von Turmtrubel. Alle Zeiten in Sekunden. Änderungen wirken nach einem Server-Neustart.",
+  "tickRate": 20,
+  "regularSeconds": 180,
+  "overtimeSeconds": 120,
+  "doubleElixirLastSeconds": 60,
+  "suddenDeath": "firstCrown",
+  "_suddenDeathInfo": "firstCrown = der erste zerstörte Turm in der Verlängerung gewinnt (wie im Vorbild). firstHit = der erste Treffer auf einen Kronenturm gewinnt.",
+  "elixir": {
+    "start": 5,
+    "max": 10,
+    "regenSeconds": 2.8,
+    "doubleMultiplier": 2,
+    "overtimeMultiplier": 3
+  },
+  "hand": {
+    "size": 4,
+    "arrivalDelay": 0.35
+  },
+  "evo": {
+    "startCharged": false
+  },
+  "towers": {
+    "princess": {
+      "name": "Wachturm",
+      "hp": 3000,
+      "damage": 110,
+      "hitSpeed": 0.8,
+      "range": 7.5,
+      "size": 3,
+      "projectile": { "kind": "arrow", "speed": 16 }
+    },
+    "king": {
+      "name": "Burgturm",
+      "hp": 4800,
+      "damage": 115,
+      "hitSpeed": 1.0,
+      "range": 7,
+      "size": 4,
+      "projectile": { "kind": "cannonball", "speed": 14 }
+    }
+  },
+  "lobby": {
+    "codeTtlSeconds": 600,
+    "reconnectSeconds": 30,
+    "countdownSeconds": 3,
+    "loadTimeoutSeconds": 8
+  },
+  "emoteCooldown": 3,
+  "maxEntities": 260
+}
