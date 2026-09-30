@@ -718,6 +718,7 @@ body[data-screen='s-game'] #toasts { left: var(--toast-x, 50%); top: var(--toast
 /* ───── Spiel ───── */
 #game-canvas { position: absolute; inset: 0; display: block; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .game-ui { position: absolute; top: max(6px, var(--safe-t)); left: max(6px, var(--safe-l)); z-index: var(--z-hud); }
+.game-ui.right .game-menu { position: absolute; right: 0; top: 44px; width: 240px; }
 .game-menu-btn { width: 44px; height: 44px; font-size: 20px; }
 .game-menu { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--surface-cream); border: var(--outline); border-radius: 14px; box-shadow: 0 5px 0 var(--ink-900); max-width: 240px; }
 

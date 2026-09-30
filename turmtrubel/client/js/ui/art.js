@@ -18,6 +18,34 @@ export function cardArt(db, id, evo = false, w = 180, h = 225) {
   return cv;
 }
 
+/** Graustufen-Fassung eines Kartenbilds (für „nicht bezahlbar“: wird mit 35 % über das Original gelegt). */
+const grays = new Map();
+export function cardArtGray(db, id, evo = false) {
+  const key = `${id}|${evo ? 1 : 0}`;
+  let cv = grays.get(key);
+  if (!cv) {
+    const src = cardArt(db, id, evo);
+    cv = document.createElement('canvas');
+    cv.width = src.width;
+    cv.height = src.height;
+    const c = cv.getContext('2d');
+    c.drawImage(src, 0, 0);
+    try {
+      const img = c.getImageData(0, 0, cv.width, cv.height);
+      const d = img.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const l = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11;
+        d[i] = d[i + 1] = d[i + 2] = l;
+      }
+      c.putImageData(img, 0, 0);
+    } catch {
+      /* Canvas nicht lesbar → Original bleibt */
+    }
+    grays.set(key, cv);
+  }
+  return cv;
+}
+
 export function cardArtURL(db, id, evo = false) {
   const key = `${id}|${evo ? 1 : 0}`;
   let u = urls.get(key);

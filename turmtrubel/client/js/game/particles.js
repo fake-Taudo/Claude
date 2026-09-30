@@ -1,4 +1,6 @@
 // Partikel und kurzlebige Effekte in Weltkoordinaten (Felder), gezeichnet über die View.
+import { FONT } from './canvastext.js';
+
 const TAU = Math.PI * 2;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[(Math.random() * arr.length) | 0];
@@ -92,6 +94,20 @@ export class Particles {
     this.texts.push({ x, y, str, color, size, life, max: life, z });
   }
 
+  /** Schadenszahl: Pop + Aufsteigen (~550 ms). Treffer aufs selbe Ziel binnen 0,25 s werden addiert, max. 8 gleichzeitig. */
+  damage(key, x, y, amount, color, z) {
+    const same = this.texts.find((t) => t.key === key && t.max - t.life < 0.25);
+    if (same) {
+      same.val += amount;
+      same.str = String(same.val);
+      same.life = same.max;
+      return;
+    }
+    const dmg = this.texts.filter((t) => t.key != null);
+    if (dmg.length >= 8) this.texts.splice(this.texts.indexOf(dmg[0]), 1);
+    this.texts.push({ key, x, y, val: amount, str: String(amount), color, size: 0.44, life: 0.55, max: 0.55, z, rise: 1.3 });
+  }
+
   // ───────── Voreinstellungen ─────────
   hit(x, y, z = 0.5, color = '#fff6c8') {
     this.burst(x, y, 5, { z, colors: [color, '#ffffff'], speed: [1.5, 3.5], vz: [0.5, 2], life: [0.15, 0.3], size: [0.05, 0.1], shape: 'spark', g: 2 });
@@ -164,7 +180,7 @@ export class Particles {
     this.bolts = this.bolts.filter((b) => b.life > 0);
     for (const t of this.texts) {
       t.life -= dt;
-      t.z += dt * 1.2;
+      if (!t.rise) t.z += dt * 1.2;
     }
     this.texts = this.texts.filter((t) => t.life > 0);
   }
@@ -301,13 +317,17 @@ export class Particles {
     // Schwebende Texte
     for (const t of this.texts) {
       const [x, y0] = view.toScreen(t.x, t.y);
-      const y = y0 - t.z * s;
+      const age = t.max - t.life;
+      const y = y0 - (t.z + (t.rise ? t.rise * Math.min(1, age / t.max) : 0)) * s;
       const a = Math.min(1, t.life / (t.max * 0.4));
+      const pop = t.rise ? (age < 0.12 ? 0.7 + (age / 0.12) * 0.5 : age < 0.2 ? 1.2 - ((age - 0.12) / 0.08) * 0.2 : 1) : 1;
       ctx.save();
       ctx.globalAlpha = a;
-      ctx.font = `${Math.max(10, Math.round(t.size * s))}px "Lilita One", "Arial Black", sans-serif`;
+      const px = Math.max(12, Math.round(t.size * s * pop));
+      ctx.font = `${px}px ${FONT}`;
       ctx.textAlign = 'center';
-      ctx.lineWidth = Math.max(2, t.size * s * 0.18);
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = Math.max(3, px * 0.2);
       ctx.strokeStyle = '#1c1830';
       ctx.strokeText(t.str, x, y);
       ctx.fillStyle = t.color;

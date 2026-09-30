@@ -141,12 +141,12 @@ function pageChecks() {
       if (r.x < -1 || r.y < -1 || r.x + r.w > vw + 1 || r.y + r.h > vh + 1) out.push({ t: 'hud-offscreen', el: name });
       if (/^card\d|emote|ability|menu/.test(name) && (r.w < 44 || r.h < 44)) out.push({ t: 'touch-target', el: 'hud:' + name, w: Math.round(r.w), h: Math.round(r.h) });
     }
-    // Toast darf nicht über der Arena liegen
+    // Toast: nur direkt über der Hand erlaubt (unterstes Fünftel der Arena, §9.7), nie über dem Kampfgeschehen
     const t = document.querySelector('#toasts .toast');
     if (t && vis(t)) {
       const tr = t.getBoundingClientRect();
       const o = inter(A, { x: tr.left, y: tr.top, w: tr.width, h: tr.height });
-      if (o > 4) out.push({ t: 'toast-over-arena', overlapPx: Math.round(o) });
+      if (o > 4 && tr.top < A.y + A.h * 0.8) out.push({ t: 'toast-over-arena', overlapPx: Math.round(o) });
     }
     // DOM-Menüknopf über der Arena?
     const mb = document.getElementById('game-menu-btn');
@@ -360,7 +360,7 @@ async function runViewport(browser, url, vp, report) {
     await page.waitForTimeout(150);
     await page.click('#gm-surrender');
     await shot('aufgeben-bestaetigen');
-    await page.click('#modal-root .btn-danger');
+    await page.click('#modal-root .btn-danger, #modal-root .btn-red');
     await page.waitForSelector('#s-result.active', { timeout: 8000 });
     await shot('ergebnis-niederlage', { wait: 1400 });
   });

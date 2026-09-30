@@ -14,6 +14,9 @@ export const DEFAULT_SETTINGS = Object.freeze({
   orientation: 'auto',
   dmgNumbers: true,
   showPing: true,
+  // Neu (UI-Überarbeitung) – nur mit Default ergänzt, bestehende Keys unverändert
+  muteEmotes: false,
+  haptics: true,
 });
 
 

@@ -2,6 +2,7 @@
 import { ARENA_W, ARENA_H, RIVER_Y0, RIVER_Y1, BRIDGES, TOWER_SLOTS, placementRects } from '/shared/arena.js';
 import { EF, EMOTES } from '/shared/protocol.js';
 import { drawUnit, drawBuilding, drawTower, drawEmoteFace, drawSpellIcon, TEAM, OUTLINE, shade } from './sprites.js';
+import { FONT, text as ctext, tnum, rr as rrect } from './canvastext.js';
 
 const TAU = Math.PI * 2;
 
@@ -255,7 +256,10 @@ export class Renderer {
       const c = ov.getContext('2d');
       c.setTransform(dpr, 0, 0, dpr, 0, 0);
       const A = view.rect(0, 0, ARENA_W, ARENA_H);
-      c.fillStyle = 'rgba(255, 60, 70, 0.28)';
+      // Ungültige Fläche: rot getönt + schraffiert (nicht nur Farbe)
+      c.fillStyle = 'rgba(200, 40, 60, 0.22)';
+      c.fillRect(A.x, A.y, A.w, A.h);
+      c.fillStyle = hatchRed(c);
       c.fillRect(A.x, A.y, A.w, A.h);
       const valid = kind === 'anywhere' ? [{ x0: 0, x1: ARENA_W, y0: 0, y1: ARENA_H }] : placementRects(side, enemyDown, kind === 'building' ? 'building' : 'troop');
       c.globalCompositeOperation = 'destination-out';
@@ -265,6 +269,12 @@ export class Renderer {
         c.fillRect(rr.x, rr.y, rr.w, rr.h);
       }
       c.globalCompositeOperation = 'source-over';
+      // Gültige Fläche leicht aufhellen
+      c.fillStyle = 'rgba(255,255,255,0.08)';
+      for (const r of valid) {
+        const rr = view.rect(r.x0 - 0.5, r.y0 - 0.5, r.x1 + 0.5, r.y1 + 0.5);
+        c.fillRect(rr.x, rr.y, rr.w, rr.h);
+      }
       if (kind === 'anywhere') {
         const R = view.rect(0, RIVER_Y0, ARENA_W, RIVER_Y1);
         c.fillStyle = 'rgba(255, 60, 70, 0.28)';
@@ -286,7 +296,7 @@ export class Renderer {
         c.strokeRect(rr.x + 1.5, rr.y + 1.5, rr.w - 3, rr.h - 3);
       }
       c.setLineDash([]);
-      c.fillStyle = 'rgba(255, 60, 70, 0.25)';
+      c.fillStyle = hatchRed(c);
       for (const o of obstacles) {
         const rr = view.rect(o.x - o.half, o.y - o.half, o.x + o.half, o.y + o.half);
         c.fillRect(rr.x, rr.y, rr.w, rr.h);
@@ -621,64 +631,72 @@ export class Renderer {
     const s = this.game.view.s;
     const damaged = v.hp < v.maxHp - 0.5;
     const special = v.cls === 'champion' || v.cls === 'hero';
+    // Einheiten: nur wenn beschädigt (Champions/Helden/Evos behalten ihren Stern)
     if (v.kind === 'unit' && !damaged && !special && !v.evo) return;
     const mine = v.owner === this.game.side;
+    const team = mine ? TEAM.blue : TEAM.red;
     let w;
     let h;
     let y;
     if (v.kind === 'tower') {
-      w = v.half * s * 1.5;
-      h = Math.max(7, s * 0.34);
-      y = v.sy + v.half * s * 1.05;
+      // Turm-LP als kontrastreiche Pill mit tabellarischer Zahl (≥ 12 px)
+      h = Math.max(16, s * 0.52);
+      w = Math.max(h * 3.4, v.half * s * 1.6);
+      y = v.sy + v.half * s * 1.02;
     } else if (v.kind === 'building') {
-      w = Math.max(24, v.half * s * 1.4);
-      h = Math.max(5, s * 0.22);
+      w = Math.max(28, v.half * s * 1.4);
+      h = Math.max(6, s * 0.24);
       y = v.sy - v.half * s * 1.9 - h;
     } else {
-      w = Math.max(18, Math.min(60, v.U * 1.7));
-      h = Math.max(5, s * 0.2);
+      w = Math.max(28, Math.min(60, v.U * 1.7));
+      h = Math.max(6, s * 0.22);
       y = v.sy - (v.flying ? s * 1.1 : 0) - v.U * 1.9 - h;
     }
     const x = v.sx - w / 2;
     const k = Math.max(0, Math.min(1, v.hpDisp / v.maxHp));
-    ctx.fillStyle = '#2a2438';
-    ctx.strokeStyle = OUTLINE;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(x, y, w, h, h / 2);
+    const kt = Math.max(k, Math.min(1, (v.trail ?? v.hp) / v.maxHp));
+    const r = h / 2;
+    ctx.fillStyle = '#1a1433';
+    rrect(ctx, x, y, w, h, r);
     ctx.fill();
-    ctx.fillStyle = mine ? '#4aa3ff' : '#ff4d57';
+    const iw = w - 4;
+    const ih = h - 4;
+    // Nachlauf-Segment (verlorene LP laufen sanft ab)
+    if (kt > k) {
+      ctx.fillStyle = '#fff1c2';
+      rrect(ctx, x + 2, y + 2, Math.max(ih, iw * kt), ih, ih / 2);
+      ctx.fill();
+    }
     if (k > 0) {
-      ctx.beginPath();
-      ctx.roundRect(x + 1, y + 1, Math.max(h - 2, (w - 2) * k), h - 2, (h - 2) / 2);
+      ctx.fillStyle = team.main;
+      rrect(ctx, x + 2, y + 2, Math.max(ih, iw * k), ih, ih / 2);
       ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      ctx.fillRect(x + h / 2, y + 1.5, Math.max(0, (w - 2) * k - h), Math.max(1, h * 0.25));
+      ctx.fillRect(x + 2 + ih / 2, y + 2.5, Math.max(0, iw * k - ih), Math.max(1, ih * 0.25));
+    }
+    // Treffer-Flash
+    if (v.hurt > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${0.55 * v.hurt})`;
+      rrect(ctx, x, y, w, h, r);
+      ctx.fill();
     }
     if (v.shield > 0) {
       ctx.fillStyle = '#e8eef4';
-      ctx.fillRect(x + 1, y - 3, (w - 2) * Math.min(1, v.shield / (v.maxShield || v.shield)), 3);
+      ctx.fillRect(x + 2, y - 3, iw * Math.min(1, v.shield / (v.maxShield || v.shield)), 3);
     }
-    ctx.beginPath();
-    ctx.roundRect(x, y, w, h, h / 2);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = OUTLINE;
+    rrect(ctx, x, y, w, h, r);
     ctx.stroke();
     if (v.kind === 'tower') {
-      ctx.font = `${Math.max(10, Math.round(h * 1.05))}px "Lilita One", "Arial Black", sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = OUTLINE;
-      ctx.strokeText(String(Math.ceil(v.hp)), v.sx, y + h / 2 + 1);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(String(Math.ceil(v.hp)), v.sx, y + h / 2 + 1);
-      ctx.textBaseline = 'alphabetic';
+      tnum(ctx, String(Math.ceil(v.hp)), v.sx, y + h / 2 + 1, Math.max(12, h * 0.8), '#ffffff', 'center', 3);
     } else if (special || v.evo) {
       const cx = x - h * 0.3;
       const cy = y + h / 2;
       ctx.fillStyle = v.evo ? '#b98cff' : v.cls === 'hero' ? '#ff7a5c' : '#ffd84d';
       ctx.strokeStyle = OUTLINE;
       ctx.lineWidth = 1.5;
-      starPath(ctx, cx, cy, h * 1.1);
+      starPath(ctx, cx, cy, Math.max(6, h * 1.1));
       ctx.fill();
       ctx.stroke();
     }
@@ -810,44 +828,51 @@ export class Renderer {
   }
 
   // ───────────── Emotes & Hinweise ─────────────
+  /** Emote-Sprechblase NEBEN dem Burgturm (Gegner rechts oben, eigene links unten), nie über den LP (B-09). */
   drawEmotes(ctx, emotes, now) {
     const view = this.game.view;
     const s = view.s;
     for (const e of emotes) {
       const age = now - e.at;
       if (age > 2.6) continue;
+      const emo = EMOTES[e.index];
+      if (!emo) continue;
       const king = TOWER_SLOTS.find((k) => k.side === e.owner && k.key === 'king');
-      let [x, y] = view.toScreen(king.x + (e.owner === this.game.side ? 3.2 : -3.2) * (view.flip ? -1 : 1), king.y);
+      const [kx, ky] = view.toScreen(king.x, king.y);
+      const mine = e.owner === this.game.side;
       const pop = Math.min(1, age / 0.18);
       const scale = pop < 1 ? 0.5 + pop * 0.6 : 1.1 - Math.min(0.1, (age - 0.18) * 0.5);
       const fade = age > 2.2 ? 1 - (age - 2.2) / 0.4 : 1;
-      const emo = EMOTES[e.index];
-      if (!emo) continue;
-      const R = s * 1.1 * scale;
-      ctx.save();
-      ctx.globalAlpha = fade;
-      y -= s * 1.2;
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = OUTLINE;
-      ctx.lineWidth = 3;
-      ctx.font = `${Math.round(s * 0.55 * scale)}px "Lilita One", "Arial Black", sans-serif`;
+      const R = s * 1.0 * scale;
+      const fs = Math.max(12, Math.round(s * 0.55 * scale));
+      ctx.font = `${fs}px ${FONT}`;
       const tw = ctx.measureText(emo.text).width;
       const bw = Math.max(R * 2.4, tw + s * 0.6);
       const bh = R * 2 + s * 0.8 * scale;
-      ctx.beginPath();
-      ctx.roundRect(x - bw / 2, y - bh, bw, bh, s * 0.4);
+      const dir = mine ? -1 : 1;
+      const A = view.rect(0, 0, ARENA_W, ARENA_H);
+      let cx = kx + dir * (s * 2.3 + bw / 2);
+      cx = Math.max(A.x + bw / 2 + 4, Math.min(A.x + A.w - bw / 2 - 4, cx));
+      const cy = Math.max(A.y + bh / 2 + 2, Math.min(A.y + A.h - bh / 2 - 2, ky - s * 0.9));
+      ctx.save();
+      ctx.globalAlpha = fade;
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = 3;
+      rrect(ctx, cx - bw / 2, cy - bh / 2, bw, bh, s * 0.4);
       ctx.fill();
       ctx.stroke();
+      // Zipfel zeigt zum Turm
+      const tx = cx - dir * (bw / 2);
       ctx.beginPath();
-      ctx.moveTo(x - s * 0.3, y - 1);
-      ctx.lineTo(x, y + s * 0.45);
-      ctx.lineTo(x + s * 0.3, y - 1);
+      ctx.moveTo(tx, cy - s * 0.3);
+      ctx.lineTo(tx - dir * s * 0.45, cy + s * 0.1);
+      ctx.lineTo(tx, cy + s * 0.3);
       ctx.fill();
       ctx.stroke();
-      drawEmoteFace(ctx, emo.face, x, y - bh + R * 0.95 + s * 0.1, R * 0.85, now);
-      ctx.fillStyle = e.owner === this.game.side ? '#1f5fc9' : '#c42233';
-      ctx.textAlign = 'center';
-      ctx.fillText(emo.text, x, y - s * 0.25);
+      ctx.fillRect(tx - (dir > 0 ? 0 : 3), cy - s * 0.3 + 2, 3, s * 0.6 - 4);
+      drawEmoteFace(ctx, emo.face, cx, cy - bh / 2 + R * 0.95 + s * 0.1, R * 0.85, now);
+      ctext(ctx, emo.text, cx, cy + bh / 2 - s * 0.45, fs, mine ? TEAM.blue.dark : TEAM.red.dark, 'center', 0);
       ctx.restore();
     }
   }
@@ -881,6 +906,20 @@ export class Renderer {
     const view = this.game.view;
     const s = view.s;
     const [x, y] = view.toScreen(g.x, g.y);
+    if (!g.valid && g.hint) {
+      // Klares Feedback direkt am Finger
+      ctx.save();
+      ctx.font = `14px ${FONT}`;
+      const w = ctx.measureText('Hier nicht möglich').width + 20;
+      rrect(ctx, x - w / 2, y - s * 2.6 - 26, w, 26, 13);
+      ctx.fillStyle = '#c42233';
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = OUTLINE;
+      ctx.stroke();
+      ctext(ctx, 'Hier nicht möglich', x, y - s * 2.6 - 12, 14, '#ffffff', 'center', 3);
+      ctx.restore();
+    }
     ctx.save();
     ctx.globalAlpha = g.valid ? 0.75 : 0.45;
     if (g.kind === 'spell') {
@@ -986,4 +1025,25 @@ export function starPath(ctx, x, y, r) {
     ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
   }
   ctx.closePath();
+}
+
+let hatchCache = null;
+/** Rote Schraffur für ungültige Platzierungsflächen. */
+function hatchRed(c) {
+  if (hatchCache) return hatchCache;
+  const p = document.createElement('canvas');
+  p.width = p.height = 12;
+  const x = p.getContext('2d');
+  x.strokeStyle = 'rgba(255, 70, 85, 0.5)';
+  x.lineWidth = 3;
+  x.beginPath();
+  x.moveTo(-3, 15);
+  x.lineTo(15, -3);
+  x.moveTo(-3, 3);
+  x.lineTo(3, -3);
+  x.moveTo(9, 15);
+  x.lineTo(15, 9);
+  x.stroke();
+  hatchCache = c.createPattern(p, 'repeat');
+  return hatchCache;
 }

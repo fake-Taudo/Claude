@@ -5,6 +5,7 @@ import { View, Renderer } from './renderer.js';
 import { Hud } from './hud.js';
 import { Particles } from './particles.js';
 import { cardArt } from '../ui/art.js';
+import { safeInsets } from '../ui/tokens.js';
 
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -97,6 +98,8 @@ export class Game {
     window.removeEventListener('keydown', this.onKey);
     this.canvas.removeEventListener('contextmenu', this.onContext);
     this.fx.clear();
+    for (const k of ['--toast-x', '--toast-y', '--toast-w']) document.body.style.removeProperty(k);
+    this.canvas.title = '';
   }
 
   settingsChanged() {
@@ -118,9 +121,26 @@ export class Game {
     this.canvas.height = Math.round(ch * dpr);
     this.canvas.style.width = cw + 'px';
     this.canvas.style.height = ch + 'px';
-    this.hud.layout(cw, ch, this.app.settings.orientation);
+    this.hud.layout(cw, ch, this.app.settings.orientation, safeInsets());
     this.renderer.bgKey = '';
     this.renderer.overlayKey = '';
+    this.placeDomHud();
+  }
+
+  /** DOM-Teile des HUD an das Canvas-Layout koppeln: Menüknopf und Toast-Position (B-03). */
+  placeDomHud() {
+    const L = this.hud.L;
+    const ui = document.querySelector('#s-game .game-ui');
+    if (ui) {
+      ui.style.left = `${L.menuBtn.x}px`;
+      ui.style.top = `${L.menuBtn.y}px`;
+      ui.classList.toggle('right', L.menuBtn.x > L.w / 2);
+    }
+    const t = this.hud.toastAnchor();
+    const b = document.body.style;
+    b.setProperty('--toast-x', `${t.x}px`);
+    b.setProperty('--toast-y', `${t.y}px`);
+    b.setProperty('--toast-w', `${t.w}px`);
   }
 
   // ───────────── Netzwerk ─────────────
@@ -140,7 +160,7 @@ export class Game {
     this.phase = s.ph;
     if (s.em !== this.snapMult) {
       if (s.em === 2 && this.snapMult === 1) {
-        this.hud.banner('Doppeltes Elixier!', '#ff9af0', 'Letzte Minute');
+        this.hud.banner('Doppeltes Elixier!', '#ffd0fb', 'Letzte Minute', { kind: 'phase' });
         this.audio.sfx('double');
       }
       this.snapMult = s.em;
@@ -163,7 +183,7 @@ export class Game {
     this.drag = null;
     const win = res.winner === this.side;
     const draw = res.winner == null;
-    this.hud.banner(draw ? 'Unentschieden' : win ? 'Sieg!' : 'Niederlage', draw ? '#ffffff' : win ? '#ffe066' : '#ff8a8a', res.reasonText);
+    this.hud.banner(draw ? 'Unentschieden' : win ? 'Sieg!' : 'Niederlage', draw ? '#ffffff' : win ? '#ffe066' : '#ff8a8a', res.reasonText, { kind: 'end' });
     if (win) {
       const [x, y] = [ARENA_W / 2, ARENA_H / 2];
       this.fx.confetti(x, y);
@@ -267,6 +287,11 @@ export class Game {
       v.aux = e[11];
       v.hpDisp += (v.hp - v.hpDisp) * Math.min(1, dt * 12);
       if (Math.abs(v.hpDisp - v.hp) < 1) v.hpDisp = v.hp;
+      // LP-Nachlauf: verlorener Anteil bleibt kurz stehen und läuft dann sanft ab
+      if (v.trail == null || v.hp >= v.trail) {
+        v.trail = v.hp;
+        v.trailT = now;
+      } else if (now - v.trailT > 0.4) v.trail = Math.max(v.hp, v.trail - v.maxHp * 0.8 * dt);
       v.atk = Math.max(0, v.atk - dt / 0.35);
       v.hurt = Math.max(0, v.hurt - dt / 0.16);
       if (v.ice && !(v.flags & EF.STUN)) v.ice = false;
@@ -412,7 +437,11 @@ export class Game {
           v.hurt = 1;
           const z = v.kind === 'tower' ? v.half * 1.4 : (v.flying ? 1.1 : 0) + (v.kind === 'building' ? v.half : 0.5);
           fx.hit(v.x, v.y, z);
-          if (showDmg && ev[2] >= 40) fx.text(v.x + (Math.random() - 0.5) * 0.6, v.y, String(ev[2]), v.owner === this.side ? '#ffb3b8' : '#ffffff', 0.42, 0.7, z + 0.5);
+          if (showDmg && ev[2] >= 40) {
+            // Start über dem LP-Balken, leicht teamfarbig getönt, max. 8 gleichzeitig (siehe Particles.damage)
+            const zBar = v.kind === 'tower' ? v.half * 1.6 : v.kind === 'building' ? v.half * 2.1 : (v.flying ? 1.1 : 0) + (v.U * 1.9) / this.view.s + 0.25;
+            fx.damage(v.id, v.x + (Math.random() - 0.5) * 0.4, v.y, ev[2], v.owner === this.side ? '#dcebff' : '#ffe1e3', zBar + 0.35);
+          }
           A.sfx(v.kind === 'unit' ? 'hit' : 'hitStone', 0.3);
           break;
         }
@@ -523,6 +552,7 @@ export class Game {
           break;
         }
         case 'em':
+          if (ev[1] !== this.side && this.app.settings.muteEmotes) break;
           this.emotes = this.emotes.filter((e) => e.owner !== ev[1]);
           this.emotes.push({ owner: ev[1], index: ev[2], at: now });
           A.sfx('emote');
@@ -532,7 +562,7 @@ export class Game {
           const info = this.typeInfo(ev[3], false);
           const card = this.db.card(info.cardId || info.key);
           const mine = ev[2] === this.side;
-          if (card?.ability) this.hud.banner(card.ability.name + '!', mine ? '#ffe066' : '#ff9a9a');
+          if (card?.ability) this.hud.banner(card.ability.name + '!', '#ffffff', '', { kind: 'card', team: mine ? 'blue' : 'red', cardId: card.id });
           if (v) fx.burst(v.x, v.y, 14, { z: 0.8, colors: ['#ffe066', '#ffffff', '#fff3a0'], shape: 'star', speed: [1, 3] });
           A.sfx('ability');
           break;
@@ -549,7 +579,7 @@ export class Game {
           break;
         }
         case 'ot':
-          this.hud.banner('Verlängerung!', '#ff9a3d', this.rules.suddenDeath === 'firstHit' ? 'Sudden Death: erster Turmtreffer gewinnt' : 'Sudden Death: erster Turm gewinnt');
+          this.hud.banner('Verlängerung!', '#ff9a3d', this.rules.suddenDeath === 'firstHit' ? 'Erster Turmtreffer gewinnt' : 'Erster zerstörter Turm gewinnt', { kind: 'phase' });
           A.sfx('overtime');
           A.music('overtime');
           break;
@@ -716,6 +746,10 @@ export class Game {
       case 'emoteItem':
         this.sendEmote(hit.index);
         break;
+      case 'oppName':
+        // Gekürzter Name → voller Name per Tippen (Langdruck-Ersatz auf Touch)
+        if (this.hud.oppCut) this.app.toast(this.hud.oppFull, 'info', 1800);
+        break;
       case 'arena':
         if (this.sel >= 0) {
           const [wx, wy] = this.view.toWorld(p.x, p.y);
@@ -730,6 +764,10 @@ export class Game {
   pointerMove(e) {
     const p = this.cssPoint(e);
     this.pointer = p;
+    if (e.pointerType === 'mouse' && this.hud.L) {
+      const t = this.hud.oppCut && this.hud.hit(p.x, p.y).type === 'oppName' ? this.hud.oppFull : '';
+      if (this.canvas.title !== t) this.canvas.title = t;
+    }
     if (this.drag && !this.drag.active && Math.hypot(p.x - this.drag.start.x, p.y - this.drag.start.y) > 10) this.drag.active = true;
   }
 
@@ -818,13 +856,13 @@ export class Game {
     if (me.hr[slot] > 0.01 || this.pendingSlot.has(slot)) return false;
     const pos = this.placementFor(card, wx, wy);
     if (!pos.valid) {
-      this.app.toast('Hier kannst du das nicht platzieren.', 'warn', 1100);
+      this.app.toast('Hier nicht möglich!', 'warn', 1400);
       this.audio.sfx('error');
       return false;
     }
     if (this.elixirNow() + 1e-6 < card.elixir) {
-      this.hud.flashElixir();
-      this.app.toast('Nicht genug Elixier!', 'warn', 900);
+      this.hud.flashElixir(slot);
+      this.app.toast('Nicht genug Elixier!', 'warn', 1400);
       this.audio.sfx('error');
       return false;
     }
@@ -838,16 +876,16 @@ export class Game {
   useAbility() {
     const ab = this.me?.ab;
     if (!ab || this.ended) return;
-    if (ab.dep) return this.app.toast('Die Einheit landet noch.', 'warn', 900);
+    if (ab.dep) return this.app.toast('Die Einheit landet noch.', 'warn', 1400);
     if (ab.cls === 'champion') {
       if (ab.cd > 0) {
         this.audio.sfx('error');
-        return this.app.toast('Die Fähigkeit lädt noch.', 'warn', 900);
+        return this.app.toast('Die Fähigkeit lädt noch.', 'warn', 1400);
       }
       if (this.elixirNow() < ab.cost) {
         this.hud.flashElixir();
         this.audio.sfx('error');
-        return this.app.toast('Nicht genug Elixier!', 'warn', 900);
+        return this.app.toast('Nicht genug Elixier!', 'warn', 1400);
       }
     }
     this.net.send(C2S.ABILITY, { seq: ++this.seq });
@@ -894,10 +932,23 @@ export class Game {
     this.lastFrame = now;
     this.clock = now;
     if (this.needResize) this.resize();
+    this.checkConnection();
     const renderT = performance.now() + (this.offset ?? 0) - INTERP_MS;
     this.updateWorld(renderT, now, dt);
     this.fx.update(dt);
     this.draw(now, dt);
+  }
+
+  /** Verbindung instabil (Snapshots bleiben aus oder Ping sehr hoch) → Ping rot + einmaliger Hinweis. */
+  checkConnection() {
+    const t = performance.now();
+    const stale = this.latestAt > 0 && !this.ended && t - this.latestAt > 700;
+    const unstable = stale || (this.ping ?? 0) >= 250;
+    if (unstable && !this.netUnstable && t - (this.unstableToastAt || -1e9) > 8000) {
+      this.unstableToastAt = t;
+      this.app.toast('Verbindung instabil …', 'warn', 2200);
+    }
+    this.netUnstable = unstable;
   }
 
   draw(now, dt) {
@@ -922,17 +973,28 @@ export class Game {
     // Auswahl & Vorschau
     let preview = null;
     const selCard = this.sel >= 0 && this.me ? this.db.card(this.me.h[this.sel]) : null;
+    // Platzierungs-Overlay blendet in 150 ms ein und aus
+    let ov = null;
+    if (selCard && !this.ended && selCard.type !== 'spell') {
+      const def = this.db.unit(this.db.unitRefOf(selCard));
+      const { obstacles, enemyDown } = this.placementContext();
+      ov = { kind: def.traits.deployAnywhere ? 'anywhere' : selCard.type === 'building' ? 'building' : 'troop', enemyDown, obstacles };
+      this.lastOverlay = ov;
+    }
+    this.ovAlpha = Math.max(0, Math.min(1, (this.ovAlpha || 0) + (ov ? dt : -dt) / 0.15));
+    const ovDraw = ov || this.lastOverlay;
+    if (this.ovAlpha > 0 && ovDraw) {
+      ctx.save();
+      ctx.globalAlpha = this.ovAlpha;
+      R.drawPlacementOverlay(ctx, cw, ch, dpr, ovDraw.kind, this.side, ovDraw.enemyDown, ovDraw.obstacles);
+      ctx.restore();
+    }
     if (selCard && !this.ended) {
-      if (selCard.type !== 'spell') {
-        const def = this.db.unit(this.db.unitRefOf(selCard));
-        const { obstacles, enemyDown } = this.placementContext();
-        const kind = def.traits.deployAnywhere ? 'anywhere' : selCard.type === 'building' ? 'building' : 'troop';
-        R.drawPlacementOverlay(ctx, cw, ch, dpr, kind, this.side, enemyDown, obstacles);
-      }
       const p = this.pointer;
       if (p && this.hud.inArena(p.x, p.y) && (this.drag?.active || !this.drag)) {
         const [wx, wy] = this.view.toWorld(p.x, p.y);
         preview = this.ghostFor(selCard, this.placementFor(selCard, wx, wy));
+        preview.hint = !!this.drag?.active;
       }
     }
 
@@ -957,15 +1019,8 @@ export class Game {
 
     this.hud.draw(ctx, now, dt);
 
-    // gezogene Karte folgt dem Finger außerhalb der Arena
-    if (this.drag?.active && this.sel >= 0 && this.pointer && !this.hud.inArena(this.pointer.x, this.pointer.y) && this.me) {
-      const r = this.hud.L.cards[this.sel];
-      const img = cardArt(this.db, this.me.h[this.sel], false);
-      ctx.save();
-      ctx.globalAlpha = 0.9;
-      ctx.drawImage(img, this.pointer.x - r.w / 2, this.pointer.y - r.h / 2, r.w, r.h);
-      ctx.restore();
-    }
+    // Gezogene Karte: Kartenbild über dem Finger
+    this.hud.drawDrag(ctx);
   }
 }
 

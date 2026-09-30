@@ -77,3 +77,16 @@ export function applyBodyFlags(settings) {
   b.dataset.motion = reducedMotion() ? 'reduced' : 'full';
 }
 rm?.addEventListener?.('change', () => (document.body.dataset.motion = reducedMotion() ? 'reduced' : 'full'));
+
+// Safe-Area-Abstände (Notch, Home-Indikator) in px – einmal per Mess-Element ermittelt, bei Resize neu.
+let probe = null;
+export function safeInsets() {
+  if (typeof document === 'undefined') return { t: 0, r: 0, b: 0, l: 0 };
+  if (!probe) {
+    probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+    document.body.append(probe);
+  }
+  const cs = getComputedStyle(probe);
+  return { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+}
