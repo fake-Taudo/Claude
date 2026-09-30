@@ -56,3 +56,18 @@ Laufendes Protokoll der UI-Überarbeitung: Entscheidungen mit Begründung, Vorsc
 | Einstellungen | Gruppiert in Audio, Grafik & Anzeige (mit Beschreibung unter den Segmenten), Spiel (`muteEmotes`, `haptics`) und Konto. „Raum verlassen“ bleibt **immer** sichtbar. | B-17. „Raum verlassen“ hattest du ausdrücklich angefordert, auch für den Fall, dass man in einem alten Raum festhängt. |
 | Ergebnis | Kronen erscheinen gestaffelt (250 ms), die Stats zählen in 600 ms hoch, es gibt einen Untertitel je Ausgang. Konfetti gibt es nur bei Sieg, ab „Mittel“ und ohne reduzierte Bewegung. Die Niederlage hat einen ruhigeren Hintergrund. | B-15 |
 | Logo | Pop-Einblendung, danach zweimal wippen, keine Endlos-Animation. Die Hintergrundstreifen laufen mit sanfter Parallaxe (nur ab „Mittel“, ohne reduzierte Bewegung). | §9.1 / §10 |
+
+## Phase 4 – Deck-Bauer und Kartendetail
+
+| Thema | Entscheidung | Begründung |
+| --- | --- | --- |
+| Kopfzeile | Sticky über die **volle Breite** mit einheitlichem Hintergrund und Schatten. Am Handy nur Pfeil-Knopf + Deck-Tabs in einer Zeile. | B-10: Die Naht entstand, weil der Hintergrund nicht unter das Seiten-Padding reichte. |
+| Deck am Handy | Unter 860 px (Hochformat) bleibt das Deck **kompakt und sticky** über der Sammlung: Titelzeile (Name ✎ · Aktivieren · 🎲 · 🗑), 4×2-Karten (ca. 70 px breit), Kennzahlen in einer Zeile. Die Sammlung ist ohne Scrollen sichtbar. Die Filterleiste ist am Handy **nicht** zusätzlich sticky. | §9.3. Zwei sticky Blöcke hätten auf 640 px Höhe kaum Platz für die Sammlung gelassen. |
+| Deckname | Statt eines dauerhaften Eingabefelds öffnet ein Tipp auf den Namen (✎) einen kleinen Umbenennen-Dialog. | Spart eine ganze Zeile am Handy (§9.3 „Umbenennen per Tippen“). |
+| Tausch | Eine gewählte Deckkarte hebt sich mit blauem Schein. Darunter erscheint „Tippe eine Sammlungskarte oder einen anderen Platz zum Tauschen“, auch die Zählzeile der Sammlung sagt es. Evo-Plätze („EVO 1/2“, lila Rand) und der ★-Platz (gold) sind dauerhaft markiert. | §9.3. Drag & Drop wurde bewusst weggelassen: Tippen reicht und ist am Handy zuverlässiger. |
+| Kartennamen | Bis zu 2 Zeilen, danach wird abgeschnitten. Lange Namen werden kleiner, und zusammengesetzte Wörter bekommen weiche Trennstellen (nur in der Anzeige, z. B. „Zwillings-schützinnen“). Der volle Name steht immer im `title`. | B-13. `hyphens: auto` ist auf Linux-Chromium nicht verlässlich, die weichen Trennstellen funktionieren überall. |
+| „Im Deck“ | Das Kartenbild wird gedimmt und entsättigt, dazu kommt ein grünes Abzeichen „✔ Im Deck“. | §9.3: nicht nur Dimmen. |
+| Filter | Suche + Knopf „Filter (n)“ klappen die Chips auf (am Desktop offen, am Handy zu). „Zurücksetzen“ ist nur aktiv, wenn Filter gesetzt sind. Der Leerzustand zeigt Symbol, Erklärung und „Filter zurücksetzen“. | §9.3 |
+| Kartendetail | Stat-Tabelle mit Symbolen und relativen Mini-Balken: Wert ÷ Höchstwert aller Karten desselben Typs (Truppe/Gebäude/Zauber, Evo eingeschlossen), einmal pro Datenbank berechnet. Balken gibt es nur für „mehr ist mehr“-Werte (Leben, Schaden, DPS, Reichweite, Tempo, Lebensdauer, Radius, Dauer). Der Text bleibt für Screenreader lesbar, Symbole und Balken sind `aria-hidden`. | B-16. Angriffstempo hat keinen Balken, weil ein kleinerer Wert besser ist und ein Balken dort irreführen würde. |
+| Evo-Box | Eigene Karte mit Status „✓ Aktiv im Evo-Platz“ oder „Inaktiv – nur in Platz 1 oder 2“ und Fortschrittspunkten („● ● → EVO“). | §9.4 |
+| Aktionen | „Ins Deck“ / „In Evo-Platz“ sind bei vollem Deck deaktiviert, der Grund steht darunter („Deck voll – tippe zuerst eine Deckkarte an …“). Champions und Helden bleiben erlaubt, weil sie den ★-Platz ersetzen. | §9.4 |

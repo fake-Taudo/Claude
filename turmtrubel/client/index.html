@@ -77,41 +77,50 @@
 
     <!-- Deck-Bauer -->
     <section class="screen" id="s-deck" aria-label="Deck-Bauer">
-      <header class="topbar">
-        <button class="btn btn-small btn-secondary" id="deck-back">← Zurück</button>
+      <header class="topbar deck-top">
+        <button class="btn btn-small btn-secondary" id="deck-back" aria-label="Zurück zum Menü"><span class="ico" aria-hidden="true">←</span><span class="lbl">Zurück</span></button>
         <h1 class="topbar-title">Deck-Bauer</h1>
-        <div class="deck-tabs" id="deck-tabs" role="tablist"></div>
+        <div class="deck-tabs" id="deck-tabs" role="tablist" aria-label="Deck-Plätze"></div>
       </header>
       <div class="deck-layout">
-        <aside class="panel deck-panel">
-          <input id="deck-name" class="text-input deck-name" maxlength="20" aria-label="Deckname">
+        <aside class="panel deck-panel" aria-label="Aktuelles Deck">
+          <div class="deck-title-row">
+            <button class="deck-name-btn" id="deck-name" title="Deck umbenennen"><span class="pill-text" id="deck-name-text">Deck</span><span aria-hidden="true">✎</span></button>
+            <button class="btn btn-small btn-success" id="deck-use"><span class="ico" aria-hidden="true">☆</span> Aktivieren</button>
+            <button class="icon-btn" id="deck-random" title="Zufallsdeck" aria-label="Zufallsdeck">🎲</button>
+            <button class="icon-btn" id="deck-clear" title="Deck leeren" aria-label="Deck leeren">🗑</button>
+          </div>
           <div class="deck-slots" id="deck-slots"></div>
           <div class="deck-stats">
-            <div><span class="stat-label">Ø Elixier</span><b id="deck-avg">0</b></div>
-            <div><span class="stat-label">4er-Zyklus</span><b id="deck-cycle">0</b></div>
-            <div><span class="stat-label">Karten</span><b id="deck-count">0/8</b></div>
+            <div><b id="deck-avg" class="num">0</b><span class="stat-label">Ø Elixier</span></div>
+            <div><b id="deck-cycle" class="num">0</b><span class="stat-label">4er-Zyklus</span></div>
+            <div><b id="deck-count" class="num">0/8</b><span class="stat-label">Karten</span></div>
           </div>
-          <p class="deck-errors" id="deck-errors"></p>
-          <p class="hint small">Plätze 1–2 = <b class="evo-text">Evo-Plätze</b> · Platz 3 = <b class="special-text">Champion/Held</b>. Tippe eine Karte im Deck an und dann eine andere, um sie zu tauschen.</p>
-          <div class="row wrap">
-            <button class="btn btn-small btn-accent" id="deck-random"><span class="ico" aria-hidden="true">🎲</span> Zufallsdeck</button>
-            <button class="btn btn-small btn-danger" id="deck-clear">Leeren</button>
-            <button class="btn btn-small btn-success" id="deck-use"><span class="ico" aria-hidden="true">✔</span> Als aktives Deck</button>
-          </div>
+          <p class="deck-sel-hint" id="deck-sel-hint" role="status" hidden>Tippe eine Sammlungskarte oder einen anderen Platz zum Tauschen.</p>
+          <p class="deck-errors" id="deck-errors" role="status"></p>
+          <p class="hint small deck-help">Plätze 1–2 = <b class="evo-text">Evo-Plätze</b> · Platz 3 = <b class="special-text">Champion/Held</b>. Tippe eine Deckkarte an und dann eine andere Karte, um zu tauschen.</p>
         </aside>
-        <section class="collection">
+        <section class="collection" aria-label="Kartensammlung">
           <div class="filters">
-            <input id="flt-search" class="text-input search" placeholder="Karte suchen…" aria-label="Karten suchen">
-            <div class="chips" id="flt-type"></div>
-            <div class="chips" id="flt-elixir"></div>
-            <div class="chips" id="flt-rarity"></div>
-            <select id="flt-sort" class="select" aria-label="Sortierung">
-              <option value="elixir">Nach Elixier</option>
-              <option value="rarity">Nach Seltenheit</option>
-              <option value="name">Nach Name</option>
-            </select>
+            <div class="filter-bar">
+              <input id="flt-search" class="text-input search" type="search" placeholder="Karte suchen…" aria-label="Karten suchen" autocomplete="off">
+              <button class="btn btn-small btn-ghost" id="flt-toggle" aria-expanded="false" aria-controls="flt-panel">Filter</button>
+            </div>
+            <div class="filter-panel" id="flt-panel">
+              <div class="chips" id="flt-type" role="group" aria-label="Kartentyp"></div>
+              <div class="chips" id="flt-elixir" role="group" aria-label="Elixierkosten"></div>
+              <div class="chips" id="flt-rarity" role="group" aria-label="Seltenheit"></div>
+              <div class="filter-foot">
+                <select id="flt-sort" class="select" aria-label="Sortierung">
+                  <option value="elixir">Nach Elixier</option>
+                  <option value="rarity">Nach Seltenheit</option>
+                  <option value="name">Nach Name</option>
+                </select>
+                <button class="btn btn-small btn-ghost" id="flt-reset">Zurücksetzen</button>
+              </div>
+            </div>
           </div>
-          <p class="hint small" id="grid-count"></p>
+          <p class="hint small" id="grid-count" aria-live="polite"></p>
           <div class="card-grid" id="card-grid"></div>
         </section>
       </div>

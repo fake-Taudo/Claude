@@ -40,3 +40,13 @@ Alle UI-Änderungen der Überarbeitung, in verständlichem Deutsch. Die Befund-I
 - **Menü im Kampf (B-08):** Es öffnet sich als richtiger Dialog mit abgedunkeltem Hintergrund und dem klaren Hinweis „Das Spiel läuft weiter“. Die Knöpfe sind sinnvoll gewichtet, „Aufgeben“ ist abgesetzt und wird nachgefragt. Am Desktop gibt es gut lesbare Tastenkappen. Gegner-Emotes lassen sich hier stummschalten.
 - **Einstellungen (B-17):** Sie sind in Audio, Grafik & Anzeige, Spiel und Konto gruppiert, jede Auswahl hat eine kurze Erklärung. Neu ist der Schalter „Vibration“.
 - **Ergebnis (B-15):** Kronen erscheinen nacheinander, die Zahlen zählen hoch. Konfetti gibt es nur bei einem Sieg, eine Niederlage wirkt ruhiger und hat einen freundlichen Satz.
+
+## Phase 4 – Deck-Bauer und Kartendetail
+
+- **Keine Naht mehr im Kopf (B-10):** Die Kopfzeile des Deck-Bauers reicht über die ganze Breite und bleibt beim Scrollen oben.
+- **Handy hochkant:** Dein Deck bleibt kompakt oben sichtbar (8 Karten, Kennzahlen in einer Zeile), darunter scrollt die Sammlung, die sofort sichtbar ist.
+- **Tauschen:** Eine angetippte Deckkarte leuchtet blau, und ein Hinweis erklärt den nächsten Schritt. Evo-Plätze und der Champion/Held-Platz sind farbig markiert.
+- **Kartennamen (B-13):** Namen stehen in bis zu zwei Zeilen und werden an sinnvollen Stellen getrennt. Karten im Deck tragen das Abzeichen „✔ Im Deck“.
+- **Filter:** Der Knopf „Filter (n)“ zeigt, wie viele Filter aktiv sind. Mit „Zurücksetzen“ ist alles wieder frei, und bei null Treffern gibt es einen freundlichen Hinweis.
+- **Deckname:** Ein Tipp auf den Namen öffnet das Umbenennen.
+- **Kartendetail (B-16):** Die Werte haben Symbole und kleine Balken, die den Wert im Vergleich zu allen Karten zeigen. Die Evo-Fähigkeit steht in einer eigenen Box, die anzeigt, ob sie aktiv ist und nach wie vielen Einsätzen sie auslöst. Ist das Deck voll, sind „Ins Deck“ und „In Evo-Platz“ gesperrt und nennen den Grund. Am Handy öffnet sich das Detail als Blatt von unten.

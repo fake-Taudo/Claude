@@ -1,6 +1,6 @@
 // Deck-Bauer: 5 Deck-Slots (localStorage), Filter, Suche, Evo- und Champion/Held-Plätze, Zufallsdeck.
 import { validateDeck, averageElixir, cycleCost, randomDeck, isSpecial, EVO_SLOTS, SPECIAL_SLOT, DECK_SIZE, RARITY_ORDER } from '/shared/cards.js';
-import { $, h, showScreen, toast } from './dom.js';
+import { $, h, ico, modal, showScreen, toast } from './dom.js';
 import { cardEl, openCardDetail } from './cardview.js';
 
 const TYPE_FILTERS = [
@@ -52,12 +52,12 @@ export class DeckBuilder {
       this.store.save();
       toast(`„${this.deck().name}“ ist jetzt dein aktives Deck.`, 'ok');
       this.renderTabs();
+      this.renderHead();
     });
-    $('#deck-name').addEventListener('input', (e) => {
-      this.deck().name = e.target.value.slice(0, 20) || `Deck ${this.idx + 1}`;
-      this.store.save();
-      this.renderTabs();
-    });
+    $('#deck-name').addEventListener('click', () => this.rename());
+    $('#flt-toggle').addEventListener('click', () => this.setFiltersOpen(!this.filtersOpen));
+    $('#flt-reset').addEventListener('click', () => this.resetFilters());
+    this.setFiltersOpen(matchMedia('(min-width: 861px)').matches);
     $('#flt-search').addEventListener('input', (e) => {
       this.f.q = e.target.value.trim().toLowerCase();
       this.renderGrid();
@@ -68,7 +68,7 @@ export class DeckBuilder {
     });
     const typeRoot = $('#flt-type');
     for (const [k, label] of TYPE_FILTERS) {
-      typeRoot.append(h('button', { class: 'fchip', dataset: { k }, onclick: () => ((this.f.type = k), this.renderFilters(), this.renderGrid()) }, label));
+      typeRoot.append(h('button', { class: 'fchip', 'aria-pressed': 'false', dataset: { k }, onclick: () => ((this.f.type = k), this.renderFilters(), this.renderGrid()) }, label));
     }
     const elRoot = $('#flt-elixir');
     for (let i = 1; i <= 9; i++) {
@@ -92,7 +92,7 @@ export class DeckBuilder {
     }
     const rRoot = $('#flt-rarity');
     for (const [k, label] of RARITY_FILTERS) {
-      rRoot.append(h('button', { class: 'fchip', dataset: { k }, onclick: () => ((this.f.rarity = k), this.renderFilters(), this.renderGrid()) }, label));
+      rRoot.append(h('button', { class: 'fchip', 'aria-pressed': 'false', dataset: { k }, onclick: () => ((this.f.rarity = k), this.renderFilters(), this.renderGrid()) }, label));
     }
   }
 
@@ -114,9 +114,60 @@ export class DeckBuilder {
 
   render() {
     this.renderTabs();
-    $('#deck-name').value = this.deck().name;
+    this.renderHead();
     this.renderSlots();
     this.renderStats();
+    this.renderFilters();
+    this.renderGrid();
+  }
+
+  renderHead() {
+    const d = this.deck();
+    $('#deck-name-text').textContent = d.name;
+    $('#deck-name').title = `${d.name} – umbenennen`;
+    const active = this.store.active === this.idx;
+    const use = $('#deck-use');
+    use.disabled = active;
+    use.replaceChildren(ico(active ? '★' : '☆'), active ? 'Aktiv' : 'Aktivieren');
+    use.title = active ? 'Das ist dein aktives Deck' : 'Als aktives Deck verwenden';
+  }
+
+  /** Umbenennen per Tippen auf den Decknamen (statt Dauer-Eingabefeld – spart Platz am Handy). */
+  rename() {
+    const input = h('input', { class: 'text-input', maxlength: '20', value: this.deck().name, 'aria-label': 'Deckname' });
+    const save = () => {
+      this.deck().name = input.value.trim().slice(0, 20) || `Deck ${this.idx + 1}`;
+      this.store.save();
+      this.renderTabs();
+      this.renderHead();
+      m.close();
+    };
+    input.addEventListener('keydown', (e) => e.key === 'Enter' && save());
+    const m = modal('Deck umbenennen', h('div', {}, input, h('div', { class: 'row' }, h('button', { class: 'btn btn-success', onclick: save }, 'Speichern'))));
+  }
+
+  setFiltersOpen(open) {
+    this.filtersOpen = open;
+    $('#flt-panel').hidden = !open;
+    $('#flt-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+    this.renderFilterCount();
+  }
+
+  activeFilterCount() {
+    const f = this.f;
+    return (f.type !== 'all') + (f.rarity !== 'all') + (f.elixir.size > 0) + (f.q ? 1 : 0);
+  }
+
+  renderFilterCount() {
+    const n = this.activeFilterCount();
+    $('#flt-toggle').replaceChildren(ico(this.filtersOpen ? '▴' : '▾'), n ? `Filter (${n})` : 'Filter');
+    $('#flt-toggle').classList.toggle('has-filters', n > 0);
+    $('#flt-reset').disabled = n === 0;
+  }
+
+  resetFilters() {
+    this.f = { q: '', type: 'all', elixir: new Set(), rarity: 'all', sort: this.f.sort };
+    $('#flt-search').value = '';
     this.renderFilters();
     this.renderGrid();
   }
@@ -158,13 +209,14 @@ export class DeckBuilder {
           : h('div', { class: `card empty${isEvo ? ' evo-slot' : ''}${isSpecialSlot ? ' special-slot' : ''}`, role: 'button', tabindex: '0', onclick: () => this.clickSlot(i) }, isEvo ? 'Evo' : isSpecialSlot ? 'Champion / Held' : 'leer');
         return h(
           'div',
-          { class: `slot${this.selSlot === i ? ' selected' : ''}` },
-          isEvo ? h('span', { class: 'slot-label evo' }, 'EVO') : isSpecialSlot ? h('span', { class: 'slot-label special' }, '★ CHAMP/HELD') : null,
-
+          { class: `slot${this.selSlot === i ? ' selected' : ''}${isEvo ? ' is-evo' : ''}${isSpecialSlot ? ' is-special' : ''}` },
+          isEvo ? h('span', { class: 'slot-label evo' }, `EVO ${i + 1}`) : isSpecialSlot ? h('span', { class: 'slot-label special' }, '★ CHAMP/HELD') : null,
           el,
         );
       }),
     );
+    $('#deck-sel-hint').hidden = this.selSlot < 0;
+    $('.deck-panel').classList.toggle('has-selection', this.selSlot >= 0);
   }
 
   renderStats() {
@@ -178,9 +230,14 @@ export class DeckBuilder {
   }
 
   renderFilters() {
-    for (const b of document.querySelectorAll('#flt-type .fchip')) b.classList.toggle('on', b.dataset.k === this.f.type);
-    for (const b of document.querySelectorAll('#flt-rarity .fchip')) b.classList.toggle('on', b.dataset.k === this.f.rarity);
-    for (const b of document.querySelectorAll('#flt-elixir .fchip')) b.classList.toggle('on', this.f.elixir.has(Number(b.dataset.k)));
+    const set = (b, on) => {
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    };
+    for (const b of document.querySelectorAll('#flt-type .fchip')) set(b, b.dataset.k === this.f.type);
+    for (const b of document.querySelectorAll('#flt-rarity .fchip')) set(b, b.dataset.k === this.f.rarity);
+    for (const b of document.querySelectorAll('#flt-elixir .fchip')) set(b, this.f.elixir.has(Number(b.dataset.k)));
+    this.renderFilterCount();
   }
 
   filtered() {
@@ -207,7 +264,22 @@ export class DeckBuilder {
   renderGrid() {
     const inDeck = new Set(this.deck().slots.filter(Boolean));
     const list = this.filtered();
-    $('#grid-count').textContent = `${list.length} von ${this.db.cards.length} Karten · Tippe auf eine Karte für Details`;
+    this.renderFilterCount();
+    $('#grid-count').textContent = `${list.length} von ${this.db.cards.length} Karten · ${this.selSlot >= 0 ? 'Tippe eine Karte zum Tauschen' : 'Tippe auf eine Karte für Details'}`;
+    if (!list.length) {
+      // Leerzustand mit Ausweg
+      $('#card-grid').replaceChildren(
+        h(
+          'div',
+          { class: 'empty-state' },
+          h('span', { class: 'empty-ico', 'aria-hidden': 'true' }, '🔍'),
+          h('b', {}, 'Keine Karten gefunden'),
+          h('span', {}, 'Probier einen anderen Suchbegriff oder weniger Filter.'),
+          h('button', { class: 'btn btn-small btn-secondary', onclick: () => this.resetFilters() }, 'Filter zurücksetzen'),
+        ),
+      );
+      return;
+    }
     $('#card-grid').replaceChildren(...list.map((c) => cardEl(this.db, c.id, { inDeck: inDeck.has(c.id), showEvoHint: true, onClick: () => this.clickCard(c.id) })));
   }
 
@@ -225,14 +297,18 @@ export class DeckBuilder {
       if (!slots[i]) return;
       this.selSlot = i;
       this.renderSlots();
+      this.renderGrid();
       return;
     }
     if (this.selSlot === i) {
       const id = slots[i];
       this.selSlot = -1;
       this.renderSlots();
+      this.renderGrid();
+      const evoCard = !!this.db.card(id)?.evo;
       openCardDetail(this.app, id, {
-        evo: EVO_SLOTS.includes(i) && !!this.db.card(id)?.evo,
+        evo: EVO_SLOTS.includes(i) && evoCard,
+        evoState: evoCard ? (EVO_SLOTS.includes(i) ? 'active' : 'inactive') : null,
         actions: [{ label: 'Aus dem Deck entfernen', cls: 'btn-danger', onClick: () => this.removeSlot(i) }],
       });
       return;
@@ -247,6 +323,7 @@ export class DeckBuilder {
     [slots[a], slots[i]] = [slots[i], slots[a]];
     this.selSlot = -1;
     this.changed();
+    this.app.audio.sfx('select');
   }
 
   removeSlot(i) {
@@ -270,12 +347,16 @@ export class DeckBuilder {
     }
     const card = this.db.card(id);
     const actions = [];
+    // Deck voll → Knöpfe deaktiviert, mit Grund (Champions/Helden ersetzen den ★-Platz)
+    const full = slots.every(Boolean) && !isSpecial(card);
+    const reason = full ? 'Deck voll – tippe zuerst eine Deckkarte an, um sie zu tauschen.' : '';
     if (pos >= 0) actions.push({ label: 'Aus dem Deck entfernen', cls: 'btn-danger', onClick: () => this.removeSlot(pos) });
     else {
-      actions.push({ label: 'Ins Deck', cls: 'btn-success', onClick: () => this.addCard(id) });
-      if (card.evo) actions.push({ label: 'In Evo-Platz', cls: 'btn-accent', onClick: () => this.addCard(id, true) });
+      actions.push({ label: 'Ins Deck', cls: 'btn-success', onClick: () => this.addCard(id), disabled: full, reason });
+      if (card.evo) actions.push({ label: 'In Evo-Platz', cls: 'btn-accent', onClick: () => this.addCard(id, true), disabled: full, reason });
     }
-    openCardDetail(this.app, id, { evo: pos >= 0 && EVO_SLOTS.includes(pos) && !!card.evo, actions });
+    const evoState = card.evo ? (pos >= 0 && EVO_SLOTS.includes(pos) ? 'active' : 'inactive') : null;
+    openCardDetail(this.app, id, { evo: evoState === 'active', evoState, actions });
   }
 
   /** Nur ein Champion/Held: ein anderer wird aus dem Spezialplatz entfernt. */

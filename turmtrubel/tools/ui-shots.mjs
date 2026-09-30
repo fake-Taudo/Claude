@@ -120,7 +120,8 @@ function pageChecks() {
   for (const el of all('*')) {
     if (!vis(el)) continue;
     const cs = getComputedStyle(el);
-    if (cs.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth + 1) {
+    const clamped = cs.webkitLineClamp && cs.webkitLineClamp !== 'none' && el.scrollHeight > el.clientHeight + 1;
+    if ((cs.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth + 1) || clamped) {
       const full = el.closest('[title]') || el.closest('[aria-label]');
       out.push({ t: full ? 'truncated-titled' : 'truncated', text: el.textContent.trim().slice(0, 40) });
     }
