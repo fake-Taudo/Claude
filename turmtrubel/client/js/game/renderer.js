@@ -441,6 +441,18 @@ export class Renderer {
     }
   }
 
+  /** Trümmer für zerstörte Kronentürme (sie fehlen im Snapshot). */
+  drawRubble(ctx, list, towerRules) {
+    const view = this.game.view;
+    for (const slot of TOWER_SLOTS) {
+      const alive = list.some((v) => v.kind === 'tower' && v.owner === slot.side && Math.abs(v.x - slot.x) < 0.2 && Math.abs(v.y - slot.y) < 0.2);
+      if (alive) continue;
+      const size = towerRules?.[slot.key]?.size ?? (slot.key === 'king' ? 4 : 3);
+      const [x, y] = view.toScreen(slot.x, slot.y);
+      drawTower(ctx, { x, y, U: (size / 2) * view.s, destroyed: true, team: slot.side === this.game.side ? 'blue' : 'red' });
+    }
+  }
+
   // ───────────── Einheiten ─────────────
   drawEntities(ctx, list, t, quality) {
     const view = this.game.view;

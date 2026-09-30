@@ -937,8 +937,9 @@ export class Game {
     }
 
     R.drawZonesGround(ctx, this.zones, now);
-    this.fx.drawRings(ctx, this.view);
     const list = [...this.vis.values()];
+    if (this.latest) R.drawRubble(ctx, list, this.rules.towers);
+    this.fx.drawRings(ctx, this.view);
     R.drawEntities(ctx, list, now, q);
     R.drawBeams(ctx, list, now);
     R.drawProjectiles(ctx, this.projList || [], now);

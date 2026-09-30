@@ -88,10 +88,28 @@ export class Hud {
     const sP = Math.min((w - 8) / 18, (h - hudH - topH - 6) / 33.2);
     const panelW = Math.round(Math.min(300, Math.max(168, w * 0.25)));
     const sR = Math.min((w - panelW - 16) / 32, (h - 8) / 18.8);
-    const mode = pref === 'portrait' ? 'portrait' : pref === 'rotated' ? 'rotated' : sP >= 15 || sP >= sR * 0.85 ? 'portrait' : 'rotated';
-    const L = { mode, w, h };
+    // Hochkant-Arena mit Kartenpanel rechts daneben (Desktop/Tablet quer)
+    const sS = w > h ? Math.min((w - panelW - 40) / 18, (h - 8) / 33.2) : 0;
+    const sV = Math.max(sP, sS);
+    const mode = pref === 'portrait' ? 'portrait' : pref === 'rotated' ? 'rotated' : sV >= 15 || sV >= sR * 0.85 ? 'portrait' : 'rotated';
+    const side = mode === 'portrait' && sS > sP;
+    const L = { mode, w, h, side };
     const gap = 6;
-    if (mode === 'portrait') {
+    if (side) {
+      const s = Math.max(4, sS);
+      view.mode = 'portrait';
+      view.s = s;
+      const aw = 18 * s;
+      const ah = 32 * s;
+      const total = aw + 28 + panelW;
+      view.ox = Math.round(Math.max(4, (w - total) / 2));
+      view.oy = Math.round(s * 1.2 + Math.max(0, (h - ah - s * 1.2) / 2));
+      const px = view.ox + aw + 24;
+      L.panel = { x: px - 8, y: 0, w: Math.min(w - (px - 8), panelW + 16), h };
+      this.panelRight(L, px, panelW, h, gap);
+      L.emoteBtn = { x: view.ox + 30, y: view.oy + ah - 30, r: Math.max(20, Math.min(28, s * 1.1)) };
+      L.abilityBtn = { x: view.ox + aw - 40, y: view.oy + ah - 42, r: Math.max(26, Math.min(36, s * 1.5)) };
+    } else if (mode === 'portrait') {
       const s = Math.max(4, sP);
       view.mode = 'portrait';
       view.s = s;
@@ -118,7 +136,7 @@ export class Hud {
       const nh = ch * 0.62;
       const totalW = nw + gap * 2 + 4 * cw + 3 * gap;
       const x0 = px + (pw - totalW) / 2;
-      const cy = top + 8;
+      const cy = top + Math.max(10, Math.min(28, (ph - (ch + 8 + elixH)) / 2 - 4));
       L.next = { x: x0, y: cy + ch - nh, w: nw, h: nh };
       L.cards = [0, 1, 2, 3].map((i) => ({ x: x0 + nw + gap * 2 + i * (cw + gap), y: cy, w: cw, h: ch }));
       L.elixir = { x: L.cards[0].x, y: cy + ch + 8, w: 4 * cw + 3 * gap, h: elixH };
@@ -134,20 +152,7 @@ export class Hud {
       view.oy = Math.round(s * 0.8 + (h - ah - s * 0.8) / 2);
       const px = w - panelW - 4;
       L.panel = { x: px - 4, y: 0, w: panelW + 8, h };
-      L.oppName = { x: px + 6, y: 16, maxW: panelW - 12 };
-      L.score = { x: px + 4, y: 32, w: panelW - 8, h: 36, bar: true };
-      const elixH = 22;
-      const cwW = (panelW - 3 * gap) / 2;
-      const cwH = (h - 76 - 40 - gap) / (2 * 1.26 + 0.55 * 1.26);
-      const cw = Math.max(30, Math.min(cwW, cwH));
-      const ch = cw * 1.26;
-      const gx = px + (panelW - (2 * cw + gap)) / 2;
-      const gy = 78;
-      L.cards = [0, 1, 2, 3].map((i) => ({ x: gx + (i % 2) * (cw + gap), y: gy + Math.floor(i / 2) * (ch + gap), w: cw, h: ch }));
-      const ny = gy + 2 * ch + gap + 18;
-      L.next = { x: px + 4, y: ny, w: cw * 0.55, h: ch * 0.55 };
-      const ex = L.next.x + L.next.w + 10;
-      L.elixir = { x: ex, y: ny + L.next.h / 2 - elixH / 2, w: px + panelW - 4 - ex, h: elixH };
+      this.panelRight(L, px, panelW, h, gap);
       L.emoteBtn = { x: view.ox + aw - 30, y: view.oy + 30, r: Math.max(20, Math.min(28, s * 1.1)) };
       L.abilityBtn = { x: view.ox + aw - 42, y: view.oy + ah - 42, r: Math.max(26, Math.min(36, s * 1.5)) };
     }
@@ -162,6 +167,26 @@ export class Hud {
     }));
     this.L = L;
     return L;
+  }
+
+  /** Seitenpanel: Name, Timer/Kronen, 2×2 Handkarten, nächste Karte + Elixier (vertikal zentriert). */
+  panelRight(L, px, panelW, h, gap) {
+    const elixH = 22;
+    const cwW = (panelW - 3 * gap) / 2;
+    const cwH = (h - 76 - 40 - gap) / (2 * 1.26 + 0.55 * 1.26);
+    const cw = Math.max(30, Math.min(cwW, cwH));
+    const ch = cw * 1.26;
+    const content = 78 + 2 * ch + gap + 18 + ch * 0.55;
+    const y0 = Math.max(0, Math.min(h * 0.18, (h - content) / 2));
+    L.oppName = { x: px + 6, y: y0 + 16, maxW: panelW - 12 };
+    L.score = { x: px + 4, y: y0 + 32, w: panelW - 8, h: 36, bar: true };
+    const gx = px + (panelW - (2 * cw + gap)) / 2;
+    const gy = y0 + 78;
+    L.cards = [0, 1, 2, 3].map((i) => ({ x: gx + (i % 2) * (cw + gap), y: gy + Math.floor(i / 2) * (ch + gap), w: cw, h: ch }));
+    const ny = gy + 2 * ch + gap + 18;
+    L.next = { x: px + 4, y: ny, w: cw * 0.55, h: ch * 0.55 };
+    const ex = L.next.x + L.next.w + 10;
+    L.elixir = { x: ex, y: ny + L.next.h / 2 - elixH / 2, w: px + panelW - 4 - ex, h: elixH };
   }
 
   inArena(x, y) {
@@ -215,7 +240,7 @@ export class Hud {
     ctx.fillStyle = grad;
     ctx.fillRect(P.x, P.y, P.w, P.h);
     ctx.fillStyle = '#5a47b3';
-    if (L.mode === 'portrait') ctx.fillRect(P.x, P.y, P.w, 3);
+    if (L.topbar) ctx.fillRect(P.x, P.y, P.w, 3);
     else ctx.fillRect(P.x, P.y, 3, P.h);
     if (L.topbar) {
       const T = L.topbar;
@@ -422,9 +447,9 @@ export class Hud {
     const r = L.oppName;
     let name = g.names[1 - g.side] || 'Gegner';
     const narrow = L.w < 460;
-    const size = L.mode === 'portrait' ? Math.max(12, Math.min(17, (L.topbar?.h || 40) * (narrow ? 0.34 : 0.4))) : 14;
+    const size = L.topbar ? Math.max(12, Math.min(17, (L.topbar?.h || 40) * (narrow ? 0.34 : 0.4))) : 14;
     ctx.font = `${size}px ${FONT}`;
-    const avail = L.mode === 'portrait' ? L.score.x - 8 - r.x : r.maxW || 200;
+    const avail = L.topbar ? L.score.x - 8 - r.x : r.maxW || 200;
     const csPre = Math.min(narrow ? 15 : 20, (size + 10) * 0.8);
     const nameMax = avail - csPre * 3.6 - 30;
     if (ctx.measureText(name).width > nameMax) {
@@ -449,9 +474,9 @@ export class Hud {
     this.crownTargets.opp = [x + w + 6 + cs * 0.6 + Math.max(0, opC - 1) * cs * 1.18, y];
     // Verbindungsstatus & Ping unauffällig im Kartenpanel
     const P = L.panel;
-    const px = L.mode === 'portrait' ? P.x + P.w - 8 : P.x + P.w - 10;
-    const py = L.mode === 'portrait' ? P.y + 13 : y + 1;
-    if (g.oppDisconnected) text(ctx, '⚠ Gegner getrennt', L.mode === 'portrait' ? P.x + 8 : px - 50, py, 12, '#ffd84d', L.mode === 'portrait' ? 'left' : 'right', 2.5);
+    const px = L.topbar ? P.x + P.w - 8 : P.x + P.w - 10;
+    const py = L.topbar ? P.y + 13 : y + 1;
+    if (g.oppDisconnected) text(ctx, '⚠ Gegner getrennt', L.topbar ? P.x + 8 : px - 50, L.topbar ? py : y + 22, 12, '#ffd84d', L.topbar ? 'left' : 'right', 2.5);
     if (g.app.settings.showPing && g.ping != null) {
       const p = Math.round(g.ping);
       const col = p < 80 ? '#7dff8a' : p < 180 ? '#ffe066' : '#ff6b6b';

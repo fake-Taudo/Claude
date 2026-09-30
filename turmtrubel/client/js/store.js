@@ -1,5 +1,6 @@
 // Lokale Speicherung (localStorage): Name, Einstellungen, Deck-Slots.
 import { validateDeck } from '/shared/cards.js';
+import { STARTER_DECKS } from '/shared/decks.js';
 
 const KEY = 'turmtrubel.v1';
 export const DECK_SLOTS = 5;
@@ -15,14 +16,6 @@ export const DEFAULT_SETTINGS = Object.freeze({
   showPing: true,
 });
 
-// Startdecks, damit man sofort losspielen kann (Slot 1+2 = Evo, Slot 3 = Champion/Held)
-const STARTER_DECKS = [
-  { name: 'Koloss-Druck', slots: ['knappe', 'zwillingsschuetzen', 'mirell', 'steinkoloss', 'funkenmagier', 'brummkaefer', 'glutball', 'funkenschlag'] },
-  { name: 'Borsten-Zyklus', slots: ['knochenwichte', 'frostfunke', 'aelis', 'borstenreiter', 'armbrustmaid', 'donnerbuechse', 'kobolde', 'rollstamm'] },
-  { name: 'Luftangriff', slots: ['flattermotten', 'rabauken', 'kaija', 'bombenzeppelin', 'flammenflatterer', 'knochenlegion', 'kriegstrommel', 'pfeilhagel'] },
-  { name: 'Belagerung', slots: ['steinschleuder', 'donnerbuechse', 'torvin', 'belagerungsballiste', 'frostmagierin', 'knappe', 'kettenblitz', 'rollstamm'] },
-  { name: 'Stahl-Walze', slots: ['stahlgolem', 'wirbelschildmaid', 'grom', 'felsgigant', 'knochenruferin', 'flammenflatterer', 'sumpfnebel', 'funkenschlag'] },
-];
 
 export class Store {
   constructor(db) {
