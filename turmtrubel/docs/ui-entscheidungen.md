@@ -40,3 +40,19 @@ Laufendes Protokoll der UI-Überarbeitung: Entscheidungen mit Begründung, Vorsc
 | Schadenszahlen | Pop + Aufsteigen in 550 ms, Start über dem LP-Balken, leicht teamfarbig getönt. Treffer aufs selbe Ziel innerhalb von 0,25 s werden addiert, es sind max. 8 gleichzeitig sichtbar. | §9.7. Schwärme fluten das Feld nicht mehr. |
 | Emotes | Die Auswahl ist ein 3×2-Raster mit 44-px-Zielen über dem Knopf, die Abklingzeit läuft als Ring um den Knopf. Sprechblasen erscheinen **neben** dem Burgturm (Gegner rechts, eigene links) mit Zipfel zum Turm. Neues Setting `muteEmotes` (Default aus) blendet Gegner-Emotes samt Ton aus. | B-09 |
 | Gegnername | Wird er gekürzt, zeigt Tippen den vollen Namen als Toast, am Desktop erscheint er als Tooltip beim Überfahren. | §9.7 / B-13 |
+
+## Phase 3 – Menüs und Ablauf
+
+| Thema | Entscheidung | Begründung |
+| --- | --- | --- |
+| Hauptmenü, primärer CTA | Die Reihenfolge ist **„Kampf erstellen“** (Gold, 68 px), dann „Mit Code beitreten“ (Blau), dann „Training gegen Bot“ (Grün, abgesetzt). | Der Kern des Spiels ist der Freundschaftskampf per Code. Training ist der Einstieg ohne zweite Person und bleibt sofort erreichbar. |
+| Online-Status | Er steht als Punkt mit Label in der Kopfzeile, am Handy nur als Punkt. | B-11: Er schwebte vorher verloren unter dem Panel. |
+| Panels | Beide Panels sind gleich hoch (`align-items: stretch`), die Deck-Kennzahlen stehen als drei Kacheln, „Deck unvollständig“ in Warnfarbe. | §9.2 |
+| „Noch im Raum“ | Das Banner im Menü hat einen direkten Knopf „Raum verlassen“. `ALREADY_IN_ROOM` wird clientseitig abgefangen, der Servertext bleibt unverändert. | §9.2, keine Protokolländerung. |
+| Code-Eingabe | 6 Einzelfelder mit Auto-Weiter, Rücktaste springt zurück, Einfügen verteilt den Code (und sendet ihn bei 6 Zeichen ab). Fehler färben die Felder rot, lassen sie wackeln und zeigen den Servertext. | §9.2 |
+| Lobby-Countdown | Die Ziffer **ersetzt das „VS“** zwischen den Spielerkarten (Pop 1,4 → 1 in 220 ms), es gibt kein Vollbild-Overlay mehr. Code und Deck sind währenddessen ausgegraut. „Abbrechen“ und „Verlassen“ bleiben bedienbar. | B-04. Abbrechen und Verlassen nutzen bestehende Logik (Bereit zurücknehmen bricht den Countdown ab). Ein komplett gesperrter Bildschirm würde den Spieler festhalten. |
+| Ladescreen | Der Fortschritt ist **echt**: Schrift, Kartenbilder des eigenen Decks (auch Evo- und Graustufenfassung) und Arena-Hintergrund werden vorbereitet, und der Balken folgt den erledigten Schritten. Danach steht dort „Bereit! Warte auf deinen Gegner …“. „Geladen“ wird frühestens nach 1,2 s gemeldet, damit die VS-Animation ausspielen kann (bei reduzierter Bewegung sofort). Pro Seite gibt es eine Burgturm-Vorschau in Teamfarbe und ein Emblem, **kein Gegner-Deck**. Tipps wechseln alle 3,2 s mit Überblendung. | §9.6 / B-12 / Fairness (§4). |
+| Pausen-Menü | Modal mit Backdrop (Blur auf „Hoch“), Titel „Menü“ statt „Pause“. Oben steht der Hinweis „Das Spiel läuft weiter“. Reihenfolge: Weiter, Ton, Musik, Gegner-Emotes, Einstellungen, abgesetzt Aufgeben mit Bestätigung. Tastenkappen erscheinen nur bei Maus und Tastatur. | B-08. Der Kampf ist serverseitig nicht pausierbar, die Logik bleibt unverändert. |
+| Einstellungen | Gruppiert in Audio, Grafik & Anzeige (mit Beschreibung unter den Segmenten), Spiel (`muteEmotes`, `haptics`) und Konto. „Raum verlassen“ bleibt **immer** sichtbar. | B-17. „Raum verlassen“ hattest du ausdrücklich angefordert, auch für den Fall, dass man in einem alten Raum festhängt. |
+| Ergebnis | Kronen erscheinen gestaffelt (250 ms), die Stats zählen in 600 ms hoch, es gibt einen Untertitel je Ausgang. Konfetti gibt es nur bei Sieg, ab „Mittel“ und ohne reduzierte Bewegung. Die Niederlage hat einen ruhigeren Hintergrund. | B-15 |
+| Logo | Pop-Einblendung, danach zweimal wippen, keine Endlos-Animation. Die Hintergrundstreifen laufen mit sanfter Parallaxe (nur ab „Mittel“, ohne reduzierte Bewegung). | §9.1 / §10 |

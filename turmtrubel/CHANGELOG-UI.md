@@ -28,3 +28,15 @@ Alle UI-Änderungen der Überarbeitung, in verständlichem Deutsch. Die Befund-I
 - **Turm-Lebenspunkte:** Größere Anzeige mit Zahlen, die nicht springen. Verlorene Lebenspunkte laufen sichtbar nach, Treffer blitzen kurz auf.
 - **Schadenszahlen:** Sie ploppen kurz auf und steigen nach oben. Mehrere Treffer auf dasselbe Ziel werden zusammengezählt, es sind höchstens 8 gleichzeitig zu sehen.
 - **Emotes:** Die Auswahl ist ein großes Raster, die Abklingzeit läuft als Ring um den Knopf. Sprechblasen erscheinen neben dem Turm statt über dessen Lebenspunkten. Neu ist die Einstellung „Gegner-Emotes stummschalten“.
+
+## Phase 3 – Menüs und Ablauf
+
+- **Startbildschirm:** Das Namensfeld zeigt einen Zeichenzähler und eine klare Meldung, wenn es leer ist. Das Logo springt einmal herein, statt endlos zu wippen.
+- **Hauptmenü (B-11):** Es gibt einen großen Haupt-Knopf „Kampf erstellen“, der Online-Status steht in der Kopfzeile, und beide Panels sind gleich hoch. Das aktive Deck zeigt Ø Elixier, 4er-Zyklus und „spielbereit“ bzw. „Deck unvollständig“ als Kacheln.
+- **Noch in einem Raum?** Statt des Hinweises auf die Einstellungen erscheint ein Banner mit direktem Knopf „Raum verlassen“.
+- **Beitreten:** Der Code wird in sechs einzelne Felder eingegeben. Sie springen automatisch weiter und nehmen eingefügte Codes an. Falsche Codes werden rot markiert.
+- **Lobby (B-04):** Der Countdown ersetzt das „VS“ und verdeckt nichts mehr. „Code kopieren“ bestätigt mit „Kopiert! ✓“, und ein Hinweis zeigt, auf wen gewartet wird.
+- **Ladebildschirm (B-12):** Beide Seiten zeigen einen Burgturm in Teamfarbe und ein Emblem. Der Balken zeigt echten Ladefortschritt, die Tipps wechseln alle paar Sekunden.
+- **Menü im Kampf (B-08):** Es öffnet sich als richtiger Dialog mit abgedunkeltem Hintergrund und dem klaren Hinweis „Das Spiel läuft weiter“. Die Knöpfe sind sinnvoll gewichtet, „Aufgeben“ ist abgesetzt und wird nachgefragt. Am Desktop gibt es gut lesbare Tastenkappen. Gegner-Emotes lassen sich hier stummschalten.
+- **Einstellungen (B-17):** Sie sind in Audio, Grafik & Anzeige, Spiel und Konto gruppiert, jede Auswahl hat eine kurze Erklärung. Neu ist der Schalter „Vibration“.
+- **Ergebnis (B-15):** Kronen erscheinen nacheinander, die Zahlen zählen hoch. Konfetti gibt es nur bei einem Sieg, eine Niederlage wirkt ruhiger und hat einen freundlichen Satz.

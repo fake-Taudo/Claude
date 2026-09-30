@@ -102,6 +102,12 @@ export class Game {
     this.canvas.title = '';
   }
 
+  /** Vor dem Kampf (Ladescreen): Layout berechnen und Arena-Hintergrund vorzeichnen. */
+  prepare() {
+    this.resize();
+    this.renderer.renderBackground(this.cw, this.ch, this.dpr);
+  }
+
   settingsChanged() {
     this.fx.setQuality(this.app.settings.quality);
     this.needResize = true;
@@ -122,7 +128,7 @@ export class Game {
     this.canvas.style.width = cw + 'px';
     this.canvas.style.height = ch + 'px';
     this.hud.layout(cw, ch, this.app.settings.orientation, safeInsets());
-    this.renderer.bgKey = '';
+    // bgKey enthält Größe, Maßstab und Versatz → Hintergrund wird nur bei echter Änderung neu gezeichnet
     this.renderer.overlayKey = '';
     this.placeDomHud();
   }

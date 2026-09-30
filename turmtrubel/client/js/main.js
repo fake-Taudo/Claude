@@ -4,12 +4,13 @@ import { C2S, S2C, ERRORS, normalizeCode, isValidCodeFormat, sanitizeName } from
 import { Net } from './net.js';
 import { AudioSys } from './audio.js';
 import { Store } from './store.js';
-import { $, h, showScreen, currentScreen, toast, modal, confirmDialog, fmtTime } from './ui/dom.js';
+import { $, h, ico, showScreen, currentScreen, toast, modal, confirmDialog, fmtTime } from './ui/dom.js';
 import { cardEl } from './ui/cardview.js';
-import { prerenderAll } from './ui/art.js';
+import { prerenderAll, cardArt, cardArtGray } from './ui/art.js';
+import { drawTower } from './game/sprites.js';
 import { DeckBuilder } from './ui/deckbuilder.js';
 import { openSettings } from './ui/settings.js';
-import { applyBodyFlags } from './ui/tokens.js';
+import { applyBodyFlags, reducedMotion } from './ui/tokens.js';
 import { Game } from './game/game.js';
 
 const TIPS = [
@@ -21,6 +22,13 @@ const TIPS = [
   'Tipp: Helden haben eine starke Spezialfähigkeit, die du einmal pro Einsatz zünden kannst.',
   'Tipp: Gebäude lenken Gebäudejäger wie den Steinkoloss ab.',
   'Tipp: Mit den Tasten 1–4 wählst du Karten, mit der Leertaste zündest du Fähigkeiten.',
+  'Tipp: Wählst du eine Karte, zeigt die Elixierleiste mit einer Kerbe, was sie kostet.',
+  'Tipp: Zauber wie Glutball treffen auch Kronentürme – aber mit weniger Schaden.',
+  'Tipp: Schwärme sind stark gegen große Einzelkämpfer, aber anfällig für Flächenschaden.',
+  'Tipp: Tippst du auf den gekürzten Gegnernamen, siehst du ihn in voller Länge.',
+  'Tipp: Zerstörst du einen Wachturm, bekommst du eine Krone – drei Kronen beenden den Kampf sofort.',
+  'Tipp: Der Burgturm schläft, bis er Schaden nimmt oder ein Wachturm fällt.',
+  'Tipp: Gegner-Emotes kannst du im Menü (≡) stummschalten.',
 ];
 
 class App {
@@ -101,11 +109,22 @@ class App {
       if (e.target.closest?.('.btn, .icon-btn, .chip, .deck-tab, .fchip')) this.audio.sfx('click', 0.6);
     });
 
+    const ni = $('#name-input');
+    const updName = () => {
+      const has = ni.value.trim().length > 0;
+      $('#name-count').textContent = `${ni.value.length}/16`;
+      $('#name-go').setAttribute('aria-disabled', has ? 'false' : 'true');
+      if (has) $('#name-error').textContent = '';
+    };
+    ni.addEventListener('input', updName);
+    updName();
     $('#name-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      const n = sanitizeName($('#name-input').value);
+      const n = sanitizeName(ni.value);
       if (!n) {
-        $('#name-error').textContent = ERRORS.INVALID_NAME;
+        $('#name-error').textContent = ni.value.trim() ? ERRORS.INVALID_NAME : 'Bitte gib zuerst einen Namen ein.';
+        this.audio.sfx('error');
+        ni.focus();
         return;
       }
       this.store.name = n;
@@ -121,6 +140,10 @@ class App {
       this.store.active = Number(e.target.value);
       this.store.save();
       this.renderMenuDeck();
+    });
+    $('#menu-room-leave').addEventListener('click', () => {
+      this.leaveRoom();
+      toast('Du hast den Raum verlassen.', 'ok');
     });
     $('#btn-create').addEventListener('click', () => this.createRoom());
     $('#btn-join').addEventListener('click', () => this.openJoin());
@@ -153,36 +176,73 @@ class App {
     });
     $('#res-menu').addEventListener('click', () => this.leaveRoom());
 
-    const gm = $('#game-menu');
-    $('#game-menu-btn').addEventListener('click', () => {
-      gm.hidden = !gm.hidden;
-      this.updateGameMenu();
-    });
-    $('#gm-sound').addEventListener('click', () => {
-      this.settings.sfx = !this.settings.sfx;
-      this.store.save();
-      this.audio.apply();
-      this.updateGameMenu();
-    });
-    $('#gm-music').addEventListener('click', () => {
-      this.settings.music = !this.settings.music;
-      this.store.save();
-      this.audio.apply();
-      this.updateGameMenu();
-    });
-    $('#gm-settings').addEventListener('click', () => {
-      gm.hidden = true;
-      openSettings(this, { allowRename: false });
-    });
-    $('#gm-surrender').addEventListener('click', async () => {
-      gm.hidden = true;
-      if (await confirmDialog('Aufgeben?', 'Willst du den Kampf wirklich aufgeben? Dein Gegner erhält 3 Kronen.', 'Aufgeben', true)) this.net.send(C2S.SURRENDER);
-    });
+    $('#game-menu-btn').addEventListener('click', () => this.openPause());
   }
 
-  updateGameMenu() {
-    $('#gm-sound').textContent = this.settings.sfx ? '🔊 Ton an' : '🔇 Ton aus';
-    $('#gm-music').textContent = this.settings.music ? '🎵 Musik an' : '🎵 Musik aus';
+  /** Pausen-Menü als Modal (B-08). Der Kampf läuft weiter – das wird klar gesagt. */
+  openPause() {
+    if (this.pauseModal || !this.game) return;
+    const s = this.settings;
+    const save = () => {
+      this.store.save();
+      this.audio.apply();
+    };
+    const toggleBtn = (id, get, set, onTxt, offTxt, onIco, offIco) => {
+      const b = h('button', { class: 'btn btn-secondary', id });
+      const upd = () => {
+        b.replaceChildren(ico(get() ? onIco : offIco), get() ? onTxt : offTxt);
+        b.setAttribute('aria-pressed', get() ? 'true' : 'false');
+      };
+      b.addEventListener('click', () => {
+        set(!get());
+        save();
+        upd();
+      });
+      upd();
+      return b;
+    };
+    const training = !!this.game.training;
+    const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const key = (k) => h('kbd', { class: 'key' }, k);
+    const body = h(
+      'div',
+      { class: 'pause' },
+      h('p', { class: 'pause-note' }, ico('⏵'), training ? 'Das Training läuft im Hintergrund weiter.' : 'Das Spiel läuft weiter – dein Gegner kann weiterspielen.'),
+      h('button', { class: 'btn btn-primary btn-big btn-block', id: 'gm-resume', onclick: () => m.close() }, ico('▶'), 'Weiter'),
+      h(
+        'div',
+        { class: 'pause-grid' },
+        toggleBtn('gm-sound', () => s.sfx, (v) => (s.sfx = v), 'Ton an', 'Ton aus', '🔊', '🔇'),
+        toggleBtn('gm-music', () => s.music, (v) => (s.music = v), 'Musik an', 'Musik aus', '🎵', '🔈'),
+        toggleBtn('gm-emotes', () => !s.muteEmotes, (v) => (s.muteEmotes = !v), 'Gegner-Emotes an', 'Gegner-Emotes stumm', '💬', '🙊'),
+        h('button', { class: 'btn btn-accent', id: 'gm-settings', onclick: () => (m.close(), openSettings(this, { allowRename: false })) }, ico('⚙'), 'Einstellungen'),
+      ),
+      h(
+        'button',
+        {
+          class: 'btn btn-danger btn-block pause-surrender',
+          id: 'gm-surrender',
+          onclick: async () => {
+            m.close();
+            if (await confirmDialog('Wirklich aufgeben?', 'Der Gegner gewinnt sofort mit 3 Kronen.', 'Aufgeben', true)) this.net.send(C2S.SURRENDER);
+          },
+        },
+        ico('🏳'),
+        'Aufgeben',
+      ),
+      fine
+        ? h(
+            'ul',
+            { class: 'keys', 'aria-label': 'Tastenkürzel' },
+            h('li', {}, key('1'), '–', key('4'), ' Karte wählen'),
+            h('li', {}, key('Leertaste'), ' Fähigkeit'),
+            h('li', {}, key('E'), ' Emotes'),
+            h('li', {}, key('Esc'), ' Auswahl abbrechen'),
+          )
+        : null,
+    );
+    const m = modal('Menü', body, { onClose: () => (this.pauseModal = null) });
+    this.pauseModal = m;
   }
 
   // ───────────── Netzwerk ─────────────
@@ -228,11 +288,17 @@ class App {
       if (this.game) this.game.ping = rtt;
     });
     n.on(S2C.ERROR, (m) => {
-      if (m.code === 'ALREADY_IN_ROOM') this.serverInRoom = true;
-      if (this.joinModal) {
-        const err = this.joinModal.el.querySelector('.error');
-        if (err) err.textContent = m.message;
+      if (m.code === 'ALREADY_IN_ROOM') {
+        // Statt Verweis auf die Einstellungen: Banner mit direktem „Raum verlassen“
+        this.serverInRoom = true;
+        this.closeJoin();
+        this.updateRoomBanner();
+        toast('Du bist noch in einem Raum – verlasse ihn zuerst.', 'warn', 2600);
         this.audio.sfx('error');
+        return;
+      }
+      if (this.joinModal) {
+        this.joinModal.markError?.(m.message);
         return;
       }
       toast(m.message, 'error', 3500);
@@ -245,6 +311,7 @@ class App {
         if (m.inRoom) n.send(C2S.LEAVE);
         else this.leaving = false;
       } else this.leaving = false;
+      this.updateRoomBanner();
     });
     // Raum-Nachrichten, die nach „Raum verlassen“ noch eintreffen, verwerfen
     const roomMsg = (fn) => (m) => {
@@ -271,6 +338,7 @@ class App {
       this.serverInRoom = false;
       this.leaving = false;
       this.resetRoomState();
+      this.updateRoomBanner();
       if (m.reason !== 'left') {
         if (m.message) toast(m.message, 'warn', 4000);
         if (wasIn || currentScreen() !== 's-menu') this.goMenu();
@@ -281,7 +349,9 @@ class App {
   resetRoomState() {
     this.room = null;
     clearInterval(this.expiryTimer);
-    $('#countdown').classList.remove('show');
+    clearInterval(this.tipTimer);
+    this.resetCountdown();
+    this.pauseModal?.close();
     if (this.game) {
       this.game.destroy();
       this.game = null;
@@ -292,6 +362,7 @@ class App {
   goMenu() {
     this.closeJoin();
     $('#menu-name').textContent = this.store.name;
+    $('#menu-rename').title = `${this.store.name} – Namen ändern`;
     this.renderMenuDeck();
     showScreen('s-menu');
     this.audio.music('menu');
@@ -300,11 +371,18 @@ class App {
       cs.textContent = 'online';
       cs.className = 'conn-state online';
     }
+    this.updateRoomBanner();
     if (this.pendingJoin && this.net?.welcomed) {
       const code = this.pendingJoin;
       this.pendingJoin = null;
       this.openJoin(code);
     }
+  }
+
+  /** „Du bist noch in einem Raum“ als Banner im Hauptmenü (statt Umweg über die Einstellungen). */
+  updateRoomBanner() {
+    const show = currentScreen() === 's-menu' && this.serverInRoom && !this.room && !this.game && !this.leaving;
+    $('#menu-room-banner').hidden = !show;
   }
 
   fillDeckSelect(sel) {
@@ -323,9 +401,9 @@ class App {
     );
     const ok = validateDeck(this.db, d.slots).ok;
     $('#menu-deck-meta').replaceChildren(
-      h('span', {}, 'Ø Elixier ', h('b', {}, averageElixir(this.db, d.slots).toFixed(1).replace('.', ','))),
-      h('span', {}, '4er-Zyklus ', h('b', {}, cycleCost(this.db, d.slots))),
-      ok ? h('span', { class: 'ok' }, '✔ spielbereit') : h('span', { class: 'bad' }, '✖ unvollständig'),
+      h('div', { class: 'meta' }, h('b', {}, averageElixir(this.db, d.slots).toFixed(1).replace('.', ',')), h('span', {}, 'Ø Elixier')),
+      h('div', { class: 'meta' }, h('b', {}, cycleCost(this.db, d.slots)), h('span', {}, '4er-Zyklus')),
+      h('div', { class: `meta ${ok ? 'ok' : 'bad'}` }, h('b', {}, ok ? '✔' : '!'), h('span', {}, ok ? 'spielbereit' : 'Deck unvollständig')),
     );
   }
 
@@ -351,29 +429,75 @@ class App {
     this.net.send(C2S.TRAINING, { deck: this.store.activeDeck().slots });
   }
 
+  /** Beitreten: 6 Felder mit Auto-Weiter, Einfügen aus der Zwischenablage und klarem Fehlerzustand. */
   openJoin(prefill = '') {
     this.closeJoin();
-    const input = h('input', { class: 'text-input join-code-input', maxlength: '7', placeholder: 'ABC123', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Einladungscode', value: prefill });
+    const boxes = Array.from({ length: 6 }, (_, i) =>
+      h('input', { class: 'code-cell', maxlength: '1', inputmode: 'text', autocapitalize: 'characters', autocomplete: 'off', spellcheck: 'false', 'aria-label': `Zeichen ${i + 1} von 6`, 'data-code-input': '' }),
+    );
+    const wrap = h('div', { class: 'code-cells', role: 'group', 'aria-label': 'Einladungscode' }, boxes);
     const err = h('p', { class: 'error', role: 'alert' });
+    const value = () => boxes.map((b) => b.value).join('');
+    const markError = (msg) => {
+      err.textContent = msg;
+      wrap.classList.remove('bad');
+      void wrap.offsetWidth;
+      wrap.classList.add('bad');
+      this.audio.sfx('error');
+    };
+    const setValue = (str, from = 0) => {
+      const clean = String(str).toUpperCase().replace(/[^A-Z0-9]/g, '');
+      for (let i = from, j = 0; i < 6 && j < clean.length; i++, j++) boxes[i].value = clean[j];
+      const next = boxes.find((b) => !b.value) || boxes[5];
+      next.focus();
+    };
     const submit = () => {
-      const code = normalizeCode(input.value);
-      if (!isValidCodeFormat(code)) {
-        err.textContent = ERRORS.INVALID_CODE;
-        this.audio.sfx('error');
-        return;
-      }
+      const code = normalizeCode(value());
+      if (!isValidCodeFormat(code)) return markError(ERRORS.INVALID_CODE);
       if (!this.requireReady()) return;
       err.textContent = '';
       this.net.send(C2S.JOIN, { code, deck: this.store.activeDeck().slots });
     };
-    input.addEventListener('input', () => {
-      input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-      err.textContent = '';
+    boxes.forEach((b, i) => {
+      b.addEventListener('input', () => {
+        const v = b.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        wrap.classList.remove('bad');
+        err.textContent = '';
+        if (v.length > 1) return setValue(v, i);
+        b.value = v;
+        if (v && i < 5) boxes[i + 1].focus();
+      });
+      b.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !b.value && i > 0) {
+          e.preventDefault();
+          boxes[i - 1].value = '';
+          boxes[i - 1].focus();
+        } else if (e.key === 'ArrowLeft' && i > 0) boxes[i - 1].focus();
+        else if (e.key === 'ArrowRight' && i < 5) boxes[i + 1].focus();
+        else if (e.key === 'Enter') submit();
+      });
+      b.addEventListener('paste', (e) => {
+        e.preventDefault();
+        setValue(e.clipboardData?.getData('text') || '', i);
+        if (value().length === 6) submit();
+      });
+      b.addEventListener('focus', () => b.select());
     });
-    input.addEventListener('keydown', (e) => e.key === 'Enter' && submit());
-    const body = h('div', {}, h('p', { style: { fontWeight: 800, marginTop: 0 } }, 'Gib den 6-stelligen Code deines Freundes ein:'), input, err, h('div', { class: 'row' }, h('button', { class: 'btn btn-success btn-big', onclick: submit }, 'Beitreten')));
+    const body = h(
+      'div',
+      { class: 'join' },
+      h('p', { class: 'join-lead' }, 'Gib den 6-stelligen Code deines Freundes ein:'),
+      wrap,
+      err,
+      h('div', { class: 'row' }, h('button', { class: 'btn btn-success btn-big', onclick: submit }, 'Beitreten')),
+      h('p', { class: 'hint small', style: { textAlign: 'center' } }, 'Tipp: Einfügen funktioniert direkt im ersten Feld.'),
+    );
     this.joinModal = modal('Kampf beitreten', body, { onClose: () => (this.joinModal = null) });
-    if (prefill && isValidCodeFormat(prefill)) setTimeout(submit, 50);
+    this.joinModal.markError = markError;
+    if (prefill) {
+      setValue(prefill);
+      if (isValidCodeFormat(normalizeCode(prefill))) setTimeout(submit, 50);
+    }
   }
 
   closeJoin() {
@@ -398,6 +522,7 @@ class App {
       this.net.send(C2S.NAME, { name: n });
       this.net.name = n;
       $('#menu-name').textContent = n;
+      $('#menu-rename').title = `${n} – Namen ändern`;
       m.close();
     };
     input.addEventListener('keydown', (e) => e.key === 'Enter' && save());
@@ -411,6 +536,7 @@ class App {
     if (!this.net.send(C2S.LEAVE)) this.pendingLeave = true;
     this.resetRoomState();
     this.goMenu();
+    this.updateRoomBanner();
   }
 
   /** „Raum verlassen“ aus den Einstellungen – mit Rückfrage. */
@@ -456,9 +582,16 @@ class App {
     render($('#lobby-p1'), m.players[1], 1);
     const me = m.players[m.you];
     const btn = $('#lobby-ready');
-    btn.textContent = me?.ready ? 'Nicht bereit' : 'Bereit!';
-    btn.classList.toggle('is-ready', !!me?.ready);
-    $('#lobby-deck-select').disabled = m.state === 'countdown';
+    const counting = m.state === 'countdown';
+    btn.textContent = counting ? 'Abbrechen' : me?.ready ? 'Nicht bereit' : 'Bereit!';
+    btn.className = `btn btn-big ${me?.ready && !counting ? 'btn-ghost' : counting ? 'btn-secondary' : 'btn-success'}`;
+    $('#lobby-deck-select').disabled = counting;
+    $('#lobby-copy').disabled = counting;
+    $('#lobby-share').disabled = counting;
+    $('.lobby-panel').classList.toggle('is-counting', counting);
+    const opp = m.players[1 - m.you];
+    $('#lobby-note').textContent = counting ? 'Gleich geht’s los …' : !opp ? '' : me?.ready && !opp.ready ? `Warte, bis ${opp.name} bereit ist …` : !me?.ready && opp.ready ? `${opp.name} ist bereit – du auch?` : '';
+    if (!counting) this.resetCountdown();
     clearInterval(this.expiryTimer);
     const full = m.players[0] && m.players[1];
     const end = Date.now() + m.expiresIn * 1000;
@@ -470,16 +603,22 @@ class App {
     this.expiryTimer = setInterval(upd, 1000);
   }
 
+  /** Countdown ersetzt das „VS“ zwischen den Spielerkarten – verdeckt nichts (B-04). */
   onCountdown(m) {
-    const el = $('#countdown');
-    if (m.n < 0) {
-      el.classList.remove('show');
-      return;
-    }
-    el.classList.add('show');
-    el.replaceChildren(h('span', {}, m.n > 0 ? String(m.n) : 'Los!'));
+    if (m.n < 0) return this.resetCountdown();
+    const vs = $('#lobby-vs');
+    vs.classList.add('counting');
+    $('.lobby-panel')?.classList.add('is-counting');
+    vs.replaceChildren(h('span', { class: 'count-num' }, m.n > 0 ? String(m.n) : 'Los!'));
     this.audio.sfx(m.n > 0 ? 'count' : 'go');
-    if (m.n === 0) setTimeout(() => el.classList.remove('show'), 800);
+  }
+
+  resetCountdown() {
+    const vs = $('#lobby-vs');
+    if (!vs) return;
+    vs.classList.remove('counting');
+    vs.replaceChildren(h('span', {}, 'VS'));
+    $('.lobby-panel')?.classList.remove('is-counting');
   }
 
   copyCode(share) {
@@ -491,7 +630,14 @@ class App {
       return;
     }
     const text = share ? link : code;
-    const done = () => toast(share ? 'Link kopiert!' : `Code ${code} kopiert!`, 'ok');
+    const btn = $(share ? '#lobby-share' : '#lobby-copy');
+    const done = () => {
+      const old = btn.textContent;
+      btn.textContent = 'Kopiert! ✓';
+      clearTimeout(this.copyTimer);
+      this.copyTimer = setTimeout(() => (btn.textContent = old === 'Kopiert! ✓' ? (share ? 'Link teilen' : 'Code kopieren') : old), 1600);
+      toast(share ? 'Link kopiert!' : `Code ${code} kopiert!`, 'ok');
+    };
     if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done, () => toast(text, 'info', 5000));
     else toast(text, 'info', 5000);
   }
@@ -509,23 +655,72 @@ class App {
     showScreen('s-loading');
     $('#load-me').textContent = m.names[m.side];
     $('#load-opp').textContent = m.names[1 - m.side];
-    $('#load-tip').textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
-    const bar = $('#load-bar');
-    bar.style.transform = 'scaleX(0)';
+    this.drawVsTowers();
+    this.startTips();
+    this.loadMatch(this.game, m);
+  }
+
+  /** Echter Ladefortschritt: Schrift, Kartenbilder (auch Graustufen) und Arena-Hintergrund vorbereiten. */
+  async loadMatch(game, m) {
     const t0 = performance.now();
-    const step = () => {
-      const k = Math.min(1, (performance.now() - t0) / 1400);
+    const bar = $('#load-bar');
+    const prog = $('#load-progress');
+    const status = $('#load-status');
+    const ids = (m.deck || []).filter(Boolean);
+    const jobs = [['Schrift', () => document.fonts?.ready]];
+    for (const id of ids) {
+      jobs.push(['Karten', () => cardArt(this.db, id, false)]);
+      jobs.push(['Karten', () => cardArtGray(this.db, id, false)]);
+      if (this.db.card(id)?.evo) jobs.push(['Karten', () => (cardArt(this.db, id, true), cardArtGray(this.db, id, true))]);
+    }
+    jobs.push(['Arena', () => game.prepare()]);
+    for (let i = 0; i < jobs.length; i++) {
+      if (this.game !== game) return;
+      status.textContent = `Lade ${jobs[i][0]} …`;
+      await jobs[i][1]();
+      const k = (i + 1) / jobs.length;
       bar.style.transform = `scaleX(${k})`;
-      if (k < 1) requestAnimationFrame(step);
-      else this.net.send(C2S.LOADED);
-    };
-    requestAnimationFrame(step);
+      prog.setAttribute('aria-valuenow', String(Math.round(k * 100)));
+      if (i % 3 === 2) await new Promise((r) => requestAnimationFrame(r));
+    }
+    if (this.game !== game) return;
+    status.textContent = m.training ? 'Bereit!' : 'Bereit! Warte auf deinen Gegner …';
+    // Die VS-Einblendung darf ausspielen (≈ 1,2 s), danach melden wir „geladen“
+    const wait = Math.max(0, 1200 - (performance.now() - t0));
+    setTimeout(() => this.game === game && this.net.send(C2S.LOADED), reducedMotion() ? 0 : wait);
+  }
+
+  /** Burgturm-Vorschau in Teamfarbe für den VS-Screen (kein Gegner-Deck, §4 Fairness). */
+  drawVsTowers() {
+    for (const [id, team] of [['#load-tower-me', 'blue'], ['#load-tower-opp', 'red']]) {
+      const cv = $(id);
+      const c = cv.getContext('2d');
+      c.clearRect(0, 0, cv.width, cv.height);
+      drawTower(c, { x: cv.width / 2, y: cv.height * 0.64, U: 46, king: true, team, t: 0, quality: 2 });
+    }
+  }
+
+  startTips() {
+    const el = $('#load-tip');
+    let i = Math.floor(Math.random() * TIPS.length);
+    el.textContent = TIPS[i];
+    el.classList.remove('fade');
+    clearInterval(this.tipTimer);
+    this.tipTimer = setInterval(() => {
+      if (currentScreen() !== 's-loading') return clearInterval(this.tipTimer);
+      el.classList.add('fade');
+      setTimeout(() => {
+        i = (i + 1) % TIPS.length;
+        el.textContent = TIPS[i];
+        el.classList.remove('fade');
+      }, 220);
+    }, 3200);
   }
 
   onMatchStart() {
     if (!this.game) return;
-    $('#countdown').classList.remove('show');
-    $('#game-menu').hidden = true;
+    clearInterval(this.tipTimer);
+    this.resetCountdown();
     showScreen('s-game');
     this.game.start();
     this.audio.music('battle');
@@ -564,6 +759,8 @@ class App {
     title.textContent = draw ? 'Unentschieden' : win ? 'Sieg!' : 'Niederlage';
     title.className = `result-title${draw ? ' draw' : win ? '' : ' lose'}`;
     $('#res-reason').textContent = m.reasonText + (m.training ? ' · Training' : '');
+    $('#res-sub').textContent = draw ? 'Gleichstand – Zeit für eine Revanche?' : win ? 'Stark gespielt!' : 'Knapp daneben – beim nächsten Mal klappt’s!';
+    $('#s-result').dataset.outcome = draw ? 'draw' : win ? 'win' : 'lose';
     $('#res-me').textContent = m.names[you] + ' (du)';
     $('#res-opp').textContent = m.names[opp];
     const crownSvg = (on, delay) => {
@@ -579,7 +776,7 @@ class App {
         if (i < n) {
           const delay = d;
           setTimeout(() => this.audio.sfx('crown', 0.7), delay * 1000);
-          d += 0.35;
+          d += 0.25;
         }
       }
     };
@@ -588,17 +785,29 @@ class App {
     document.querySelector('.res-side.red').classList.toggle('winner', m.winner === opp);
     document.querySelector('.res-side.blue').classList.toggle('winner', m.winner === you);
     const st = m.stats?.[you] || {};
-    $('#res-stats').replaceChildren(
-      h('div', { class: 'res-stat' }, h('b', {}, st.played ?? 0), 'Karten gespielt'),
-      h('div', { class: 'res-stat' }, h('b', {}, st.spent ?? 0), 'Elixier ausgegeben'),
-      h('div', { class: 'res-stat' }, h('b', {}, st.towerDamage ?? 0), 'Turmschaden'),
-    );
+    const stat = (v, label) => h('div', { class: 'res-stat' }, h('b', { class: 'num', dataset: { to: String(Math.round(v ?? 0)) } }, reducedMotion() ? Math.round(v ?? 0) : 0), label);
+    $('#res-stats').replaceChildren(stat(st.played, 'Karten gespielt'), stat(st.spent, 'Elixier ausgegeben'), stat(st.towerDamage, 'Turmschaden'));
+    if (!reducedMotion()) this.countUp($('#res-stats'), 600, d * 1000 + 200);
     const btn = $('#res-rematch');
     btn.disabled = !m.rematchAvailable;
     btn.textContent = '↻ Rematch';
     $('#res-rematch-status').textContent = m.rematchAvailable ? (m.training ? 'Der Bot ist jederzeit bereit.' : 'Beide müssen zustimmen.') : 'Dein Gegner hat den Raum verlassen.';
     showScreen('s-result');
-    if (win) this.confetti();
+    // Konfetti nur bei Sieg, ab Qualität „Mittel“ und ohne reduzierte Bewegung
+    if (win && this.settings.quality !== 'low' && !reducedMotion()) this.confetti();
+  }
+
+  /** Zahlen von 0 hochzählen (tabellarische Ziffern, 600 ms). */
+  countUp(root, ms, delay = 0) {
+    const els = [...root.querySelectorAll('[data-to]')];
+    const t0 = performance.now() + delay;
+    const tick = () => {
+      const k = Math.min(1, Math.max(0, (performance.now() - t0) / ms));
+      const e = 1 - Math.pow(1 - k, 3);
+      for (const el of els) el.textContent = String(Math.round(Number(el.dataset.to) * e));
+      if (k < 1 && currentScreen() === 's-result') requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   onRematchState(m) {

@@ -231,6 +231,7 @@ async function runViewport(browser, url, vp, report) {
   await step('beitreten', async () => {
     await page.click('#btn-join');
     await page.waitForSelector('.join-code-input, [data-code-input]');
+    await page.locator('.join-code-input, [data-code-input]').first().click();
     await page.keyboard.type('ZZZZZZ');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(400);
@@ -255,7 +256,7 @@ async function runViewport(browser, url, vp, report) {
   // ───── Training ─────
   await page.click('#btn-training');
   await page.waitForSelector('#s-lobby.active', { timeout: 8000 }).catch(() => log.push('keine Lobby'));
-  await page.waitForSelector('#countdown.show', { timeout: 3000 }).catch(() => {});
+  await page.waitForSelector('#countdown.show, #lobby-vs.counting', { timeout: 3000 }).catch(() => {});
   await shot('lobby-countdown', { noSettle: true, wait: 350 });
   await page.waitForSelector('#s-loading.active', { timeout: 8000 }).catch(() => log.push('kein Ladescreen'));
   await shot('laden', { noSettle: true, wait: 700 });
@@ -322,6 +323,7 @@ async function runViewport(browser, url, vp, report) {
     await shot('einstellungen-kampf');
     await page.keyboard.press('Escape');
     await page.waitForTimeout(200);
+    // Alter Stand: Dropdown-Menü wieder schließen
     await page.evaluate(() => document.getElementById('game-menu') && (document.getElementById('game-menu').hidden = true));
   });
   await step('letzte-10s', async () => {

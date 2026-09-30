@@ -26,32 +26,42 @@
       <div class="center-col">
         <div class="logo big" aria-hidden="true"><span class="logo-a">Turm</span><span class="logo-b">trubel</span></div>
         <p class="tagline">Das 1-gegen-1-Kartenduell um Türme, Kronen und Ruhm!</p>
-        <form class="panel name-panel" id="name-form" autocomplete="off">
+        <form class="panel name-panel" id="name-form" autocomplete="off" novalidate>
           <label for="name-input" class="panel-title">Wie heißt du?</label>
-          <input id="name-input" class="text-input" maxlength="16" placeholder="Dein Spielername" autocomplete="nickname" spellcheck="false">
+          <div class="input-wrap">
+            <input id="name-input" class="text-input" maxlength="16" placeholder="Dein Spielername" autocomplete="nickname" spellcheck="false" aria-describedby="name-count name-error">
+            <span class="input-count num" id="name-count" aria-live="polite">0/16</span>
+          </div>
           <p class="error" id="name-error" role="alert"></p>
-          <button class="btn btn-primary btn-big" type="submit">Los geht's!</button>
+          <button class="btn btn-primary btn-big" type="submit" id="name-go" aria-disabled="true">Los geht's!</button>
         </form>
       </div>
     </section>
 
     <!-- Hauptmenü -->
     <section class="screen" id="s-menu" aria-label="Hauptmenü">
-      <header class="topbar">
+      <header class="topbar menu-top">
         <div class="logo small" aria-hidden="true"><span class="logo-a">Turm</span><span class="logo-b">trubel</span></div>
         <div class="topbar-right">
+          <span id="conn-state" class="conn-state" role="status">verbinde…</span>
           <button class="chip" id="menu-rename" title="Namen ändern"><span class="chip-dot"></span><span id="menu-name" class="pill-text">Spieler</span> <span aria-hidden="true">✎</span></button>
           <button class="icon-btn" id="menu-settings" title="Einstellungen" aria-label="Einstellungen">⚙</button>
         </div>
       </header>
+      <div class="room-banner" id="menu-room-banner" role="status" hidden>
+        <span class="toast-ico" aria-hidden="true">!</span>
+        <span class="room-banner-text">Du bist noch in einem Raum.</span>
+        <button class="btn btn-small btn-danger" id="menu-room-leave">Raum verlassen</button>
+      </div>
       <main class="menu-main">
-        <div class="panel menu-actions">
+        <div class="panel menu-actions hero">
           <h2 class="panel-title">Freundschaftskampf</h2>
-          <button class="btn btn-primary btn-big" id="btn-create"><span class="ico" aria-hidden="true">⚔</span> Kampf erstellen</button>
-          <button class="btn btn-secondary btn-big" id="btn-join"><span class="ico" aria-hidden="true">🔑</span> Beitreten</button>
+          <p class="hero-sub">Fordere einen Freund heraus – ihr braucht nur einen 6-stelligen Code.</p>
+          <button class="btn btn-primary btn-big btn-hero" id="btn-create"><span class="ico" aria-hidden="true">⚔</span> Kampf erstellen</button>
+          <button class="btn btn-secondary btn-big" id="btn-join"><span class="ico" aria-hidden="true">🔑</span> Mit Code beitreten</button>
           <div class="divider"><span>oder</span></div>
           <button class="btn btn-success" id="btn-training"><span class="ico" aria-hidden="true">🎯</span> Training gegen Bot</button>
-          <p class="hint small">Erstelle einen Kampf und schicke deinem Freund den 6-stelligen Code.</p>
+          <p class="hint small">Sofort loslegen – ohne zweiten Spieler.</p>
         </div>
         <div class="panel menu-deck">
           <div class="deck-head">
@@ -60,10 +70,9 @@
           </div>
           <div class="mini-deck" id="menu-deck"></div>
           <div class="deck-meta" id="menu-deck-meta"></div>
-          <button class="btn btn-accent" id="btn-deckbuilder"><span class="ico" aria-hidden="true">🃏</span> Deck-Bauer</button>
+          <button class="btn btn-accent deck-cta" id="btn-deckbuilder"><span class="ico" aria-hidden="true">🃏</span> Deck-Bauer</button>
         </div>
       </main>
-      <footer class="menu-footer"><span id="conn-state" class="conn-state">verbinde…</span></footer>
     </section>
 
     <!-- Deck-Bauer -->
@@ -117,38 +126,52 @@
             <span class="code-label">Einladungscode</span>
             <span class="code" id="lobby-code">------</span>
             <div class="row">
-              <button class="btn btn-small btn-secondary" id="lobby-copy">Kopieren</button>
+              <button class="btn btn-small btn-secondary" id="lobby-copy">Code kopieren</button>
               <button class="btn btn-small btn-accent" id="lobby-share">Link teilen</button>
             </div>
             <span class="hint small" id="lobby-expiry"></span>
           </div>
           <div class="versus">
             <div class="player-card blue" id="lobby-p0"></div>
-            <div class="vs">VS</div>
+            <div class="vs" id="lobby-vs" aria-live="assertive"><span>VS</span></div>
             <div class="player-card red" id="lobby-p1"></div>
           </div>
-          <label class="lobby-deck">Dein Deck:
+          <label class="lobby-deck"><span>Dein Deck</span>
             <select id="lobby-deck-select" class="select"></select>
           </label>
-          <div class="row">
+          <div class="row wrap lobby-actions">
             <button class="btn btn-success btn-big" id="lobby-ready">Bereit!</button>
-            <button class="btn btn-danger" id="lobby-leave">Verlassen</button>
+            <button class="btn btn-ghost btn-ghost-danger" id="lobby-leave">Verlassen</button>
           </div>
+          <p class="hint small lobby-note" id="lobby-note" aria-live="polite"></p>
         </div>
       </div>
-      <div class="countdown" id="countdown" aria-live="assertive"></div>
+      <div class="countdown" id="countdown" hidden></div>
     </section>
 
     <!-- Ladebildschirm vor dem Kampf -->
     <section class="screen" id="s-loading" aria-label="Kampf wird geladen">
       <div class="vs-screen">
-        <div class="vs-side blue"><span class="vs-name" id="load-me">Du</span></div>
+        <div class="vs-side blue">
+          <div class="vs-card">
+            <canvas class="vs-tower" id="load-tower-me" width="180" height="200" aria-hidden="true"></canvas>
+            <span class="vs-emblem blue" aria-hidden="true">★</span>
+            <span class="vs-name" id="load-me">Du</span>
+          </div>
+        </div>
         <div class="vs-mid">VS</div>
-        <div class="vs-side red"><span class="vs-name" id="load-opp">Gegner</span></div>
+        <div class="vs-side red">
+          <div class="vs-card">
+            <canvas class="vs-tower" id="load-tower-opp" width="180" height="200" aria-hidden="true"></canvas>
+            <span class="vs-emblem red" aria-hidden="true">★</span>
+            <span class="vs-name" id="load-opp">Gegner</span>
+          </div>
+        </div>
       </div>
       <div class="load-bottom">
-        <div class="progress"><div class="bar" id="load-bar"></div></div>
-        <p class="hint" id="load-tip"></p>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="load-progress"><div class="bar" id="load-bar"></div></div>
+        <p class="hint load-status" id="load-status">Lade Arena …</p>
+        <p class="hint load-tip" id="load-tip" aria-live="polite"></p>
       </div>
     </section>
 
@@ -156,14 +179,7 @@
     <section class="screen" id="s-game" aria-label="Kampf">
       <canvas id="game-canvas"></canvas>
       <div class="game-ui">
-        <button class="icon-btn game-menu-btn" id="game-menu-btn" aria-label="Menü">≡</button>
-        <div class="game-menu" id="game-menu" hidden>
-          <button class="btn btn-small btn-secondary" id="gm-sound">🔊 Ton an</button>
-          <button class="btn btn-small btn-secondary" id="gm-music">🎵 Musik an</button>
-          <button class="btn btn-small btn-accent" id="gm-settings"><span class="ico" aria-hidden="true">⚙</span> Einstellungen</button>
-          <button class="btn btn-small btn-danger" id="gm-surrender"><span class="ico" aria-hidden="true">🏳</span> Aufgeben</button>
-          <p class="hint small">Tasten: 1–4 Karte · Leertaste Fähigkeit · E Emotes · Esc abbrechen</p>
-        </div>
+        <button class="icon-btn game-menu-btn" id="game-menu-btn" aria-label="Menü öffnen" aria-haspopup="dialog">≡</button>
       </div>
     </section>
 
@@ -173,6 +189,7 @@
       <div class="center-col result-col">
         <h1 class="result-title" id="res-title">Sieg!</h1>
         <p class="result-reason" id="res-reason"></p>
+        <p class="result-sub" id="res-sub"></p>
         <div class="result-board">
           <div class="res-side red"><span class="res-name" id="res-opp"></span><div class="res-crowns" id="res-crowns-opp"></div></div>
           <div class="res-side blue"><span class="res-name" id="res-me"></span><div class="res-crowns" id="res-crowns-me"></div></div>
