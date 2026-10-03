@@ -1542,19 +1542,376 @@ class Preview {
 /* =====================================================================
    KAMPF-ENGINE (läuft im Training lokal und im Multiplayer beim Host)
    ===================================================================== */
-const W = 1600, H = 1000, CX = W / 2, CY = H / 2;
-const PILLARS = [{ x: 420, y: 300, r: 44 }, { x: 1180, y: 300, r: 44 }, { x: 420, y: 700, r: 44 }, { x: 1180, y: 700, r: 44 }, { x: 800, y: 500, r: 58 }];
+/* =====================================================================
+   KARTE – Größe nach Spielerzahl, zufälliges Thema, Hindernisse aus Bausteinen
+   Jedes Match erzeugt das Training bzw. der Host eine neue Karte und schickt sie
+   den Gästen einmal mit der Start-Nachricht. Aufbau:
+   • Größe wächst mit der Spielerzahl (2–3 / 4–6 / 7–10 Spieler).
+   • Ein Thema (Ruinen, Kristallhöhle, Festung, Leuchthain) bestimmt Farben,
+     Bodenzonen und welche Bausteine wie oft vorkommen.
+   • Die Fläche wird in ein Raster geteilt; jede Zelle bekommt einen zufällig
+     gedrehten/gespiegelten Baustein (L-Mauer, Bunker, Säulen, Büsche, Abgrund …),
+     die Mitte ein Wahrzeichen mit freiem Innenraum (dort endet die Sturmzone).
+   • Eine Erreichbarkeitsprüfung (Flutfüllung auf dem Navigationsraster) stellt
+     sicher, dass alle Startpunkte verbunden sind – sonst neuer Versuch.
+   Hindernis-Arten (Flags: MV blockiert Bewegung, PJ Geschosse/Strahlen, LOS Sicht):
+     wall   hohe Mauer (Rechteck)          MV PJ LOS
+     pillar Säule/Kristall/Baum (Kreis)    MV PJ LOS
+     cover  niedrige Barrikade (Rechteck)  MV PJ  –   Deckung, man sieht darüber
+     pit    Abgrund/Teich                  MV  –   –   Umweg, man kann darüber schießen
+     bush   Busch                          –   –   –   verbirgt, wer darin steht
+   ===================================================================== */
+let W = 2400, H = 1500, CX = W / 2, CY = H / 2;
+let MAP = null, NAV = null;
+const OB = { MV: 1, PJ: 2, LOS: 4 };
+const OB_FLAGS = { wall: 7, pillar: 7, cover: 3, pit: 1, bush: 0 };
+const MAP_THEMES = [
+  { id: 'ruinen', n: 'Ruinen', bg: ['#141c3c', '#090d1f'], acc: '#7c8cff', acc2: '#3ee6ff', top: '#1a2248', bush: '#2dd4bf', pit: '#7c8cff', deco: ['#3ee6ff', '#7c8cff', '#a78bfa'],
+    w: { L: 3, line: 3, pillars: 2, bushes: 2, crates: 2, cross: 1, pit: 1, bunker: 1, plaza: 1 } },
+  { id: 'kristall', n: 'Kristallhöhle', bg: ['#1c1440', '#0b0920'], acc: '#c084fc', acc2: '#f0abfc', top: '#241650', bush: '#a78bfa', pit: '#e879f9', deco: ['#c084fc', '#f0abfc', '#38bdf8'],
+    w: { crystals: 4, pit: 3, line: 1, L: 1, bushes: 1, crates: 1, plaza: 1 } },
+  { id: 'festung', n: 'Festung', bg: ['#1d1830', '#0c0a16'], acc: '#fbbf24', acc2: '#fb923c', top: '#2a2036', bush: '#84cc16', pit: '#fb923c', deco: ['#fbbf24', '#fb923c', '#f87171'],
+    w: { bunker: 4, crates: 3, line: 2, L: 2, cross: 1, pit: 1, bushes: 1 } },
+  { id: 'hain', n: 'Leuchthain', bg: ['#0f2027', '#07121a'], acc: '#4ade80', acc2: '#a3e635', top: '#12302a', bush: '#22c55e', pit: '#38bdf8', deco: ['#4ade80', '#38bdf8', '#a3e635'],
+    w: { grove: 4, bushes: 4, L: 1, line: 1, pit: 1, pillars: 1 } },
+];
+function mkRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const WALL_T = 26;
+// Bausteine in Zell-Koordinaten (Mitte 0,0; s = halbe Zellgröße). Rechtecke mittig (x,y = Zentrum).
+function scatterIn(R, s, n, minD, make) {
+  const out = [];
+  for (let k = 0; k < n * 12 && out.length < n; k++) { const x = (R() * 2 - 1) * s * .72, y = (R() * 2 - 1) * s * .72; if (out.every(o => Math.hypot(o.x - x, o.y - y) >= minD)) out.push(Object.assign(make(), { x, y })); }
+  return out;
+}
+const PREFABS = {
+  L: (s, R) => { const a = s * .42; return [{ k: 'wall', x: -a + s * .45, y: -a, w: s * .9, h: WALL_T }, { k: 'wall', x: -a, y: -a + s * .4, w: WALL_T, h: s * .8 }, ...(R() < .5 ? [{ k: 'cover', x: s * .3, y: s * .3, w: 56, h: 56 }] : [])]; },
+  line: (s, R) => { const g = 80 + R() * 40, l1 = s * (.55 + R() * .3), l2 = Math.max(60, s * 1.7 - l1 - g); return [{ k: 'wall', x: -s * .85 + l1 / 2, y: 0, w: l1, h: WALL_T }, { k: R() < .5 ? 'wall' : 'cover', x: s * .85 - l2 / 2, y: 0, w: l2, h: WALL_T + 4 }]; },
+  cross: s => { const a = s * .5, l = s * .5; return [{ k: 'wall', x: -a, y: 0, w: l, h: WALL_T }, { k: 'wall', x: a, y: 0, w: l, h: WALL_T }, { k: 'wall', x: 0, y: -a, w: WALL_T, h: l }, { k: 'cover', x: 0, y: a, w: WALL_T + 6, h: l * .8 }]; },
+  pillars: (s, R) => scatterIn(R, s, 2 + (R() * 3 | 0), 130, () => ({ k: 'pillar', r: 30 + R() * 16 })),
+  crystals: (s, R) => scatterIn(R, s, 3 + (R() * 3 | 0), 95, () => ({ k: 'pillar', r: 20 + R() * 22, cr: 1 })),
+  grove: (s, R) => [...scatterIn(R, s, 2 + (R() * 2 | 0), 150, () => ({ k: 'pillar', r: 24 + R() * 12, tree: 1 })), ...scatterIn(R, s * .9, 1 + (R() * 2 | 0), 170, () => ({ k: 'bush', r: 62 + R() * 30 }))],
+  bushes: (s, R) => [...scatterIn(R, s, 2 + (R() * 2 | 0), 160, () => ({ k: 'bush', r: 58 + R() * 34 })), ...(R() < .6 ? [{ k: 'cover', x: (R() - .5) * s, y: (R() - .5) * s, w: 60, h: 60 }] : [])],
+  crates: (s, R) => scatterIn(R, s, 3 + (R() * 2 | 0), 120, () => { const q = 46 + R() * 24; return R() < .5 ? { k: 'cover', w: q, h: q } : { k: 'cover', w: q * 1.7, h: q * .7 }; }),
+  bunker: s => { const a = s * .42, t = 30; return [{ k: 'cover', x: 0, y: -a, w: s * .95, h: t }, { k: 'cover', x: -s * .46, y: -a + s * .25, w: t, h: s * .5 }, { k: 'cover', x: s * .46, y: -a + s * .25, w: t, h: s * .5 }, { k: 'wall', x: 0, y: s * .38, w: s * .42, h: WALL_T }]; },
+  pit: (s, R) => R() < .5 ? [{ k: 'pit', x: 0, y: 0, w: s * (.9 + R() * .45), h: s * (.38 + R() * .2) }, { k: 'cover', x: 0, y: -s * .58, w: 74, h: 30 }] : [{ k: 'pit', x: 0, y: 0, r: s * (.3 + R() * .13) }, ...scatterIn(R, s, 2, 220, () => ({ k: 'cover', w: 52, h: 52 })).filter(o => Math.hypot(o.x, o.y) > s * .55)],
+  plaza: (s, R) => R() < .5 ? [{ k: 'pillar', x: 0, y: 0, r: 34 }] : [],
+};
+// Wahrzeichen in der Mitte (Innenraum bleibt frei – dort endet die Sturmzone)
+const LANDMARKS = {
+  ruinen: () => { const a = 250, l = 230; return [{ k: 'wall', x: 0, y: -a, w: l, h: WALL_T }, { k: 'wall', x: 0, y: a, w: l, h: WALL_T }, { k: 'wall', x: -a, y: 0, w: WALL_T, h: l }, { k: 'wall', x: a, y: 0, w: WALL_T, h: l },
+    ...[1, 3, 5, 7].map(i => ({ k: 'pillar', x: Math.cos(i * Math.PI / 4) * 345, y: Math.sin(i * Math.PI / 4) * 345, r: 28 }))]; },
+  kristall: () => [...[0, 1, 2, 3, 4, 5].map(i => ({ k: 'pillar', cr: 1, x: Math.cos(i * TAU / 6 + .5) * 270, y: Math.sin(i * TAU / 6 + .5) * 270, r: 30 + (i % 2) * 10 })), { k: 'pit', x: -470, y: 0, r: 80 }, { k: 'pit', x: 470, y: 0, r: 80 }],
+  festung: () => { const a = 240, seg = 150, o = 105; const out = []; for (const sg of [-1, 1]) { out.push({ k: 'cover', x: sg * o, y: -a, w: seg, h: 30 }, { k: 'cover', x: sg * o, y: a, w: seg, h: 30 }, { k: 'cover', x: -a, y: sg * o, w: 30, h: seg }, { k: 'cover', x: a, y: sg * o, w: 30, h: seg }); }
+    for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) out.push({ k: 'pillar', x: sx * a, y: sy * a, r: 36 }); return out; },
+  hain: () => [...[0, 1, 2, 3, 4].map(i => ({ k: 'bush', x: Math.cos(i * TAU / 5) * 250, y: Math.sin(i * TAU / 5) * 250, r: 74 })), ...[0, 1, 2].map(i => ({ k: 'pillar', tree: 1, x: Math.cos(i * TAU / 3 + .6) * 400, y: Math.sin(i * TAU / 3 + .6) * 400, r: 34 }))],
+};
+function mapSizeFor(n) { return n <= 3 ? [2200, 1400] : n <= 6 ? [2600, 1650] : [3000, 1900]; }
+// Rohform (mittig) -> gespeicherte Form (Rechteck: x,y = linke obere Ecke)
+function finalizeOb(o) {
+  const ob = { k: o.k, f: OB_FLAGS[o.k] };
+  if (o.r) Object.assign(ob, { x: Math.round(o.x), y: Math.round(o.y), r: Math.round(o.r) }); else Object.assign(ob, { x: Math.round(o.x - o.w / 2), y: Math.round(o.y - o.h / 2), w: Math.round(o.w), h: Math.round(o.h) });
+  if (o.cr) ob.cr = 1; if (o.tree) ob.tree = 1;
+  return ob;
+}
+function obBox(o) { return o.r ? [o.x - o.r, o.y - o.r, o.x + o.r, o.y + o.r] : [o.x, o.y, o.x + o.w, o.y + o.h]; }
+function genMap(n, seed) {
+  for (let tryN = 0; tryN < 10; tryN++) {
+    const m = genMapTry(n, (seed + tryN * 7919) >>> 0);
+    if (m.ok) return m;
+  }
+  return genMapTry(n, seed, true);
+}
+function genMapTry(n, seed, force) {
+  const R = mkRng(seed), [mw, mh] = mapSizeFor(n), theme = MAP_THEMES[Math.floor(R() * MAP_THEMES.length)];
+  const cx = mw / 2, cy = mh / 2, raw = [];
+  const place = (list, ox, oy, q, mx) => { for (const o of list) { let x = o.x * mx, y = o.y; for (let i = 0; i < q; i++) [x, y] = [-y, x]; const p = Object.assign({}, o, { x: ox + x, y: oy + y }); if (!o.r && q % 2) [p.w, p.h] = [o.h, o.w]; raw.push(p); } };
+  place(LANDMARKS[theme.id](), cx, cy, Math.floor(R() * 4), R() < .5 ? 1 : -1);
+  const cols = Math.max(3, Math.round(mw / 430)), rows = Math.max(2, Math.round(mh / 430)), cw = mw / cols, ch = mh / rows, s = Math.min(cw, ch) / 2;
+  const keys = Object.keys(theme.w), tot = keys.reduce((a, k) => a + theme.w[k], 0);
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const x0 = (i + .5) * cw, y0 = (j + .5) * ch;
+    if (Math.hypot(x0 - cx, y0 - cy) < 360) continue;
+    let pf = 'plaza';
+    if (R() > .1) { let r = R() * tot; for (const k of keys) { r -= theme.w[k]; if (r <= 0) { pf = k; break; } } }
+    place(PREFABS[pf](s, R), x0 + (R() - .5) * cw * .22, y0 + (R() - .5) * ch * .22, Math.floor(R() * 4), R() < .5 ? 1 : -1);
+  }
+  // Startpunkte auf einer Ellipse; Umgebung freiräumen
+  const spawns = [], off = R() * TAU;
+  for (let i = 0; i < Math.max(n, 2); i++) { const a = off + i / Math.max(n, 2) * TAU; spawns.push([Math.round(cx + Math.cos(a) * mw * .36), Math.round(cy + Math.sin(a) * mh * .34)]); }
+  let obs = raw.map(finalizeOb).filter(o => { const b = obBox(o); return b[0] >= 46 && b[1] >= 46 && b[2] <= mw - 46 && b[3] <= mh - 46; });
+  const near = (o, x, y, d) => { if (o.r) return Math.hypot(o.x - x, o.y - y) < o.r + d; const px = clamp(x, o.x, o.x + o.w), py = clamp(y, o.y, o.y + o.h); return Math.hypot(x - px, y - py) < d; };
+  obs = obs.filter(o => !spawns.some(([x, y]) => near(o, x, y, o.k === 'bush' ? 70 : 95)) && !(o.f & OB.MV && near(o, cx, cy, 150)));
+  // Bodenzonen (Farbflecken) für Abwechslung
+  const deco = []; for (let i = 0; i < Math.round(mw * mh / 260000); i++) deco.push({ x: Math.round(R() * mw), y: Math.round(R() * mh), r: Math.round(160 + R() * 260), c: Math.floor(R() * theme.deco.length), p: Math.floor(R() * 3) });
+  const m = { v: 1, seed, theme: theme.id, w: mw, h: mh, obs, spawns, deco };
+  m.ok = force || mapConnected(m);
+  return m;
+}
+// Karte aktivieren (Training, Host und Gast)
+function setMap(m) {
+  MAP = m; MAP.th = MAP_THEMES.find(t => t.id === m.theme) || MAP_THEMES[0];
+  W = m.w; H = m.h; CX = W / 2; CY = H / 2; MAP.storm0 = Math.ceil(Math.hypot(W, H) / 2) + 30;
+  MAP.solid = MAP.obs.filter(o => o.f); MAP.bushes = MAP.obs.filter(o => o.k === 'bush');
+  for (const o of MAP.obs) { const b = obBox(o); o.bx1 = b[0]; o.by1 = b[1]; o.bx2 = b[2]; o.by2 = b[3]; }
+  NAV = null; FLOOR = null; MINI = null; if (DECAL.c) { DECAL.c = null; }
+}
+function mapForNet(m) { return { v: m.v, seed: m.seed, theme: m.theme, w: m.w, h: m.h, obs: m.obs.map(o => { const q = { k: o.k, f: o.f, x: o.x, y: o.y }; if (o.r) q.r = o.r; else { q.w = o.w; q.h = o.h; } if (o.cr) q.cr = 1; if (o.tree) q.tree = 1; return q; }), spawns: m.spawns, deco: m.deco }; }
+
+/* ---------- Geometrie: Kollision, Strahl- und Sichtprüfung ---------- */
+// Punkt aus allen Hindernissen mit Flag `mask` (und aus dem Kartenrand) schieben
+function obsPush(x, y, r, mask = OB.MV) {
+  if (MAP) for (let it = 0; it < 2; it++) for (const o of MAP.solid) {
+    if (!(o.f & mask) || x + r < o.bx1 || x - r > o.bx2 || y + r < o.by1 || y - r > o.by2) continue;
+    if (o.r) { const dx = x - o.x, dy = y - o.y, d = Math.hypot(dx, dy), m = o.r + r; if (d < m) { if (d < 1e-3) { x += m; continue; } x = o.x + dx / d * m; y = o.y + dy / d * m; } continue; }
+    const px = clamp(x, o.x, o.x + o.w), py = clamp(y, o.y, o.y + o.h), dx = x - px, dy = y - py, d2v = dx * dx + dy * dy;
+    if (d2v >= r * r) continue;
+    if (d2v > 1e-6) { const d = Math.sqrt(d2v); x += dx / d * (r - d); y += dy / d * (r - d); }
+    else { const l = x - o.x, rr = o.x + o.w - x, t = y - o.y, b = o.y + o.h - y, mn = Math.min(l, rr, t, b); if (mn === l) x = o.x - r; else if (mn === rr) x = o.x + o.w + r; else if (mn === t) y = o.y - r; else y = o.y + o.h + r; }
+  }
+  return [clamp(x, r, W - r), clamp(y, r, H - r)];
+}
+// Abstand eines Punkts zum nächsten Hindernis mit Flag (negativ = innen)
+function obsDist(x, y, mask) {
+  let best = 1e9; if (!MAP) return best;
+  for (const o of MAP.solid) { if (!(o.f & mask)) continue; let d; if (o.r) d = Math.hypot(x - o.x, y - o.y) - o.r; else { const dx = Math.max(o.x - x, 0, x - o.x - o.w), dy = Math.max(o.y - y, 0, y - o.y - o.h); d = dx || dy ? Math.hypot(dx, dy) : -Math.min(x - o.x, o.x + o.w - x, y - o.y, o.y + o.h - y); } if (d < best) best = d; }
+  return best;
+}
+// Erster Treffer einer Strecke mit Hindernissen (Flag mask, um pad aufgeblasen): {t (0..1), nx, ny} oder null
+function rayObs(x1, y1, x2, y2, mask, pad = 0) {
+  if (!MAP) return null;
+  const dx = x2 - x1, dy = y2 - y1, mnx = Math.min(x1, x2) - pad, mxx = Math.max(x1, x2) + pad, mny = Math.min(y1, y2) - pad, mxy = Math.max(y1, y2) + pad;
+  let best = null;
+  for (const o of MAP.solid) {
+    if (!(o.f & mask) || o.bx1 > mxx || o.bx2 < mnx || o.by1 > mxy || o.by2 < mny) continue;
+    if (o.r) {
+      const fx = x1 - o.x, fy = y1 - o.y, rr = o.r + pad, a = dx * dx + dy * dy, b = 2 * (fx * dx + fy * dy), c = fx * fx + fy * fy - rr * rr;
+      if (c <= 0) { const d = Math.hypot(fx, fy) || 1; if (!best || 0 < best.t) best = { t: 0, nx: fx / d, ny: fy / d }; continue; }
+      const disc = b * b - 4 * a * c; if (disc < 0 || a === 0) continue;
+      const t = (-b - Math.sqrt(disc)) / (2 * a);
+      if (t >= 0 && t <= 1 && (!best || t < best.t)) { const hx = x1 + dx * t - o.x, hy = y1 + dy * t - o.y, d = Math.hypot(hx, hy) || 1; best = { t, nx: hx / d, ny: hy / d }; }
+    } else {
+      const ax = o.x - pad, ay = o.y - pad, bx = o.x + o.w + pad, by = o.y + o.h + pad;
+      let tmin = 0, tmax = 1, nx = 0, ny = 0;
+      if (Math.abs(dx) < 1e-9) { if (x1 < ax || x1 > bx) continue; }
+      else { let t1 = (ax - x1) / dx, t2 = (bx - x1) / dx, n = -1; if (t1 > t2) { [t1, t2] = [t2, t1]; n = 1; } if (t1 > tmin) { tmin = t1; nx = n; ny = 0; } tmax = Math.min(tmax, t2); if (tmin > tmax) continue; }
+      if (Math.abs(dy) < 1e-9) { if (y1 < ay || y1 > by) continue; }
+      else { let t1 = (ay - y1) / dy, t2 = (by - y1) / dy, n = -1; if (t1 > t2) { [t1, t2] = [t2, t1]; n = 1; } if (t1 > tmin) { tmin = t1; nx = 0; ny = n; } tmax = Math.min(tmax, t2); if (tmin > tmax) continue; }
+      if (!nx && !ny) { const l = Math.hypot(dx, dy) || 1; nx = -dx / l; ny = -dy / l; } // Start innerhalb
+      if (!best || tmin < best.t) best = { t: tmin, nx, ny };
+    }
+  }
+  return best;
+}
+const segClear = (x1, y1, x2, y2, mask, pad = 0) => !rayObs(x1, y1, x2, y2, mask, pad);
+function inBush(x, y) { if (!MAP) return null; for (const b of MAP.bushes) if (Math.hypot(x - b.x, y - b.y) < b.r - 6) return b; return null; }
+// Sieht `a` den Kämpfer `t`? (Mauern/Säulen verdecken; im Busch verborgen, außer nah oder gerade aufgedeckt)
+function canSee(a, t) {
+  if (!t || t.team === a.team) return true;
+  const d = Math.hypot(t.x - a.x, t.y - a.y); if (d < 130) return true;
+  if (!((t.fl || 0) & FL.rev) && !(t.revT > 0) && inBush(t.x, t.y)) return false;
+  if (segClear(a.x, a.y, t.x, t.y, OB.LOS)) return true;
+  const px = -(t.y - a.y) / d * t.r * .8, py = (t.x - a.x) / d * t.r * .8;
+  return segClear(a.x, a.y, t.x + px, t.y + py, OB.LOS) || segClear(a.x, a.y, t.x - px, t.y - py, OB.LOS);
+}
+
+/* ---------- Navigation (Bots): Raster + A* + Wegglättung ---------- */
+function buildNav() {
+  const cs = 32, cols = Math.ceil(W / cs), rows = Math.ceil(H / cs), g = new Uint8Array(cols * rows);
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { const x = (i + .5) * cs, y = (j + .5) * cs; g[j * cols + i] = x < 24 || y < 24 || x > W - 24 || y > H - 24 || obsDist(x, y, OB.MV) < 22 ? 1 : 0; }
+  NAV = { cs, cols, rows, g };
+  return NAV;
+}
+function mapConnected(m) {
+  const keep = [MAP, W, H, CX, CY]; MAP = m; W = m.w; H = m.h; CX = W / 2; CY = H / 2; MAP.solid = m.obs.filter(o => o.f); MAP.bushes = []; for (const o of m.obs) { const b = obBox(o); o.bx1 = b[0]; o.by1 = b[1]; o.bx2 = b[2]; o.by2 = b[3]; }
+  const N = buildNav(), seen = new Uint8Array(N.g.length), cell = (x, y) => clamp(y / N.cs | 0, 0, N.rows - 1) * N.cols + clamp(x / N.cs | 0, 0, N.cols - 1);
+  let ok = true;
+  const start = navFree(cell(CX, CY)); const st = [start]; seen[start] = 1; let cnt = 1;
+  while (st.length) { const c = st.pop(), ci = c % N.cols, cj = c / N.cols | 0; for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const ni = ci + di, nj = cj + dj; if (ni < 0 || nj < 0 || ni >= N.cols || nj >= N.rows) continue; const k = nj * N.cols + ni; if (seen[k] || N.g[k]) continue; seen[k] = 1; cnt++; st.push(k); } }
+  const free = N.g.reduce((a, v) => a + (v ? 0 : 1), 0);
+  if (cnt < free * .95) ok = false;
+  for (const [x, y] of m.spawns) if (!seen[navFree(cell(x, y))]) ok = false;
+  [MAP, W, H, CX, CY] = keep; NAV = null;
+  return ok;
+}
+function navFree(c) {
+  const N = NAV; if (!N.g[c]) return c;
+  const ci = c % N.cols, cj = c / N.cols | 0;
+  for (let r = 1; r < 8; r++) for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) { const ni = ci + di, nj = cj + dj; if (ni < 0 || nj < 0 || ni >= N.cols || nj >= N.rows) continue; const k = nj * N.cols + ni; if (!N.g[k]) return k; }
+  return c;
+}
+function navPath(x1, y1, x2, y2) {
+  const N = NAV || buildNav(), cs = N.cs, C = N.cols;
+  const cell = (x, y) => clamp(y / cs | 0, 0, N.rows - 1) * C + clamp(x / cs | 0, 0, C - 1);
+  const s = navFree(cell(x1, y1)), e = navFree(cell(x2, y2)); if (s === e) return [[x2, y2]];
+  const g = new Float32Array(N.g.length).fill(1e9), from = new Int32Array(N.g.length).fill(-1), closed = new Uint8Array(N.g.length);
+  const ex = e % C, ey = e / C | 0, hf = k => { const dx = Math.abs(k % C - ex), dy = Math.abs((k / C | 0) - ey); return (dx + dy) + (Math.SQRT2 - 2) * Math.min(dx, dy); };
+  const heap = [[hf(s), s]]; g[s] = 0; let it = 0, found = false;
+  const push = n => { heap.push(n); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+  while (heap.length && it++ < 9000) {
+    const [, c] = pop(); if (closed[c]) continue; closed[c] = 1; if (c === e) { found = true; break; }
+    const ci = c % C, cj = c / C | 0;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+      if (!di && !dj) continue; const ni = ci + di, nj = cj + dj; if (ni < 0 || nj < 0 || ni >= C || nj >= N.rows) continue;
+      const k = nj * C + ni; if (N.g[k] || closed[k]) continue;
+      if (di && dj && (N.g[cj * C + ni] || N.g[nj * C + ci])) continue; // keine Ecken schneiden
+      const ng = g[c] + (di && dj ? Math.SQRT2 : 1); if (ng < g[k]) { g[k] = ng; from[k] = c; push([ng + hf(k), k]); }
+    }
+  }
+  if (!found) return null;
+  const pts = []; for (let c = e; c !== -1 && c !== s; c = from[c]) pts.push([(c % C + .5) * cs, ((c / C | 0) + .5) * cs]);
+  pts.reverse(); pts.push([x2, y2]);
+  // Wegglättung: nur Punkte behalten, die nicht direkt erreichbar sind
+  const out = []; let px = x1, py = y1;
+  for (let i = 0; i < pts.length; i++) { const nx = pts[i + 1]; if (nx && segClear(px, py, nx[0], nx[1], OB.MV, 20)) continue; out.push(pts[i]); px = pts[i][0]; py = pts[i][1]; }
+  return out;
+}
+function randomFreePoint(R = Math.random) { const N = NAV || buildNav(); for (let i = 0; i < 40; i++) { const k = Math.floor(R() * N.g.length); if (!N.g[k]) return [(k % N.cols + .5) * N.cs, ((k / N.cols | 0) + .5) * N.cs]; } return [CX, CY]; }
+
+/* ---------- Darstellung der Karte ---------- */
+let FLOOR = null, MINI = null;
+function buildFloor() {
+  const T = MAP.th, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const g = x.createRadialGradient(CX, CY, 60, CX, CY, Math.hypot(W, H) * .55); g.addColorStop(0, T.bg[0]); g.addColorStop(1, T.bg[1]);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  // Bodenzonen: weiche Farbflächen mit eigenem Muster (Raster, Ringe, Rauten)
+  for (const d of MAP.deco) {
+    const col = T.deco[d.c % T.deco.length], gg = x.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r); gg.addColorStop(0, rgba(col, .075)); gg.addColorStop(1, rgba(col, 0));
+    x.fillStyle = gg; circ(x, d.x, d.y, d.r); x.fill();
+    x.save(); circ(x, d.x, d.y, d.r * .85); x.clip(); x.strokeStyle = rgba(col, .07); x.lineWidth = 1.5;
+    if (d.p === 0) { for (let r = 30; r < d.r; r += 34) { circ(x, d.x, d.y, r); x.stroke(); } }
+    else if (d.p === 1) { x.beginPath(); for (let i = -d.r; i < d.r; i += 26) { x.moveTo(d.x + i, d.y - d.r); x.lineTo(d.x + i + d.r, d.y + d.r * 0); x.moveTo(d.x + i, d.y + d.r); x.lineTo(d.x + i + d.r, d.y); } x.stroke(); }
+    else { const s = 34; for (let yy = d.y - d.r; yy < d.y + d.r; yy += s * .87) for (let xx = d.x - d.r + ((yy / (s * .87) | 0) % 2) * s / 2; xx < d.x + d.r; xx += s) { x.beginPath(); for (let i = 0; i < 6; i++) { const a = i * TAU / 6; x.lineTo(xx + Math.cos(a) * s * .45, yy + Math.sin(a) * s * .45); } x.closePath(); x.stroke(); } }
+    x.restore();
+  }
+  x.strokeStyle = rgba(T.acc, .05); x.lineWidth = 1;
+  for (let i = 50; i < W; i += 50) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
+  for (let i = 50; i < H; i += 50) { x.beginPath(); x.moveTo(0, i); x.lineTo(W, i); x.stroke(); }
+  x.strokeStyle = rgba(T.acc, .1); x.lineWidth = 2; x.setLineDash([12, 14]); circ(x, CX, CY, 150); x.stroke(); circ(x, CX, CY, 520); x.stroke(); x.setLineDash([]);
+  x.strokeStyle = rgba(T.acc2, .07); x.lineWidth = 1; for (let i = 0; i < 12; i++) { const a = i * TAU / 12; x.beginPath(); x.moveTo(CX + Math.cos(a) * 90, CY + Math.sin(a) * 90); x.lineTo(CX + Math.cos(a) * 150, CY + Math.sin(a) * 150); x.stroke(); }
+  // Abgründe/Teiche (Teil des Bodens) und Schlagschatten der hohen Elemente
+  for (const o of MAP.obs) {
+    if (o.k === 'pit') {
+      x.save(); obPath(x, o, 0); x.fillStyle = '#020309'; x.fill();
+      const cx2 = o.r ? o.x : o.x + o.w / 2, cy2 = o.r ? o.y : o.y + o.h / 2, rr = o.r || Math.max(o.w, o.h) / 2;
+      const pg = x.createRadialGradient(cx2, cy2, 0, cx2, cy2, rr); pg.addColorStop(0, rgba(T.pit, .16)); pg.addColorStop(1, rgba(T.pit, .02)); x.fillStyle = pg; x.fill();
+      x.clip(); x.strokeStyle = rgba(T.pit, .1); x.lineWidth = 2; for (let i = 0; i < 4; i++) { obPath(x, o, -10 - i * 14); x.stroke(); }
+      x.restore(); x.save(); obPath(x, o, 0); x.strokeStyle = rgba(T.pit, .75); x.lineWidth = 3; x.shadowColor = T.pit; x.shadowBlur = 16; x.stroke(); x.restore();
+    } else if (o.f & OB.MV) { x.save(); x.translate(7, 10); obPath(x, o, 2); x.fillStyle = 'rgba(0,0,0,.38)'; x.fill(); x.restore(); }
+  }
+  const cm = (cx2, cy2, sx, sy) => { x.strokeStyle = rgba(T.acc, .35); x.lineWidth = 3; x.beginPath(); x.moveTo(cx2 + sx * 60, cy2); x.lineTo(cx2, cy2); x.lineTo(cx2, cy2 + sy * 60); x.stroke(); };
+  cm(14, 14, 1, 1); cm(W - 14, 14, -1, 1); cm(14, H - 14, 1, -1); cm(W - 14, H - 14, -1, -1);
+  return c;
+}
+// Umriss eines Hindernisses (inset > 0 verkleinert)
+function obPath(x, o, inset = 0) {
+  x.beginPath();
+  if (o.r) { const r = Math.max(2, o.r - inset); if (o.cr) { for (let i = 0; i < 6; i++) { const a = i * TAU / 6 + (o.x % 7); const rr = r * (i % 2 ? .82 : 1.05); x.lineTo(o.x + Math.cos(a) * rr, o.y + Math.sin(a) * rr); } x.closePath(); } else if (o.k === 'pillar' && !o.tree) { for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + Math.PI / 8; x.lineTo(o.x + Math.cos(a) * r, o.y + Math.sin(a) * r); } x.closePath(); } else x.arc(o.x, o.y, r, 0, TAU); }
+  else { const i2 = Math.min(inset, o.w / 2 - 1, o.h / 2 - 1); x.rect(o.x + i2, o.y + i2, o.w - 2 * i2, o.h - 2 * i2); }
+}
+// Hohe/feste Elemente (Mauern, Säulen, Barrikaden) – nur sichtbare zeichnen
+function drawObstacles(x, V, t) {
+  if (!MAP) return; const T = MAP.th;
+  for (const o of MAP.solid) {
+    if (o.k === 'pit' || o.bx2 < V.x0 || o.bx1 > V.x1 || o.by2 < V.y0 || o.by1 > V.y1) continue;
+    if (o.k === 'wall') {
+      obPath(x, o, 0); x.fillStyle = T.top; x.fill();
+      x.strokeStyle = rgba(T.acc, .18); x.lineWidth = 8; x.stroke(); x.strokeStyle = rgba(T.acc, .85); x.lineWidth = 2; x.stroke();
+      x.strokeStyle = rgba(T.acc2, .22); x.lineWidth = 1.5; obPath(x, o, 7); x.stroke();
+    } else if (o.k === 'cover') {
+      obPath(x, o, 0); x.fillStyle = mix(T.top, '#000000', .25); x.fill(); x.strokeStyle = rgba(T.acc2, .6); x.lineWidth = 2; x.stroke();
+      x.save(); obPath(x, o, 3); x.clip(); x.strokeStyle = rgba(T.acc2, .16); x.lineWidth = 5; x.beginPath(); for (let i = -o.h; i < o.w + o.h; i += 16) { x.moveTo(o.x + i, o.y); x.lineTo(o.x + i - o.h, o.y + o.h); } x.stroke(); x.restore();
+    } else if (o.k === 'pillar') {
+      if (o.tree) {
+        x.fillStyle = mix(T.top, '#000000', .2); circ(x, o.x, o.y, o.r); x.fill();
+        for (let i = 0; i < 5; i++) { const a = i * TAU / 5 + o.x, sw = Math.sin(t * 1.3 + i + o.y) * 2; x.fillStyle = rgba(T.bush, .5 + (i % 2) * .2); circ(x, o.x + Math.cos(a) * o.r * .45 + sw, o.y + Math.sin(a) * o.r * .45, o.r * .62); x.fill(); }
+        x.strokeStyle = rgba(T.acc, .75); x.lineWidth = 2; circ(x, o.x, o.y, o.r); x.stroke(); x.fillStyle = rgba(T.acc2, .9); circ(x, o.x, o.y, 4); x.fill();
+      } else {
+        obPath(x, o, 0); x.fillStyle = o.cr ? mix(T.top, T.acc, .18) : T.top; x.fill();
+        x.strokeStyle = rgba(T.acc, .2); x.lineWidth = 8; x.stroke(); x.strokeStyle = rgba(o.cr ? T.acc2 : T.acc, .85); x.lineWidth = 2.2; x.stroke();
+        if (o.cr) { x.strokeStyle = rgba('#ffffff', .25); x.lineWidth = 1.2; x.beginPath(); x.moveTo(o.x - o.r * .4, o.y - o.r * .5); x.lineTo(o.x + o.r * .1, o.y + o.r * .1); x.lineTo(o.x + o.r * .5, o.y - o.r * .2); x.stroke(); }
+        else { x.strokeStyle = rgba(T.acc2, .25); x.lineWidth = 1.5; circ(x, o.x, o.y, o.r * .55); x.stroke(); }
+      }
+    }
+  }
+}
+// Buschkronen über den Kämpfern; der eigene Busch wird durchscheinend
+function drawBushes(x, V, t, local) {
+  if (!MAP) return; const T = MAP.th, own = local && local.alive ? inBush(local.x, local.y) : null;
+  for (const b of MAP.bushes) {
+    if (b.bx2 < V.x0 || b.bx1 > V.x1 || b.by2 < V.y0 || b.by1 > V.y1) continue;
+    const al = b === own ? .42 : .94, n = 7;
+    x.globalAlpha = al; x.fillStyle = mix(T.bush, '#03140f', .62);
+    for (let i = 0; i < n; i++) { const a = i * TAU / n + b.x * .01, sw = Math.sin(t * 1.6 + i * 1.7 + b.y) * 2.5; circ(x, b.x + Math.cos(a) * b.r * .5 + sw, b.y + Math.sin(a) * b.r * .5, b.r * .55); x.fill(); }
+    circ(x, b.x, b.y, b.r * .6); x.fill();
+    x.globalAlpha = al * .9; x.strokeStyle = rgba(T.bush, .55); x.lineWidth = 2;
+    for (let i = 0; i < n; i++) { const a = i * TAU / n + b.x * .01, sw = Math.sin(t * 1.6 + i * 1.7 + b.y) * 2.5; x.beginPath(); x.arc(b.x + Math.cos(a) * b.r * .5 + sw, b.y + Math.sin(a) * b.r * .5, b.r * .55, a - 1.1, a + 1.1); x.stroke(); }
+    x.fillStyle = rgba(T.bush, .5); for (let i = 0; i < 5; i++) { const a = i * 2.4 + b.x; circ(x, b.x + Math.cos(a) * b.r * .45, b.y + Math.sin(a) * b.r * .4, 2.2); x.fill(); }
+    x.globalAlpha = 1;
+  }
+}
+// Sichtschatten: Bereiche hinter hohen Elementen (vom eigenen Spieler aus) abdunkeln
+function drawShadows(x, px, py, V) {
+  if (!MAP) return; const FAR = 4000; x.beginPath(); let any = false;
+  const quad = (ax, ay, bx, by) => { const la = Math.hypot(ax - px, ay - py) || 1, lb = Math.hypot(bx - px, by - py) || 1; x.moveTo(ax, ay); x.lineTo(ax + (ax - px) / la * FAR, ay + (ay - py) / la * FAR); x.lineTo(bx + (bx - px) / lb * FAR, by + (by - py) / lb * FAR); x.lineTo(bx, by); x.closePath(); any = true; };
+  const m = 900;
+  for (const o of MAP.solid) {
+    if (!(o.f & OB.LOS) || o.bx2 < V.x0 - m || o.bx1 > V.x1 + m || o.by2 < V.y0 - m || o.by1 > V.y1 + m) continue;
+    if (o.r) {
+      const dx = o.x - px, dy = o.y - py, d = Math.hypot(dx, dy); if (d <= o.r + 1) continue;
+      const a = Math.atan2(dy, dx), h = Math.asin(o.r / d), L = Math.sqrt(d * d - o.r * o.r);
+      quad(px + Math.cos(a - h) * L, py + Math.sin(a - h) * L, px + Math.cos(a + h) * L, py + Math.sin(a + h) * L);
+    } else {
+      if (px > o.x && px < o.x + o.w && py > o.y && py < o.y + o.h) continue;
+      const cs = [[o.x, o.y], [o.x + o.w, o.y], [o.x + o.w, o.y + o.h], [o.x, o.y + o.h]], ca = Math.atan2(o.y + o.h / 2 - py, o.x + o.w / 2 - px);
+      let lo = null, hi = null, alo = 9, ahi = -9;
+      for (const c of cs) { const a = angDiff(ca, Math.atan2(c[1] - py, c[0] - px)); if (a < alo) { alo = a; lo = c; } if (a > ahi) { ahi = a; hi = c; } }
+      quad(lo[0], lo[1], hi[0], hi[1]);
+    }
+  }
+  if (any) { x.fillStyle = 'rgba(2,4,12,.62)'; x.fill('nonzero'); }
+}
+// Minikarte (Grundriss einmal vorgerendert)
+function buildMini(wpx) {
+  const s = wpx / W, c = document.createElement('canvas'), d = 2; c.width = Math.ceil(W * s * d); c.height = Math.ceil(H * s * d);
+  const x = c.getContext('2d'), T = MAP.th; x.setTransform(s * d, 0, 0, s * d, 0, 0);
+  x.fillStyle = 'rgba(8,11,26,.86)'; x.fillRect(0, 0, W, H);
+  for (const o of MAP.obs) { obPath(x, o, 0); x.fillStyle = o.k === 'bush' ? rgba(T.bush, .35) : o.k === 'pit' ? 'rgba(0,0,0,.9)' : o.k === 'cover' ? rgba(T.acc2, .55) : rgba(T.acc, .9); x.fill(); }
+  x.strokeStyle = rgba(T.acc, .7); x.lineWidth = 2 / s; x.strokeRect(0, 0, W, H);
+  return { c, w: wpx, s };
+}
+
+/* ---------- Kamera: folgt dem eigenen Spieler, nach dem Ausscheiden Übersicht ---------- */
+function updateCamera(dt, local) {
+  const L = RD.L; if (!L || !L.area) return;
+  const A = L.area, aw = Math.max(50, A.r - A.l), ah = Math.max(50, A.b - A.t), acx = (A.l + A.r) / 2, acy = (A.t + A.b) / 2;
+  const fit = Math.min(aw / W, ah / H) * .97, follow = !!(local && local.alive && MATCH.mode);
+  let ts, tx, ty;
+  if (follow) {
+    ts = Math.max(fit, L.camS || 1);
+    const look = 70; tx = local.x + Math.cos(local.ang || 0) * look; ty = local.y + Math.sin(local.ang || 0) * look;
+    const hw = aw / 2 / ts, hh2 = ah / 2 / ts, m = 120;
+    tx = W + 2 * m <= 2 * hw ? CX : clamp(tx, hw - m, W - hw + m); ty = H + 2 * m <= 2 * hh2 ? CY : clamp(ty, hh2 - m, H - hh2 + m);
+  } else { ts = fit; tx = CX; ty = CY; }
+  let c = RD.cam; if (!c || !isFinite(c.x)) c = RD.cam = { x: tx, y: ty, s: ts };
+  const kp = 1 - Math.exp(-Math.min(dt, .1) * 6.5), ks = 1 - Math.exp(-Math.min(dt, .1) * 2.6);
+  c.x += (tx - c.x) * kp; c.y += (ty - c.y) * kp; c.s += (ts - c.s) * ks;
+  RD.scale = c.s; RD.ox = acx - c.x * c.s; RD.oy = acy - c.y * c.s;
+  const cw = RD.cw || RD.c.clientWidth, chh = RD.ch || RD.c.clientHeight;
+  RD.view = { x0: -RD.ox / c.s, y0: -RD.oy / c.s, x1: (cw - RD.ox) / c.s, y1: (chh - RD.oy) / c.s };
+}
+
 const SHAPES = ['orb', 'drop', 'rock', 'crescent', 'knife', 'shard', 'petal', 'vine', 'blob', 'spike', 'note', 'wave', 'gear', 'bolt', 'feather', 'void', 'rune', 'web', 'star', 'skull', 'scythe', 'tornado', 'yin', 'dice', 'bone', 'spear', 'square', 'leaf', 'sun', 'ring', 'penrose', 'coin'];
 const ZSTY = ['', 'water', 'gas', 'ice', 'electric', 'flower', 'mist', 'sand', 'spore', 'lava', 'storm', 'fire', 'wind', 'void', 'time', 'aurora', 'web', 'holy', 'snow', 'roots', 'nebula', 'serpent', 'life'];
 const KINDS = ['player', 'minion', 'decoy', 'turret', 'twin'];
 const NEG = ['slow', 'stun', 'freeze', 'root', 'silence', 'confuse', 'fear', 'burn', 'poison', 'bleed', 'plague', 'weaken', 'vuln', 'shred', 'anti', 'invh', 'mark', 'chill', 'charge', 'amber', 'doom', 'stolen'];
-const FL = { stun: 1, freeze: 2, slow: 4, burn: 8, poison: 16, bleed: 32, root: 64, silence: 128, shield: 256, inv: 512, stealth: 1024, weaken: 2048, vuln: 4096, confuse: 8192, haste: 16384, mark: 32768, intang: 65536, fear: 1 << 17, dmgUp: 1 << 18, reflect: 1 << 19, anti: 1 << 20, plague: 1 << 21, doom: 1 << 22, stasis: 1 << 23, cheat: 1 << 24, form: 1 << 25, karma: 1 << 26, thorns: 1 << 27, chill: 1 << 28, invDmg: 1 << 29 };
+const FL = { stun: 1, freeze: 2, slow: 4, burn: 8, poison: 16, bleed: 32, root: 64, silence: 128, shield: 256, inv: 512, stealth: 1024, weaken: 2048, vuln: 4096, confuse: 8192, haste: 16384, mark: 32768, intang: 65536, fear: 1 << 17, dmgUp: 1 << 18, reflect: 1 << 19, anti: 1 << 20, plague: 1 << 21, doom: 1 << 22, stasis: 1 << 23, cheat: 1 << 24, form: 1 << 25, karma: 1 << 26, thorns: 1 << 27, chill: 1 << 28, invDmg: 1 << 29, rev: 1 << 30 }; // rev = im Busch aufgedeckt (angegriffen/getroffen)
 const ORB_GAIN = { rad: 58, r: 6, spd: 3.2, dmg: 4, life: 10, hitCd: 0.5 };
 let WD = null; // aktuelle Welt
 
 function newWorld(opt = {}) {
   return { t: 0, ft: 0, f: [], p: [], z: [], tr: [], wl: [], ob: [], te: [], tl: [], po: [], sch: [], id: 1,
-    phase: 'count', cd: 3, stormT: opt.stormT ?? 40, stormDur: opt.stormDur ?? 70, storm0: 990, stormR: 990, stormMin: 45, stormTick: 0,
+    phase: 'count', cd: 3, stormT: opt.stormT ?? 40, stormDur: opt.stormDur ?? 70, storm0: MAP ? MAP.storm0 : 990, stormR: MAP ? MAP.storm0 : 990, stormMin: 45, stormTick: 0,
     endT: 0, winner: null, net: !!opt.net, out: [], opt };
 }
 function emit(ev) { VFX.handle(ev); if (WD && WD.net) WD.out.push(ev); }
@@ -1566,7 +1923,7 @@ function distToSeg(px, py, x1, y1, x2, y2) {
   const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy; let t = l2 ? ((px - x1) * dx + (py - y1) * dy) / l2 : 0; t = clamp(t, 0, 1);
   return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
-function clampArena(x, y, r = 20) { x = clamp(x, r, W - r); y = clamp(y, r, H - r); for (const p of PILLARS) { const dx = x - p.x, dy = y - p.y, d = Math.hypot(dx, dy), m = p.r + r; if (d < m) { x = p.x + dx / (d || 1) * m; y = p.y + dy / (d || 1) * m; } } return [x, y]; }
+function clampArena(x, y, r = 20) { return obsPush(clamp(x, r, W - r), clamp(y, r, H - r), r); }
 function aimClamp(f, ax, ay, rng) { const dx = ax - f.x, dy = ay - f.y, d = Math.hypot(dx, dy); if (d > rng) { ax = f.x + dx / d * rng; ay = f.y + dy / d * rng; } return [clamp(ax, 10, W - 10), clamp(ay, 10, H - 10)]; }
 const visible = t => !t.s.stealth;
 function nearestEnemy(x, y, team, maxD = 9999, needVis = true, filter) {
@@ -1628,7 +1985,7 @@ function damage(src, tgt, amt, o = {}) {
   try { return damageInner(src, tgt, amt, o); } finally { DMG_DEPTH--; }
 }
 function damageInner(src, tgt, amt, o) {
-  const s = tgt.s;
+  const s = tgt.s; if (!o.dot) tgt.revT = Math.max(tgt.revT || 0, .8);
   if (immune(tgt)) { if (!o.dot && !o.quiet) { if (WD.t - (tgt.immT || 0) > .4) { tgt.immT = WD.t; txt(tgt, 'IMMUN', pal('#fbbf24')); } } return 0; }
   amt *= inMul(tgt);
   if (s.invDmg) { if (o.dot !== 'invh') heal(tgt, amt); return 0; }
@@ -1808,11 +2165,12 @@ function stepWorld(dt) {
   for (const f of w.f) { f.fl = flagsOf(f); f.chan = 0; }
   for (const z of w.z) if (z.m.channel && z.o.alive && z.delay <= 0) z.o.chan = z.m.channel;
 }
-function flagsOf(f) { let b = 0; for (const k in f.s) if (FL[k]) b |= FL[k]; if (f.shield > 0) b |= FL.shield; return b; }
+function flagsOf(f) { let b = 0; for (const k in f.s) if (FL[k]) b |= FL[k]; if (f.shield > 0) b |= FL.shield; if (f.revT > 0) b |= FL.rev; return b; }
 function updateFighter(f, dt) {
   if (!f.alive) return;
   tickStatus(f, dt); if (!f.alive) return;
   if (f.shT > 0) { f.shT -= dt; if (f.shT <= 0) { f.shield = 0; f.sburst = null; } }
+  if (f.revT > 0) f.revT -= dt;
   if (f.life) { f.life -= dt; if (f.life <= 0) { f.alive = false; emit(['b', f.x | 0, f.y | 0, AURAS[f.aura].ci1, 10, 120, 3, f.aura]); if (f.sm && f.sm.pop) explode(f, f.x, f.y, f.sm.pop); return; } }
   f.r = f.r0 * (f.s.grow ? 1.35 : 1) * (f.form ? f.form.size : 1);
   const regMul = f.s.enr ? 2 : 1;
@@ -1858,7 +2216,7 @@ function collide(f) {
   const r = f.r;
   if (f.x < r || f.x > W - r) f.vx = 0; if (f.y < r || f.y > H - r) f.vy = 0;
   f.x = clamp(f.x, r, W - r); f.y = clamp(f.y, r, H - r);
-  for (const p of PILLARS) { const dx = f.x - p.x, dy = f.y - p.y, d = Math.hypot(dx, dy), m = r + p.r; if (d < m) { const k = (m - d) / (d || 1); f.x += dx * k; f.y += dy * k; } }
+  [f.x, f.y] = obsPush(f.x, f.y, r);
   for (const w of WD.wl) {
     const dx = w.x2 - w.x1, dy = w.y2 - w.y1, l2 = dx * dx + dy * dy; let t = clamp(((f.x - w.x1) * dx + (f.y - w.y1) * dy) / l2, 0, 1);
     const cx = w.x1 + t * dx, cy = w.y1 + t * dy, ex = f.x - cx, ey = f.y - cy, d = Math.hypot(ex, ey), m = r + 7;
@@ -1905,7 +2263,7 @@ function updateProj(p, dt) {
     if (p.back) { const o = p.o; if (o.alive) { const dx = o.x - p.x, dy = o.y - p.y, l = Math.hypot(dx, dy) || 1, s = Math.hypot(p.vx, p.vy); p.vx = dx / l * s; p.vy = dy / l * s; if (l < o.r + 10) { p.dead = true; return; } } else { p.dead = true; return; } if (p.age > p.life * 2.6) { p.dead = true; return; } }
   }
   if (m.grow) p.r += m.grow * dts;
-  const s = Math.hypot(p.vx, p.vy) || 1;
+  const s = Math.hypot(p.vx, p.vy) || 1, px0 = p.x, py0 = p.y;
   p.x += p.vx * dts; p.y += p.vy * dts; p.dist += s * dts;
   if (m.wob || p.hx) { const amp = m.wob || 18, off = Math.sin(p.age * (m.wob ? 13 : 9) + (p.hx === 1 ? Math.PI : 0)) * amp * Math.min(1, p.age * 6); const nx = -p.vy / s, ny = p.vx / s; p.x += nx * (off - p.off); p.y += ny * (off - p.off); p.off = off; }
   if (m.pa) for (const t of WD.f) { if (!t.alive || t.team === p.team || t.kind === 'turret' || t.s.grow) continue; const dx = p.x - t.x, dy = p.y - t.y, dd = Math.hypot(dx, dy); if (dd < 110 && dd > 5) { const k = Math.min(dd, m.pa * dt); t.x += dx / dd * k; t.y += dy / dd * k; } }
@@ -1913,9 +2271,12 @@ function updateProj(p, dt) {
   let hitWall = false;
   if (p.x < p.r || p.x > W - p.r) { if (p.bounce > 0) { p.vx = -p.vx; p.x = clamp(p.x, p.r, W - p.r); p.bounce--; if (m.chaos) rotV(p, rand(-0.9, 0.9)); p.hit.clear(); } else hitWall = true; }
   if (p.y < p.r || p.y > H - p.r) { if (p.bounce > 0) { p.vy = -p.vy; p.y = clamp(p.y, p.r, H - p.r); p.bounce--; if (m.chaos) rotV(p, rand(-0.9, 0.9)); p.hit.clear(); } else hitWall = true; }
-  for (const pl of PILLARS) {
-    const dx = p.x - pl.x, dy = p.y - pl.y, dd = Math.hypot(dx, dy);
-    if (dd < pl.r + p.r) { if (p.bounce > 0) { const nx = dx / dd, ny = dy / dd, dp = p.vx * nx + p.vy * ny; p.vx -= 2 * dp * nx; p.vy -= 2 * dp * ny; p.x = pl.x + nx * (pl.r + p.r + 1); p.y = pl.y + ny * (pl.r + p.r + 1); p.bounce--; if (m.chaos) rotV(p, rand(-0.9, 0.9)); } else hitWall = true; }
+  // Mauern, Säulen und Barrikaden: abprallen (falls möglich) oder einschlagen; Abgründe und Büsche lassen Geschosse durch
+  const oh = rayObs(px0, py0, p.x, p.y, OB.PJ, p.r * .7);
+  if (oh) {
+    const hx = px0 + (p.x - px0) * oh.t, hy = py0 + (p.y - py0) * oh.t;
+    if (p.bounce > 0) { const dp = p.vx * oh.nx + p.vy * oh.ny; if (dp < 0) { p.vx -= 2 * dp * oh.nx; p.vy -= 2 * dp * oh.ny; } p.x = hx + oh.nx * 2; p.y = hy + oh.ny * 2; p.bounce--; if (m.chaos) rotV(p, rand(-0.9, 0.9)); p.hit.clear(); }
+    else { p.x = hx; p.y = hy; hitWall = true; }
   }
   if (hitWall) { if (m.grapple && p.o.alive) grappleTo(p.o, p.x, p.y); endProj(p); return; }
   for (const w of WD.wl) {
@@ -2136,7 +2497,7 @@ function tryCast(f, i) {
   const res = cast(f, m, f.inp.ax, f.inp.ay, ctx);
   if (res === false) { f.cds[i] = 0.4; return false; }
   f.en -= cost; if (hpc) { f.hp -= hpc; f.dotAcc += hpc; }
-  f.cds[i] = m.cd;
+  f.cds[i] = m.cd; f.revT = 1.2; // Angreifen deckt im Busch auf
   if (i > 0) {
     if (hadEcho && f.echoNext) { f.echoNext = false; sched(0.3, () => { if (f.alive) { txt(f, 'ECHO!', AURAS[f.aura].ci2v); cast(f, m, f.inp.ax, f.inp.ay, { slot: i }); } }); }
     if (f.s.cycle) { for (let j = 1; j < 4; j++) if (j !== i) f.cds[j] = Math.max(0, f.cds[j] - 2); heal(f, 6); }
@@ -2204,10 +2565,14 @@ function beamSegs(x, y, ang, len, refl) {
   const segs = []; let dx = Math.cos(ang), dy = Math.sin(ang), rem = len;
   for (let i = 0; i <= refl && rem > 0; i++) {
     const tx = dx > 0 ? (W - x) / dx : dx < 0 ? -x / dx : Infinity, ty = dy > 0 ? (H - y) / dy : dy < 0 ? -y / dy : Infinity;
-    const t = Math.max(0, Math.min(tx, ty, rem)); const nx = x + dx * t, ny = y + dy * t;
-    segs.push([x, y, nx, ny]); rem -= t; x = nx; y = ny;
+    let t = Math.max(0, Math.min(tx, ty, rem));
+    const oh = rayObs(x, y, x + dx * t, y + dy * t, OB.PJ, 0), onObs = oh && oh.t * t < t - .5;
+    if (onObs) t = oh.t * t;
+    const nx = x + dx * t, ny = y + dy * t;
+    segs.push([x, y, nx, ny]); rem -= Math.max(t, 1); x = nx; y = ny;
     if (rem <= 0 || i === refl) break;
-    if (tx < ty) dx = -dx; else dy = -dy;
+    if (onObs) { const dp = dx * oh.nx + dy * oh.ny; dx -= 2 * dp * oh.nx; dy -= 2 * dp * oh.ny; x += oh.nx * 2; y += oh.ny * 2; }
+    else if (tx < ty) dx = -dx; else dy = -dy;
   }
   return segs;
 }
@@ -2347,10 +2712,10 @@ function castTrap(f, m, ax, ay) {
 function castChain(f, m, ax, ay, ctx) {
   const a = AURAS[f.aura], ang = Math.atan2(ay - f.y, ax - f.x);
   let best = null, bs = 1e9;
-  for (const t of WD.f) { if (!t.alive || t.team === f.team || !visible(t)) continue; const dx = t.x - f.x, dy = t.y - f.y, d = Math.hypot(dx, dy); if (d > m.rng + t.r) continue; const da = Math.abs(angDiff(ang, Math.atan2(dy, dx))); if (da > 0.65) continue; const sc = d * (1 + da * 2); if (sc < bs) { bs = sc; best = t; } }
+  for (const t of WD.f) { if (!t.alive || t.team === f.team || !visible(t) || !segClear(f.x, f.y, t.x, t.y, OB.PJ)) continue; const dx = t.x - f.x, dy = t.y - f.y, d = Math.hypot(dx, dy); if (d > m.rng + t.r) continue; const da = Math.abs(angDiff(ang, Math.atan2(dy, dx))); if (da > 0.65) continue; const sc = d * (1 + da * 2); if (sc < bs) { bs = sc; best = t; } }
   if (!best) { emit(['L', f.x | 0, f.y | 0, (f.x + Math.cos(ang) * m.rng * .6) | 0, (f.y + Math.sin(ang) * m.rng * .6) | 0, 3, f.aura, VISB[m.vis] || 1]); return; }
   let cur = best, x = f.x, y = f.y, mul = 1; const hit = new Set();
-  for (let j = 0; j <= m.jumps && cur; j++) { emit(['L', x | 0, y | 0, cur.x | 0, cur.y | 0, 6, f.aura, VISB[m.vis] || 1]); hitWith(f, cur, m, ctx, x, y, mul); hit.add(cur.id); x = cur.x; y = cur.y; mul *= m.decay || .75; cur = nearestEnemy(x, y, f.team, m.jr, true, t => !hit.has(t.id)); }
+  for (let j = 0; j <= m.jumps && cur; j++) { emit(['L', x | 0, y | 0, cur.x | 0, cur.y | 0, 6, f.aura, VISB[m.vis] || 1]); hitWith(f, cur, m, ctx, x, y, mul); hit.add(cur.id); x = cur.x; y = cur.y; mul *= m.decay || .75; cur = nearestEnemy(x, y, f.team, m.jr, true, t => !hit.has(t.id) && segClear(x, y, t.x, t.y, OB.PJ)); }
 }
 function castWall(f, m, ax, ay) {
   const a = AURAS[f.aura], ang = f.ang; let cx, cy;
@@ -2589,12 +2954,25 @@ class Bot {
     const f = this.f; let best = null, bs = 1e9;
     for (const t of WD.f) {
       if (!t.alive || t.team === f.team) continue;
-      const d = Math.hypot(t.x - f.x, t.y - f.y); if (!visible(t) && d > 90) continue;
-      let sc = d * (this.melee ? 1.4 : 1) + (t.kind === 'minion' ? 260 : t.kind === 'turret' ? 360 : 0) + (this.diff === 2 && !this.melee ? (t.hp / t.mhp) * 160 : 0);
+      const d = Math.hypot(t.x - f.x, t.y - f.y); if (d > 1500 || (!visible(t) && d > 90)) continue;
+      const seen = canSee(f, t); // Mauern und Büsche verdecken auch für Bots
+      if (!seen && !(this.mem && this.mem.id === t.id && WD.t - this.mem.t < 3)) continue;
+      let sc = d * (this.melee ? 1.4 : 1) + (seen ? 0 : 240) + (t.kind === 'minion' ? 260 : t.kind === 'turret' ? 360 : 0) + (this.diff === 2 && !this.melee ? (t.hp / t.mhp) * 160 : 0);
       if (t === this.tgt) sc -= 80;
       if (sc < bs) { bs = sc; best = t; }
     }
-    this.tgt = best;
+    this.tgt = best; this.los = best ? canSee(f, best) : false;
+    if (best && this.los) this.mem = { id: best.id, x: best.x, y: best.y, t: WD.t };
+  }
+  // Bewegungsrichtung zu einem Ziel: direkt, wenn frei, sonst entlang eines A*-Pfads um Hindernisse
+  navDir(gx, gy, dt) {
+    const f = this.f;
+    if (segClear(f.x, f.y, gx, gy, OB.MV, f.r + 2)) { this.path = null; const d = Math.hypot(gx - f.x, gy - f.y) || 1; return [(gx - f.x) / d, (gy - f.y) / d]; }
+    this.pathT = (this.pathT || 0) - dt;
+    if (!this.path || this.pathT <= 0 || Math.hypot(this.pathGoal[0] - gx, this.pathGoal[1] - gy) > 120) { this.path = navPath(f.x, f.y, gx, gy) || []; this.pathT = .9 + Math.random() * .4; this.pathGoal = [gx, gy]; }
+    while (this.path.length && Math.hypot(this.path[0][0] - f.x, this.path[0][1] - f.y) < 30) this.path.shift();
+    if (this.path.length > 1 && segClear(f.x, f.y, this.path[1][0], this.path[1][1], OB.MV, f.r)) this.path.shift();
+    const p = this.path[0] || [gx, gy], d = Math.hypot(p[0] - f.x, p[1] - f.y) || 1; return [(p[0] - f.x) / d, (p[1] - f.y) / d];
   }
   update(dt) {
     const f = this.f; if (!f.alive) return;
@@ -2607,9 +2985,11 @@ class Bot {
     const f = this.f; this.pickTarget(); const t = this.tgt; f.inp.b = 0; this.noise = rand(-1, 1) * this.err;
     if (!t || WD.phase !== 'fight') return;
     const d = Math.hypot(t.x - f.x, t.y - f.y), hpP = f.hp / f.mhp; let away = false;
+    const los = this.los, clear = los && segClear(f.x, f.y, t.x, t.y, OB.PJ, 4), shotKind = k => k === 'proj' || k === 'beam' || k === 'chain';
     for (let i = 1; i < 4; i++) {
       const o = this.mv[i], m = o.m;
       if (f.cds[i] > 0 || f.en < m.c || f.s.silence || (m.hp && f.hp < m.hp + 15) || Math.random() > this.use) continue;
+      if ((!los && o.cls !== 'def') || (o.cls === 'atk' && shotKind(m.k) && !clear)) continue; // nur mit Sicht bzw. freier Schusslinie
       let go = false;
       switch (o.cls) {
         case 'atk': go = d <= o.rng + t.r + 10 && (!m.req || t.s[m.req]) && (m.k !== 'detonate' || WD.f.some(e => e.alive && e.team !== f.team && e.s[m.status])); break;
@@ -2625,30 +3005,43 @@ class Bot {
       if (go) { f.inp.b |= 1 << i; if (away) this.escape = 0.4; break; }
     }
     const m0 = this.mv[0];
-    if (!away && d <= m0.rng + t.r + 8 && f.en >= m0.m.c + (this.diff && f.en < 40 ? 16 : 0) && (!m0.m.hp || hpP > 0.35 || d < 200)) f.inp.b |= 1;
+    if (!away && los && (!shotKind(m0.m.k) || clear) && d <= m0.rng + t.r + 8 && f.en >= m0.m.c + (this.diff && f.en < 40 ? 16 : 0) && (!m0.m.hp || hpP > 0.35 || d < 200)) f.inp.b |= 1;
     if (this.diff === 0 && Math.random() < 0.3) f.inp.b &= ~1;
   }
   steer(dt) {
     const f = this.f, t = this.tgt; let vx = 0, vy = 0;
     if (WD.phase === 'count') { f.inp.mx = f.inp.my = 0; return; }
-    if (t) {
+    if (t && this.los) {
       const dx = t.x - f.x, dy = t.y - f.y, d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
       const want = f.hp / f.mhp < 0.3 && this.diff > 0 ? Math.max(this.pref, 300) : this.pref;
       const k = clamp((d - want) / 120, -1, 1);
       const cced = t.s && (t.s.stun || t.s.root || t.s.freeze || t.s.stasis);
       const sf = this.melee ? (d > 130 || cced ? 0.1 : 0.55) : 0.75, kk = this.melee && k > 0 ? 1.6 : (k < 0 && this.diff < 2 ? k * 0.7 : k);
-      vx += nx * kk + -ny * this.strafe * sf; vy += ny * kk + nx * this.strafe * sf;
+      if (k > 0 && !segClear(f.x, f.y, t.x, t.y, OB.MV, f.r + 2)) { const nd = this.navDir(t.x, t.y, dt); vx += nd[0] * 1.3; vy += nd[1] * 1.3; } // Weg um Hindernisse
+      else { vx += nx * kk + -ny * this.strafe * sf; vy += ny * kk + nx * this.strafe * sf; }
       let ax = t.x, ay = t.y; const sp = this.mv[0].m.spd;
       if (sp && t.mv) { const tt = d / sp; ax += t.inp.mx * t.cspd * tt * this.lead; ay += t.inp.my * t.cspd * tt * this.lead; }
       if (this.escape > 0) { this.escape -= dt; f.inp.ax = f.x - nx * 220; f.inp.ay = f.y - ny * 220; }
       else { const ang = Math.atan2(ay - f.y, ax - f.x) + this.noise, ad = Math.hypot(ax - f.x, ay - f.y); f.inp.ax = f.x + Math.cos(ang) * ad; f.inp.ay = f.y + Math.sin(ang) * ad; }
     } else {
-      const dx = this.wander.x - f.x, dy = this.wander.y - f.y, d = Math.hypot(dx, dy) || 1;
-      if (d < 40) this.wander = { x: rand(250, W - 250), y: rand(180, H - 180) };
-      vx += dx / d * .6; vy += dy / d * .6;
+      // kein sichtbares Ziel: zur letzten bekannten Position oder ein freies Ziel innerhalb der Zone ansteuern
+      let gx, gy;
+      if (t && this.mem && this.mem.id === t.id) { gx = this.mem.x; gy = this.mem.y; if (Math.hypot(gx - f.x, gy - f.y) < 50) this.mem = null; }
+      else {
+        if (!this.wander || Math.hypot(this.wander.x - f.x, this.wander.y - f.y) < 60 || Math.hypot(this.wander.x - CX, this.wander.y - CY) > WD.stormR * .85) { let q = randomFreePoint(); for (let i = 0; i < 10 && Math.hypot(q[0] - CX, q[1] - CY) > Math.max(120, WD.stormR * .75); i++) q = randomFreePoint(); this.wander = { x: q[0], y: q[1] }; }
+        gx = this.wander.x; gy = this.wander.y;
+      }
+      const nd = this.navDir(gx, gy, dt); vx += nd[0] * .9; vy += nd[1] * .9; f.inp.ax = f.x + nd[0] * 200; f.inp.ay = f.y + nd[1] * 200;
     }
     const dc = Math.hypot(f.x - CX, f.y - CY) || 1; if (dc > WD.stormR - 90) { vx += (CX - f.x) / dc * 2.2; vy += (CY - f.y) / dc * 2.2; }
-    for (const p of PILLARS) { const dx = f.x - p.x, dy = f.y - p.y, d = Math.hypot(dx, dy) || 1; if (d < p.r + f.r + 34) { vx += dx / d * 1.2; vy += dy / d * 1.2; } }
+    for (const o of MAP.solid) { // Abstand zu Hindernissen halten
+      if (!(o.f & OB.MV) || o.bx1 > f.x + 70 || o.bx2 < f.x - 70 || o.by1 > f.y + 70 || o.by2 < f.y - 70) continue;
+      const px = o.r ? o.x : clamp(f.x, o.x, o.x + o.w), py = o.r ? o.y : clamp(f.y, o.y, o.y + o.h), dx = f.x - px, dy = f.y - py, dd = Math.hypot(dx, dy) || 1, gap = dd - (o.r || 0) - f.r;
+      if (gap < 24) { const kk = (1 - Math.max(0, gap) / 24) * .8; vx += dx / dd * kk; vy += dy / dd * kk; }
+    }
+    // festgefahren? kurz seitlich ausweichen und neu planen
+    this.stk = (this.stk || 0) + dt; if (this.stk > 1.1) { if (Math.hypot(f.x - (this.sx ?? f.x + 99), f.y - (this.sy ?? f.y)) < 14 && Math.hypot(vx, vy) > .3) { this.path = null; this.wander = null; this.unstuck = .5; this.ux = -vy; this.uy = vx; } this.stk = 0; this.sx = f.x; this.sy = f.y; }
+    if (this.unstuck > 0) { this.unstuck -= dt; vx += this.ux * 1.4; vy += this.uy * 1.4; }
     if (f.x < 70) vx += 1; if (f.x > W - 70) vx -= 1; if (f.y < 70) vy += 1; if (f.y > H - 70) vy -= 1;
     if (Math.random() < this.dodge) {
       for (const p of WD.p) { if (p.team === f.team) continue; const dx = f.x - p.x, dy = f.y - p.y, dd = Math.hypot(dx, dy); if (dd > 240 || dd < 1) continue; const s = Math.hypot(p.vx, p.vy) || 1; if ((dx * p.vx + dy * p.vy) / (dd * s) < 0.85) continue; const side = (p.vx * dy - p.vy * dx) > 0 ? 1 : -1; vx += -p.vy / s * side * 1.7; vy += p.vx / s * side * 1.7; break; }
@@ -2691,7 +3084,7 @@ const fxInfo = ai => FX_INFO[ai] || FX_NONE;
 const easeOut = k => 1 - Math.pow(1 - clamp(k, 0, 1), 3);
 // Brandspuren am Boden: halbe Auflösung, verblassen langsam; nach dem Verblassen wird die Ebene gar nicht mehr gezeichnet
 const DECAL = { c: null, x: null, acc: 0, live: 0 };
-function decalInit() { if (!DECAL.c) { DECAL.c = document.createElement('canvas'); DECAL.c.width = W / 2; DECAL.c.height = H / 2; DECAL.x = DECAL.c.getContext('2d'); DECAL.x.setTransform(.5, 0, 0, .5, 0, 0); } DECAL.x.clearRect(0, 0, W, H); DECAL.live = 0; }
+function decalInit() { if (!DECAL.c || DECAL.c.width !== W / 2 || DECAL.c.height !== H / 2) { DECAL.c = document.createElement('canvas'); DECAL.c.width = W / 2; DECAL.c.height = H / 2; DECAL.x = DECAL.c.getContext('2d'); DECAL.x.setTransform(.5, 0, 0, .5, 0, 0); } DECAL.x.clearRect(0, 0, W, H); DECAL.live = 0; }
 function stampDecal(x, y, r, col, str = 1, crack = false) {
   if (!DECAL.c) decalInit();
   DECAL.live = 9;
@@ -2954,14 +3347,14 @@ const VFX = {
     for (const g of this.ghosts) { const k = 1 - g.t / g.max; glow(x, g.col, g.x, g.y, g.r * 2.6, .5 * k); x.strokeStyle = rgba(g.col, .7 * k); x.lineWidth = 2; circ(x, g.x, g.y, g.r * (1 + (1 - k) * .25)); x.stroke(); x.fillStyle = rgba(g.col, .16 * k); x.fill(); }
     x.restore();
   },
-  drawGround(x) {
-    if (DECAL.c && DECAL.live > 0) x.drawImage(DECAL.c, 0, 0, W, H);
+  drawGround(x, V) {
+    if (DECAL.c && DECAL.live > 0) { const sx = clamp(Math.floor(V ? V.x0 : 0), 0, W), sy = clamp(Math.floor(V ? V.y0 : 0), 0, H), ex = clamp(Math.ceil(V ? V.x1 : W), 0, W), ey = clamp(Math.ceil(V ? V.y1 : H), 0, H); if (ex - sx > 2 && ey - sy > 2) x.drawImage(DECAL.c, sx / 2, sy / 2, (ex - sx) / 2, (ey - sy) / 2, sx, sy, ex - sx, ey - sy); }
     x.save(); x.globalCompositeOperation = 'lighter';
     for (const r of this.rings) { if (!r.fill || r.t < 0) continue; const k = r.t / r.max; x.fillStyle = rgba(r.col, .2 * (1 - k)); circ(x, r.x, r.y, lerp(r.r0, r.r1, easeOut(k))); x.fill(); }
     x.restore();
   },
   draw(x) {
-    const T0 = RD.t;
+    const T0 = RD.t, V = RD.view, out = p => V && (p.x < V.x0 - 40 || p.x > V.x1 + 40 || p.y < V.y0 - 40 || p.y > V.y1 + 40);
     x.save(); x.beginPath(); x.rect(-30, -30, W + 60, H + 60); x.clip(); // Effekte bleiben in der Arena
     x.save(); x.globalCompositeOperation = 'lighter';
     for (const p of this.pillars) {
@@ -3000,15 +3393,15 @@ const VFX = {
       x.restore();
     }
     for (const f of this.flashes) {
-      if (f.t < 0) continue; const k = f.t / f.max, a = 1 - k;
+      if (f.t < 0 || (V && (f.x + f.r < V.x0 || f.x - f.r > V.x1 || f.y + f.r < V.y0 || f.y - f.r > V.y1))) continue; const k = f.t / f.max, a = 1 - k;
       if (f.soft) { glow(x, f.col, f.x, f.y, f.r * (1 + k * .5), .45 * a); continue; }
       glow(x, f.col, f.x, f.y, f.r * (1 + k * .35), (f.r > 110 ? .8 : .95) * a * a);
       // weißer Kern begrenzt, damit Kämpfer unter großen Explosionen erkennbar bleiben
       if (f.core) glow(x, '#ffffff', f.x, f.y, Math.min(f.r * .45, 64) * (1 - k * .4), .75 * a * a);
     }
-    // helle Partikel additiv
+    // helle Partikel additiv (nur im sichtbaren Ausschnitt)
     for (const p of this.parts) {
-      if (p.dark) continue; const k = p.life / p.max, al = Math.min(1, k * 2.4);
+      if (p.dark || out(p)) continue; const k = p.life / p.max, al = Math.min(1, k * 2.4);
       if (p.sh !== 'spark' && (this.q > .7 || p.s > 2.6)) glow(x, p.col, p.x, p.y, p.s * 3.2, al * .5);
       x.globalAlpha = al; x.fillStyle = x.strokeStyle = p.col;
       if (p.sh === 'plus') { const s = p.s * (.6 + .4 * k); x.fillRect(p.x - s * .3, p.y - s * 1.2, s * .6, s * 2.4); x.fillRect(p.x - s * 1.2, p.y - s * .3, s * 2.4, s * .6); }
@@ -3018,7 +3411,7 @@ const VFX = {
     x.restore();
     // dunkle Partikel (Rauch, Steine) normal überdeckend
     x.save();
-    for (const p of this.parts) { if (!p.dark) continue; const k = p.life / p.max; x.globalAlpha = Math.min(.75, k * 1.5); x.fillStyle = p.col; drawParticle(x, p.sh, p.x, p.y, p.s * (.7 + .3 * k), p.rot, p); }
+    for (const p of this.parts) { if (!p.dark || out(p)) continue; const k = p.life / p.max; x.globalAlpha = Math.min(.75, k * 1.5); x.fillStyle = p.col; drawParticle(x, p.sh, p.x, p.y, p.s * (.7 + .3 * k), p.rot, p); }
     x.restore();
     x.restore();
   },
@@ -3130,21 +3523,7 @@ const FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
    ARENA-RENDERER
    ===================================================================== */
 const RD = { c: null, x: null, scale: 1, ox: 0, oy: 0, dpr: 1, fx: new Map(), t: 0, frame: 0, slotIcons: {}, trails: new Map(), hp: new Map(), flashT: new Map(), pos: new Map(), seen: new Set() };
-function rdReset() { RD.fx.clear(); RD.hp.clear(); RD.pos.clear(); RD.flashT.clear(); RD.seen.clear(); RD.trails.clear(); } // Entity-IDs beginnen jedes Match neu
-let FLOOR = null;
-function buildFloor() {
-  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
-  const g = x.createRadialGradient(CX, CY, 60, CX, CY, 960); g.addColorStop(0, '#141c3c'); g.addColorStop(1, '#090d1f');
-  x.fillStyle = g; x.fillRect(0, 0, W, H);
-  x.strokeStyle = 'rgba(124,140,255,.055)'; x.lineWidth = 1;
-  for (let i = 50; i < W; i += 50) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
-  for (let i = 50; i < H; i += 50) { x.beginPath(); x.moveTo(0, i); x.lineTo(W, i); x.stroke(); }
-  x.strokeStyle = 'rgba(124,140,255,.09)'; x.lineWidth = 2; x.setLineDash([12, 14]); circ(x, CX, CY, 170); x.stroke(); circ(x, CX, CY, 330); x.stroke(); x.setLineDash([]);
-  x.strokeStyle = 'rgba(62,230,255,.07)'; x.lineWidth = 1; for (let i = 0; i < 12; i++) { const a = i * TAU / 12; x.beginPath(); x.moveTo(CX + Math.cos(a) * 90, CY + Math.sin(a) * 90); x.lineTo(CX + Math.cos(a) * 330, CY + Math.sin(a) * 330); x.stroke(); }
-  const cm = (cx, cy, sx, sy) => { x.strokeStyle = 'rgba(124,140,255,.35)'; x.lineWidth = 3; x.beginPath(); x.moveTo(cx + sx * 60, cy); x.lineTo(cx, cy); x.lineTo(cx, cy + sy * 60); x.stroke(); };
-  cm(14, 14, 1, 1); cm(W - 14, 14, -1, 1); cm(14, H - 14, 1, -1); cm(W - 14, H - 14, -1, -1);
-  return c;
-}
+function rdReset() { RD.cam = null; RD.fx.clear(); RD.hp.clear(); RD.pos.clear(); RD.flashT.clear(); RD.seen.clear(); RD.trails.clear(); } // Entity-IDs beginnen jedes Match neu
 /* ---------- Responsives Layout ----------
    Eine Funktion berechnet für die aktuelle Fenstergröße (Desktop, Handy hoch/quer, Tablet):
    • die UI-Skalierung ui (HUD wächst/schrumpft proportional, in "UI-Einheiten" gezeichnet),
@@ -3180,7 +3559,9 @@ function hudLayout(w, hh) {
     const ctrl = Math.max(P.size + P.gap, P.joy) + 10; // Höhe der Touch-Steuerung (CSS px)
     // Querformat: Arena links neben den festen Buttons; Hochformat: über Joystick und Buttons
     const A = port ? { l: 8, t: top * ui, r: w - 8, b: hh - ctrl } : { l: 10, t: top * ui, r: w - (P.size + P.gap + 12), b: hh - 8 };
-    Object.assign(L, fitArena(L, A, w, hh)); L.area = A;
+    Object.assign(L, fitArena(L, A, w, hh)); L.area = A; L.camS = camScale(A, true);
+    L.mini = port ? { x: 10, y: L.zoneY + 12, w: 112 } : { x: 10, y: leaveB + 8, w: 132 };
+    if (!port) L.ping = { x: 12, y: L.mini.y + L.mini.w * .66 + 16 };
     return L;
   }
   const ui = L.ui = clamp(Math.min(w / 1280, hh / 760), .85, 1.3), Wu = L.Wu = w / ui, Hu = L.Hu = hh / ui;
@@ -3190,14 +3571,17 @@ function hudLayout(w, hh) {
   L.ping = { x: lr.right / ui + 10, y: 26 };
   // volle Spielerliste rechts, wenn sie neben die Arena passt, sonst kompakter Zähler
   const listW = 230, listH = 34 + 24 * Math.max(2, Object.keys(MATCH.names || {}).length || 10);
-  const full = fitArena(L, { ...A, r: w - listW * ui }, w, hh), comp = fitArena(L, A, w, hh);
   const listHits = 44 + listH > L.panel.y - 8 && Wu - listW < L.panel.x + L.panel.w;
-  L.list = Wu >= 760 && full.scale >= comp.scale * .92 && !listHits ? 'full' : 'compact';
+  L.list = Wu >= 980 && !listHits ? 'full' : 'compact';
   L.cnt = { x: Wu - 132, y: 10, w: 122, h: 26 };
-  Object.assign(L, L.list === 'full' ? full : comp); L.area = A;
+  const A2 = L.list === 'full' ? { ...A, r: w - listW * ui } : A;
+  Object.assign(L, fitArena(L, A2, w, hh)); L.area = A2; L.camS = camScale(A2, false);
+  L.mini = { x: 12, y: lr.bottom / ui + 12, w: 176 };
   L.feedMax = L.list === 'full' ? L.panel.y - 16 : Hu * .55;
   return L;
 }
+// Kamera-Zoom: der freie Bildbereich zeigt auf der kurzen Seite ~620 (Touch) bzw. ~720 Welteinheiten, auf der langen höchstens ~1100/1300
+function camScale(A, touch) { const aw = A.r - A.l, ah = A.b - A.t, sh = Math.min(aw, ah), lg = Math.max(aw, ah), v = touch ? [620, 1100] : [720, 1300]; return clamp(Math.max(sh / v[0], lg / v[1]), .3, 1.6); }
 function resizeArena() {
   const c = RD.c, d = RD.dpr = Math.min(2, window.devicePixelRatio || 1);
   const w = c.clientWidth, hh = c.clientHeight; c.width = Math.round(w * d); c.height = Math.round(hh * d);
@@ -3429,9 +3813,15 @@ function trackTrail(id, px, py, len) {
 }
 function drawArena(view, dt, local) {
   const c = RD.c, x = RD.x; RD.t += dt; RD.frame++; const t = RD.t;
+  if (!MAP) setMap(genMap(4, 1));
   if (!FLOOR) FLOOR = buildFloor();
   if (!DECAL.c) decalInit();
   const w = c.clientWidth, hh = c.clientHeight;
+  updateCamera(dt, local);
+  const V = RD.view || { x0: 0, y0: 0, x1: W, y1: H }, inV = (px, py, m) => px > V.x0 - m && px < V.x1 + m && py > V.y0 - m && py < V.y1 + m;
+  // Wer ist aus Sicht des eigenen Spielers sichtbar? (Mauern werfen Sichtschatten, Büsche verbergen)
+  const me = local && local.alive && local.id !== -1 ? local : null, vis = RD.visIds = new Set();
+  for (const f of view.f) if (f.alive && (!me || canSee(me, f))) vis.add(f.id);
   const alive = view.f.filter(f => f.kind === 'player' && f.alive).length; VFX.crowd = alive > 6 ? .6 : alive > 4 ? .8 : 1;
   // Treffer-Aufblitzen, Rückmeldung bei eigenem Schaden, Nachbilder schneller Bewegung
   for (const f of view.f) {
@@ -3442,21 +3832,21 @@ function drawArena(view, dt, local) {
     RD.hp.set(f.id, hv);
     const ft = RD.flashT.get(f.id); if (ft > 0) RD.flashT.set(f.id, ft - dt);
     const pp = RD.pos.get(f.id);
-    if (pp && dt > 0 && dt < .049 && !view.noGhost && f.kind !== 'turret' && !((f.fl & FL.stealth) && local && f.team !== local.team)) { const dd = Math.hypot(f.x - pp[0], f.y - pp[1]); if (dd / dt > 640 && dd < 200 && VFX.ghosts.length < 120) VFX.ghosts.push({ x: pp[0], y: pp[1], r: f.r, col: fxInfo(f.aura).c1, t: 0, max: .26 + AURAS[f.aura].t * .015 }); }
+    if (pp && dt > 0 && dt < .049 && !view.noGhost && vis.has(f.id) && f.kind !== 'turret' && !((f.fl & FL.stealth) && local && f.team !== local.team)) { const dd = Math.hypot(f.x - pp[0], f.y - pp[1]); if (dd / dt > 640 && dd < 200 && VFX.ghosts.length < 120) VFX.ghosts.push({ x: pp[0], y: pp[1], r: f.r, col: fxInfo(f.aura).c1, t: 0, max: .26 + AURAS[f.aura].t * .015 }); }
     RD.pos.set(f.id, [f.x, f.y]);
   }
   x.setTransform(RD.dpr, 0, 0, RD.dpr, 0, 0);
   x.fillStyle = '#05070f'; x.fillRect(0, 0, w, hh);
   const sk = VFX.shake * Math.min(1, Math.sqrt(RD.scale)), sx = sk ? Math.sin(t * 73) * sk : 0, sy = sk ? Math.cos(t * 61) * sk : 0;
   x.setTransform(RD.dpr * RD.scale, 0, 0, RD.dpr * RD.scale, RD.dpr * (RD.ox + sx), RD.dpr * (RD.oy + sy));
-  x.drawImage(FLOOR, 0, 0);
-  VFX.drawGround(x);
+  { const sx = clamp(Math.floor(V.x0), 0, W), sy = clamp(Math.floor(V.y0), 0, H), ex = clamp(Math.ceil(V.x1), 0, W), ey = clamp(Math.ceil(V.y1), 0, H); if (ex > sx && ey > sy) x.drawImage(FLOOR, sx, sy, ex - sx, ey - sy, sx, sy, ex - sx, ey - sy); }
+  VFX.drawGround(x, V);
   x.save(); x.shadowColor = '#7c8cff'; x.shadowBlur = 24; x.strokeStyle = 'rgba(124,140,255,.75)'; x.lineWidth = 3; x.strokeRect(0, 0, W, H); x.restore();
-  if (view.stormR < 980) {
+  if (view.stormR < MAP.storm0 - 10) {
     x.save(); x.beginPath(); x.rect(0, 0, W, H); x.arc(CX, CY, view.stormR, 0, TAU, true); x.fillStyle = 'rgba(255,40,90,.13)'; x.fill();
     x.strokeStyle = 'rgba(255,77,140,.85)'; x.lineWidth = 3; x.shadowColor = '#ff4d8c'; x.shadowBlur = 18; x.setLineDash([16, 10]); x.lineDashOffset = -t * 40; circ(x, CX, CY, view.stormR); x.stroke(); x.restore();
   }
-  for (const z of view.z) drawZone(x, z, t, dt);
+  for (const z of view.z) if (inV(z.x, z.y, (z.sh === 'l' ? z.len : z.r || 100) + 60)) drawZone(x, z, t, dt);
   for (const p of view.po || []) { for (const [px, py, cc2] of [[p.x1, p.y1, p.col], [p.x2, p.y2, p.col2]]) { x.save(); x.translate(px, py); x.rotate(t * 3); x.globalCompositeOperation = 'lighter'; glow(x, PAL[cc2], 0, 0, 60, .7); x.strokeStyle = PAL[cc2]; x.lineWidth = 3; x.beginPath(); x.ellipse(0, 0, 28, 20, 0, 0, TAU); x.stroke(); x.rotate(-t * 6); x.beginPath(); x.ellipse(0, 0, 18, 12, 0, 0, TAU); x.stroke(); x.restore(); if (Math.random() < .3) VFX.spawn(1, px, py, { col: PAL[cc2], sh: 'dot', inward: 34, life: .4, s: 1.8 }); } }
   for (const tr of view.tr) {
     const own = local && tr.team === local.team; const al = own ? .8 : .18 + (tr.arm > 0 ? .25 : 0);
@@ -3472,11 +3862,6 @@ function drawArena(view, dt, local) {
     x.shadowBlur = 0; x.strokeStyle = wl.refl ? col : 'rgba(255,255,255,.7)'; x.lineWidth = 3; x.stroke(); x.restore();
     if (Math.random() < .25 * VFX.q) { const kk = Math.random(); VFX.add({ x: lerp(wl.x1, wl.x2, kk), y: lerp(wl.y1, wl.y2, kk), vx: rand(-20, 20), vy: -rand(20, 50), life: .5, max: .5, col, s: 1.8, sh: 'spark', rot: 0, vr: 0, drag: 2, g: 0 }); }
   }
-  for (const p of PILLARS) {
-    x.save(); x.fillStyle = '#141c3a'; x.strokeStyle = 'rgba(124,140,255,.65)'; x.lineWidth = 3; x.shadowColor = '#7c8cff'; x.shadowBlur = 14;
-    x.beginPath(); for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + Math.PI / 8; x.lineTo(p.x + Math.cos(a) * p.r, p.y + Math.sin(a) * p.r); } x.closePath(); x.fill(); x.stroke();
-    x.shadowBlur = 0; x.strokeStyle = 'rgba(62,230,255,.25)'; x.lineWidth = 1.5; circ(x, p.x, p.y, p.r * .55); x.stroke(); x.restore();
-  }
   x.save(); x.globalCompositeOperation = 'lighter';
   for (const te of view.te) {
     const I = fxInfo(te.ai ?? -1), c1 = PAL[te.col], mxp = (te.ax + te.bx) / 2 + Math.sin(t * 6) * 20, myp = (te.ay + te.by) / 2 + Math.cos(t * 6) * 20;
@@ -3486,19 +3871,20 @@ function drawArena(view, dt, local) {
   }
   x.restore();
   const fs = view.f;
-  for (const f of fs) if (f.alive) { x.fillStyle = 'rgba(0,0,0,.35)'; x.beginPath(); x.ellipse(f.x, f.y + f.r * .85, f.r * .9, f.r * .3, 0, 0, TAU); x.fill(); }
+  for (const f of fs) if (f.alive && vis.has(f.id) && inV(f.x, f.y, 60)) { x.fillStyle = 'rgba(0,0,0,.35)'; x.beginPath(); x.ellipse(f.x, f.y + f.r * .85, f.r * .9, f.r * .3, 0, 0, TAU); x.fill(); }
   VFX.drawGhosts(x); // Nachbilder unter den Kämpfern, damit der Körper sichtbar bleibt
-  for (const f of fs) if (f.alive) drawFighter(x, f, t, dt, local);
-  if (local && local.alive && MATCH.touch) TOUCH.drawAim(x, local, t);
+  for (const f of fs) if (f.alive && vis.has(f.id) && inV(f.x, f.y, 120)) drawFighter(x, f, t, dt, local);
   // Orbitale mit Spuren
   x.save(); x.globalCompositeOperation = 'lighter';
   for (const o of view.ob) {
+    if (!inV(o.x, o.y, 60)) continue;
     const I = fxInfo(o.ai ?? -1), c1 = PAL[o.col], pts = trackTrail('o' + o.id, o.x, o.y, Math.round((5 + I.t) * (.5 + .5 * VFX.q)));
     drawTrail(x, pts, o.r * 1.1, c1, I.c2, I.t);
     glow(x, c1, o.x, o.y, o.r * (3.2 + I.t * .3), .85); x.fillStyle = c1; circ(x, o.x, o.y, o.r); x.fill(); x.fillStyle = '#fff'; circ(x, o.x, o.y, o.r * .42); x.fill();
   }
   // Geschosse: Spur, Halo (stufenabhängig), Form, Orbit-Funken, Partikelausstoß
   for (const p of view.p) {
+    if (!inV(p.x, p.y, 80)) continue;
     const I = fxInfo(p.ai ?? -1), tv = I.tv, c1 = PAL[p.col], c2 = PAL[p.col2] || '#fff', ang = Math.atan2(p.vy, p.vx), r = p.r * (1 + I.t * .05);
     const pts = trackTrail(p.id, p.x, p.y, Math.round(tv.tr * (.5 + .5 * VFX.q)));
     drawTrail(x, pts, Math.max(2, r * .9), c1, c2, I.t);
@@ -3509,11 +3895,15 @@ function drawArena(view, dt, local) {
     if (Math.random() < (.22 + I.t * .07) * VFX.q && VFX.parts.length < VFX.cap()) VFX.add({ x: p.x, y: p.y, vx: -p.vx * .12 + rand(-25, 25), vy: -p.vy * .12 + rand(-25, 25), life: .4, max: .4, col: Math.random() < .5 ? c1 : c2, s: rand(1.2, 2.2) + I.t * .1, sh: I.sh, rot: rand(TAU), vr: 4, drag: 2, g: 0 });
   }
   x.restore();
-  for (const p of view.p) { const I = fxInfo(p.ai ?? -1), c1 = PAL[p.col], c2 = PAL[p.col2] || '#fff'; x.save(); x.translate(p.x, p.y); x.rotate(Math.atan2(p.vy, p.vx)); drawShape(x, p.sh, p.r * (1 + I.t * .05), c1, c2, t + p.id); x.restore(); }
+  for (const p of view.p) { if (!inV(p.x, p.y, 40)) continue; const I = fxInfo(p.ai ?? -1), c1 = PAL[p.col], c2 = PAL[p.col2] || '#fff'; x.save(); x.translate(p.x, p.y); x.rotate(Math.atan2(p.vy, p.vx)); drawShape(x, p.sh, p.r * (1 + I.t * .05), c1, c2, t + p.id); x.restore(); }
   if (RD.frame % 30 === 0) { for (const [id, tr] of RD.trails) if (tr.seen !== RD.frame) RD.trails.delete(id); if (RD.seen.size > 600) RD.seen = new Set([...view.z.map(z => 'z' + z.id), ...view.wl.map(w => 'w' + w.id)]); }
   VFX.draw(x);
+  if (me) drawShadows(x, me.x, me.y, V); // Sichtschatten hinter hohen Elementen
+  drawObstacles(x, V, t);
+  drawBushes(x, V, t, local);
+  if (local && local.alive && MATCH.touch) TOUCH.drawAim(x, local, t);
   for (const tl of view.tl) drawTele(x, tl, t, true);
-  for (const f of fs) drawBars(x, f, local);
+  for (const f of fs) if (vis.has(f.id) && inV(f.x, f.y, 80)) drawBars(x, f, local);
   VFX.drawText(x);
   if (Math.random() < .02) for (const [id, fx] of RD.fx) if (RD.t - fx.seen > 2) RD.fx.delete(id);
 }
@@ -3562,12 +3952,13 @@ function drawHUD(view, local, dt) {
   x.textAlign = 'center';
   if (view.phase === 'fight') {
     const left = (WD && MATCH.mode !== 'client' ? WD.stormT - WD.ft : view.stormIn);
-    x.font = `800 12px ${FONT}`; x.fillStyle = view.stormR < 980 ? '#ff7aa8' : '#8c96bb';
-    x.fillText(view.stormR < 980 ? (compact ? 'ZONE SCHRUMPFT!' : 'DIE ZONE SCHRUMPFT – BLEIB IM KREIS') : 'Zone schrumpft in ' + Math.max(0, Math.ceil(left || 0)) + ' s', w / 2, MATCH.touch ? L.zoneY : 22);
+    x.font = `800 12px ${FONT}`; x.fillStyle = view.stormR < MAP.storm0 - 10 ? '#ff7aa8' : '#8c96bb';
+    x.fillText(view.stormR < MAP.storm0 - 10 ? (compact ? 'ZONE SCHRUMPFT!' : 'DIE ZONE SCHRUMPFT – BLEIB IM KREIS') : 'Zone schrumpft in ' + Math.max(0, Math.ceil(left || 0)) + ' s', w / 2, MATCH.touch ? L.zoneY : 22);
   }
   if (MATCH.ping !== undefined && MATCH.mode === 'client' && L.ping) { x.font = `600 11px ${FONT}`; x.fillStyle = '#5d668a'; x.textAlign = 'left'; x.fillText('Ping ' + MATCH.ping + ' ms', L.ping.x, L.ping.y); }
   // Countdown
-  if (view.phase === 'count') { x.textAlign = 'center'; const n = Math.ceil(view.cd); x.font = `900 96px ${FONT}`; x.fillStyle = '#fff'; x.shadowColor = '#7c8cff'; x.shadowBlur = 40; x.fillText(n > 0 ? n : 'KAMPF!', w / 2, hh * .4); x.shadowBlur = 0; }
+  if (view.phase === 'count') { x.textAlign = 'center'; const n = Math.ceil(view.cd); x.font = `900 96px ${FONT}`; x.fillStyle = '#fff'; x.shadowColor = '#7c8cff'; x.shadowBlur = 40; x.fillText(n > 0 ? n : 'KAMPF!', w / 2, hh * .4); x.shadowBlur = 0; if (MAP) { x.font = `800 14px ${FONT}`; x.fillStyle = MAP.th.acc; x.fillText('KARTE: ' + MAP.th.n.toUpperCase(), w / 2, hh * .4 + 70); } }
+  drawMinimap(x, L, view, local); drawEdgeArrows(x, L, view, local);
   if (!local) return;
   if (MATCH.touch) { drawTouchHUD(x, L, local); return; }
   // Unten: HP, Stamina, Moves
@@ -3601,6 +3992,31 @@ function drawHUD(view, local, dt) {
     x.font = `800 9px ${FONT}`; x.textAlign = 'left'; x.fillStyle = '#8c96bb'; x.fillText(MATCH.touch ? (i ? i : 'ATK') : KEYS[i], sx2 + 5, sy + 9);
     x.textAlign = 'right'; x.fillStyle = m.hp ? '#ff9db0' : '#fde047'; x.fillText(m.hp ? m.hp + 'HP' : (m.c || 0), sx2 + slotS - 5, sy + slotS - 8);
     x.textAlign = 'center'; x.font = `700 9px ${FONT}`; x.fillStyle = '#c3cae6'; x.fillText(m.n.length > 14 ? m.n.slice(0, 13) + '…' : m.n, sx2 + slotS / 2, sy - 7);
+  }
+}
+// Minikarte: Grundriss, Sturmzone, eigene Position und aktueller Bildausschnitt
+function drawMinimap(x, L, view, local) {
+  if (!MAP || !L.mini) return; const M = L.mini;
+  if (!MINI || MINI.w !== M.w || MINI.map !== MAP) { MINI = buildMini(M.w); MINI.map = MAP; }
+  const s = MINI.s, mh = H * s;
+  x.save(); x.globalAlpha = .9; x.drawImage(MINI.c, M.x, M.y, M.w, mh); x.globalAlpha = 1;
+  x.beginPath(); x.rect(M.x, M.y, M.w, mh); x.clip();
+  if (view.stormR < MAP.storm0 - 10) { x.strokeStyle = '#ff4d8c'; x.lineWidth = 1.5; circ(x, M.x + CX * s, M.y + CY * s, view.stormR * s); x.stroke(); }
+  if (RD.view && local && local.alive) { const v = RD.view; x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 1; x.strokeRect(M.x + v.x0 * s, M.y + v.y0 * s, (v.x1 - v.x0) * s, (v.y1 - v.y0) * s); }
+  if (local && local.alive) { x.fillStyle = '#3ee6ff'; x.shadowColor = '#3ee6ff'; x.shadowBlur = 6; circ(x, M.x + local.x * s, M.y + local.y * s, 3.2); x.fill(); x.shadowBlur = 0; }
+  x.restore(); x.strokeStyle = 'rgba(140,160,235,.35)'; x.lineWidth = 1; x.strokeRect(M.x, M.y, M.w, mh);
+}
+// Pfeile am Rand für sichtbare Gegner in der Nähe, die gerade außerhalb des Bildausschnitts sind
+function drawEdgeArrows(x, L, view, local) {
+  if (!local || !local.alive || !RD.view || !RD.visIds) return;
+  const A = L.area, ui = L.ui, l = A.l / ui + 16, r = A.r / ui - 16, tp = A.t / ui + 16, b = A.b / ui - 16, cx = (l + r) / 2, cy = (tp + b) / 2;
+  for (const f of view.f) {
+    if (!f.alive || f.kind !== 'player' || f.team === local.team || !RD.visIds.has(f.id)) continue;
+    const sx = (f.x * RD.scale + RD.ox) / ui, sy = (f.y * RD.scale + RD.oy) / ui; if (sx > l && sx < r && sy > tp && sy < b) continue;
+    const d = Math.hypot(f.x - local.x, f.y - local.y); if (d > 1500) continue;
+    const dx = sx - cx, dy = sy - cy, k = Math.min((dx > 0 ? r - cx : cx - l) / (Math.abs(dx) || 1e-6), (dy > 0 ? b - cy : cy - tp) / (Math.abs(dy) || 1e-6)), px = cx + dx * k, py = cy + dy * k, a = Math.atan2(dy, dx);
+    const col = AURAS[f.aura].c1; x.save(); x.translate(px, py); x.rotate(a); x.globalAlpha = clamp(1.3 - d / 1500, .45, 1);
+    x.fillStyle = col; x.shadowColor = col; x.shadowBlur = 8; path(x, [9, 0, -6, -7, -3, 0, -6, 7]); x.fill(); x.restore();
   }
 }
 function drawTouchHUD(x, L, local) {
@@ -3651,7 +4067,7 @@ const TOUCH = {
   held: [0, 0, 0, 0], latch: [0, 0, 0, 0], lprev: [null, null, null, null], lseq: [0, 0, 0, 0], shot: null, forced: false, R: 56, dead: 15, cache: {}, icons: '', els: null,
   autoTarget(local) {
     const view = MATCH.view; let best = null, bd = 900 * 900;
-    if (view) for (const f of view.f) { if (!f.alive || f.team === local.team || (f.fl & FL.stealth)) continue; const d = d2(f.x, f.y, local.x, local.y) * (f.kind === 'player' || f.kind === 'decoy' ? 1 : 1.6); if (d < bd) { bd = d; best = f; } }
+    if (view) for (const f of view.f) { if (!f.alive || f.team === local.team || (f.fl & FL.stealth) || (RD.visIds && !RD.visIds.has(f.id))) continue; const d = d2(f.x, f.y, local.x, local.y) * (f.kind === 'player' || f.kind === 'decoy' ? 1 : 1.6); if (d < bd) { bd = d; best = f; } }
     return best;
   },
   // Zielpunkt aus einer Zugrichtung (dx/dy in Bildschirm-Pixeln) für den Move m
@@ -3833,7 +4249,7 @@ const NET_CONFIG = {
   //   config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:...', username: '...', credential: '...' }] } }
   peerOptions: { debug: 1 },
 };
-const PROTO = 4, MAX_PLAYERS = 10;
+const PROTO = 5, MAX_PLAYERS = 10;
 const CODE_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const genCode = () => Array.from({ length: 6 }, () => CODE_ALPHA[randi(0, CODE_ALPHA.length - 1)]).join('');
 function loadPeerJS() {
@@ -4062,7 +4478,7 @@ function clientSnapshot(s) {
 }
 function collideStatic(x, y, r, walls) {
   x = clamp(x, r, W - r); y = clamp(y, r, H - r);
-  for (const p of PILLARS) { const dx = x - p.x, dy = y - p.y, d = Math.hypot(dx, dy), m = r + p.r; if (d < m) { x += dx / (d || 1) * (m - d); y += dy / (d || 1) * (m - d); } }
+  [x, y] = obsPush(x, y, r);
   for (const w of walls || []) { const dx = w.x2 - w.x1, dy = w.y2 - w.y1, l2 = dx * dx + dy * dy || 1; const t = clamp(((x - w.x1) * dx + (y - w.y1) * dy) / l2, 0, 1); const cx = w.x1 + t * dx, cy = w.y1 + t * dy, ex = x - cx, ey = y - cy, d = Math.hypot(ex, ey), m = r + 7; if (d < m) { x += ex / (d || 1) * (m - d); y += ey / (d || 1) * (m - d); } }
   return [x, y];
 }
@@ -4131,12 +4547,14 @@ function simStep(dt) {
   matchCheck();
 }
 function spawnPoints(n) {
+  if (MAP && MAP.spawns.length >= n) return MAP.spawns.slice(0, n).map(q => q.slice());
   const pts = [], off = rand(TAU);
-  for (let i = 0; i < n; i++) { const a = off + i / n * TAU; let x = CX + Math.cos(a) * 590, y = CY + Math.sin(a) * 370; [x, y] = clampArena(x, y, 30); pts.push([x, y]); }
+  for (let i = 0; i < n; i++) { const a = off + i / n * TAU; let x = CX + Math.cos(a) * W * .36, y = CY + Math.sin(a) * H * .34; [x, y] = clampArena(x, y, 30); pts.push([x, y]); }
   return pts;
 }
 function startMatch(mode, players, opt = {}) {
-  WD = newWorld({ net: mode === 'host', stormT: opt.stormT ?? 40 });
+  setMap(opt.map || genMap(players.length, (Math.random() * 4294967296) >>> 0)); // neue Karte pro Match
+  WD = newWorld({ net: mode === 'host', stormT: opt.stormT ?? 40, stormDur: W >= 2900 ? 82 : W >= 2500 ? 74 : 66 });
   VFX.clear(); rdReset();
   MATCH = { mode, names: {}, byPid: {}, bots: [], localFid: null, snapT: 0, ended: false, touch: MATCH.touch, opt, startTime: performance.now() };
   const pts = spawnPoints(players.length);
@@ -4169,11 +4587,12 @@ function hostStartMatch() {
   const players = NET.room.map(p => ({ pid: p.id, name: p.name, aura: (AURA_BY_ID[p.aura] || AURAS[0]).i, local: p.id === 'host' }));
   closeAllModals();
   startMatch('host', players, { stormT: 40 });
-  NET.tr.broadcast({ t: 'start', players: players.map(p => ({ pid: p.pid, fid: p.fid, name: p.name, aura: p.aura })) });
+  NET.tr.broadcast({ t: 'start', map: mapForNet(MAP), players: players.map(p => ({ pid: p.pid, fid: p.fid, name: p.name, aura: p.aura })) });
   sendRoom();
 }
 function startClientMatch(m) {
   closeAllModals();
+  if (m.map) setMap(m.map);
   WD = null; VFX.clear(); rdReset();
   MATCH = { mode: 'client', names: {}, byPid: {}, bots: [], localFid: null, snaps: [], evq: [], off: null, pending: [], seq: 0, inT: 0, ack: 0, srv: null, lp: null, ended: false, touch: MATCH.touch, ping: MATCH.ping };
   for (const p of m.players) { MATCH.names[p.fid] = { name: p.name, aura: p.aura }; if (p.pid === NET.myId) MATCH.localFid = p.fid; }
@@ -4497,6 +4916,7 @@ function openOdds() {
 function openHelp() {
   openModal('Steuerung & Regeln', `<div class="form-grid" style="font-size:14px;line-height:1.6;color:#c3cae6">
     <div><b style="color:#fff">Steuerung (Arena)</b><br>Bewegen: <span class="key">W A S D</span> oder Pfeiltasten · Zielen: Maus<br>Hauptattacke: <span class="key">Linksklick</span> oder <span class="key">Leertaste</span> (gedrückt halten = Dauerfeuer)<br>Spezialmoves: <span class="key">Q</span> <span class="key">E</span> <span class="key">R</span> (alternativ <span class="key">1</span> <span class="key">2</span> <span class="key">3</span>, Rechtsklick = Q)<br>Touch: Daumen links aufsetzen = Joystick zum Bewegen. Großer Button rechts: kurz tippen = Angriff auf den nächsten Gegner; gedrückt halten und ziehen = zielen, loslassen = Angriff (zurück in die Mitte = abbrechen). Die drei kleinen Buttons lösen die Spezialmoves sofort aus; Sprints und Teleports folgen dabei der Joystick-Richtung.</div>
+    <div><b style="color:#fff">Karte</b><br>Jedes Match hat eine neue Karte (Ruinen, Kristallhöhle, Festung oder Leuchthain), die mit der Spielerzahl wächst. Hohe Mauern und Säulen blockieren Bewegung, Geschosse und Sicht (dahinter liegt ein Sichtschatten). Niedrige Barrikaden schützen vor Geschossen, man sieht aber darüber. Abgründe und Teiche erzwingen Umwege, lassen Geschosse aber durch. In Büschen bist du unsichtbar, bis du angreifst, getroffen wirst oder jemand ganz nah kommt. Die Kamera folgt dir; die Minikarte zeigt Grundriss und Sturmzone, Pfeile am Rand zeigen nahe Gegner außerhalb des Bildes.</div>
     <div><b style="color:#fff">Kampf</b><br>Jeder Move kostet Stamina (gelbe Leiste, regeneriert sich laufend) und hat eine Abklingzeit. Bei 0 HP scheidest du aus. Nach ~40 s schrumpft eine Sturmzone – wer draußen steht, verliert HP. Der letzte Überlebende gewinnt.</div>
     <div><b style="color:#fff">Auren</b><br>64 Auren in 9 Seltenheitsstufen – jede mit eigener Rolle, eigenen Werten und einem eigenständigen Moveset (Schadensart, Reichweite/Form, Zusatzeffekte und Taktik unterscheiden sich). Seltenere Auren haben komplexere Mechaniken wie Zeitreisen, Zwillinge, Seelentausch oder Zeitstopp.</div>
     <div><b style="color:#fff">Multiplayer</b><br>Ein Spieler erstellt einen Raum und teilt den 6-stelligen Code. Andere öffnen dieselbe HTML-Datei und treten mit dem Code bei. Start ab 2 Spielern, bis zu 10 im Free-for-All. Die Verbindung läuft per WebRTC direkt zwischen den Browsern (Signaling über den öffentlichen PeerJS-Server).</div>
