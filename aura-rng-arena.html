@@ -6,6 +6,10 @@
 <title>Aura RNG Arena</title>
 <meta name="description" content="Aura-Rolling-Kampfspiel: Rolle seltene Auren, sammle sie und kämpfe mit ihren einzigartigen Movesets im Training oder im Echtzeit-Multiplayer.">
 <meta name="theme-color" content="#070a14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Aura RNG">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.45' stop-color='%237c8cff'/%3E%3Cstop offset='1' stop-color='%237c8cff' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='url(%23g)'/%3E%3C/svg%3E">
 <style>
 /* =====================================================================
@@ -54,6 +58,16 @@ input,select{font:inherit;color:inherit}
 .icon-btn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);border:1px solid var(--line);transition:.2s}
 .icon-btn:hover{border-color:var(--accent);box-shadow:0 0 14px rgba(124,140,255,.4)}
 .icon-btn svg{width:18px;height:18px}
+/* Vollbild-Schalter (Lobby: Symbol + Text, Arena: Symbol neben „Verlassen“) */
+.fs-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.fs-btn svg{width:17px;height:17px;flex:none}
+.fs-lobby{height:36px;padding:0 14px;border-radius:999px;background:linear-gradient(135deg,rgba(124,140,255,.22),rgba(62,230,255,.14));border:1px solid rgba(124,140,255,.55);font-size:13px;font-weight:700;transition:.2s}
+.fs-lobby:hover,.fs-lobby:focus-visible{border-color:var(--accent);box-shadow:0 0 16px rgba(124,140,255,.45)}
+.fs-lobby[aria-pressed="true"]{background:rgba(124,140,255,.3)}
+.fs-arena{padding:0;width:34px}
+.fs-btn.hidden{display:none}
+@media (pointer:coarse){.arena-top .btn.small{min-height:36px}.fs-arena{width:42px}}
+@media (max-width:560px){.fs-lobby span{display:none}.fs-lobby{width:36px;padding:0}}
 
 /* ---------- Lobby Layout ---------- */
 .lobby-wrap{position:absolute;inset:0;display:flex;flex-direction:column}
@@ -376,6 +390,7 @@ input,select{font:inherit;color:inherit}
           <div class="pill">Sammlung <b id="collVal">0/0</b></div>
           <label class="name-field">Name <input id="nameInput" maxlength="16" autocomplete="off" spellcheck="false"></label>
           <button class="icon-btn" id="soundBtn" title="Sound an/aus"></button>
+          <button class="fs-btn fs-lobby" id="fsBtn" type="button" aria-pressed="false"></button>
         </div>
       </header>
       <main class="lobby-grid">
@@ -441,7 +456,7 @@ input,select{font:inherit;color:inherit}
   <!-- ===================== ARENA ===================== -->
   <div id="arena" class="screen">
     <canvas id="gc"></canvas>
-    <div class="arena-top"><button class="btn small danger" id="leaveBtn">Verlassen</button></div>
+    <div class="arena-top"><button class="btn small danger" id="leaveBtn">Verlassen</button><button class="btn small fs-btn fs-arena" id="fsBtnArena" type="button" aria-pressed="false"></button></div>
     <div class="arena-banner" id="banner"></div>
     <div class="touch hidden" id="touchUi">
       <div class="tjoy-zone" id="joyZone"><div class="joy" id="joy"><i></i></div></div>
@@ -1299,6 +1314,8 @@ const AU = {
    ICONS: Aura-Icons, Trank-Icons, Move-Icons, UI-SVGs
    ===================================================================== */
 const SVG = {
+  fsOn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  fsOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
   users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.6 0 4.4 1.6 5 4.4"/></svg>',
   bot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><circle cx="9" cy="13" r="1.4"/><circle cx="15" cy="13" r="1.4"/><path d="M12 3v4M2 13h2M20 13h2"/></svg>',
   grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>',
@@ -3524,6 +3541,44 @@ const FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
    ===================================================================== */
 const RD = { c: null, x: null, scale: 1, ox: 0, oy: 0, dpr: 1, fx: new Map(), t: 0, frame: 0, slotIcons: {}, trails: new Map(), hp: new Map(), flashT: new Map(), pos: new Map(), seen: new Set() };
 function rdReset() { RD.cam = null; RD.fx.clear(); RD.hp.clear(); RD.pos.clear(); RD.flashT.clear(); RD.seen.clear(); RD.trails.clear(); } // Entity-IDs beginnen jedes Match neu
+/* ---------- Vollbild ----------
+   Native Fullscreen-API (mit webkit-Präfix für Safari/iPad) auf dem ganzen Dokument.
+   Schalter in der Lobby und neben „Verlassen“, Taste F; Esc beendet wie im Browser üblich.
+   Wo der Browser kein Vollbild erlaubt (iPhone, eingebettete Ansicht ohne Freigabe),
+   erscheint ein Hinweis. Größenänderungen übernimmt das responsive Layout pro Frame. */
+const FS = {
+  el: () => document.fullscreenElement || document.webkitFullscreenElement || null,
+  can: () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled),
+  standalone: () => !!(window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) || navigator.standalone === true,
+  async toggle() {
+    AU.init();
+    try {
+      if (this.el()) { await (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen()); return; }
+      if (!this.can()) {
+        const iOS = /iPhone|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1 && !document.documentElement.webkitRequestFullscreen);
+        toast(iOS ? 'Auf dem iPhone: Teilen → „Zum Home-Bildschirm“ – dann startet das Spiel ohne Browserleisten.' : 'Vollbild ist in dieser Ansicht nicht erlaubt – öffne das Spiel direkt in einem eigenen Browser-Tab.');
+        return;
+      }
+      const d = document.documentElement;
+      if (d.requestFullscreen) await d.requestFullscreen({ navigationUI: 'hide' }); else d.webkitRequestFullscreen();
+    } catch (e) { toast('Vollbild konnte nicht gestartet werden.', 'bad'); }
+  },
+  sync() {
+    const on = !!FS.el(), hide = FS.standalone() && !on;
+    for (const b of document.querySelectorAll('.fs-btn')) {
+      b.innerHTML = (on ? SVG.fsOff : SVG.fsOn) + (b.id === 'fsBtn' ? `<span>${on ? 'Vollbild beenden' : 'Vollbild'}</span>` : '');
+      b.title = on ? 'Vollbild beenden (Esc / F)' : 'Vollbild (F)'; b.setAttribute('aria-label', b.title); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.classList.toggle('hidden', hide);
+    }
+  },
+  changed() { FS.sync(); if (SCREEN_ARENA()) { TOUCH.reset(); requestAnimationFrame(() => checkArenaSize()); } },
+  init() {
+    $('#fsBtn').onclick = () => FS.toggle(); $('#fsBtnArena').onclick = () => FS.toggle();
+    document.addEventListener('fullscreenchange', FS.changed); document.addEventListener('webkitfullscreenchange', FS.changed);
+    addEventListener('keydown', e => { if (e.code === 'KeyF' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName))) { e.preventDefault(); FS.toggle(); } });
+    FS.sync();
+  },
+};
 /* ---------- Responsives Layout ----------
    Eine Funktion berechnet für die aktuelle Fenstergröße (Desktop, Handy hoch/quer, Tablet):
    • die UI-Skalierung ui (HUD wächst/schrumpft proportional, in "UI-Einheiten" gezeichnet),
@@ -3540,7 +3595,7 @@ function fitArena(L, A, w, hh) { // größtes W:H-Rechteck in A, möglichst mitt
 }
 function hudLayout(w, hh) {
   const touch = !!MATCH.touch, port = hh > w * 1.05, L = { touch, port, w, hh };
-  const lb = $('#leaveBtn'), lr = lb && lb.offsetWidth ? lb.getBoundingClientRect() : { right: 108, bottom: 46 };
+  const lb = document.querySelector('.arena-top'), lr = lb && lb.offsetWidth ? lb.getBoundingClientRect() : { right: 150, bottom: 46 };
   if (touch) {
     const ui = L.ui = clamp(Math.min(w, hh) / 400, .9, 1.3), Wu = L.Wu = w / ui, Hu = L.Hu = hh / ui, P = L.pad = padSize(w, hh);
     const leaveR = lr.right / ui, leaveB = lr.bottom / ui;
@@ -4915,7 +4970,7 @@ function openOdds() {
 }
 function openHelp() {
   openModal('Steuerung & Regeln', `<div class="form-grid" style="font-size:14px;line-height:1.6;color:#c3cae6">
-    <div><b style="color:#fff">Steuerung (Arena)</b><br>Bewegen: <span class="key">W A S D</span> oder Pfeiltasten · Zielen: Maus<br>Hauptattacke: <span class="key">Linksklick</span> oder <span class="key">Leertaste</span> (gedrückt halten = Dauerfeuer)<br>Spezialmoves: <span class="key">Q</span> <span class="key">E</span> <span class="key">R</span> (alternativ <span class="key">1</span> <span class="key">2</span> <span class="key">3</span>, Rechtsklick = Q)<br>Touch: Daumen links aufsetzen = Joystick zum Bewegen. Großer Button rechts: kurz tippen = Angriff auf den nächsten Gegner; gedrückt halten und ziehen = zielen, loslassen = Angriff (zurück in die Mitte = abbrechen). Die drei kleinen Buttons lösen die Spezialmoves sofort aus; Sprints und Teleports folgen dabei der Joystick-Richtung.</div>
+    <div><b style="color:#fff">Steuerung (Arena)</b><br>Bewegen: <span class="key">W A S D</span> oder Pfeiltasten · Zielen: Maus<br>Hauptattacke: <span class="key">Linksklick</span> oder <span class="key">Leertaste</span> (gedrückt halten = Dauerfeuer)<br>Spezialmoves: <span class="key">Q</span> <span class="key">E</span> <span class="key">R</span> (alternativ <span class="key">1</span> <span class="key">2</span> <span class="key">3</span>, Rechtsklick = Q)<br>Vollbild: Schalter oben in der Lobby bzw. neben „Verlassen“ oder Taste <span class="key">F</span>; beenden mit demselben Schalter oder <span class="key">Esc</span>.<br>Touch: Daumen links aufsetzen = Joystick zum Bewegen. Großer Button rechts: kurz tippen = Angriff auf den nächsten Gegner; gedrückt halten und ziehen = zielen, loslassen = Angriff (zurück in die Mitte = abbrechen). Die drei kleinen Buttons lösen die Spezialmoves sofort aus; Sprints und Teleports folgen dabei der Joystick-Richtung.</div>
     <div><b style="color:#fff">Karte</b><br>Jedes Match hat eine neue Karte (Ruinen, Kristallhöhle, Festung oder Leuchthain), die mit der Spielerzahl wächst. Hohe Mauern und Säulen blockieren Bewegung, Geschosse und Sicht (dahinter liegt ein Sichtschatten). Niedrige Barrikaden schützen vor Geschossen, man sieht aber darüber. Abgründe und Teiche erzwingen Umwege, lassen Geschosse aber durch. In Büschen bist du unsichtbar, bis du angreifst, getroffen wirst oder jemand ganz nah kommt. Die Kamera folgt dir; die Minikarte zeigt Grundriss und Sturmzone, Pfeile am Rand zeigen nahe Gegner außerhalb des Bildes.</div>
     <div><b style="color:#fff">Kampf</b><br>Jeder Move kostet Stamina (gelbe Leiste, regeneriert sich laufend) und hat eine Abklingzeit. Bei 0 HP scheidest du aus. Nach ~40 s schrumpft eine Sturmzone – wer draußen steht, verliert HP. Der letzte Überlebende gewinnt.</div>
     <div><b style="color:#fff">Auren</b><br>64 Auren in 9 Seltenheitsstufen – jede mit eigener Rolle, eigenen Werten und einem eigenständigen Moveset (Schadensart, Reichweite/Form, Zusatzeffekte und Taktik unterscheiden sich). Seltenere Auren haben komplexere Mechaniken wie Zeitreisen, Zwillinge, Seelentausch oder Zeitstopp.</div>
@@ -5213,6 +5268,7 @@ function init() {
   ni.addEventListener('change', () => { S.name = cleanName(ni.value); ni.value = S.name; save(); if (NET.role === 'client') NET.tr && NET.tr.send({ t: 'name', name: S.name }); if (NET.role === 'host') { const p = NET.room.find(p => p.host); if (p) { p.name = S.name; sendRoom(); } } });
   const sb = $('#soundBtn'), setSnd = () => { sb.innerHTML = S.sound ? SVG.sound : SVG.mute; sb.title = S.sound ? 'Sound aus' : 'Sound an'; };
   setSnd(); sb.onclick = () => { S.sound = !S.sound; save(); setSnd(); AU.init(); AU.play('click'); };
+  FS.init();
   const qt = $('#quickT'); qt.checked = !!S.quick; qt.onchange = () => { S.quick = qt.checked; save(); };
   $('#autoT').onchange = e => { if (e.target.checked && !ROLLST.busy && !REVEAL.open) doRoll(); };
   $('#rollBtn').onclick = doRoll;
