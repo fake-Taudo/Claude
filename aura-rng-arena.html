@@ -31,6 +31,7 @@ input,select{font:inherit;color:inherit}
 @keyframes shake{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(4px,-2px)}30%,50%,70%{transform:translate(-6px,3px)}40%,60%{transform:translate(6px,-3px)}}
 @keyframes shake2{10%,90%{transform:translate(-4px,3px) rotate(-.3deg)}20%,80%{transform:translate(8px,-5px) rotate(.4deg)}30%,50%,70%{transform:translate(-12px,6px) rotate(-.5deg)}40%,60%{transform:translate(12px,-6px) rotate(.5deg)}}
 #bgc{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+@supports (height:100dvh){html,body{height:100dvh}}
 .screen{position:absolute;inset:0;display:none;z-index:1}
 .screen.active{display:block}
 .hidden{display:none!important}
@@ -3075,19 +3076,75 @@ function buildFloor() {
   cm(14, 14, 1, 1); cm(W - 14, 14, -1, 1); cm(14, H - 14, 1, -1); cm(W - 14, H - 14, -1, -1);
   return c;
 }
+/* ---------- Responsives Layout ----------
+   Eine Funktion berechnet für die aktuelle Fenstergröße (Desktop, Handy hoch/quer, Tablet):
+   • die UI-Skalierung ui (HUD wächst/schrumpft proportional, in "UI-Einheiten" gezeichnet),
+   • alle HUD-Bereiche (HP/Stamina, Move-Leiste, Spielerliste, Zonentext, Kill-Feed),
+   • die freie Fläche für die Arena, sodass weder HUD noch Touch-Buttons sie verdecken.
+   resizeArena() übernimmt das Ergebnis; drawHUD() zeichnet exakt in diese Bereiche. */
+function padSize(w, hh) { // entspricht den CSS-Regeln von .tpad (--m, --s, --D)
+  const vm = Math.min(w, hh), m = clamp(vm * .27, 98, 134), s = clamp(vm * .155, 54, 74), D = m / 2 + s / 2 + 12;
+  return { m, s, size: m / 2 + D + s / 2, gap: 16, joy: clamp(vm * .3, 112, 150) + 22 };
+}
+function fitArena(L, A, w, hh) { // größtes W:H-Rechteck in A, möglichst mittig im Fenster
+  const sc = Math.max(.08, Math.min((A.r - A.l) / W, (A.b - A.t) / H, 1.35)), aw = W * sc, ah = H * sc;
+  return { scale: sc, ox: clamp((w - aw) / 2, A.l, Math.max(A.l, A.r - aw)), oy: clamp((hh - ah) / 2, A.t, Math.max(A.t, A.b - ah)) };
+}
+function hudLayout(w, hh) {
+  const touch = !!MATCH.touch, port = hh > w * 1.05, L = { touch, port, w, hh };
+  const lb = $('#leaveBtn'), lr = lb && lb.offsetWidth ? lb.getBoundingClientRect() : { right: 108, bottom: 46 };
+  if (touch) {
+    const ui = L.ui = clamp(Math.min(w, hh) / 400, .9, 1.3), Wu = L.Wu = w / ui, Hu = L.Hu = hh / ui, P = L.pad = padSize(w, hh);
+    const leaveR = lr.right / ui, leaveB = lr.bottom / ui;
+    L.cnt = { x: Wu - 132, y: 10, w: 122, h: 26 };
+    const room = L.cnt.x - 10 - (leaveR + 10);
+    let top;
+    if (!port && room >= 230) { // Querformat: HP/Stamina in der oberen Leiste zwischen „Verlassen“ und Zähler
+      const bw = Math.min(340, room); L.hp = { x: leaveR + 10 + (room - bw) / 2, y: 18, w: bw };
+      L.zoneY = 64; top = 76; L.ping = { x: 12, y: leaveB + 14 };
+    } else { // Hochformat/schmal: eigene Zeile unter der oberen Leiste
+      const bw = Math.min(400, Wu - 24); L.hp = { x: (Wu - bw) / 2, y: Math.max(leaveB, 36) + 16, w: bw };
+      L.zoneY = L.hp.y + 46; top = L.zoneY + 14; L.ping = room >= 80 ? { x: leaveR + 10, y: 24 } : null;
+    }
+    L.feedY = port ? top + 6 : L.cnt.y + L.cnt.h + 14;
+    L.feedMax = port ? Hu * .5 : Hu - (P.size + P.gap) / ui - 16;
+    const ctrl = Math.max(P.size + P.gap, P.joy) + 10; // Höhe der Touch-Steuerung (CSS px)
+    // Querformat: Arena links neben den festen Buttons; Hochformat: über Joystick und Buttons
+    const A = port ? { l: 8, t: top * ui, r: w - 8, b: hh - ctrl } : { l: 10, t: top * ui, r: w - (P.size + P.gap + 12), b: hh - 8 };
+    Object.assign(L, fitArena(L, A, w, hh)); L.area = A;
+    return L;
+  }
+  const ui = L.ui = clamp(Math.min(w / 1280, hh / 760), .85, 1.3), Wu = L.Wu = w / ui, Hu = L.Hu = hh / ui;
+  const bw = Math.min(420, Wu - 40), slotS = Math.min(64, (bw - 30) / 4), sy = Hu - slotS - 18;
+  L.panel = { x: (Wu - bw) / 2 - 12, y: sy - 70, w: bw + 24, h: Hu - 8 - (sy - 70) };
+  const top = Math.max(40, lr.bottom / ui + 6), A = { l: 12, t: top * ui, r: w - 12, b: (L.panel.y - 8) * ui };
+  L.ping = { x: lr.right / ui + 10, y: 26 };
+  // volle Spielerliste rechts, wenn sie neben die Arena passt, sonst kompakter Zähler
+  const listW = 230, listH = 34 + 24 * Math.max(2, Object.keys(MATCH.names || {}).length || 10);
+  const full = fitArena(L, { ...A, r: w - listW * ui }, w, hh), comp = fitArena(L, A, w, hh);
+  const listHits = 44 + listH > L.panel.y - 8 && Wu - listW < L.panel.x + L.panel.w;
+  L.list = Wu >= 760 && full.scale >= comp.scale * .92 && !listHits ? 'full' : 'compact';
+  L.cnt = { x: Wu - 132, y: 10, w: 122, h: 26 };
+  Object.assign(L, L.list === 'full' ? full : comp); L.area = A;
+  L.feedMax = L.list === 'full' ? L.panel.y - 16 : Hu * .55;
+  return L;
+}
 function resizeArena() {
   const c = RD.c, d = RD.dpr = Math.min(2, window.devicePixelRatio || 1);
   const w = c.clientWidth, hh = c.clientHeight; c.width = Math.round(w * d); c.height = Math.round(hh * d);
-  const port = hh > w, top = MATCH.touch ? (port ? 96 : 82) : 38, bottom = MATCH.touch ? (port ? Math.min(300, hh * .32) : 8) : (hh > 560 ? 160 : 12);
-  RD.scale = Math.min(w / (W + 40), (hh - top - bottom) / H, 1.35); if (RD.scale < .25) RD.scale = Math.min(w / (W + 40), (hh - top) / H);
-  RD.ox = (w - W * RD.scale) / 2; RD.oy = top + Math.max(0, (hh - top - bottom - H * RD.scale) / 2);
-  if (MATCH.touch && !port) {
-    // Querformat: Arena möglichst links neben den Angriffsbuttons halten (Joystick schwebt, Buttons sind fest)
-    const pad = $('#tpad'), sideR = (pad && pad.offsetWidth ? pad.offsetWidth : 190) + 28, sideL = 10;
-    let aw = W * RD.scale; if (aw > w - sideR - sideL) { RD.scale = Math.max(RD.scale * .85, (w - sideR - sideL) / W); aw = W * RD.scale; }
-    RD.ox = clamp((w - aw) / 2, sideL, Math.max(sideL, w - sideR - aw)); RD.oy = top + Math.max(0, (hh - top - bottom - H * RD.scale) / 2);
-  }
+  RD.cw = w; RD.ch = hh; RD.dprRaw = window.devicePixelRatio || 1; RD.touchL = !!MATCH.touch;
+  const L = RD.L = hudLayout(w, hh);
+  RD.scale = L.scale; RD.ox = L.ox; RD.oy = L.oy;
   if (MATCH.touch) TOUCH.layout();
+}
+// Größe, Drehung, Zoom (devicePixelRatio) oder Eingabemodus geändert? -> neu layouten (pro Frame geprüft)
+function checkArenaSize() {
+  const c = RD.c; if (!c) return;
+  if (c.clientWidth !== RD.cw || c.clientHeight !== RD.ch || (window.devicePixelRatio || 1) !== RD.dprRaw || !!MATCH.touch !== RD.touchL) {
+    const rot = RD.cw && (c.clientWidth > c.clientHeight) !== (RD.cw > RD.ch);
+    if (rot) TOUCH.reset(); // laufende Touch-Gesten beziehen sich auf die alte Anordnung
+    resizeArena();
+  }
 }
 function getFX(f) { let fx = RD.fx.get(f.id); if (!fx || fx.ai !== f.aura) { fx = new AuraFX(f.aura); RD.fx.set(f.id, fx); } fx.seen = RD.t; return fx; }
 function hpRatio(f) { if (f.kind === 'decoy' && f.owner && typeof f.owner === 'object') return f.owner.hp / f.owner.mhp; return f.hp / f.mhp; }
@@ -3399,15 +3456,15 @@ function slotIcon(ai, i, m) {
 }
 const KEYS = ['LMB', 'Q', 'E', 'R'];
 function drawHUD(view, local, dt) {
-  const x = RD.x, w = RD.c.clientWidth, hh = RD.c.clientHeight;
-  if (w < 200 || hh < 200) return;
-  x.setTransform(RD.dpr, 0, 0, RD.dpr, 0, 0);
+  const x = RD.x, L = RD.L; if (!L || RD.c.clientWidth < 160 || RD.c.clientHeight < 160) return;
+  const w = L.Wu, hh = L.Hu; // UI-Einheiten (CSS px / ui)
+  x.setTransform(RD.dpr * L.ui, 0, 0, RD.dpr * L.ui, 0, 0);
   if (VFX.flash) { const k = 1 - VFX.flash.t / .5; x.globalCompositeOperation = 'lighter'; x.fillStyle = rgba(VFX.flash.col, VFX.flash.a * k * k); x.fillRect(0, 0, w, hh); x.globalCompositeOperation = 'source-over'; }
   if (VFX.vign > .02) { const g = x.createRadialGradient(w / 2, hh / 2, Math.min(w, hh) * .32, w / 2, hh / 2, Math.hypot(w, hh) * .56); g.addColorStop(0, 'rgba(255,30,50,0)'); g.addColorStop(1, `rgba(255,30,50,${Math.min(.55, VFX.vign * .7)})`); x.fillStyle = g; x.fillRect(0, 0, w, hh); }
   x.textBaseline = 'middle';
   // Oben rechts: Spielerliste
   const players = view.f.filter(f => f.kind === 'player').sort((a, b) => (b.alive - a.alive) || (hpRatio(b) - hpRatio(a)));
-  const compact = MATCH.touch || w < 760;
+  const compact = MATCH.touch || L.list !== 'full';
   let ly = 54; const lx = w - 214;
   if (compact) { x.font = `800 11px ${FONT}`; x.textAlign = 'right'; x.fillStyle = 'rgba(10,14,30,.75)'; rr(x, w - 132, 10, 122, 26, 9); x.fill(); x.fillStyle = '#e8ecff'; x.fillText(players.filter(p => p.alive).length + ' / ' + players.length + ' am Leben', w - 20, 23); x.textAlign = 'left'; ly = 50; }
   else {
@@ -3422,10 +3479,11 @@ function drawHUD(view, local, dt) {
     x.globalAlpha = 1; ly += 24;
   }
   }
-  // Kill-Feed (auf Touch unterhalb der Lebensanzeige)
-  if (MATCH.touch) ly = Math.max(ly, 84);
+  // Kill-Feed (auf Touch unterhalb der Lebensanzeige bzw. der Zählers)
+  if (MATCH.touch) ly = L.feedY - 10;
   ly += 10;
   for (const k of VFX.kills) {
+    if (ly > L.feedMax) break;
     const al = Math.min(1, (6 - k.t) * 1.5); x.globalAlpha = al; const kn = MATCH.names[k.k], vn = MATCH.names[k.v];
     const s = kn ? `${kn.name} ✦ ${vn ? vn.name : '?'}` : `${vn ? vn.name : '?'} ist gefallen`;
     x.font = `700 12px ${FONT}`; const tw = x.measureText(s).width; x.fillStyle = 'rgba(10,14,30,.7)'; rr(x, w - tw - 30, ly - 11, tw + 20, 22, 8); x.fill();
@@ -3436,13 +3494,13 @@ function drawHUD(view, local, dt) {
   if (view.phase === 'fight') {
     const left = (WD && MATCH.mode !== 'client' ? WD.stormT - WD.ft : view.stormIn);
     x.font = `800 12px ${FONT}`; x.fillStyle = view.stormR < 980 ? '#ff7aa8' : '#8c96bb';
-    x.fillText(view.stormR < 980 ? (compact ? 'ZONE SCHRUMPFT!' : 'DIE ZONE SCHRUMPFT – BLEIB IM KREIS') : 'Zone schrumpft in ' + Math.max(0, Math.ceil(left || 0)) + ' s', w / 2, MATCH.touch ? 100 : 22);
+    x.fillText(view.stormR < 980 ? (compact ? 'ZONE SCHRUMPFT!' : 'DIE ZONE SCHRUMPFT – BLEIB IM KREIS') : 'Zone schrumpft in ' + Math.max(0, Math.ceil(left || 0)) + ' s', w / 2, MATCH.touch ? L.zoneY : 22);
   }
-  if (MATCH.ping !== undefined && MATCH.mode === 'client') { x.font = `600 11px ${FONT}`; x.fillStyle = '#5d668a'; x.textAlign = 'left'; x.fillText('Ping ' + MATCH.ping + ' ms', 120, 26); }
+  if (MATCH.ping !== undefined && MATCH.mode === 'client' && L.ping) { x.font = `600 11px ${FONT}`; x.fillStyle = '#5d668a'; x.textAlign = 'left'; x.fillText('Ping ' + MATCH.ping + ' ms', L.ping.x, L.ping.y); }
   // Countdown
   if (view.phase === 'count') { x.textAlign = 'center'; const n = Math.ceil(view.cd); x.font = `900 96px ${FONT}`; x.fillStyle = '#fff'; x.shadowColor = '#7c8cff'; x.shadowBlur = 40; x.fillText(n > 0 ? n : 'KAMPF!', w / 2, hh * .4); x.shadowBlur = 0; }
   if (!local) return;
-  if (MATCH.touch) { drawTouchHUD(x, w, local); return; }
+  if (MATCH.touch) { drawTouchHUD(x, L, local); return; }
   // Unten: HP, Stamina, Moves
   const a = AURAS[local.aura], bw = Math.min(420, w - 40), bx = (w - bw) / 2;
   const slotS = Math.min(64, (bw - 30) / 4), sy = hh - slotS - 18;
@@ -3476,8 +3534,8 @@ function drawHUD(view, local, dt) {
     x.textAlign = 'center'; x.font = `700 9px ${FONT}`; x.fillStyle = '#c3cae6'; x.fillText(m.n.length > 14 ? m.n.slice(0, 13) + '…' : m.n, sx2 + slotS / 2, sy - 7);
   }
 }
-function drawTouchHUD(x, w, local) {
-  const bw = Math.min(340, w - 150), bx = (w - bw) / 2, y = 44;
+function drawTouchHUD(x, L, local) {
+  const bw = L.hp.w, bx = L.hp.x, y = L.hp.y;
   x.fillStyle = 'rgba(10,14,30,.75)'; rr(x, bx - 8, y - 8, bw + 16, 40, 10); x.fill();
   const hr = clamp(local.hp / local.mhp, 0, 1), er = clamp(local.en / local.men, 0, 1);
   x.fillStyle = 'rgba(0,0,0,.55)'; x.fillRect(bx, y, bw, 12); x.fillStyle = hr > .5 ? '#4ade80' : hr > .25 ? '#fbbf24' : '#ff4d6d'; x.fillRect(bx, y, bw * hr, 12);
@@ -4113,6 +4171,7 @@ function leaveArena() {
 }
 function arenaFrame(dt) {
   if (!MATCH.mode) return;
+  checkArenaSize();
   let view, local = null;
   if (MATCH.mode === 'client') {
     const lp = MATCH.srv;
@@ -4662,7 +4721,9 @@ function init() {
     else if (MATCH.mode === 'host') { if (MATCH.ended || confirm('Match beenden? Alle Spieler kehren in den Raum zurück.')) { leaveArena(); openMP(); } }
     else if (MATCH.ended || confirm('Training abbrechen?')) leaveArena();
   };
-  addEventListener('resize', () => { if (SCREEN === 'arena') resizeArena(); });
+  const relayout = () => { if (SCREEN === 'arena') checkArenaSize(); };
+  addEventListener('resize', relayout); addEventListener('orientationchange', () => setTimeout(relayout, 60));
+  if (window.visualViewport) visualViewport.addEventListener('resize', relayout);
   addEventListener('pointerdown', () => AU.init(), { once: false, passive: true });
   addEventListener('keydown', e => {
     if (REVEAL.open && (e.code === 'Enter' || e.code === 'Space') && REVEAL.el) { e.preventDefault(); closeReveal(); return; }
