@@ -2805,7 +2805,7 @@ const VFX = {
   dash(x1, y1, x2, y2, ai, v = 0) {
     const I = fxInfo(ai), tv = I.tv, ang = Math.atan2(y2 - y1, x2 - x1), cf = this.cf(x1, y1);
     if (v === 28) { // Fledermausschwarm entlang der Strecke
-      for (let i = 0; i < 14 * Math.max(.5, this.q); i++) { const k = rand(0, 1), sp = rand(380, 620), a = ang + rand(-.5, .5); this.parts.push({ x: lerp(x1, x2, k * .4) + rand(-14, 14), y: lerp(y1, y2, k * .4) + rand(-14, 14), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: .6, max: .6, col: pick([mix(I.c1, '#000000', .25), I.c1, '#fecaca']), s: rand(3.4, 4.6), sh: 'bat', rot: 0, vr: 0, drag: 2.2, g: 0 }); }
+      for (let i = 0; i < 16 * Math.max(.5, this.q); i++) { const k = rand(0, 1), sp = rand(240, 420), a = ang + rand(-.7, .7); this.parts.push({ x: lerp(x1, x2, k * .8) + rand(-22, 22), y: lerp(y1, y2, k * .8) + rand(-22, 22), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: .7, max: .7, col: pick([I.c1, '#fecaca', '#fb7185']), s: rand(5, 6.8), sh: 'bat', rot: 0, vr: 0, drag: 1.8, g: 0 }); }
       this.spawn(10 * cf, x1, y1, { cols: [I.c1, '#fecaca'], sh: 'dot', spd: 200, life: .4, s: 1.6, ang, spread: .6 });
     } else if (v) { const acc = VIS_COL[v]; for (let i = 0; i < 4; i++) { const k = (i + .5) / 4; this.spawn(5 * tv.p * cf, lerp(x1, x2, k), lerp(y1, y2, k), { cols: acc ? [acc[0], acc[1], I.c1] : [I.c1, I.c2], sh: VIS_SH[v] || I.sh, spd: 90, life: .6, s: 2.4, drag: 2 }); } if (v === 21) this.lines.push({ x1, y1, x2, y2, w: 5, col: I.c1, col2: '#e0f2fe', t: 0, max: .2, vis: 1, tier: I.t, seed: rand(1000) }); if (v === 23) this.arcs.push({ x: x2, y: y2, ang, R: 46, arc: 2.4, col: '#e0f2fe', col2: I.c2, vis: 1, t: 0, max: .35, tier: I.t }); }
     this.ring(x1, y1, 34 + I.t * 3, I.c1, { w: 3, max: .25 });
