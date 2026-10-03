@@ -1059,7 +1059,12 @@ AURAS.forEach(a => { a.oneIn = Math.round(100 / (TIERS[a.t].p / TIER_AURAS[a.t].
 const AURA_BY_ID = Object.fromEntries(AURAS.map(a => [a.id, a]));
 
 /* =====================================================================
-   SPEICHERSTAND (localStorage)
+   SPEICHERSTAND
+   • Lokal: localStorage (sofort, auch in der heruntergeladenen Datei).
+   • Als claude.ai-Artefakt zusätzlich dauerhaft in der privaten Datenbank
+     der Person (data/users/<id>/save) – überlebt geleerten Browser-Speicher,
+     private Fenster und Gerätewechsel. Der neuere Stand (savedAt) gewinnt.
+   • Export/Import als Code (Hilfe → Speicherstand) als manuelle Sicherung.
    ===================================================================== */
 const SAVE_KEY = 'auraRngArena.v1';
 function defaultSave() {
@@ -1067,13 +1072,77 @@ function defaultSave() {
     potions: { luck1: 1, klee: 2 }, boosts: [], queue: [], bonusCharges: 0,
     sound: true, quick: false, stats: { wins: 0, matches: 0, kills: 0, best: -1 }, hist: [], newIds: {} };
 }
+function normalizeSave(d) {
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
+  const s = Object.assign(defaultSave(), d); s.stats = Object.assign(defaultSave().stats, d.stats || {});
+  for (const k of ['owned', 'potions', 'newIds']) if (!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {};
+  for (const k of ['boosts', 'queue', 'hist']) if (!Array.isArray(s[k])) s[k] = [];
+  if (s.equipped && !AURA_BY_ID[s.equipped]) s.equipped = null;
+  s.savedAt = +s.savedAt || 0;
+  return s;
+}
 function loadSave() {
-  try { const d = JSON.parse(localStorage.getItem(SAVE_KEY)); if (d && typeof d === 'object') { const s = Object.assign(defaultSave(), d); s.stats = Object.assign(defaultSave().stats, d.stats || {}); return s; } } catch (e) { }
+  try { const s = normalizeSave(JSON.parse(localStorage.getItem(SAVE_KEY))); if (s) return s; } catch (e) { }
   return defaultSave();
 }
 const S = loadSave();
-if (S.equipped && !AURA_BY_ID[S.equipped]) S.equipped = null;
-function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } }
+function save() {
+  S.savedAt = Date.now();
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { }
+  CLOUD.queue();
+}
+// Kompletten Spielstand ersetzen (Cloud-Laden, Import) – S bleibt dasselbe Objekt
+function replaceSave(d) {
+  const n = normalizeSave(d); if (!n) return false;
+  for (const k of Object.keys(S)) delete S[k];
+  Object.assign(S, n);
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { }
+  return true;
+}
+const CLOUD = {
+  ref: null, state: 'local', busy: false, dirty: false, timer: 0, last: 0,
+  // Startet im Hintergrund; ohne Artefakt-Umgebung bleibt alles lokal
+  async init() {
+    try {
+      const use = window.claude && window.claude.use; if (typeof use !== 'function') return;
+      this.state = 'connecting';
+      const [db, user] = await Promise.all([use('db'), use('user')]);
+      const id = db && user ? await user.id() : null;
+      if (!id) { this.state = 'local'; return; }
+      this.ref = db.doc('data/users/' + id + '/save');
+      const snap = await this.ref.get(), d = snap.exists ? snap.data() : null;
+      let remote = null; try { remote = d && typeof d.s === 'string' ? normalizeSave(JSON.parse(d.s)) : null; } catch (e) { }
+      this.state = 'cloud';
+      if (remote && remote.savedAt > (S.savedAt || 0)) this.applyRemote(remote);
+      else if (!remote || (S.savedAt || 0) > remote.savedAt) this.flush();
+    } catch (e) { this.state = this.ref ? 'cloud' : 'local'; }
+  },
+  // neueren Cloud-Stand übernehmen, sobald nichts läuft (kein Roll, kein Match)
+  applyRemote(remote, tries = 0) {
+    if (SCREEN !== 'lobby' || ROLLST.busy || REVEAL.open || MATCH.mode) { if (tries < 40) setTimeout(() => this.applyRemote(remote, tries + 1), 1500); return; }
+    if (remote.savedAt <= (S.savedAt || 0)) return;
+    replaceSave(remote); closeAllModals(); renderLobby(); updateLuckUI();
+    const ni = $('#nameInput'); if (ni) ni.value = S.name;
+    toast('Spielstand geladen', 'good');
+  },
+  queue() { if (!this.ref) return; this.dirty = true; clearTimeout(this.timer); this.timer = setTimeout(() => this.flush(), Math.max(2500, 10000 - (Date.now() - this.last))); },
+  async flush() {
+    if (!this.ref) return; if (this.busy) { this.dirty = true; return; }
+    this.busy = true; this.dirty = false; clearTimeout(this.timer); this.last = Date.now();
+    try { await this.ref.set({ v: 1, t: S.savedAt || Date.now(), s: JSON.stringify(S) }); this.state = 'cloud'; }
+    catch (e) {
+      if (e && e.code === 'unavailable' && !this._retry) { this._retry = true; setTimeout(() => { this._retry = false; this.queue(); }, 1500 + Math.random() * 1500); }
+      else if (e && (e.code === 'revoked' || e.code === 'not_granted')) { this.ref = null; this.state = 'local'; }
+    }
+    this.busy = false;
+    if (this.dirty) this.queue();
+  },
+};
+// Export/Import als Code (Base64 von UTF-8-JSON)
+function exportSaveCode() { const j = JSON.stringify(S); return 'AURA1:' + btoa(unescape(encodeURIComponent(j))); }
+function importSaveCode(code) {
+  try { const t = String(code || '').trim().replace(/^AURA1:/, ''); const d = JSON.parse(decodeURIComponent(escape(atob(t)))); if (!replaceSave(d)) return false; save(); return true; } catch (e) { return false; }
+}
 const ownedCount = () => Object.keys(S.owned).filter(k => AURA_BY_ID[k]).length;
 
 /* =====================================================================
@@ -4431,7 +4500,20 @@ function openHelp() {
     <div><b style="color:#fff">Kampf</b><br>Jeder Move kostet Stamina (gelbe Leiste, regeneriert sich laufend) und hat eine Abklingzeit. Bei 0 HP scheidest du aus. Nach ~40 s schrumpft eine Sturmzone – wer draußen steht, verliert HP. Der letzte Überlebende gewinnt.</div>
     <div><b style="color:#fff">Auren</b><br>64 Auren in 9 Seltenheitsstufen – jede mit eigener Rolle, eigenen Werten und einem eigenständigen Moveset (Schadensart, Reichweite/Form, Zusatzeffekte und Taktik unterscheiden sich). Seltenere Auren haben komplexere Mechaniken wie Zeitreisen, Zwillinge, Seelentausch oder Zeitstopp.</div>
     <div><b style="color:#fff">Multiplayer</b><br>Ein Spieler erstellt einen Raum und teilt den 6-stelligen Code. Andere öffnen dieselbe HTML-Datei und treten mit dem Code bei. Start ab 2 Spielern, bis zu 10 im Free-for-All. Die Verbindung läuft per WebRTC direkt zwischen den Browsern (Signaling über den öffentlichen PeerJS-Server).</div>
-    <div><b style="color:#fff">Speicherstand</b><br>Fortschritt wird automatisch im Browser gespeichert (localStorage).</div></div>`, 'mid');
+    <div><b style="color:#fff">Speicherstand</b><br>Dein Fortschritt (Auren, Sternenstaub, Tränke, Statistik) wird automatisch gespeichert – lokal im Browser und, wenn das Spiel als claude.ai-Artefakt läuft, zusätzlich dauerhaft in deinem privaten Speicher.<br>
+      <span id="saveState" style="color:#8c96bb"></span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn small" id="saveExport">Spielstand exportieren</button><button class="btn small" id="saveImport">Spielstand importieren</button></div>
+      <textarea id="saveCode" spellcheck="false" style="display:none;width:100%;height:84px;margin-top:8px;background:rgba(0,0,0,.35);color:#e8ecff;border:1px solid var(--line2);border-radius:10px;padding:8px;font:12px/1.4 ui-monospace,monospace;resize:vertical"></textarea>
+      <div id="saveImportRow" style="display:none;margin-top:6px"><button class="btn small" id="saveImportGo">Code laden</button></div></div></div>`, 'mid');
+  const st = $('#saveState'), code = $('#saveCode');
+  st.textContent = CLOUD.state === 'cloud' ? '✓ Dauerhafter Speicher aktiv' : CLOUD.state === 'connecting' ? 'Verbinde mit dauerhaftem Speicher …' : 'Nur lokal (im Browser) gespeichert – sichere ihn bei Bedarf per Export.';
+  $('#saveExport').onclick = () => { code.style.display = 'block'; $('#saveImportRow').style.display = 'none'; code.value = exportSaveCode(); code.select(); try { navigator.clipboard && navigator.clipboard.writeText(code.value).then(() => toast('Code kopiert', 'good'), () => {}); } catch (e) { } };
+  $('#saveImport').onclick = () => { code.style.display = 'block'; code.value = ''; code.placeholder = 'Exportierten Code hier einfügen (AURA1:…)'; $('#saveImportRow').style.display = 'block'; code.focus(); };
+  $('#saveImportGo').onclick = () => {
+    if (!confirm('Aktuellen Spielstand durch den importierten ersetzen?')) return;
+    if (importSaveCode(code.value)) { closeAllModals(); renderLobby(); updateLuckUI(); const ni = $('#nameInput'); if (ni) ni.value = S.name; toast('Spielstand importiert', 'good'); }
+    else toast('Ungültiger Code', 'bad');
+  };
 }
 
 /* ---------- Training ---------- */
@@ -4729,8 +4811,10 @@ function init() {
     if (REVEAL.open && (e.code === 'Enter' || e.code === 'Space') && REVEAL.el) { e.preventDefault(); closeReveal(); return; }
     if (SCREEN === 'lobby' && !MODALS.length && e.code === 'Space' && e.target === document.body) { e.preventDefault(); doRoll(); }
   });
-  addEventListener('beforeunload', () => { save(); if (NET.role === 'client') NET.tr && NET.tr.send({ t: 'leave' }); if (NET.role === 'host') NET.tr && NET.tr.broadcast({ t: 'reject', reason: 'Der Host hat das Spiel geschlossen.' }); });
+  addEventListener('beforeunload', () => { save(); CLOUD.flush(); if (NET.role === 'client') NET.tr && NET.tr.send({ t: 'leave' }); if (NET.role === 'host') NET.tr && NET.tr.broadcast({ t: 'reject', reason: 'Der Host hat das Spiel geschlossen.' }); });
   renderLobby();
+  CLOUD.init();
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); CLOUD.flush(); } });
   const jc = new URLSearchParams(location.search).get('join');
   if (jc) setTimeout(() => { if (S.equipped) openMP(jc.toUpperCase()); else toast('Rolle zuerst eine Aura, dann kannst du dem Spiel ' + jc.toUpperCase() + ' beitreten.'); }, 400);
   requestAnimationFrame(frame);
