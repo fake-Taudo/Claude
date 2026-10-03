@@ -1260,6 +1260,7 @@ function drawGlyph(x, a, s) { // Glyph einer Aura in Einheitsgröße zeichnen (K
 }
 function rainbowRing(x, cx, cy, r, w, t, segs = 36, alpha = 1) {
   x.lineWidth = w;
+  if (x.createConicGradient && r > 0) { const g = x.createConicGradient(-t * Math.PI / 2, cx, cy); for (let i = 0; i <= 6; i++) g.addColorStop(i / 6, `hsla(${i * 60},95%,65%,${alpha})`); x.strokeStyle = g; circ(x, cx, cy, r); x.stroke(); return; }
   for (let i = 0; i < segs; i++) { x.strokeStyle = `hsla(${(i / segs * 360 + t * 90) % 360},95%,65%,${alpha})`; x.beginPath(); x.arc(cx, cy, r, i / segs * TAU, (i + 1.05) / segs * TAU); x.stroke(); }
 }
 const ICON_CACHE = {};
@@ -1349,7 +1350,7 @@ class AuraFX {
       else { p.x += p.vx * dt; p.y += p.vy * dt; if (p.drag) { p.vx *= 1 - p.drag * dt; p.vy *= 1 - p.drag * dt; } }
       if (p.ring) p.s += dt * r * 1.8;
     }
-    if (this.p.length > 90) this.p.splice(0, this.p.length - 90);
+    const pc = intensity >= 1 ? 90 : Math.max(24, Math.round(90 * intensity)); if (this.p.length > pc) this.p.splice(0, this.p.length - pc);
     this.p = this.p.filter(p => p.life > 0);
   }
   spawn(mo, sh, x, y, r) {
@@ -1379,7 +1380,9 @@ class AuraFX {
     if (T >= 3) glow(x, a.c2v, cx, cy, r * (1.9 + T * .1), .22 * alpha);
     if (T >= 5) { // Lichtstrahlen
       x.save(); x.translate(cx, cy); x.rotate(t * .25); const n = 6 + T;
-      for (let i = 0; i < n; i++) { x.rotate(TAU / n); const g = x.createLinearGradient(0, 0, 0, -r * (3 + T * .25)); g.addColorStop(0, rgba(a.c1, .28 * alpha)); g.addColorStop(1, rgba(a.c1, 0)); x.fillStyle = g; path(x, [-r * .14, 0, 0, -r * (3 + T * .25), r * .14, 0]); x.fill(); }
+      const L = r * (3 + T * .25), w = r * .14, g = x.createRadialGradient(0, 0, 0, 0, 0, L); g.addColorStop(0, rgba(a.c1, .28 * alpha)); g.addColorStop(1, rgba(a.c1, 0)); x.fillStyle = g; x.beginPath();
+      for (let i = 0; i < n; i++) { const an = (i + 1) * TAU / n, c = Math.cos(an), sn = Math.sin(an); x.moveTo(-w * c, -w * sn); x.lineTo(L * sn, -L * c); x.lineTo(w * c, w * sn); x.closePath(); }
+      x.fill();
       x.restore();
     }
     x.restore();
@@ -2628,20 +2631,26 @@ function stampDecal(x, y, r, col, str = 1, crack = false) {
   if (crack) { d.strokeStyle = `rgba(0,0,0,${.45 * str})`; d.lineWidth = 2.5; for (let i = 0; i < 7; i++) { let a = rand(TAU), px = x, py = y; d.beginPath(); d.moveTo(px, py); for (let k = 0; k < 4; k++) { a += rand(-.5, .5); px += Math.cos(a) * r * .28; py += Math.sin(a) * r * .28; d.lineTo(px, py); } d.stroke(); } }
 }
 
+const VFX_LIM = [['rings', 90], ['flashes', 70], ['lines', 80], ['arcs', 40], ['rays', 24], ['pillars', 8], ['ghosts', 60], ['runes', 20], ['bubbles', 20], ['tps', 20], ['nums', 60], ['texts', 20]];
 const VFX = {
   parts: [], rings: [], lines: [], arcs: [], flashes: [], ghosts: [], rays: [], pillars: [], bubbles: [], runes: [], tps: [], later: [],
   nums: [], texts: [], kills: [], shake: 0, flash: null, vign: 0, q: 1, ema: 1 / 60, crowd: 1,
   clear() {
     for (const k of ['parts', 'rings', 'lines', 'arcs', 'flashes', 'ghosts', 'rays', 'pillars', 'bubbles', 'runes', 'tps', 'later', 'nums', 'texts', 'kills']) this[k] = [];
-    this.shake = 0; this.flash = null; this.vign = 0; decalInit();
+    this.shake = 0; this.flash = null; this.vign = 0; this.lastUpd = performance.now(); decalInit();
   },
   cap() { return (MATCH.touch ? 760 : 1500) * this.q; },
   cf(x, y) { const me = localFighterView(); if (!me || !me.alive) return this.crowd; return d2(x, y, me.x, me.y) < 300 * 300 ? 1 : this.crowd; },
   kick(x, y, amt) { const me = localFighterView(); const fo = me && me.alive ? clamp(1 - Math.hypot(me.x - x, me.y - y) / 700, 0, 1) : .35; this.shake = Math.min(16, Math.max(this.shake, amt * fo)); },
-  flashAt(x, y, col, a) { const me = localFighterView(); const fo = me && me.alive ? clamp(1 - Math.hypot(me.x - x, me.y - y) / 900, 0, 1) : .5; if (a * fo > .02) this.flash = { col, a: Math.min(.45, a * fo), t: 0 }; },
+  flashAt(x, y, col, a) {
+    const me = localFighterView(); const fo = me && me.alive ? clamp(1 - Math.hypot(me.x - x, me.y - y) / 900, 0, 1) : .5;
+    const cur = this.flash ? this.flash.a * (1 - this.flash.t / .5) ** 2 : 0, na = Math.min(.45, a * fo);
+    // nur ersetzen, wenn deutlich stärker oder nach kurzer Pause – kein Dauerflackern bei vielen Explosionen
+    if (na > .02 && na > cur + .02 && (na > cur * 1.6 || RD.t - (this.flT ?? -9) > .33)) { this.flash = { col, a: na, t: 0 }; this.flT = RD.t; }
+  },
   // Partikel erzeugen (o: cols/col, sh, spd, smin, life, s, ang, spread, drag, g, out, inward, vx, vy, dark)
   spawn(n, x, y, o) {
-    n = Math.round(n * this.q); const room = Math.floor(this.cap() - this.parts.length); if (room <= 0 || n <= 0) return; n = Math.min(n, room);
+    n = Math.round(n * this.q); const room = Math.floor(this.cap() * (this.cf(x, y) === 1 ? 1 : .7) - this.parts.length); if (room <= 0 || n <= 0) return; n = Math.min(n, room);
     const cols = o.cols || [o.col || '#ffffff'];
     for (let i = 0; i < n; i++) {
       const a = o.ang !== undefined ? o.ang + rand(-(o.spread || 0), o.spread || 0) : rand(TAU), v = rand(o.smin ?? (o.spd || 100) * .3, o.spd || 100);
@@ -2651,8 +2660,10 @@ const VFX = {
       this.parts.push(p);
     }
   },
+  add(p, low = true) { if (this.parts.length < this.cap() * (low ? .7 : 1)) this.parts.push(p); }, // Einzelpartikel mit Budget (low: Umgebung, lässt Platz für nahe Treffer)
   ring(x, y, r1, col, o = {}) { this.rings.push({ x, y, r0: o.r0 ?? r1 * .2, r1, col, w: o.w || 4, t: -(o.delay || 0), max: o.max || .4, fill: o.fill, rainbow: o.rainbow, dash: o.dash, off: o.off || 0 }); },
   handle(e) {
+    if (e[0] !== 'k' && performance.now() - this.lastUpd > 400) return; // Tab im Hintergrund: keine Effekte aufstauen
     if (!SCREEN_ARENA() && e[0] === 's') return;
     switch (e[0]) {
       case 'n': this.nums.push({ x: e[1], y: e[2], v: e[3], k: e[4], t: 0, max: e[4] === 4 ? .7 : e[4] === 2 ? 1.05 : .95, dx: rand(-14, 14) }); break;
@@ -2702,13 +2713,13 @@ const VFX = {
       if (!soft) this.spawn(n * .55, x, y, { cols: [c3, c1], sh: 'spark', spd: R * 3.4 + 80, smin: R, life: .28, s: 1.7, drag: 5 });
       if (tv.motes) this.spawn(n * .28, x, y, { cols: [c2, c1], sh: 'dot', spd: R * .7, life: 1 + t * .07, s: 1.5, drag: 1.4, g: -16, out: R * .6 });
       if (tv.spark) this.spawn((3 + t) * cf, x, y, { cols: ['#ffffff', c2], sh: 'star', spd: R * 1.4, life: .75, s: 2.6, drag: 2 });
-      if (tv.rays || R >= 200) this.rays.push({ x, y, len: R * 1.7, n: 7 + t, rot: rand(TAU), col: t >= 6 ? '#ffffff' : c1, t: 0, max: (.32 + t * .025), w: Math.max(4, R * .06) });
+      if (tv.rays || R >= 200) this.rays.push({ x, y, len: Math.min(R * 1.7, R + 160), n: 7 + t, rot: rand(TAU), col: t >= 6 ? '#ffffff' : c1, t: 0, max: (.32 + t * .025), w: Math.max(4, R * .06) });
       if (tv.rainbow) { this.ring(x, y, R * 1.3, '#fff', { r0: R * .3, w: 4, rainbow: true, max: .5, delay: .05 }); this.spawn((6 + t * 2) * cf, x, y, { cols: RAINBOW, sh: 'star', spd: R * 2, life: .6, s: 2.4, drag: 2.5 }); }
       if (tv.prism) { this.ring(x, y, R * 1.15, '#ff3d6e', { r0: R * .2, w: 3, off: -4, max: .42 }); this.ring(x, y, R * 1.15, '#3ee6ff', { r0: R * .2, w: 3, off: 4, max: .42 }); }
       switch (v) {
         case 1: case 10: this.spawn(n * .5, x, y, { cols: ['#ff7a1a', '#ffd166', '#ff3d1f'], sh: 'spark', spd: R * 1.6, life: .7, s: 2.2, drag: 2, g: -40 }); break;
         case 2: case 7: this.pillars.push({ x, y, w: R * .7, col: v === 7 ? '#fde68a' : c1, t: 0, max: .5 * tv.dur }); if (v === 7) this.rays.push({ x, y, len: R * 1.4, n: 10, rot: 0, col: '#fde68a', t: 0, max: .45, w: R * .05 }); break;
-        case 3: for (let i = 0; i < n * .5 * this.q; i++) this.parts.push({ x: x + rand(-R, R) * .4, y, vx: rand(-R, R) * 1.2, vy: -rand(R * 2.2, R * 4), life: .9, max: .9, col: pick(['#ff5a1f', '#ffb020', c1]), s: rand(2, 4), sh: 'dot', rot: 0, vr: 0, drag: .6, g: R * 8 }); break;
+        case 3: for (let i = 0; i < n * .5 * this.q; i++) this.add({ x: x + rand(-R, R) * .4, y, vx: rand(-R, R) * 1.2, vy: -rand(R * 2.2, R * 4), life: .9, max: .9, col: pick(['#ff5a1f', '#ffb020', c1]), s: rand(2, 4), sh: 'dot', rot: 0, vr: 0, drag: .6, g: R * 8 }); break;
         case 4: this.lines.push({ x1: x + rand(-40, 40), y1: y - 340, x2: x, y2: y, w: 9 + t, col: '#e0f2fe', col2: c1, t: 0, max: .28, vis: 1, tier: t, seed: rand(1000) }); this.flashes.push({ x, y, r: R * 1.4, col: '#e0f2fe', t: 0, max: .1, core: true }); break;
         case 6: this.ring(x, y, R * 1.1, '#e0f2fe', { w: 3, max: .55, dash: 1 }); this.spawn(n * .6, x, y, { cols: ['#ffffff', '#bae6fd', c1], sh: 'shard', spd: R * 2.2, life: .6, s: 3, drag: 3 }); break;
         case 8: this.spawn(n * .6, x, y, { cols: ['#78716c', '#a8a29e', '#57534e'], sh: 'square', spd: R * 2, life: .7, s: 3.2, drag: 3, dark: 1 }); break;
@@ -2805,7 +2816,7 @@ const VFX = {
   dash(x1, y1, x2, y2, ai, v = 0) {
     const I = fxInfo(ai), tv = I.tv, ang = Math.atan2(y2 - y1, x2 - x1), cf = this.cf(x1, y1);
     if (v === 28) { // Fledermausschwarm entlang der Strecke
-      for (let i = 0; i < 16 * Math.max(.5, this.q); i++) { const k = rand(0, 1), sp = rand(240, 420), a = ang + rand(-.7, .7); this.parts.push({ x: lerp(x1, x2, k * .8) + rand(-22, 22), y: lerp(y1, y2, k * .8) + rand(-22, 22), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: .7, max: .7, col: pick([I.c1, '#fecaca', '#fb7185']), s: rand(5, 6.8), sh: 'bat', rot: 0, vr: 0, drag: 1.8, g: 0 }); }
+      for (let i = 0; i < 16 * Math.max(.5, this.q) * cf; i++) { const k = rand(0, 1), sp = rand(240, 420), a = ang + rand(-.7, .7); this.add({ x: lerp(x1, x2, k * .8) + rand(-22, 22), y: lerp(y1, y2, k * .8) + rand(-22, 22), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: .7, max: .7, col: pick([I.c1, '#fecaca', '#fb7185']), s: rand(5, 6.8), sh: 'bat', rot: 0, vr: 0, drag: 1.8, g: 0 }); }
       this.spawn(10 * cf, x1, y1, { cols: [I.c1, '#fecaca'], sh: 'dot', spd: 200, life: .4, s: 1.6, ang, spread: .6 });
     } else if (v) { const acc = VIS_COL[v]; for (let i = 0; i < 4; i++) { const k = (i + .5) / 4; this.spawn(5 * tv.p * cf, lerp(x1, x2, k), lerp(y1, y2, k), { cols: acc ? [acc[0], acc[1], I.c1] : [I.c1, I.c2], sh: VIS_SH[v] || I.sh, spd: 90, life: .6, s: 2.4, drag: 2 }); } if (v === 21) this.lines.push({ x1, y1, x2, y2, w: 5, col: I.c1, col2: '#e0f2fe', t: 0, max: .2, vis: 1, tier: I.t, seed: rand(1000) }); if (v === 23) this.arcs.push({ x: x2, y: y2, ang, R: 46, arc: 2.4, col: '#e0f2fe', col2: I.c2, vis: 1, t: 0, max: .35, tier: I.t }); }
     this.ring(x1, y1, 34 + I.t * 3, I.c1, { w: 3, max: .25 });
@@ -2851,8 +2862,11 @@ const VFX = {
     this.flashAt(x, y, I.c1, .14 + I.t * .02);
   },
   update(dt) {
-    this.ema = this.ema * .95 + dt * .05;
-    if (this.ema > .026) this.q = Math.max(.35, this.q - dt * .6); else if (this.ema < .019) this.q = Math.min(1, this.q + dt * .25);
+    this.lastUpd = performance.now();
+    // Qualität an der tatsächlichen Bildrate messen: fmin = kürzestes Bildintervall des Geräts (30-Hz-Geräte nicht dauerhaft drosseln)
+    this.fmin = Math.min((this.fmin || dt) + dt * .002, Math.max(dt, .004)); this.ema = this.ema * .95 + dt * .05;
+    if (this.ema > Math.max(.026, this.fmin * 1.5)) this.q = Math.max(.35, this.q - dt * .6); else if (this.ema < Math.max(.019, this.fmin * 1.15)) this.q = Math.min(1, this.q + dt * .25);
+    for (const [k, mx] of VFX_LIM) if (this[k].length > mx) this[k].splice(0, this[k].length - mx);
     if (this.later.length) { for (const l of this.later) l.t -= dt; const due = this.later.filter(l => l.t <= 0); this.later = this.later.filter(l => l.t > 0); for (const l of due) l.fn(); }
     for (const p of this.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; const dr = Math.max(0, 1 - p.drag * dt); p.vx *= dr; p.vy = p.vy * dr + p.g * dt; p.rot += p.vr * dt; if (p.jit && Math.random() < .25) { p.x += rand(-p.jit, p.jit); p.y += rand(-p.jit, p.jit); } }
     for (const f of this.flashes) if (f.vx && f.t > 0) { f.x += f.vx * dt; f.y += f.vy * dt; }
@@ -2864,6 +2878,12 @@ const VFX = {
     if (this.flash) { this.flash.t += dt; if (this.flash.t > .5) this.flash = null; }
     if (DECAL.c && DECAL.live > 0) { DECAL.live -= dt; DECAL.acc += dt; if (DECAL.live <= 0) DECAL.x.clearRect(0, 0, W, H); else if (DECAL.acc > .25) { const d = DECAL.x; d.globalCompositeOperation = 'destination-out'; d.fillStyle = `rgba(0,0,0,${DECAL.acc * .22})`; d.fillRect(0, 0, W, H); d.globalCompositeOperation = 'source-over'; DECAL.acc = 0; } }
   },
+  drawGhosts(x) {
+    if (!this.ghosts.length) return;
+    x.save(); x.globalCompositeOperation = 'lighter';
+    for (const g of this.ghosts) { const k = 1 - g.t / g.max; glow(x, g.col, g.x, g.y, g.r * 2.6, .5 * k); x.strokeStyle = rgba(g.col, .7 * k); x.lineWidth = 2; circ(x, g.x, g.y, g.r * (1 + (1 - k) * .25)); x.stroke(); x.fillStyle = rgba(g.col, .16 * k); x.fill(); }
+    x.restore();
+  },
   drawGround(x) {
     if (DECAL.c && DECAL.live > 0) x.drawImage(DECAL.c, 0, 0, W, H);
     x.save(); x.globalCompositeOperation = 'lighter';
@@ -2872,8 +2892,8 @@ const VFX = {
   },
   draw(x) {
     const T0 = RD.t;
+    x.save(); x.beginPath(); x.rect(-30, -30, W + 60, H + 60); x.clip(); // Effekte bleiben in der Arena
     x.save(); x.globalCompositeOperation = 'lighter';
-    for (const g of this.ghosts) { const k = 1 - g.t / g.max; glow(x, g.col, g.x, g.y, g.r * 2.6, .5 * k); x.strokeStyle = rgba(g.col, .7 * k); x.lineWidth = 2; circ(x, g.x, g.y, g.r * (1 + (1 - k) * .25)); x.stroke(); x.fillStyle = rgba(g.col, .16 * k); x.fill(); }
     for (const p of this.pillars) {
       const k = p.t / p.max, a = 1 - k, wv = p.w * (1 - k * .6), gr = x.createLinearGradient(0, p.y - 520, 0, p.y);
       gr.addColorStop(0, rgba(p.col, 0)); gr.addColorStop(.7, rgba(p.col, .35 * a)); gr.addColorStop(1, rgba(p.col, .8 * a));
@@ -2881,9 +2901,10 @@ const VFX = {
       glow(x, p.col, p.x, p.y, p.w * 1.4, a * .8);
     }
     for (const r of this.rays) {
-      const k = r.t / r.max, a = 1 - k; x.save(); x.translate(r.x, r.y); x.rotate(r.rot + k * .6);
-      for (let i = 0; i < r.n; i++) { x.rotate(TAU / r.n); const L = r.tick ? r.len : r.len * easeOut(k * 1.6); const g = x.createLinearGradient(0, 0, 0, -L); g.addColorStop(0, rgba(r.col, .55 * a)); g.addColorStop(1, rgba(r.col, 0)); x.fillStyle = g; path(x, [-r.w, 0, 0, -L, r.w, 0]); x.fill(); }
-      x.restore();
+      const k = r.t / r.max, a = 1 - k, L = Math.max(1, r.tick ? r.len : r.len * easeOut(k * 1.6)); x.save(); x.translate(r.x, r.y); x.rotate(r.rot + k * .6);
+      const g = x.createRadialGradient(0, 0, 0, 0, 0, L); g.addColorStop(0, rgba(r.col, .55 * a)); g.addColorStop(1, rgba(r.col, 0)); x.fillStyle = g; x.beginPath();
+      for (let i = 0; i < r.n; i++) { const an = (i + 1) * TAU / r.n, c = Math.cos(an), sn = Math.sin(an); x.moveTo(-r.w * c, -r.w * sn); x.lineTo(L * sn, -L * c); x.lineTo(r.w * c, r.w * sn); x.closePath(); }
+      x.fill(); x.restore();
     }
     for (const a of this.arcs) this.drawArc(x, a);
     for (const l of this.lines) this.drawLine(x, l, T0);
@@ -2918,7 +2939,7 @@ const VFX = {
     // helle Partikel additiv
     for (const p of this.parts) {
       if (p.dark) continue; const k = p.life / p.max, al = Math.min(1, k * 2.4);
-      if (p.sh !== 'spark') glow(x, p.col, p.x, p.y, p.s * 3.2, al * .5);
+      if (p.sh !== 'spark' && (this.q > .7 || p.s > 2.6)) glow(x, p.col, p.x, p.y, p.s * 3.2, al * .5);
       x.globalAlpha = al; x.fillStyle = x.strokeStyle = p.col;
       if (p.sh === 'plus') { const s = p.s * (.6 + .4 * k); x.fillRect(p.x - s * .3, p.y - s * 1.2, s * .6, s * 2.4); x.fillRect(p.x - s * 1.2, p.y - s * .3, s * 2.4, s * .6); }
       else drawParticle(x, p.sh, p.x, p.y, p.s * (.55 + .45 * k), p.rot, p);
@@ -2929,8 +2950,10 @@ const VFX = {
     x.save();
     for (const p of this.parts) { if (!p.dark) continue; const k = p.life / p.max; x.globalAlpha = Math.min(.75, k * 1.5); x.fillStyle = p.col; drawParticle(x, p.sh, p.x, p.y, p.s * (.7 + .3 * k), p.rot, p); }
     x.restore();
+    x.restore();
   },
   drawArc(x, a) {
+    if (a.t < 0) return;
     const k = a.t / a.max, fade = 1 - k, tv = TV[a.tier], th = a.R * (.34 + a.tier * .015);
     if (a.vis === 1) {
       const base = a.ang + easeOut(k) * TAU * 1.15;
@@ -3037,6 +3060,7 @@ const FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
    ARENA-RENDERER
    ===================================================================== */
 const RD = { c: null, x: null, scale: 1, ox: 0, oy: 0, dpr: 1, fx: new Map(), t: 0, frame: 0, slotIcons: {}, trails: new Map(), hp: new Map(), flashT: new Map(), pos: new Map(), seen: new Set() };
+function rdReset() { RD.fx.clear(); RD.hp.clear(); RD.pos.clear(); RD.flashT.clear(); RD.seen.clear(); RD.trails.clear(); } // Entity-IDs beginnen jedes Match neu
 let FLOOR = null;
 function buildFloor() {
   const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
@@ -3054,7 +3078,7 @@ function buildFloor() {
 function resizeArena() {
   const c = RD.c, d = RD.dpr = Math.min(2, window.devicePixelRatio || 1);
   const w = c.clientWidth, hh = c.clientHeight; c.width = Math.round(w * d); c.height = Math.round(hh * d);
-  const port = hh > w, top = MATCH.touch ? (port ? 96 : 54) : 38, bottom = MATCH.touch ? (port ? Math.min(300, hh * .32) : 8) : (hh > 560 ? 160 : 12);
+  const port = hh > w, top = MATCH.touch ? (port ? 96 : 82) : 38, bottom = MATCH.touch ? (port ? Math.min(300, hh * .32) : 8) : (hh > 560 ? 160 : 12);
   RD.scale = Math.min(w / (W + 40), (hh - top - bottom) / H, 1.35); if (RD.scale < .25) RD.scale = Math.min(w / (W + 40), (hh - top) / H);
   RD.ox = (w - W * RD.scale) / 2; RD.oy = top + Math.max(0, (hh - top - bottom - H * RD.scale) / 2);
   if (MATCH.touch && !port) {
@@ -3140,7 +3164,7 @@ function drawZone(x, z, t, dt) {
     for (let i = 0; i < 4 + (I.t >= 4 ? 2 : 0); i++) { x.beginPath(); for (let k = 0; k <= 20; k++) { const tt = k / 20, a = i * TAU / (4 + (I.t >= 4 ? 2 : 0)) + tt * 3.5 * dir + t * 2.2 * dir, rr2 = R * (1 - tt * .9); k ? x.lineTo(cx + Math.cos(a) * rr2, cy + Math.sin(a) * rr2) : x.moveTo(cx + Math.cos(a) * rr2, cy + Math.sin(a) * rr2); } x.stroke(); }
     if (sty === 'void') { x.globalCompositeOperation = 'source-over'; x.fillStyle = 'rgba(0,0,0,.6)'; circ(x, cx, cy, Math.min(R * .3, 44)); x.fill(); x.globalCompositeOperation = 'lighter'; x.strokeStyle = rgba(c1, .8); x.lineWidth = 2; circ(x, cx, cy, Math.min(R * .3, 44) + 2); x.stroke(); }
   } else if (['gas', 'spore', 'mist', 'nebula'].includes(sty)) {
-    for (let i = 0; i < 7; i++) { const a = seed + i * 2.4 + t * .3 * (i % 2 ? 1 : -1), rr2 = R * (.25 + .5 * ((i * 37 % 10) / 10)); glow(x, i % 2 ? c2 : col, cx + Math.cos(a) * rr2, cy + Math.sin(a) * rr2, R * .6, .26); }
+    const nn = VFX.q > .6 ? 7 : 4; for (let i = 0; i < nn; i++) { const a = seed + i * 2.4 + t * .3 * (i % 2 ? 1 : -1), rr2 = R * (.25 + .5 * ((i * 37 % 10) / 10)); glow(x, i % 2 ? c2 : col, cx + Math.cos(a) * rr2, cy + Math.sin(a) * rr2, R * .6, .26 * 7 / nn * .8); }
   } else if (sty === 'electric') {
     x.strokeStyle = rgba(col, .75); x.lineWidth = 1.6;
     for (let i = 0; i < 3 + (I.t >= 3 ? 2 : 0); i++) { const a = rand(TAU), r1 = rand(R); x.beginPath(); x.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); for (let k = 0; k < 4; k++) x.lineTo(cx + Math.cos(a) * r1 + rand(-25, 25), cy + Math.sin(a) * r1 + rand(-25, 25)); x.stroke(); }
@@ -3148,7 +3172,7 @@ function drawZone(x, z, t, dt) {
     for (let i = 0; i < 12; i++) { const a = seed + i * 1.7, rr2 = R * ((i * 53 % 10) / 10), px = cx + Math.cos(a) * rr2, py = cy + Math.sin(a) * rr2 + ((t * 30 + i * 20) % 40) - 20; x.fillStyle = rgba('#ffffff', .65); circ(x, px, py, 1.8); x.fill(); }
     x.strokeStyle = rgba('#e0f2fe', .28); x.lineWidth = 1; for (let i = 0; i < 6; i++) { const a = seed + i * 1.3; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); x.stroke(); }
   } else if (['lava', 'fire'].includes(sty)) {
-    for (let i = 0; i < 7; i++) { const a = seed + i * 2.1, rr2 = R * ((i * 31 % 10) / 12); glow(x, i % 2 ? '#ffb020' : '#ff3d1f', cx + Math.cos(a) * rr2, cy + Math.sin(a) * rr2, R * .5 * (.8 + .2 * Math.sin(t * 6 + i)), .4); }
+    const nn = VFX.q > .6 ? 7 : 4; for (let i = 0; i < nn; i++) { const a = seed + i * 2.1, rr2 = R * ((i * 31 % 10) / 12); glow(x, i % 2 ? '#ffb020' : '#ff3d1f', cx + Math.cos(a) * rr2, cy + Math.sin(a) * rr2, R * .5 * (.8 + .2 * Math.sin(t * 6 + i)), .4); }
   } else if (['holy', 'life', 'flower', 'time'].includes(sty)) {
     glow(x, col, cx, cy, R * 1.1, .28); x.strokeStyle = rgba(col, .5); x.lineWidth = 2; x.setLineDash([6, 10]); x.lineDashOffset = t * 30; circ(x, cx, cy, R * .78); x.stroke(); x.setLineDash([]);
     if (sty === 'time') { x.save(); x.translate(cx, cy); x.rotate(t * 1.5); x.strokeStyle = rgba(c2, .65); x.lineWidth = 3; x.beginPath(); x.moveTo(0, 0); x.lineTo(0, -R * .7); x.stroke(); x.rotate(-t * 1.4); x.beginPath(); x.moveTo(0, 0); x.lineTo(R * .45, 0); x.stroke(); x.restore(); }
@@ -3170,7 +3194,7 @@ function drawZone(x, z, t, dt) {
     const [px, py] = zonePoint(z), up = ['fire', 'lava', 'holy', 'life', 'flower', 'spore', 'gas'].includes(sty), down = ['snow', 'ice'].includes(sty), inn = ['void', 'water', 'sand', 'wind', 'storm'].includes(sty);
     const ddx = cx - px, ddy = cy - py, dl = Math.hypot(ddx, ddy) || 1;
     const shp = sty === 'fire' || sty === 'lava' ? 'spark' : sty === 'snow' || sty === 'ice' ? 'flake' : sty === 'flower' || sty === 'life' ? 'petal' : sty === 'electric' || sty === 'storm' ? 'spark' : I.sh;
-    VFX.parts.push({ x: px, y: py, vx: inn ? ddx / dl * 60 : rand(-12, 12), vy: inn ? ddy / dl * 60 : up ? -rand(30, 70) : down ? rand(20, 40) : rand(-12, 12), life: .9, max: .9, col: Math.random() < .5 ? col : c2, s: rand(1.6, 2.8), sh: shp, rot: rand(TAU), vr: rand(-3, 3), drag: .5, g: 0 });
+    VFX.add({ x: px, y: py, vx: inn ? ddx / dl * 60 : rand(-12, 12), vy: inn ? ddy / dl * 60 : up ? -rand(30, 70) : down ? rand(20, 40) : rand(-12, 12), life: .9, max: .9, col: Math.random() < .5 ? col : c2, s: rand(1.6, 2.8), sh: shp, rot: rand(TAU), vr: rand(-3, 3), drag: .5, g: 0 });
   }
   if (life < .25) { x.save(); zonePath(x, z); x.strokeStyle = rgba(col, .45 * (Math.sin(t * 20) * .5 + .5)); x.lineWidth = 2; x.stroke(); x.restore(); }
 }
@@ -3192,7 +3216,7 @@ function drawTele(x, tl, t, top) {
       const u = tl.t / .42, mx = tl.x - 260 * u, my = tl.y - 380 * u, sz = 8 + tl.r * .18;
       x.strokeStyle = rgba('#ff9f43', .55); x.lineWidth = sz * 1.2; x.lineCap = 'round'; x.beginPath(); x.moveTo(mx - 90 * .7, my - 130 * .7); x.lineTo(mx, my); x.stroke();
       glow(x, '#ff7a1a', mx, my, sz * 4, .9); glow(x, '#ffffff', mx, my, sz * 1.6, .9);
-      if (Math.random() < .6) VFX.parts.push({ x: mx, y: my, vx: rand(-30, 30), vy: rand(-30, 30), life: .35, max: .35, col: pick(['#ff7a1a', '#ffd166']), s: 2.4, sh: 'dot', rot: 0, vr: 0, drag: 2, g: 0 });
+      if (Math.random() < .6) VFX.add({ x: mx, y: my, vx: rand(-30, 30), vy: rand(-30, 30), life: .35, max: .35, col: pick(['#ff7a1a', '#ffd166']), s: 2.4, sh: 'dot', rot: 0, vr: 0, drag: 2, g: 0 });
     } else if (v === 2 || v === 7) { const wv = Math.max(3, tl.r * .5 * (1 - k)); const g2 = x.createLinearGradient(0, tl.y - 420, 0, tl.y); g2.addColorStop(0, rgba(c1, 0)); g2.addColorStop(1, rgba(c1, .5 * k + .1)); x.fillStyle = g2; x.fillRect(tl.x - wv / 2, tl.y - 420, wv, 420); }
     else if (v === 4) { x.globalCompositeOperation = 'source-over'; x.fillStyle = `rgba(10,14,30,${.2 + .25 * k})`; circ(x, tl.x, tl.y - 4, tl.r * 1.05); x.fill(); x.globalCompositeOperation = 'lighter'; if (Math.random() < .3) VFX.lines.push({ x1: tl.x + rand(-tl.r, tl.r), y1: tl.y - 60, x2: tl.x + rand(-tl.r, tl.r) * .5, y2: tl.y - 10, w: 2, col: '#e0f2fe', col2: c1, t: 0, max: .08, vis: 1, tier: 0, seed: rand(1000) }); }
     else if (v === 5 && Math.random() < .5) VFX.spawn(2, tl.x, tl.y, { cols: [c1, '#ffffff'], sh: 'dot', inward: tl.r, life: .3, s: 1.8 });
@@ -3217,9 +3241,9 @@ function drawStatus(x, f, t, isEnemy) {
   if (fl & FL.form) { x.strokeStyle = rgba('#ff4d2d', .5 + .3 * Math.sin(t * 10)); x.lineWidth = 3; circ(x, f.x, f.y, r + 4); x.stroke(); }
   if (fl & FL.reflect) { x.strokeStyle = rgba('#e2e8f0', .7); x.lineWidth = 2; x.beginPath(); for (let i = 0; i <= 6; i++) { const a = i * TAU / 6 + t; i ? x.lineTo(f.x + Math.cos(a) * (r + 9), f.y + Math.sin(a) * (r + 9)) : x.moveTo(f.x + Math.cos(a) * (r + 9), f.y + Math.sin(a) * (r + 9)); } x.stroke(); }
   if (fl & FL.karma) { x.save(); x.translate(f.x, f.y); x.rotate(t * 2); x.strokeStyle = 'rgba(245,245,244,.6)'; x.lineWidth = 2; x.beginPath(); x.arc(0, 0, r + 8, 0, Math.PI); x.stroke(); x.strokeStyle = 'rgba(63,63,70,.9)'; x.beginPath(); x.arc(0, 0, r + 8, Math.PI, TAU); x.stroke(); x.restore(); }
-  if ((fl & FL.burn) && Math.random() < .25) VFX.parts.push({ x: f.x + rand(-r, r) * .7, y: f.y + rand(-r, r) * .5, vx: rand(-8, 8), vy: -rand(30, 60), life: .5, max: .5, col: '#ff9f43', s: 2.5, sh: 'spark', rot: 0, vr: 0, drag: 1, g: 0 });
-  if ((fl & (FL.poison | FL.plague)) && Math.random() < .18) VFX.parts.push({ x: f.x + rand(-r, r) * .7, y: f.y + rand(-r, r) * .5, vx: 0, vy: -rand(15, 30), life: .7, max: .7, col: '#a3e635', s: 2, sh: 'bubble', rot: 0, vr: 0, drag: 1, g: 0 });
-  if ((fl & FL.bleed) && Math.random() < .2) VFX.parts.push({ x: f.x + rand(-r, r) * .5, y: f.y, vx: 0, vy: rand(20, 40), life: .5, max: .5, col: '#ff4d6d', s: 2, sh: 'dot', rot: 0, vr: 0, drag: 1, g: 0 });
+  if ((fl & FL.burn) && Math.random() < .25) VFX.add({ x: f.x + rand(-r, r) * .7, y: f.y + rand(-r, r) * .5, vx: rand(-8, 8), vy: -rand(30, 60), life: .5, max: .5, col: '#ff9f43', s: 2.5, sh: 'spark', rot: 0, vr: 0, drag: 1, g: 0 });
+  if ((fl & (FL.poison | FL.plague)) && Math.random() < .18) VFX.add({ x: f.x + rand(-r, r) * .7, y: f.y + rand(-r, r) * .5, vx: 0, vy: -rand(15, 30), life: .7, max: .7, col: '#a3e635', s: 2, sh: 'bubble', rot: 0, vr: 0, drag: 1, g: 0 });
+  if ((fl & FL.bleed) && Math.random() < .2) VFX.add({ x: f.x + rand(-r, r) * .5, y: f.y, vx: 0, vy: rand(20, 40), life: .5, max: .5, col: '#ff4d6d', s: 2, sh: 'dot', rot: 0, vr: 0, drag: 1, g: 0 });
 }
 function drawFighter(x, f, t, dt, local) {
   const a = AURAS[f.aura], fl = f.fl, me = local && f.id === local.id, enemy = local ? f.team !== local.team : true;
@@ -3235,7 +3259,7 @@ function drawFighter(x, f, t, dt, local) {
     x.beginPath(); for (let i = 0; i < 6; i++) { const an = i * TAU / 6; x.lineTo(Math.cos(an) * f.r, Math.sin(an) * f.r); } x.closePath(); x.fill(); x.stroke(); x.shadowBlur = 0;
     x.rotate(f.ang); x.fillStyle = a.c1; x.fillRect(0, -3, f.r + 6, 6); x.fillStyle = a.c2v; circ(x, 0, 0, f.r * .4); x.fill(); x.restore();
   } else {
-    fx.update(dt, f.x, f.y, f.r, 1);
+    fx.update(dt, f.x, f.y, f.r, me ? Math.max(.6, VFX.q) : VFX.q * VFX.crowd);
     fx.drawBack(x, f.x, f.y, f.r, al);
     drawBody(x, a, f.x, f.y, f.r * (1 + hf * .8), f.ang, t, { alpha: al });
     fx.drawFront(x, al);
@@ -3286,16 +3310,18 @@ function drawArena(view, dt, local) {
   // Treffer-Aufblitzen, Rückmeldung bei eigenem Schaden, Nachbilder schneller Bewegung
   for (const f of view.f) {
     if (!f.alive) continue;
-    const ph = RD.hp.get(f.id); if (ph !== undefined && f.hp < ph - 1.2) { RD.flashT.set(f.id, .14); if (local && f.id === local.id) { const d = ph - f.hp; VFX.vign = Math.min(.75, VFX.vign + d / 40); VFX.kick(f.x, f.y, 1.5 + Math.min(7, d * .22)); } }
-    RD.hp.set(f.id, f.hp);
+    // gleiche HP wie Snapshot/Balken (Trugbilder spiegeln den Besitzer); Gäste nutzen die HP des Snapshots, dessen Events schon abgespielt sind
+    const hv = f.fhp ?? (f.kind === 'decoy' && f.owner && typeof f.owner === 'object' ? f.owner.hp : f.hp);
+    const ph = RD.hp.get(f.id); if (ph !== undefined && hv < ph - 1.2) { RD.flashT.set(f.id, .14); if (local && f.id === local.id) { const d = ph - hv; VFX.vign = Math.min(.75, VFX.vign + d / 40); VFX.kick(f.x, f.y, 1.5 + Math.min(7, d * .22)); } }
+    RD.hp.set(f.id, hv);
     const ft = RD.flashT.get(f.id); if (ft > 0) RD.flashT.set(f.id, ft - dt);
     const pp = RD.pos.get(f.id);
-    if (pp && dt > 0 && f.kind !== 'turret' && !((f.fl & FL.stealth) && local && f.team !== local.team)) { const dd = Math.hypot(f.x - pp[0], f.y - pp[1]); if (dd / dt > 640 && dd < 200 && VFX.ghosts.length < 120) VFX.ghosts.push({ x: f.x, y: f.y, r: f.r, col: fxInfo(f.aura).c1, t: 0, max: .26 + AURAS[f.aura].t * .015 }); }
+    if (pp && dt > 0 && dt < .049 && !view.noGhost && f.kind !== 'turret' && !((f.fl & FL.stealth) && local && f.team !== local.team)) { const dd = Math.hypot(f.x - pp[0], f.y - pp[1]); if (dd / dt > 640 && dd < 200 && VFX.ghosts.length < 120) VFX.ghosts.push({ x: pp[0], y: pp[1], r: f.r, col: fxInfo(f.aura).c1, t: 0, max: .26 + AURAS[f.aura].t * .015 }); }
     RD.pos.set(f.id, [f.x, f.y]);
   }
   x.setTransform(RD.dpr, 0, 0, RD.dpr, 0, 0);
   x.fillStyle = '#05070f'; x.fillRect(0, 0, w, hh);
-  const sk = VFX.shake, sx = sk ? Math.sin(t * 73) * sk : 0, sy = sk ? Math.cos(t * 61) * sk : 0;
+  const sk = VFX.shake * Math.min(1, Math.sqrt(RD.scale)), sx = sk ? Math.sin(t * 73) * sk : 0, sy = sk ? Math.cos(t * 61) * sk : 0;
   x.setTransform(RD.dpr * RD.scale, 0, 0, RD.dpr * RD.scale, RD.dpr * (RD.ox + sx), RD.dpr * (RD.oy + sy));
   x.drawImage(FLOOR, 0, 0);
   VFX.drawGround(x);
@@ -3318,7 +3344,7 @@ function drawArena(view, dt, local) {
     x.save(); x.globalAlpha = k; x.lineCap = 'round'; x.shadowColor = col; x.shadowBlur = 16 + I.t * 2;
     x.strokeStyle = wl.refl ? 'rgba(226,232,240,.9)' : col; x.lineWidth = 12 + Math.sin(t * 9 + wl.id) * 1.5; x.beginPath(); x.moveTo(wl.x1, wl.y1); x.lineTo(wl.x2, wl.y2); x.stroke();
     x.shadowBlur = 0; x.strokeStyle = wl.refl ? col : 'rgba(255,255,255,.7)'; x.lineWidth = 3; x.stroke(); x.restore();
-    if (Math.random() < .25 * VFX.q) { const kk = Math.random(); VFX.parts.push({ x: lerp(wl.x1, wl.x2, kk), y: lerp(wl.y1, wl.y2, kk), vx: rand(-20, 20), vy: -rand(20, 50), life: .5, max: .5, col, s: 1.8, sh: 'spark', rot: 0, vr: 0, drag: 2, g: 0 }); }
+    if (Math.random() < .25 * VFX.q) { const kk = Math.random(); VFX.add({ x: lerp(wl.x1, wl.x2, kk), y: lerp(wl.y1, wl.y2, kk), vx: rand(-20, 20), vy: -rand(20, 50), life: .5, max: .5, col, s: 1.8, sh: 'spark', rot: 0, vr: 0, drag: 2, g: 0 }); }
   }
   for (const p of PILLARS) {
     x.save(); x.fillStyle = '#141c3a'; x.strokeStyle = 'rgba(124,140,255,.65)'; x.lineWidth = 3; x.shadowColor = '#7c8cff'; x.shadowBlur = 14;
@@ -3330,11 +3356,12 @@ function drawArena(view, dt, local) {
     const I = fxInfo(te.ai ?? -1), c1 = PAL[te.col], mxp = (te.ax + te.bx) / 2 + Math.sin(t * 6) * 20, myp = (te.ay + te.by) / 2 + Math.cos(t * 6) * 20;
     x.strokeStyle = rgba(c1, .22); x.lineWidth = 12 + I.t; x.beginPath(); x.moveTo(te.ax, te.ay); x.quadraticCurveTo(mxp, myp, te.bx, te.by); x.stroke();
     x.strokeStyle = rgba(c1, .85); x.lineWidth = 3.5 + Math.sin(t * 20) * 1.5; x.stroke(); x.strokeStyle = rgba('#ffffff', .6); x.lineWidth = 1.2; x.stroke();
-    if (Math.random() < (.5 + I.t * .1) * VFX.q) { const L = .9; VFX.parts.push({ x: te.bx, y: te.by, vx: (te.ax - te.bx) / L, vy: (te.ay - te.by) / L, life: L * .9, max: L, col: pick([c1, I.c2]), s: 2.2, sh: 'dot', rot: 0, vr: 0, drag: 0, g: 0 }); }
+    if (Math.random() < (.5 + I.t * .1) * VFX.q) { const L = .9; VFX.add({ x: te.bx, y: te.by, vx: (te.ax - te.bx) / L, vy: (te.ay - te.by) / L, life: L * .9, max: L, col: pick([c1, I.c2]), s: 2.2, sh: 'dot', rot: 0, vr: 0, drag: 0, g: 0 }); }
   }
   x.restore();
   const fs = view.f;
   for (const f of fs) if (f.alive) { x.fillStyle = 'rgba(0,0,0,.35)'; x.beginPath(); x.ellipse(f.x, f.y + f.r * .85, f.r * .9, f.r * .3, 0, 0, TAU); x.fill(); }
+  VFX.drawGhosts(x); // Nachbilder unter den Kämpfern, damit der Körper sichtbar bleibt
   for (const f of fs) if (f.alive) drawFighter(x, f, t, dt, local);
   if (local && local.alive && MATCH.touch) TOUCH.drawAim(x, local, t);
   // Orbitale mit Spuren
@@ -3353,11 +3380,11 @@ function drawArena(view, dt, local) {
     if (I.t >= 4) glow(x, c2, p.x, p.y, r * 2.2 * (1 + .15 * Math.sin(t * 12 + p.id)), .45);
     if (tv.rays) { x.fillStyle = '#ffffff'; for (let i = 0; i < 2 + (I.t >= 7); i++) { const an = t * 9 + p.id + i * TAU / 3; x.save(); x.translate(p.x + Math.cos(an) * r * 2, p.y + Math.sin(an) * r * 2); starP(x, 4, 3.4, 1); x.fill(); x.restore(); } }
     if (tv.rainbow) { x.strokeStyle = rgba(RAINBOW[((t * 10 + p.id) | 0) % 8], .8); x.lineWidth = 2; circ(x, p.x, p.y, r * 1.7); x.stroke(); }
-    if (Math.random() < (.22 + I.t * .07) * VFX.q && VFX.parts.length < VFX.cap()) VFX.parts.push({ x: p.x, y: p.y, vx: -p.vx * .12 + rand(-25, 25), vy: -p.vy * .12 + rand(-25, 25), life: .4, max: .4, col: Math.random() < .5 ? c1 : c2, s: rand(1.2, 2.2) + I.t * .1, sh: I.sh, rot: rand(TAU), vr: 4, drag: 2, g: 0 });
+    if (Math.random() < (.22 + I.t * .07) * VFX.q && VFX.parts.length < VFX.cap()) VFX.add({ x: p.x, y: p.y, vx: -p.vx * .12 + rand(-25, 25), vy: -p.vy * .12 + rand(-25, 25), life: .4, max: .4, col: Math.random() < .5 ? c1 : c2, s: rand(1.2, 2.2) + I.t * .1, sh: I.sh, rot: rand(TAU), vr: 4, drag: 2, g: 0 });
   }
   x.restore();
   for (const p of view.p) { const I = fxInfo(p.ai ?? -1), c1 = PAL[p.col], c2 = PAL[p.col2] || '#fff'; x.save(); x.translate(p.x, p.y); x.rotate(Math.atan2(p.vy, p.vx)); drawShape(x, p.sh, p.r * (1 + I.t * .05), c1, c2, t + p.id); x.restore(); }
-  if (RD.frame % 30 === 0) { for (const [id, tr] of RD.trails) if (tr.seen !== RD.frame) RD.trails.delete(id); if (RD.seen.size > 600) RD.seen.clear(); }
+  if (RD.frame % 30 === 0) { for (const [id, tr] of RD.trails) if (tr.seen !== RD.frame) RD.trails.delete(id); if (RD.seen.size > 600) RD.seen = new Set([...view.z.map(z => 'z' + z.id), ...view.wl.map(w => 'w' + w.id)]); }
   VFX.draw(x);
   for (const tl of view.tl) drawTele(x, tl, t, true);
   for (const f of fs) drawBars(x, f, local);
@@ -3395,7 +3422,8 @@ function drawHUD(view, local, dt) {
     x.globalAlpha = 1; ly += 24;
   }
   }
-  // Kill-Feed
+  // Kill-Feed (auf Touch unterhalb der Lebensanzeige)
+  if (MATCH.touch) ly = Math.max(ly, 84);
   ly += 10;
   for (const k of VFX.kills) {
     const al = Math.min(1, (6 - k.t) * 1.5); x.globalAlpha = al; const kn = MATCH.names[k.k], vn = MATCH.names[k.v];
@@ -3471,7 +3499,7 @@ addEventListener('keydown', e => {
   if (e.code === 'Escape') onEscape();
 });
 addEventListener('keyup', e => IN.keys.delete(e.code));
-addEventListener('blur', () => { IN.keys.clear(); IN.mb = 0; TOUCH.reset(); });
+addEventListener('blur', () => lostInput());
 
 /* ---------- Touch-Steuerung ----------
    Links: frei platzierbarer Joystick (Daumen aufsetzen, wo man will).
@@ -3483,14 +3511,17 @@ addEventListener('blur', () => { IN.keys.clear(); IN.mb = 0; TOUCH.reset(); });
      Zugweite die Entfernung.
    • Spezial-Buttons lösen sofort beim Berühren aus (Ziel: aktuelle
      Zielrichtung oder der nächste Gegner) und zeigen Abklingzeit,
-     fehlende Stamina und Verstummen direkt am Button.
+     fehlende Stamina und Verstummen direkt am Button. Reine Sprints und
+     Teleports folgen der Joystick-Richtung.
    Alle Eingaben über Pointer Events mit Pointer-Capture – keine
-   Klick-Verzögerung, Mehrfingerbedienung, auch per Maus testbar. */
+   Klick-Verzögerung, Mehrfingerbedienung. Hybrid-Geräte: Das zuletzt
+   benutzte Gerät gewinnt; mit ?touch=1 bleibt die Touch-Steuerung an
+   (dann auch per Maus testbar). */
 const GROUND_KINDS = new Set(['blast', 'trap', 'wall', 'blink']);
 function isGroundAim(m) { return GROUND_KINDS.has(m.k) || (m.k === 'zone' && m.at === 'aim') || (m.k === 'summon' && m.place === 'aim') || (m.k === 'custom' && !!m.rng); }
 const TOUCH = {
   joy: { id: null, x: 0, y: 0 }, main: { id: null, cx: 0, cy: 0, dx: 0, dy: 0, out: false, active: false },
-  held: [0, 0, 0, 0], latch: [0, 0, 0, 0], lprev: [null, null, null, null], shot: null, R: 56, dead: 15, cache: {}, icons: '', els: null,
+  held: [0, 0, 0, 0], latch: [0, 0, 0, 0], lprev: [null, null, null, null], lseq: [0, 0, 0, 0], shot: null, forced: false, R: 56, dead: 15, cache: {}, icons: '', els: null,
   autoTarget(local) {
     const view = MATCH.view; let best = null, bd = 900 * 900;
     if (view) for (const f of view.f) { if (!f.alive || f.team === local.team || (f.fl & FL.stealth)) continue; const d = d2(f.x, f.y, local.x, local.y) * (f.kind === 'player' || f.kind === 'decoy' ? 1 : 1.6); if (d < bd) { bd = d; best = f; } }
@@ -3513,20 +3544,26 @@ const TOUCH = {
     const now = performance.now();
     if (this.joy.id !== null) { inp.mx = this.joy.x; inp.my = this.joy.y; }
     const [ax, ay] = this.aimPoint(local, inp.mx, inp.my); inp.ax = ax; inp.ay = ay;
+    // Im Gast-Modus zählt ein Cooldown-Anstieg erst, wenn der Host die Eingabe mit dem Tipp bestätigt hat
+    const acked = q => MATCH.mode !== 'client' || (MATCH.ack || 0) >= q;
     if (this.shot) { // gepufferter Angriff: feuert, sobald die Abklingzeit es erlaubt
       const cd = local.cds[0] || 0;
-      if (now > this.shot.until || (this.shot.prev !== null && cd > this.shot.prev + .05)) this.shot = null;
+      if (now > this.shot.until || (this.shot.prev !== null && cd > this.shot.prev + .05 && acked(this.shot.seq))) this.shot = null;
       else { this.shot.prev = cd; inp.b |= 1; }
     }
+    let mob = null;
     for (let i = 1; i < 4; i++) {
       const cd = local.cds[i] || 0;
-      if (this.latch[i] && (now > this.latch[i] || (this.lprev[i] !== null && cd > this.lprev[i] + .05))) this.latch[i] = 0;
+      if (this.latch[i] && (now > this.latch[i] || (this.lprev[i] !== null && cd > this.lprev[i] + .05 && acked(this.lseq[i])))) this.latch[i] = 0;
       this.lprev[i] = cd;
-      if (this.held[i] || this.latch[i]) inp.b |= 1 << i;
+      if (this.held[i] || this.latch[i]) { inp.b |= 1 << i; const m = getMoveView(local, i); if ((m.k === 'dash' && !m.dmg && !m.end && m.dir !== 'away') || (m.k === 'blink' && m.to !== 'enemy' && !m.beam && !m.end)) mob = m; }
     }
+    // Reine Bewegungs-Spezials (Sprint, Teleport) folgen der Joystick-Richtung statt dem Auto-Ziel
+    const jl = Math.hypot(this.joy.x, this.joy.y);
+    if (mob && jl > .2 && !(this.main.active && this.main.out) && !this.shot) { const d = Math.max(80, moveRange(mob)); inp.ax = local.x + this.joy.x / jl * d; inp.ay = local.y + this.joy.y / jl * d; }
   },
-  fire(dir) { const lf = MATCH.view && MATCH.view.local, cd = lf ? lf.cds[0] || 0 : 0; this.shot = { dir, until: performance.now() + Math.min(1300, cd * 1000 + 320), prev: null }; },
-  reset() { this.joy.id = null; this.joy.x = this.joy.y = 0; this.main.active = false; this.main.id = null; this.held = [0, 0, 0, 0]; this.latch = [0, 0, 0, 0]; this.shot = null; if (this.els) { this.els.joy.classList.remove('on'); this.els.joy.style.cssText = ''; this.els.knob.style.transform = ''; this.els.main.classList.remove('down', 'cancel'); this.els.mknob.style.transform = ''; } },
+  fire(dir) { const lf = MATCH.view && MATCH.view.local, cd = lf ? lf.cds[0] || 0 : 0; this.shot = { dir, until: performance.now() + Math.min(1300, cd * 1000 + 320), prev: null, seq: MATCH.mode === 'client' ? MATCH.seq + 1 : 0 }; },
+  reset() { this.joy.id = null; this.joy.x = this.joy.y = this.joy.ox = this.joy.oy = 0; this.main.active = false; this.main.id = null; this.held = [0, 0, 0, 0]; this.latch = [0, 0, 0, 0]; this.shot = null; if (this.els) { this.els.joy.classList.remove('on'); this.els.joy.style.cssText = ''; this.els.knob.style.transform = ''; this.els.main.classList.remove('down', 'cancel'); this.els.mknob.style.transform = ''; this.els.sp.forEach(b => b.classList.remove('down')); } },
   layout() { if (!this.els) return; const r = this.els.main.getBoundingClientRect(); if (r.width) { this.R = r.width * .48; this.dead = Math.max(12, r.width * .14); } },
   // Buttons mit Move-Symbolen der ausgerüsteten Aura bestücken
   setIcons(local) {
@@ -3545,7 +3582,7 @@ const TOUCH = {
       const txt = cd > 0 ? (cd >= 1 ? String(Math.ceil(cd)) : cd.toFixed(1)) : st === 'locked' && i > 0 && silenced ? '…' : '';
       const p = Math.round(k * 360), c = this.cache[i] || (this.cache[i] = {});
       if (c.p !== p) { c.p = p; b.style.setProperty('--p', p + 'deg'); }
-      if (c.st !== st) { c.st = st; b.classList.toggle('ready', st === 'ready'); b.classList.toggle('noen', st === 'noen'); b.classList.toggle('locked', st === 'locked'); if (st === 'ready' && c.wasCd) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } c.wasCd = st === 'cd'; }
+      if (c.st !== st) { c.st = st; b.classList.toggle('ready', st === 'ready'); b.classList.toggle('noen', st === 'noen'); b.classList.toggle('locked', st === 'locked'); if (st === 'ready' && c.wasCd) { b.classList.remove('pop', 'deny'); void b.offsetWidth; b.classList.add('pop'); } c.wasCd = st === 'cd'; }
       if (c.txt !== txt) { c.txt = txt; b.querySelector('.tcd').textContent = txt; }
     });
   },
@@ -3585,11 +3622,12 @@ const TOUCH = {
     this.els = { pad, main, joy, zone, knob: joy.querySelector('i'), mknob: main.querySelector('.tknob'), sp: [1, 2, 3].map(i => pad.querySelector(`.tsp[data-b="${i}"]`)) };
     const J = this.joy, M = this.main, E = this.els;
     // Joystick: erscheint dort, wo der Daumen aufsetzt
-    const jSet = (cx, cy) => { const zr = zone.getBoundingClientRect(), s = joy.offsetWidth || 130; const lx = clamp(cx - zr.left - s / 2, 6, zr.width - s - 6), ly = clamp(cy - zr.top - s / 2, 6, zr.height - s - 6); joy.style.left = lx + 'px'; joy.style.top = ly + 'px'; joy.style.bottom = 'auto'; J.cx = zr.left + lx + s / 2; J.cy = zr.top + ly + s / 2; };
-    const jMove = (cx, cy) => { const R = (joy.offsetWidth || 130) / 2; let dx = cx - J.cx, dy = cy - J.cy; const l = Math.hypot(dx, dy); if (l > R) { dx = dx / l * R; dy = dy / l * R; } J.x = dx / R; J.y = dy / R; if (Math.hypot(J.x, J.y) < .12) J.x = J.y = 0; E.knob.style.transform = `translate(${dx}px,${dy}px)`; };
+    // Der Aufsetzpunkt ist immer der Nullpunkt; nur der Ring wird sichtbar in der Zone gehalten (Knopf bleibt unter dem Daumen)
+    const jSet = (cx, cy) => { const zr = zone.getBoundingClientRect(), s = joy.offsetWidth || 130; const lx = clamp(cx - zr.left - s / 2, 6, Math.max(6, zr.width - s - 6)), ly = clamp(cy - zr.top - s / 2, 6, Math.max(6, zr.height - s - 6)); joy.style.left = lx + 'px'; joy.style.top = ly + 'px'; joy.style.bottom = 'auto'; J.cx = cx; J.cy = cy; J.ox = cx - (zr.left + lx + s / 2); J.oy = cy - (zr.top + ly + s / 2); };
+    const jMove = (cx, cy) => { const R = (joy.offsetWidth || 130) / 2; let dx = cx - J.cx, dy = cy - J.cy; const l = Math.hypot(dx, dy); if (l > R) { dx = dx / l * R; dy = dy / l * R; } J.x = dx / R; J.y = dy / R; if (Math.hypot(J.x, J.y) < .12) J.x = J.y = 0; E.knob.style.transform = `translate(${(J.ox || 0) + dx}px,${(J.oy || 0) + dy}px)`; };
     zone.addEventListener('pointerdown', e => { if (J.id !== null) return; e.preventDefault(); AU.init(); try { zone.setPointerCapture(e.pointerId); } catch (er) { } J.id = e.pointerId; jSet(e.clientX, e.clientY); jMove(e.clientX, e.clientY); joy.classList.add('on'); });
     zone.addEventListener('pointermove', e => { if (e.pointerId === J.id) { e.preventDefault(); jMove(e.clientX, e.clientY); } });
-    const jEnd = e => { if (e.pointerId !== J.id) return; J.id = null; J.x = J.y = 0; E.knob.style.transform = ''; joy.classList.remove('on'); joy.style.cssText = ''; };
+    const jEnd = e => { if (e.pointerId !== J.id) return; J.id = null; J.x = J.y = J.ox = J.oy = 0; E.knob.style.transform = ''; joy.classList.remove('on'); joy.style.cssText = ''; };
     zone.addEventListener('pointerup', jEnd); zone.addEventListener('pointercancel', jEnd); zone.addEventListener('lostpointercapture', jEnd);
     // Großer Angriffsbutton mit Ziel-Joystick
     const mUpd = () => { const l = Math.hypot(M.dx, M.dy), mx = l > this.R ? M.dx / l * this.R : M.dx, my = l > this.R ? M.dy / l * this.R : M.dy; E.mknob.style.transform = `translate(${mx}px,${my}px)`; main.classList.toggle('cancel', M.out && l < this.dead); };
@@ -3605,8 +3643,9 @@ const TOUCH = {
     // Spezial-Buttons: lösen beim Berühren aus
     E.sp.forEach(b => {
       const i = +b.dataset.b;
-      b.addEventListener('pointerdown', e => { e.preventDefault(); AU.init(); try { b.setPointerCapture(e.pointerId); } catch (er) { } this.held[i] = e.pointerId + 1; this.latch[i] = performance.now() + 160; this.lprev[i] = null; b.classList.add('down'); if (!b.classList.contains('ready')) { b.classList.remove('deny'); void b.offsetWidth; b.classList.add('deny'); } else if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) { } });
-      const up = e => { if (this.held[i] !== e.pointerId + 1) return; this.held[i] = 0; b.classList.remove('down'); };
+      b.addEventListener('pointerdown', e => { e.preventDefault(); AU.init(); try { b.setPointerCapture(e.pointerId); } catch (er) { } this.held[i] = e.pointerId + 1; this.latch[i] = performance.now() + 160; this.lprev[i] = null; this.lseq[i] = MATCH.mode === 'client' ? MATCH.seq + 1 : 0; b.classList.add('down'); if (!b.classList.contains('ready')) { b.classList.remove('deny', 'pop'); void b.offsetWidth; b.classList.add('deny'); } else if (navigator.vibrate) try { navigator.vibrate(10); } catch (er) { } });
+      b.addEventListener('animationend', () => b.classList.remove('pop', 'deny'));
+      const up = e => { b.classList.remove('down'); if (this.held[i] !== e.pointerId + 1) return; this.held[i] = 0; };
       b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
     });
     $('#touchUi').addEventListener('contextmenu', e => e.preventDefault());
@@ -3630,6 +3669,16 @@ function enableTouch() {
   if (MATCH.touch) return; MATCH.touch = true;
   if (SCREEN_ARENA()) { $('#touchUi').classList.remove('hidden'); resizeArena(); }
 }
+// Hybrid-Geräte: Das zuletzt benutzte Eingabegerät gewinnt (außer Touch wurde per ?touch=1 erzwungen)
+function disableTouch() {
+  if (!MATCH.touch || TOUCH.forced) return; MATCH.touch = false; TOUCH.reset();
+  if (SCREEN_ARENA()) { $('#touchUi').classList.add('hidden'); resizeArena(); }
+}
+// Fenster verliert den Fokus / App im Hintergrund: Eingaben loslassen und dem Host sofort melden
+function lostInput() {
+  IN.keys.clear(); IN.mb = 0; TOUCH.reset();
+  if (MATCH.mode === 'client' && NET.tr && MATCH.srv) { const li = MATCH.lastInp || {}; MATCH.seq++; NET.tr.send({ t: 'in', s: MATCH.seq, mx: 0, my: 0, ax: li.ax | 0, ay: li.ay | 0, b: 0 }); MATCH.pending.push({ s: MATCH.seq, mx: 0, my: 0, dt: 0 }); }
+}
 function setupArenaInput() {
   const c = RD.c;
   c.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; const r = c.getBoundingClientRect(); IN.mx = e.clientX - r.left; IN.my = e.clientY - r.top; });
@@ -3638,7 +3687,11 @@ function setupArenaInput() {
   c.addEventListener('contextmenu', e => e.preventDefault());
   TOUCH.setup();
   addEventListener('touchstart', enableTouch, { passive: true });
-  if (new URLSearchParams(location.search).get('touch') === '1' || (window.matchMedia && matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches)) MATCH.touch = true;
+  addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') disableTouch(); }, { passive: true, capture: true });
+  TOUCH.forced = new URLSearchParams(location.search).get('touch') === '1';
+  if (TOUCH.forced || (window.matchMedia && matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches)) MATCH.touch = true;
+  document.addEventListener('visibilitychange', () => { if (document.hidden) lostInput(); });
+  addEventListener('pagehide', lostInput);
 }
 
 /* =====================================================================
@@ -3793,7 +3846,7 @@ function hostOnMsg(id, m) {
     case 'name': { const p = NET.room.find(p => p.id === id); if (p) { p.name = cleanName(m.name); sendRoom(); } break; }
     case 'in': {
       if (MATCH.mode !== 'host' || !WD) return; const f = MATCH.byPid[id]; if (!f || !f.alive) return;
-      f.inp.mx = clamp(+m.mx || 0, -1, 1); f.inp.my = clamp(+m.my || 0, -1, 1); f.inp.ax = +m.ax || 0; f.inp.ay = +m.ay || 0; f.inp.b = (m.b | 0) & 15; f.seq = m.s | 0;
+      f.inp.mx = clamp(+m.mx || 0, -1, 1); f.inp.my = clamp(+m.my || 0, -1, 1); f.inp.ax = +m.ax || 0; f.inp.ay = +m.ay || 0; f.inp.b = (m.b | 0) & 15; f.seq = m.s | 0; f.inT = performance.now();
       break;
     }
     case 'ping': NET.tr.send(id, { t: 'pong', c: m.c }); break;
@@ -3876,7 +3929,7 @@ function clientSnapshot(s) {
   const now = performance.now() / 1000, est = s.tm - now;
   if (MATCH.off === null || est > MATCH.off) MATCH.off = est; else MATCH.off += (est - MATCH.off) * 0.02;
   const d = decodeSnap(s); MATCH.snaps.push(d); if (MATCH.snaps.length > 40) MATCH.snaps.shift();
-  if (s.ev && s.ev.length) MATCH.evq.push({ tm: s.tm, ev: s.ev });
+  if (s.ev && s.ev.length) { MATCH.evq.push({ tm: s.tm, ev: s.ev }); if (MATCH.evq.length > 160) { const o = MATCH.evq.shift(), kk = o.ev.filter(e => e[0] === 'k'); if (kk.length) { o.ev = kk; MATCH.evq.unshift(o); } } }
   const me = d.f.find(f => f.id === MATCH.localFid);
   if (me) { MATCH.srv = me; MATCH.ack = me.seq; MATCH.pending = MATCH.pending.filter(p => p.s > me.seq); }
 }
@@ -3893,12 +3946,17 @@ function lerpList(A, B, k, keys) {
 function clientView(dt) {
   const S2 = MATCH.snaps; if (!S2.length) return null;
   const now = performance.now() / 1000, rt = now + MATCH.off - 0.1;
-  while (MATCH.evq.length && MATCH.evq[0].tm <= rt + 0.02) for (const e of MATCH.evq.shift().ev) VFX.handle(e);
+  // veraltete Event-Pakete (z. B. nach Hintergrund) ohne Effekte verwerfen, Kill-Meldungen aber behalten
+  while (MATCH.evq.length && MATCH.evq[0].tm <= rt + 0.02) { const q = MATCH.evq.shift(), old = q.tm < rt - 0.4; for (const e of q.ev) if (!old || e[0] === 'k') VFX.handle(e); }
   let a = S2[0], b = S2[0];
   for (let i = S2.length - 1; i >= 0; i--) if (S2[i].tm <= rt) { a = S2[i]; b = S2[i + 1] || S2[i]; break; }
   const k = b.tm > a.tm ? clamp((rt - a.tm) / (b.tm - a.tm), 0, 1) : 0;
-  const latest = S2[S2.length - 1];
-  const f = lerpList(a.f, b.f, k, ['x', 'y']).map(o => { if (o.kind !== 'turret') { const aa = a.f.find(q => q.id === o.id); if (aa) o.ang = aa.ang + angDiff(aa.ang, o.ang) * k; } return o; });
+  const latest = S2[S2.length - 1], hs = b.tm <= rt + 0.02 ? b : a;
+  const f = lerpList(a.f, b.f, k, ['x', 'y']).map(o => {
+    const aa = a.f.find(q => q.id === o.id);
+    if (aa) { const bb = b.f.find(q => q.id === o.id) || o; if (Math.hypot(bb.x - aa.x, bb.y - aa.y) > 150) { const s3 = k < .5 ? aa : bb; o.x = s3.x; o.y = s3.y; } if (o.kind !== 'turret') o.ang = aa.ang + angDiff(aa.ang, o.ang) * k; }
+    const hq = hs.f.find(q => q.id === o.id); o.fhp = hq ? hq.hp : o.hp; return o;
+  });
   // eigene Figur: neuester Zustand + lokale Vorhersage der Bewegung
   const me = MATCH.srv; let local = null;
   if (me) {
@@ -3908,13 +3966,13 @@ function clientView(dt) {
     if (latest.phase === 'fight') for (const p of MATCH.pending) { let mx = p.mx, my = p.my; if (conf) { mx = -mx; my = -my; } const l = Math.hypot(mx, my); if (l > 1) { mx /= l; my /= l; } x += mx * me.cspd * p.dt; y += my * me.cspd * p.dt; [x, y] = collideStatic(x, y, me.r, latest.wl); }
     if (!MATCH.lp || Math.hypot(MATCH.lp.x - x, MATCH.lp.y - y) > 140) MATCH.lp = { x, y };
     const s = Math.min(1, dt * 18); MATCH.lp.x += (x - MATCH.lp.x) * s; MATCH.lp.y += (y - MATCH.lp.y) * s;
-    local.x = MATCH.lp.x; local.y = MATCH.lp.y;
+    local.x = MATCH.lp.x; local.y = MATCH.lp.y; const hq = hs.f.find(q => q.id === me.id); local.fhp = hq ? hq.hp : me.hp;
     const inp = MATCH.lastInp; if (inp && local.alive) local.ang = Math.atan2(inp.ay - local.y, inp.ax - local.x);
     if (idx >= 0) f[idx] = local; else if (local.alive) f.push(local);
   }
   return {
     f, p: lerpList(a.p, b.p, k, ['x', 'y']), z: lerpList(a.z, b.z, k, ['x', 'y', 'r', 'ang']), tr: b.tr, wl: b.wl, ob: lerpList(a.ob, b.ob, k, ['x', 'y']), te: lerpList(a.te, b.te, k, ['ax', 'ay', 'bx', 'by']),
-    tl: b.tl, po: b.po, stormR: lerp(a.stormR, b.stormR, k), stormIn: latest.stormIn, phase: latest.phase, cd: latest.cd, local
+    tl: lerpList(a.tl, b.tl, k, ['t', 'x', 'y']), po: b.po, stormR: lerp(a.stormR, b.stormR, k), stormIn: latest.stormIn, phase: latest.phase, cd: latest.cd, local, noGhost: a === b
   };
 }
 
@@ -3939,6 +3997,8 @@ function simStep(dt) {
   const lf = fById(MATCH.localFid);
   if (lf && lf.alive) { const i = readInput(lf); Object.assign(lf.inp, i); }
   for (const b of MATCH.bots) b.update(dt);
+  // Sicherheitsnetz: Gast sendet seit 0,5 s nichts (Hintergrund, Verbindungsloch) -> stehen bleiben, nichts auslösen
+  if (MATCH.mode === 'host') { const now = performance.now(); for (const f of WD.f) if (f.inT && now - f.inT > 500) { f.inp.mx = f.inp.my = 0; f.inp.b = 0; } }
   stepWorld(dt);
   if (MATCH.mode === 'host') { MATCH.snapT -= dt; if (MATCH.snapT <= 0) { MATCH.snapT = 0.05; NET.tr && NET.tr.broadcast(encodeSnap()); WD.out = []; } }
   matchCheck();
@@ -3950,7 +4010,7 @@ function spawnPoints(n) {
 }
 function startMatch(mode, players, opt = {}) {
   WD = newWorld({ net: mode === 'host', stormT: opt.stormT ?? 40 });
-  VFX.clear(); RD.fx.clear();
+  VFX.clear(); rdReset();
   MATCH = { mode, names: {}, byPid: {}, bots: [], localFid: null, snapT: 0, ended: false, touch: MATCH.touch, opt, startTime: performance.now() };
   const pts = spawnPoints(players.length);
   players.forEach((p, i) => {
@@ -3987,7 +4047,7 @@ function hostStartMatch() {
 }
 function startClientMatch(m) {
   closeAllModals();
-  WD = null; VFX.clear(); RD.fx.clear();
+  WD = null; VFX.clear(); rdReset();
   MATCH = { mode: 'client', names: {}, byPid: {}, bots: [], localFid: null, snaps: [], evq: [], off: null, pending: [], seq: 0, inT: 0, ack: 0, srv: null, lp: null, ended: false, touch: MATCH.touch, ping: MATCH.ping };
   for (const p of m.players) { MATCH.names[p.fid] = { name: p.name, aura: p.aura }; if (p.pid === NET.myId) MATCH.localFid = p.fid; }
   enterArena();
@@ -4308,7 +4368,7 @@ function openOdds() {
 }
 function openHelp() {
   openModal('Steuerung & Regeln', `<div class="form-grid" style="font-size:14px;line-height:1.6;color:#c3cae6">
-    <div><b style="color:#fff">Steuerung (Arena)</b><br>Bewegen: <span class="key">W A S D</span> oder Pfeiltasten · Zielen: Maus<br>Hauptattacke: <span class="key">Linksklick</span> oder <span class="key">Leertaste</span> (gedrückt halten = Dauerfeuer)<br>Spezialmoves: <span class="key">Q</span> <span class="key">E</span> <span class="key">R</span> (alternativ <span class="key">1</span> <span class="key">2</span> <span class="key">3</span>, Rechtsklick = Q)<br>Touch: linker Stick bewegt, Buttons rechts greifen an (automatisches Zielen).</div>
+    <div><b style="color:#fff">Steuerung (Arena)</b><br>Bewegen: <span class="key">W A S D</span> oder Pfeiltasten · Zielen: Maus<br>Hauptattacke: <span class="key">Linksklick</span> oder <span class="key">Leertaste</span> (gedrückt halten = Dauerfeuer)<br>Spezialmoves: <span class="key">Q</span> <span class="key">E</span> <span class="key">R</span> (alternativ <span class="key">1</span> <span class="key">2</span> <span class="key">3</span>, Rechtsklick = Q)<br>Touch: Daumen links aufsetzen = Joystick zum Bewegen. Großer Button rechts: kurz tippen = Angriff auf den nächsten Gegner; gedrückt halten und ziehen = zielen, loslassen = Angriff (zurück in die Mitte = abbrechen). Die drei kleinen Buttons lösen die Spezialmoves sofort aus; Sprints und Teleports folgen dabei der Joystick-Richtung.</div>
     <div><b style="color:#fff">Kampf</b><br>Jeder Move kostet Stamina (gelbe Leiste, regeneriert sich laufend) und hat eine Abklingzeit. Bei 0 HP scheidest du aus. Nach ~40 s schrumpft eine Sturmzone – wer draußen steht, verliert HP. Der letzte Überlebende gewinnt.</div>
     <div><b style="color:#fff">Auren</b><br>64 Auren in 9 Seltenheitsstufen – jede mit eigener Rolle, eigenen Werten und einem eigenständigen Moveset (Schadensart, Reichweite/Form, Zusatzeffekte und Taktik unterscheiden sich). Seltenere Auren haben komplexere Mechaniken wie Zeitreisen, Zwillinge, Seelentausch oder Zeitstopp.</div>
     <div><b style="color:#fff">Multiplayer</b><br>Ein Spieler erstellt einen Raum und teilt den 6-stelligen Code. Andere öffnen dieselbe HTML-Datei und treten mit dem Code bei. Start ab 2 Spielern, bis zu 10 im Free-for-All. Die Verbindung läuft per WebRTC direkt zwischen den Browsern (Signaling über den öffentlichen PeerJS-Server).</div>
