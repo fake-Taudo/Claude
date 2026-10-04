@@ -37,8 +37,9 @@ input,select{font:inherit;color:inherit}
 #app{position:fixed;inset:0;overflow:hidden}
 #app.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97) both}
 #app.shake2{animation:shake2 .9s cubic-bezier(.36,.07,.19,.97) both}
-@keyframes shake{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(4px,-2px)}30%,50%,70%{transform:translate(-6px,3px)}40%,60%{transform:translate(6px,-3px)}}
-@keyframes shake2{10%,90%{transform:translate(-4px,3px) rotate(-.3deg)}20%,80%{transform:translate(8px,-5px) rotate(.4deg)}30%,50%,70%{transform:translate(-12px,6px) rotate(-.5deg)}40%,60%{transform:translate(12px,-6px) rotate(.5deg)}}
+/* Wackeln skaliert mit der Screenshake-Einstellung (--shk) */
+@keyframes shake{10%,90%{transform:translate(calc(var(--shk,1) * -2px),calc(var(--shk,1) * 1px))}20%,80%{transform:translate(calc(var(--shk,1) * 4px),calc(var(--shk,1) * -2px))}30%,50%,70%{transform:translate(calc(var(--shk,1) * -6px),calc(var(--shk,1) * 3px))}40%,60%{transform:translate(calc(var(--shk,1) * 6px),calc(var(--shk,1) * -3px))}}
+@keyframes shake2{10%,90%{transform:translate(calc(var(--shk,1) * -4px),calc(var(--shk,1) * 3px)) rotate(calc(var(--shk,1) * -.3deg))}20%,80%{transform:translate(calc(var(--shk,1) * 8px),calc(var(--shk,1) * -5px)) rotate(calc(var(--shk,1) * .4deg))}30%,50%,70%{transform:translate(calc(var(--shk,1) * -12px),calc(var(--shk,1) * 6px)) rotate(calc(var(--shk,1) * -.5deg))}40%,60%{transform:translate(calc(var(--shk,1) * 12px),calc(var(--shk,1) * -6px)) rotate(calc(var(--shk,1) * .5deg))}}
 #bgc{position:absolute;inset:0;width:100%;height:100%;z-index:0}
 @supports (height:100dvh){html,body{height:100dvh}}
 .screen{position:absolute;inset:0;display:none;z-index:1}
@@ -120,7 +121,7 @@ input,select{font:inherit;color:inherit}
 .sub-h::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--glass-line2),transparent)}
 
 /* Echtes Milchglas nur bei Maus-Bedienung (Desktop-GPU); Touch-Geräte und „Weniger Bewegung“ nutzen das dichtere Glas ohne Live-Unschärfe */
-@media (pointer:fine){html:not(.calm):not(.lite) .panel{background:var(--glass);backdrop-filter:blur(12px) saturate(130%);-webkit-backdrop-filter:blur(12px) saturate(130%)}}
+@media (pointer:fine){html[data-q="high"]:not(.calm):not(.lite) .panel{background:var(--glass);backdrop-filter:blur(12px) saturate(130%);-webkit-backdrop-filter:blur(12px) saturate(130%)}}
 @media (pointer:coarse){.topbar{backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,rgba(8,11,24,.96),rgba(8,11,24,.86))}}
 
 /* ---------- Ausgerüstete Aura ---------- */
@@ -341,6 +342,89 @@ input,select{font:inherit;color:inherit}
 #lobby.enter .col-left .panel:nth-child(1),#lobby.enter .col-right .panel:nth-child(1){animation-delay:.14s}
 #lobby.enter .col-left .panel:nth-child(2),#lobby.enter .col-right .panel:nth-child(2){animation-delay:.24s}
 
+/* ---------- Einstellungen: Zahnrad in der Kopfzeile ---------- */
+.set-btn>span{display:grid}
+.set-btn svg{transition:transform .6s var(--ease)}
+.set-btn:hover svg,.set-btn:focus-visible svg{transform:rotate(90deg)}
+.tgl-tier{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:.02em;color:var(--tc,#fbbf24);border:1px solid var(--tc,#fbbf24);background:rgba(0,0,0,.25);vertical-align:1px}
+/* ---------- Einstellungen: Seitenpanel ---------- */
+.modal-back.drawer-back{justify-content:flex-end;align-items:stretch;padding:0;background:rgba(3,5,12,.55)}
+.drawer{position:relative;width:min(460px,100%);height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(20,26,54,.95),rgba(9,12,28,.97));border-left:1px solid var(--glass-line2);box-shadow:-30px 0 80px rgba(0,0,0,.55),inset 1px 0 0 rgba(var(--ac-rgb),.35);animation:drawerIn .38s var(--ease)}
+.drawer::before{content:"";position:absolute;left:-1px;top:8%;bottom:8%;width:2px;background:linear-gradient(180deg,transparent,rgba(var(--ac-rgb),.9),transparent);box-shadow:0 0 14px rgba(var(--ac-rgb),.8);pointer-events:none}
+@media (pointer:fine){html[data-q="high"]:not(.calm):not(.lite) .drawer{background:linear-gradient(180deg,rgba(20,26,54,.8),rgba(9,12,28,.86));backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}}
+@keyframes drawerIn{from{transform:translateX(100%)}}
+.drawer-back.closing .drawer{animation:drawerOut .17s ease-in forwards}
+@keyframes drawerOut{to{transform:translateX(100%)}}
+.drawer-h{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--glass-line);flex:none}
+.drawer-h h2{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:.04em}
+.drawer-h .x{margin-left:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--glass-line2);font-size:22px;color:var(--muted);transition:color .2s,border-color .2s,transform .2s var(--ease)}
+.drawer-h .x:hover{color:#fff;border-color:rgba(var(--ac-rgb),.8);transform:rotate(90deg)}
+.drawer-b{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:8px 20px 24px;scrollbar-width:thin;scrollbar-color:#2a3360 transparent}
+.set-sec{padding:18px 0;border-bottom:1px solid var(--glass-line);display:flex;flex-direction:column;gap:14px}
+.set-sec h3{display:flex;align-items:center;gap:10px;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#c3cae6;font-weight:800}
+.set-sec h3 svg{width:28px;height:28px;padding:6px;border-radius:9px;background:rgba(var(--ac-rgb),.14);color:var(--acl);box-shadow:inset 0 0 0 1px rgba(var(--ac-rgb),.3)}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:56px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--glass-line);cursor:pointer}
+.set-row:hover{border-color:var(--glass-line2)}
+.sr-t{display:flex;flex-direction:column;gap:3px}
+.set-row b,.set-field b,.ss-top b{font-size:15px;font-weight:700;color:#eef1ff}
+.set-row small,.set-field small,.set-slider small{font-size:12.5px;color:var(--muted);line-height:1.45}
+.set-row .switch{width:48px;height:28px}.set-row .switch::after{width:22px;height:22px}.set-row .switch:checked::after{left:22px}
+.set-slider{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--glass-line)}
+.ss-top{display:flex;align-items:baseline;justify-content:space-between}
+.ss-top output{font-family:var(--display);font-weight:800;font-size:17px;color:var(--acl);font-variant-numeric:tabular-nums;min-width:56px;text-align:right}
+.set-slider input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:36px;background:transparent;cursor:pointer;--pct:50%}
+.set-slider input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:8px;background:linear-gradient(90deg,var(--acl) 0,var(--acl) var(--pct),rgba(255,255,255,.1) var(--pct));box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+.set-slider input[type=range]::-moz-range-track{height:8px;border-radius:8px;background:rgba(255,255,255,.1)}
+.set-slider input[type=range]::-moz-range-progress{height:8px;border-radius:8px;background:var(--acl)}
+.set-slider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#dfe4ff);border:3px solid var(--acl);box-shadow:0 0 14px rgba(var(--ac-rgb),.7),0 2px 6px rgba(0,0,0,.4);transition:transform .15s}
+.set-slider input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--acl);box-shadow:0 0 14px rgba(var(--ac-rgb),.7)}
+.set-slider input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
+.set-slider input[type=range]:focus-visible{outline:2px solid rgba(var(--ac-rgb),.8);outline-offset:2px;border-radius:8px}
+.set-field{display:flex;flex-direction:column;gap:8px}
+.set-seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid var(--glass-line)}
+.set-seg button{flex:1;min-height:42px;border-radius:10px;font-size:14px;font-weight:700;color:#aab3d9;transition:background .2s,color .2s,box-shadow .2s,transform .15s}
+.set-seg button:hover{color:#fff;background:rgba(255,255,255,.05)}
+.set-seg button:active{transform:scale(.96)}
+.set-seg button.on{color:#fff;background:linear-gradient(135deg,rgba(var(--ac-rgb),.55),rgba(var(--ac-rgb),.25));box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 16px rgba(var(--ac-rgb),.35)}
+.tier-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tier-pick button{min-height:44px;padding:4px 6px;border-radius:12px;font-size:12.5px;font-weight:800;letter-spacing:.03em;color:var(--tc);background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);transition:border-color .2s,box-shadow .2s,transform .15s,background .2s;overflow-wrap:anywhere}
+.tier-pick button:hover{border-color:var(--tc)}
+.tier-pick button:active{transform:scale(.96)}
+.tier-pick button.on{border-color:var(--tc);background:rgba(255,255,255,.07);box-shadow:0 0 0 1px var(--tc),0 0 18px -2px var(--tc)}
+.stop-now{padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.035);border:1px dashed var(--glass-line2);font-size:14px;color:#c9d0ee}
+.stop-now b{font-family:var(--display);font-size:16px}
+.name-row{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid var(--glass-line2);transition:border-color .2s,box-shadow .2s}
+.name-row:focus-within{border-color:rgba(var(--ac-rgb),.8);box-shadow:0 0 0 3px rgba(var(--ac-rgb),.2)}
+.name-row input{flex:1;min-width:0;height:100%;background:none;border:0;outline:none;font-size:16px;font-weight:600;color:var(--text)}
+.name-cnt{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.danger-zone{display:flex;flex-direction:column;gap:12px;margin-top:6px;padding:14px;border-radius:14px;background:linear-gradient(135deg,rgba(244,63,94,.12),rgba(244,63,94,.04));border:1px solid rgba(244,63,94,.45)}
+.dz-t{display:flex;flex-direction:column;gap:3px}
+.dz-t b{color:#fecdd3;font-size:15px}
+.btn.danger-solid{background:linear-gradient(135deg,#e11d48,#f43f5e);border-color:transparent;color:#fff;font-weight:800;box-shadow:0 6px 22px rgba(244,63,94,.35)}
+.btn.danger-solid:hover{box-shadow:0 6px 28px rgba(244,63,94,.6);border-color:transparent}
+.btn.danger-solid:disabled{background:rgba(244,63,94,.25);box-shadow:none;color:rgba(255,255,255,.6)}
+.btn.danger-solid svg{width:17px;height:17px}
+.set-foot{display:flex;flex-direction:column;gap:10px;padding-top:20px}
+.set-foot .btn{min-height:46px}
+.set-foot small{font-size:12.5px;color:var(--muted);line-height:1.45;text-align:center}
+.reset-dlg{display:flex;flex-direction:column;gap:14px}
+.rd-warn{display:flex;gap:12px;padding:14px;border-radius:14px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.45);color:#fecdd3;font-size:14px;line-height:1.5}
+.rd-warn svg{width:30px;height:30px;flex:none;color:#fb7185}
+.rd-warn b{display:block;color:#fff;margin-bottom:3px}
+.rd-lbl{font-size:14px;color:#c9d0ee}
+.rd-lbl b{color:#fb7185;letter-spacing:.08em}
+.rd-in{height:48px;padding:0 14px;border-radius:12px;background:rgba(0,0,0,.35);border:1px solid rgba(244,63,94,.45);color:#fff;font-size:17px;font-weight:800;letter-spacing:.12em;outline:none;text-transform:uppercase}
+.rd-in:focus{box-shadow:0 0 0 3px rgba(244,63,94,.25)}
+.rd-in.ok{border-color:#f43f5e;box-shadow:0 0 0 3px rgba(244,63,94,.35)}
+.rd-btns{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.rd-btns .btn{min-height:44px}
+@media (max-width:560px){.drawer{width:100%;border-left:0}.drawer::before{display:none}.drawer-b{padding:4px 16px 24px}.drawer-h{padding:14px 16px}}
+/* Qualitätsstufe Niedrig: aufwendige Lobby-Glows und Dauer-Animationen aus */
+html[data-q="low"] .rb-ring{filter:none}
+html[data-q="low"] .rs-orbit.o2,html[data-q="low"] .ep-ring{display:none}
+html[data-q="low"] .rs-halo,html[data-q="low"] .equip-prev::before,html[data-q="low"] .hist-item::before,html[data-q="low"] .strip-marker::before{animation:none}
+html[data-q="low"] .mode-btn::after,html[data-q="low"] .sm-line::after{display:none}
+
 /* ---------- Allgemeine Pills und Werte-Kacheln (Menüs, Shop, Braukessel, Aura-Details) ---------- */
 .pill{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:999px;background:var(--chip);border:1px solid var(--glass-line2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);font-size:13.5px;color:var(--muted);white-space:nowrap}
 .pill b{color:var(--text);font-family:var(--display);font-size:15px;font-variant-numeric:tabular-nums}
@@ -404,7 +488,7 @@ input,select{font:inherit;color:inherit}
 }
 @media (min-width:1101px) and (max-width:1366px){.mode-btn .chev{display:none}}
 @media (min-width:1101px) and (max-width:1280px){.equip-actions .lf{display:none}.equip-actions .ls{display:inline}.role-badge svg{display:none}.st-tile{padding:9px 10px}.st-ic{right:7px;top:7px}}
-@media (min-width:1101px) and (max-height:760px){:root{--prev-h:clamp(104px,15vh,150px);--mm-h:34px;--rb:clamp(120px,18vh,160px);--strip-h:clamp(100px,14vh,124px)}.equip-name{font-size:22px}.roll-area{gap:12px}.roll-stage{margin:0}.roll-title{font-size:20px}}
+@media (min-width:1101px) and (max-height:760px){:root{--prev-h:clamp(104px,15vh,150px);--mm-h:34px;--rb:clamp(120px,18vh,160px);--strip-h:clamp(100px,14vh,124px)}.equip-name{font-size:22px}.roll-area{gap:12px;padding-bottom:2px}.roll-stage{margin:0}.roll-title{font-size:20px}}
 @media (max-width:1280px) and (min-width:1101px){.lobby-grid{grid-template-columns:300px minmax(0,1fr) 300px}}
 
 /* ---------- Modals ---------- */
@@ -582,7 +666,7 @@ input,select{font:inherit;color:inherit}
 @keyframes rainbow{to{background-position:300% 0}}
 .cosmic-text{background:linear-gradient(90deg,#f0abfc,#818cf8,#22d3ee,#f0abfc);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:rainbow 4s linear infinite}
 .flash{position:fixed;inset:0;z-index:58;pointer-events:none;animation:flash .9s ease-out forwards}
-@keyframes flash{0%{opacity:0}8%{opacity:1}100%{opacity:0}}
+@keyframes flash{0%{opacity:0}8%{opacity:var(--fla,1)}100%{opacity:0}}
 .charge-overlay{position:fixed;inset:0;z-index:54;background:radial-gradient(circle,rgba(0,0,0,.2),rgba(0,0,0,.92) 70%);animation:fadein .4s}
 /* Cutscene ab Göttlich */
 #csc{position:fixed;inset:0;width:100%;height:100%;z-index:70;display:none;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
@@ -672,7 +756,8 @@ input,select{font:inherit;color:inherit}
   :root{--gap:14px;--pp:16px;--rb:min(56vw,216px);--strip-h:128px;--prev-h:200px;--mode-h:84px}
   .topbar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:10px 12px}
   .top-stats{display:contents}
-  .brand{grid-column:1/5;grid-row:1}
+  .brand{grid-column:1/4;grid-row:1}
+  #setBtn{grid-column:4;grid-row:1;justify-self:end}
   #soundBtn{grid-column:5;grid-row:1;justify-self:end}
   #fsBtn{grid-column:6;grid-row:1;justify-self:end}
   .dust-pill{grid-column:1/3;grid-row:2}.rolls-pill{grid-column:3/5;grid-row:2}.coll-pill{grid-column:5/7;grid-row:2}
@@ -734,6 +819,7 @@ input,select{font:inherit;color:inherit}
           <div class="top-pill rolls-pill" title="Bisherige Rolls"><span class="pi" data-icon="dice"></span><b id="rollsVal">0</b><span class="tpl">Rolls</span></div>
           <div class="top-pill coll-pill" title="Sammlungsfortschritt"><span class="pi" data-icon="grid"></span><div class="cp"><div class="cp-top"><b id="collVal">0/0</b><span class="tpl">Sammlung</span></div><div class="cp-bar"><i id="collBar"></i></div></div></div>
           <label class="top-pill name-field" title="Dein Name im Multiplayer"><span class="pi" data-icon="user"></span><input id="nameInput" maxlength="16" autocomplete="off" spellcheck="false" aria-label="Name" placeholder="Name"></label>
+          <button class="icon-btn set-btn" id="setBtn" type="button" title="Einstellungen" aria-label="Einstellungen" aria-haspopup="dialog"><span data-icon="gear"></span></button>
           <button class="icon-btn" id="soundBtn" title="Sound an/aus"></button>
           <button class="fs-btn fs-lobby" id="fsBtn" type="button" aria-pressed="false"></button>
         </div>
@@ -771,7 +857,7 @@ input,select{font:inherit;color:inherit}
           <div class="potion-sec"><div class="sec-label">Tränke <span>· antippen zum Benutzen</span></div><div class="potion-row" id="potionRow"></div></div>
           <div class="toggles">
             <label class="tgl" title="Kürzere Roll-Animation und Cutscenes"><input type="checkbox" class="switch" id="quickT"><span>Schnelle Animation</span></label>
-            <label class="tgl" title="Rollt automatisch weiter, stoppt bei seltenen Auren"><input type="checkbox" class="switch" id="autoT"><span>Auto-Roll</span></label>
+            <label class="tgl" title="Rollt automatisch weiter, stoppt bei seltenen Auren"><input type="checkbox" class="switch" id="autoT"><span>Auto-Roll <b class="tgl-tier" id="autoHint"></b></span></label>
             <label class="tgl" title="Schaltet Animationen und Bewegung der Oberfläche weitgehend ab"><input type="checkbox" class="switch" id="calmT"><span>Weniger Bewegung</span></label>
           </div>
         </section>
@@ -1433,10 +1519,20 @@ const AURA_BY_ID = Object.fromEntries(AURAS.map(a => [a.id, a]));
    • Export/Import als Code (Hilfe → Speicherstand) als manuelle Sicherung.
    ===================================================================== */
 const SAVE_KEY = 'auraRngArena.v1';
+function defaultSettings() {
+  const coarse = typeof matchMedia === 'function' && matchMedia('(pointer:coarse)').matches;
+  return { music: .4, sfx: .8, quality: coarse ? 'mid' : 'high', particles: 1, shake: 2, autoStop: 4 };
+}
+function normSettings(o) { // unbekannte oder kaputte Werte durch Standardwerte ersetzen
+  const d = defaultSettings(); o = o && typeof o === 'object' && !Array.isArray(o) ? o : {};
+  const num = (v, a, b, def) => typeof v === 'number' && Number.isFinite(v) ? clamp(v, a, b) : def;
+  return { music: num(o.music, 0, 1, d.music), sfx: num(o.sfx, 0, 1, d.sfx), quality: ['low', 'mid', 'high'].includes(o.quality) ? o.quality : d.quality,
+    particles: num(o.particles, .25, 1.5, d.particles), shake: Math.round(num(o.shake, 0, 3, d.shake)), autoStop: Math.round(num(o.autoStop, 0, 8, d.autoStop)) };
+}
 function defaultSave() {
   return { name: 'Spieler' + randi(100, 999), dust: 60, rolls: 0, owned: {}, equipped: null,
     potions: { luck1: 1, klee: 2 }, boosts: [], queue: [], bonusCharges: 0,
-    sound: true, quick: false, stats: { wins: 0, matches: 0, kills: 0, best: -1, brewed: 0 }, hist: [], newIds: {} };
+    sound: true, quick: false, stats: { wins: 0, matches: 0, kills: 0, best: -1, brewed: 0 }, hist: [], newIds: {}, settings: defaultSettings() };
 }
 function normalizeSave(d) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
@@ -1444,6 +1540,7 @@ function normalizeSave(d) {
   for (const k of ['owned', 'potions', 'newIds']) if (!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {};
   for (const k of ['boosts', 'queue', 'hist']) if (!Array.isArray(s[k])) s[k] = [];
   if (s.equipped && !AURA_BY_ID[s.equipped]) s.equipped = null;
+  s.settings = normSettings(d.settings);
   s.savedAt = +s.savedAt || 0;
   return s;
 }
@@ -1578,15 +1675,27 @@ const AU = {
     try {
       const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
       const c = this.ctx = new C();
-      this.master = c.createGain(); this.master.gain.value = 0.42;
+      this.main = c.createGain(); this.main.gain.value = 0.42;
       const comp = c.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 6;
-      this.master.connect(comp); comp.connect(c.destination);
+      this.main.connect(comp); comp.connect(c.destination);
+      this.master = c.createGain(); this.master.connect(this.main); // Soundeffekte
+      this.mus = c.createGain(); this.mus.connect(this.main);       // Musik, mit eigenem Hall
+      this.mus.verb = c.createGain(); const md = c.createDelay(1); md.delayTime.value = 0.33; const mfb = c.createGain(); mfb.gain.value = 0.35; const mwet = c.createGain(); mwet.gain.value = 0.35;
+      this.mus.verb.connect(md); md.connect(mfb); mfb.connect(md); md.connect(mwet); mwet.connect(this.mus);
       this.delay = c.createDelay(1); this.delay.delayTime.value = 0.21;
       const fb = c.createGain(); fb.gain.value = 0.38; const wet = c.createGain(); wet.gain.value = 0.3;
       this.delay.connect(fb); fb.connect(this.delay); this.delay.connect(wet); wet.connect(this.master);
       const len = c.sampleRate * 1.5; this.nb = c.createBuffer(1, len, c.sampleRate);
       const d = this.nb.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this.vol();
     } catch (e) { this.ctx = null; }
+  },
+  // Lautstärken aus den Einstellungen (80 % Effekte = bisherige Lautstärke); Musik leiser während Cutscenes
+  vol() {
+    if (!this.ctx || !this.master) return;
+    const st = S.settings, n = this.ctx.currentTime, on = S.sound ? 1 : 0;
+    this.master.gain.setTargetAtTime(st.sfx / .8 * on, n, .03);
+    this.mus.gain.setTargetAtTime(st.music * .9 * on * (typeof CS !== 'undefined' && CS.on ? .25 : 1), n, .2);
   },
   get on() { return S.sound && this.ctx && this.ctx.state === 'running'; },
   tone(f, dur, o = {}) {
@@ -1618,11 +1727,12 @@ const AU = {
   chord(fs, dur, o = {}) { fs.forEach((f, i) => this.tone(f, dur, Object.assign({}, o, { delay: (o.delay || 0) + i * (o.arp || 0) }))); },
   play(n, vm = 1, a = 0) {
     if (!this.on) return;
-    const now = performance.now(), gap = { hit: 45, hitBig: 60, tick: 18, shoot: 40, dot: 120, zap: 50, shimmer: 160, boom: 50, ui: 70 }[n] || 25;
+    const now = performance.now(), gap = { hit: 45, hitBig: 60, tick: 18, shoot: 40, dot: 120, zap: 50, shimmer: 160, boom: 50, ui: 70, preview: 110 }[n] || 25;
     if (this.last[n] && now - this.last[n] < gap) return; this.last[n] = now;
     const o = { vm };
     switch (n) {
       case 'click': this.tone(880, .05, { ...o, type: 'triangle', vol: .08 }); break;
+      case 'preview': this.chord([784, 988, 1175], .24, { ...o, type: 'triangle', vol: .07, arp: .035, verb: 1 }); break;
       case 'ui': this.tone(1320, .045, { ...o, type: 'triangle', vol: .035 }); this.tone(1980, .035, { ...o, type: 'sine', vol: .018, delay: .012 }); break;
       case 'tick': this.tone(1500 + a * 900, .025, { ...o, type: 'square', vol: .035 }); this.noise(.02, { ...o, f: 4000, vol: .05 }); break;
       case 'rollStart': this.noise(.5, { ...o, f: 400, slide: 6, vol: .12 }); this.tone(220, .4, { ...o, type: 'sawtooth', slide: 2, vol: .05, lp: 1200 }); break;
@@ -1678,6 +1788,7 @@ const AU = {
    ICONS: Aura-Icons, Trank-Icons, Move-Icons, UI-SVGs
    ===================================================================== */
 const SVG = {
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   gem: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12l3 6-9 12L3 9z"/><path d="M3 9h18M9.5 3 12 9l2.5-6M12 9v12" stroke-width="1.6"/></svg>',
   user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
   clover: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="9" r="3.2"/><circle cx="15" cy="9" r="3.2"/><circle cx="9" cy="15" r="3.2"/><circle cx="15" cy="15" r="3.2"/><path d="M15.5 15.5 20 21"/></svg>',
@@ -1939,7 +2050,7 @@ class Preview {
     if (c.width !== Math.round(w * d) || c.height !== Math.round(hh * d)) { c.width = Math.round(w * d); c.height = Math.round(hh * d); }
     const x = this.x; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, hh);
     this.t += dt; const r = Math.min(w, hh) * .14 * this.scale, cx = w / 2, cy = hh / 2 + Math.sin(this.t * 1.6) * r * .08;
-    this.fx.update(dt, cx, cy, r, 1.1);
+    this.fx.update(dt, cx, cy, r, 1.1 * FX.part);
     this.fx.drawBack(x, cx, cy, r);
     drawBody(x, this.fx.a, cx, cy, r, null, this.t);
     this.fx.drawFront(x);
@@ -3504,23 +3615,23 @@ function stampDecal(x, y, r, col, str = 1, crack = false) {
 const VFX_LIM = [['rings', 90], ['flashes', 70], ['lines', 80], ['arcs', 40], ['rays', 24], ['pillars', 8], ['ghosts', 60], ['runes', 20], ['bubbles', 20], ['tps', 20], ['nums', 60], ['texts', 20]];
 const VFX = {
   parts: [], rings: [], lines: [], arcs: [], flashes: [], ghosts: [], rays: [], pillars: [], bubbles: [], runes: [], tps: [], later: [],
-  nums: [], texts: [], kills: [], shake: 0, flash: null, vign: 0, q: 1, ema: 1 / 60, crowd: 1,
+  nums: [], texts: [], kills: [], shake: 0, flash: null, vign: 0, q: 1, qn: 1, ema: 1 / 60, crowd: 1,
   clear() {
     for (const k of ['parts', 'rings', 'lines', 'arcs', 'flashes', 'ghosts', 'rays', 'pillars', 'bubbles', 'runes', 'tps', 'later', 'nums', 'texts', 'kills']) this[k] = [];
     this.shake = 0; this.flash = null; this.vign = 0; this.lastUpd = performance.now(); decalInit();
   },
-  cap() { return (MATCH.touch ? 760 : 1500) * this.q; },
+  cap() { return (MATCH.touch ? 760 : 1500) * this.qn; },
   cf(x, y) { const me = localFighterView(); if (!me || !me.alive) return this.crowd; return d2(x, y, me.x, me.y) < 300 * 300 ? 1 : this.crowd; },
-  kick(x, y, amt) { const me = localFighterView(); const fo = me && me.alive ? clamp(1 - Math.hypot(me.x - x, me.y - y) / 700, 0, 1) : .35; this.shake = Math.min(16, Math.max(this.shake, amt * fo)); },
+  kick(x, y, amt) { const me = localFighterView(); const fo = me && me.alive ? clamp(1 - Math.hypot(me.x - x, me.y - y) / 700, 0, 1) : .35; this.shake = Math.min(16 * Math.max(1, FX.shake), Math.max(this.shake, amt * fo * FX.shake)); },
   flashAt(x, y, col, a) {
     const me = localFighterView(); const fo = me && me.alive ? clamp(1 - Math.hypot(me.x - x, me.y - y) / 900, 0, 1) : .5;
-    const cur = this.flash ? this.flash.a * (1 - this.flash.t / .5) ** 2 : 0, na = Math.min(.45, a * fo);
+    const cur = this.flash ? this.flash.a * (1 - this.flash.t / .5) ** 2 : 0, na = Math.min(.45, a * fo) * FX.flash;
     // nur ersetzen, wenn deutlich stärker oder nach kurzer Pause – kein Dauerflackern bei vielen Explosionen
     if (na > .02 && na > cur + .02 && (na > cur * 1.6 || RD.t - (this.flT ?? -9) > .33)) { this.flash = { col, a: na, t: 0 }; this.flT = RD.t; }
   },
   // Partikel erzeugen (o: cols/col, sh, spd, smin, life, s, ang, spread, drag, g, out, inward, vx, vy, dark)
   spawn(n, x, y, o) {
-    n = Math.round(n * this.q); const room = Math.floor(this.cap() * (this.cf(x, y) === 1 ? 1 : .7) - this.parts.length); if (room <= 0 || n <= 0) return; n = Math.min(n, room);
+    n = Math.round(n * this.qn); const room = Math.floor(this.cap() * (this.cf(x, y) === 1 ? 1 : .7) - this.parts.length); if (room <= 0 || n <= 0) return; n = Math.min(n, room);
     const cols = o.cols || [o.col || '#ffffff'];
     for (let i = 0; i < n; i++) {
       const a = o.ang !== undefined ? o.ang + rand(-(o.spread || 0), o.spread || 0) : rand(TAU), v = rand(o.smin ?? (o.spd || 100) * .3, o.spd || 100);
@@ -3589,7 +3700,7 @@ const VFX = {
       switch (v) {
         case 1: case 10: this.spawn(n * .5, x, y, { cols: ['#ff7a1a', '#ffd166', '#ff3d1f'], sh: 'spark', spd: R * 1.6, life: .7, s: 2.2, drag: 2, g: -40 }); break;
         case 2: case 7: this.pillars.push({ x, y, w: R * .7, col: v === 7 ? '#fde68a' : c1, t: 0, max: .5 * tv.dur }); if (v === 7) this.rays.push({ x, y, len: R * 1.4, n: 10, rot: 0, col: '#fde68a', t: 0, max: .45, w: R * .05 }); break;
-        case 3: for (let i = 0; i < n * .5 * this.q; i++) this.add({ x: x + rand(-R, R) * .4, y, vx: rand(-R, R) * 1.2, vy: -rand(R * 2.2, R * 4), life: .9, max: .9, col: pick(['#ff5a1f', '#ffb020', c1]), s: rand(2, 4), sh: 'dot', rot: 0, vr: 0, drag: .6, g: R * 8 }); break;
+        case 3: for (let i = 0; i < n * .5 * this.qn; i++) this.add({ x: x + rand(-R, R) * .4, y, vx: rand(-R, R) * 1.2, vy: -rand(R * 2.2, R * 4), life: .9, max: .9, col: pick(['#ff5a1f', '#ffb020', c1]), s: rand(2, 4), sh: 'dot', rot: 0, vr: 0, drag: .6, g: R * 8 }); break;
         case 4: this.lines.push({ x1: x + rand(-40, 40), y1: y - 340, x2: x, y2: y, w: 9 + t, col: '#e0f2fe', col2: c1, t: 0, max: .28, vis: 1, tier: t, seed: rand(1000) }); this.flashes.push({ x, y, r: R * 1.4, col: '#e0f2fe', t: 0, max: .1, core: true }); break;
         case 6: this.ring(x, y, R * 1.1, '#e0f2fe', { w: 3, max: .55, dash: 1 }); this.spawn(n * .6, x, y, { cols: ['#ffffff', '#bae6fd', c1], sh: 'shard', spd: R * 2.2, life: .6, s: 3, drag: 3 }); break;
         case 8: this.spawn(n * .6, x, y, { cols: ['#78716c', '#a8a29e', '#57534e'], sh: 'square', spd: R * 2, life: .7, s: 3.2, drag: 3, dark: 1 }); break;
@@ -3649,9 +3760,9 @@ const VFX = {
     this.flashes.push({ x: x2, y: y2, r: w * 1.8 + 14 + I.t * 3, col: I.c1, t: 0, max: .2, core: true });
     const n = Math.min(40, L / 38) * tv.p * cf, nx = -(y2 - y1) / (L || 1), ny = (x2 - x1) / (L || 1);
     const sh = vis === 3 ? 'square' : vis === 4 ? 'leaf' : vis === 6 || vis === 14 ? 'shard' : vis === 8 || vis === 9 || vis === 13 ? 'star' : vis === 12 ? 'ring' : I.sh;
-    if (vis === 11) for (let i = 0; i < n * .8 * this.q && this.parts.length < this.cap(); i++) { const k = rand(.2, 1), px = lerp(x1, x2, k) + nx * rand(-18, 18), py = lerp(y1, y2, k) + ny * rand(-18, 18), L2 = Math.hypot(x1 - px, y1 - py) || 1, sp = rand(260, 420); this.parts.push({ x: px, y: py, vx: (x1 - px) / L2 * sp, vy: (y1 - py) / L2 * sp, life: .35, max: .35, col: pick([I.c1, I.c2, '#ffffff']), s: rand(1.4, 2.2), sh: 'spark', rot: 0, vr: 0, drag: 0, g: 0 }); }
+    if (vis === 11) for (let i = 0; i < n * .8 * this.qn && this.parts.length < this.cap(); i++) { const k = rand(.2, 1), px = lerp(x1, x2, k) + nx * rand(-18, 18), py = lerp(y1, y2, k) + ny * rand(-18, 18), L2 = Math.hypot(x1 - px, y1 - py) || 1, sp = rand(260, 420); this.parts.push({ x: px, y: py, vx: (x1 - px) / L2 * sp, vy: (y1 - py) / L2 * sp, life: .35, max: .35, col: pick([I.c1, I.c2, '#ffffff']), s: rand(1.4, 2.2), sh: 'spark', rot: 0, vr: 0, drag: 0, g: 0 }); }
     if (vis === 8) this.spawn(n * .6, lerp(x1, x2, .5), lerp(y1, y2, .5), { cols: ['#fde68a', '#ffffff'], sh: 'star', spd: L * .5, life: .6, s: 2, drag: 4 });
-    for (let i = 0; i < n * this.q && this.parts.length < this.cap(); i++) { const k = Math.random(), s = (Math.random() < .5 ? -1 : 1) * rand(30, 120); this.parts.push({ x: lerp(x1, x2, k), y: lerp(y1, y2, k), vx: nx * s, vy: ny * s, life: .4, max: .4, col: pick([I.c1, I.c2, '#ffffff']), s: rand(1.5, 2.8), sh, rot: rand(TAU), vr: 4, drag: 4, g: 0, dark: vis === 3 }); }
+    for (let i = 0; i < n * this.qn && this.parts.length < this.cap(); i++) { const k = Math.random(), s = (Math.random() < .5 ? -1 : 1) * rand(30, 120); this.parts.push({ x: lerp(x1, x2, k), y: lerp(y1, y2, k), vx: nx * s, vy: ny * s, life: .4, max: .4, col: pick([I.c1, I.c2, '#ffffff']), s: rand(1.5, 2.8), sh, rot: rand(TAU), vr: 4, drag: 4, g: 0, dark: vis === 3 }); }
     this.spawn(6 * tv.p * cf, x2, y2, { cols: [I.c1, '#ffffff'], sh: 'spark', spd: 260, life: .3, s: 1.8, drag: 5 });
     if (w >= 40) this.kick(x2, y2, Math.min(7, w / 14) * tv.shake);
     if (I.t >= 6 && w >= 20) this.flashAt(x2, y2, I.c1, .08);
@@ -3662,7 +3773,7 @@ const VFX = {
     if (acc) this.accent(x, y, ang, R, arc, I, vis, acc, cf);
     this.arcs.push({ x, y, ang, R, arc, col: I.c1, col2: I.c2, vis, t: 0, max: (vis === 1 ? .34 : .24) * (1 + I.t * .03), tier: I.t });
     const n = (6 + Math.min(arc, 4) * 3) * tv.p * cf;
-    for (let i = 0; i < n * this.q && this.parts.length < this.cap(); i++) {
+    for (let i = 0; i < n * this.qn && this.parts.length < this.cap(); i++) {
       const a = vis === 1 ? rand(TAU) : ang + rand(-arc / 2, arc / 2), rr2 = R * rand(vis === 2 ? .3 : .75, 1.02), tg = a + Math.PI / 2 * (vis === 2 ? 0 : 1), sp = rand(120, 300);
       this.parts.push({ x: x + Math.cos(a) * rr2, y: y + Math.sin(a) * rr2, vx: Math.cos(a) * sp * .6 + Math.cos(tg) * sp * .5, vy: Math.sin(a) * sp * .6 + Math.sin(tg) * sp * .5, life: .3, max: .3, col: pick([I.c1, I.c2, '#ffffff']), s: rand(1.4, 2.4), sh: Math.random() < .6 ? 'spark' : I.sh, rot: rand(TAU), vr: 5, drag: 4.5, g: 0 });
     }
@@ -3675,7 +3786,7 @@ const VFX = {
     if (v === 18) { for (let i = 0; i < 4; i++) this.arcs.push({ x, y, ang, R: R * (.45 + i * .2), arc, col: i % 2 ? I.c2 : c1, col2: I.c2, vis: 3, t: -i * .06, max: .36, tier: I.t }); this.kick(x, y, 3 * I.tv.shake); return; }
     if (VIS_SOFT.has(v) || v === 11) for (let i = 0; i < 5; i++) { const k = rand(.35, 1), a = ang + rand(-arc / 2, arc / 2) * .8; this.flashes.push({ x: x + Math.cos(a) * R * k, y: y + Math.sin(a) * R * k, r: R * .3, col: v === 11 ? '#84cc16' : i % 2 ? c1 : c2, t: -i * .03, max: .8, soft: true, vx: Math.cos(a) * 40, vy: Math.sin(a) * 40 }); }
     const n = (8 + R / 12) * I.tv.p * cf;
-    for (let i = 0; i < n * this.q && this.parts.length < this.cap(); i++) { const a = ang + rand(-arc / 2, arc / 2), k = rand(.25, 1), sp = rand(90, 220); this.parts.push({ x: x + Math.cos(a) * R * k, y: y + Math.sin(a) * R * k, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp + (v === 10 || v === 1 ? -60 : 0), life: .55, max: .55, col: pick([c1, c2, acc ? acc[1] : '#ffffff']), s: rand(1.8, 3), sh, rot: rand(TAU), vr: rand(-6, 6), drag: 3, g: v === 10 ? -80 : 0 }); }
+    for (let i = 0; i < n * this.qn && this.parts.length < this.cap(); i++) { const a = ang + rand(-arc / 2, arc / 2), k = rand(.25, 1), sp = rand(90, 220); this.parts.push({ x: x + Math.cos(a) * R * k, y: y + Math.sin(a) * R * k, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp + (v === 10 || v === 1 ? -60 : 0), life: .55, max: .55, col: pick([c1, c2, acc ? acc[1] : '#ffffff']), s: rand(1.8, 3), sh, rot: rand(TAU), vr: rand(-6, 6), drag: 3, g: v === 10 ? -80 : 0 }); }
   },
   muzzle(x, y, ai, ang) {
     const I = fxInfo(ai), tv = I.tv, cf = this.cf(x, y), mx = x + Math.cos(ang) * 22, my = y + Math.sin(ang) * 22;
@@ -3735,7 +3846,8 @@ const VFX = {
     this.lastUpd = performance.now();
     // Qualität an der tatsächlichen Bildrate messen: fmin = kürzestes Bildintervall des Geräts (30-Hz-Geräte nicht dauerhaft drosseln)
     this.fmin = Math.min((this.fmin || dt) + dt * .002, Math.max(dt, .004)); this.ema = this.ema * .95 + dt * .05;
-    if (this.ema > Math.max(.026, this.fmin * 1.5)) this.q = Math.max(.35, this.q - dt * .6); else if (this.ema < Math.max(.019, this.fmin * 1.15)) this.q = Math.min(1, this.q + dt * .25);
+    if (this.ema > Math.max(.026, this.fmin * 1.5)) this.q = Math.max(.35, this.q - dt * .6); else if (this.ema < Math.max(.019, this.fmin * 1.15)) this.q = Math.min(FX.qmax, this.q + dt * .25);
+    this.q = Math.min(this.q, FX.qmax); this.qn = this.q * FX.dens; // Qualitätsstufe begrenzt, Partikeldichte skaliert
     for (const [k, mx] of VFX_LIM) if (this[k].length > mx) this[k].splice(0, this[k].length - mx);
     if (this.later.length) { for (const l of this.later) l.t -= dt; const due = this.later.filter(l => l.t <= 0); this.later = this.later.filter(l => l.t > 0); for (const l of due) l.fn(); }
     for (const p of this.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; const dr = Math.max(0, 1 - p.drag * dt); p.vx *= dr; p.vy = p.vy * dr + p.g * dt; p.rot += p.vr * dt; if (p.jit && Math.random() < .25) { p.x += rand(-p.jit, p.jit); p.y += rand(-p.jit, p.jit); } }
@@ -3809,7 +3921,7 @@ const VFX = {
     // helle Partikel additiv (nur im sichtbaren Ausschnitt)
     for (const p of this.parts) {
       if (p.dark || out(p)) continue; const k = p.life / p.max, al = Math.min(1, k * 2.4);
-      if (p.sh !== 'spark' && (this.q > .7 || p.s > 2.6)) glow(x, p.col, p.x, p.y, p.s * 3.2, al * .5);
+      if (p.sh !== 'spark' && FX.glow && (this.q > .7 || p.s > 2.6)) glow(x, p.col, p.x, p.y, p.s * 3.2, al * .5);
       x.globalAlpha = al; x.fillStyle = x.strokeStyle = p.col;
       if (p.sh === 'plus') { const s = p.s * (.6 + .4 * k); x.fillRect(p.x - s * .3, p.y - s * 1.2, s * .6, s * 2.4); x.fillRect(p.x - s * 1.2, p.y - s * .3, s * 2.4, s * .6); }
       else drawParticle(x, p.sh, p.x, p.y, p.s * (.55 + .45 * k), p.rot, p);
@@ -4144,7 +4256,7 @@ function drawZone(x, z, t, dt) {
   x.restore();
   // Umgebungspartikel – Menge nach Fläche und Stufe
   const area = z.sh === 'l' ? z.len * z.w : z.sh === 'k' ? z.r * z.r * z.arc / 120 : z.sh === 'o' ? TAU * z.r * z.w : Math.PI * z.r * z.r;
-  const rate = clamp(area / 7000, 1.5, 14) * (.7 + I.t * .2) * VFX.q;
+  const rate = clamp(area / 7000, 1.5, 14) * (.7 + I.t * .2) * VFX.qn;
   if (Math.random() < rate * dt) {
     const [px, py] = zonePoint(z), up = ['fire', 'lava', 'holy', 'life', 'flower', 'spore', 'gas'].includes(sty), down = ['snow', 'ice'].includes(sty), inn = ['void', 'water', 'sand', 'wind', 'storm'].includes(sty);
     const ddx = cx - px, ddy = cy - py, dl = Math.hypot(ddx, ddy) || 1;
@@ -4214,7 +4326,7 @@ function drawFighter(x, f, t, dt, local) {
     x.beginPath(); for (let i = 0; i < 6; i++) { const an = i * TAU / 6; x.lineTo(Math.cos(an) * f.r, Math.sin(an) * f.r); } x.closePath(); x.fill(); x.stroke(); x.shadowBlur = 0;
     x.rotate(f.ang); x.fillStyle = a.c1; x.fillRect(0, -3, f.r + 6, 6); x.fillStyle = a.c2v; circ(x, 0, 0, f.r * .4); x.fill(); x.restore();
   } else {
-    fx.update(dt, f.x, f.y, f.r, me ? Math.max(.6, VFX.q) : VFX.q * VFX.crowd);
+    fx.update(dt, f.x, f.y, f.r, me ? Math.max(.6, VFX.q) * FX.dens : VFX.qn * VFX.crowd);
     fx.drawBack(x, f.x, f.y, f.r, al);
     drawBody(x, a, f.x, f.y, f.r * (1 + hf * .8), f.ang, t, { alpha: al });
     fx.drawFront(x, al);
@@ -4305,14 +4417,14 @@ function drawArena(view, dt, local) {
     x.save(); x.globalAlpha = k; x.lineCap = 'round'; x.shadowColor = col; x.shadowBlur = 16 + I.t * 2;
     x.strokeStyle = wl.refl ? 'rgba(226,232,240,.9)' : col; x.lineWidth = 12 + Math.sin(t * 9 + wl.id) * 1.5; x.beginPath(); x.moveTo(wl.x1, wl.y1); x.lineTo(wl.x2, wl.y2); x.stroke();
     x.shadowBlur = 0; x.strokeStyle = wl.refl ? col : 'rgba(255,255,255,.7)'; x.lineWidth = 3; x.stroke(); x.restore();
-    if (Math.random() < .25 * VFX.q) { const kk = Math.random(); VFX.add({ x: lerp(wl.x1, wl.x2, kk), y: lerp(wl.y1, wl.y2, kk), vx: rand(-20, 20), vy: -rand(20, 50), life: .5, max: .5, col, s: 1.8, sh: 'spark', rot: 0, vr: 0, drag: 2, g: 0 }); }
+    if (Math.random() < .25 * VFX.qn) { const kk = Math.random(); VFX.add({ x: lerp(wl.x1, wl.x2, kk), y: lerp(wl.y1, wl.y2, kk), vx: rand(-20, 20), vy: -rand(20, 50), life: .5, max: .5, col, s: 1.8, sh: 'spark', rot: 0, vr: 0, drag: 2, g: 0 }); }
   }
   x.save(); x.globalCompositeOperation = 'lighter';
   for (const te of view.te) {
     const I = fxInfo(te.ai ?? -1), c1 = PAL[te.col], mxp = (te.ax + te.bx) / 2 + Math.sin(t * 6) * 20, myp = (te.ay + te.by) / 2 + Math.cos(t * 6) * 20;
     x.strokeStyle = rgba(c1, .22); x.lineWidth = 12 + I.t; x.beginPath(); x.moveTo(te.ax, te.ay); x.quadraticCurveTo(mxp, myp, te.bx, te.by); x.stroke();
     x.strokeStyle = rgba(c1, .85); x.lineWidth = 3.5 + Math.sin(t * 20) * 1.5; x.stroke(); x.strokeStyle = rgba('#ffffff', .6); x.lineWidth = 1.2; x.stroke();
-    if (Math.random() < (.5 + I.t * .1) * VFX.q) { const L = .9; VFX.add({ x: te.bx, y: te.by, vx: (te.ax - te.bx) / L, vy: (te.ay - te.by) / L, life: L * .9, max: L, col: pick([c1, I.c2]), s: 2.2, sh: 'dot', rot: 0, vr: 0, drag: 0, g: 0 }); }
+    if (Math.random() < (.5 + I.t * .1) * VFX.qn) { const L = .9; VFX.add({ x: te.bx, y: te.by, vx: (te.ax - te.bx) / L, vy: (te.ay - te.by) / L, life: L * .9, max: L, col: pick([c1, I.c2]), s: 2.2, sh: 'dot', rot: 0, vr: 0, drag: 0, g: 0 }); }
   }
   x.restore();
   const fs = view.f;
@@ -4337,7 +4449,7 @@ function drawArena(view, dt, local) {
     if (I.t >= 4) glow(x, c2, p.x, p.y, r * 2.2 * (1 + .15 * Math.sin(t * 12 + p.id)), .45);
     if (tv.rays) { x.fillStyle = '#ffffff'; for (let i = 0; i < 2 + (I.t >= 7); i++) { const an = t * 9 + p.id + i * TAU / 3; x.save(); x.translate(p.x + Math.cos(an) * r * 2, p.y + Math.sin(an) * r * 2); starP(x, 4, 3.4, 1); x.fill(); x.restore(); } }
     if (tv.rainbow) { x.strokeStyle = rgba(RAINBOW[((t * 10 + p.id) | 0) % 8], .8); x.lineWidth = 2; circ(x, p.x, p.y, r * 1.7); x.stroke(); }
-    if (Math.random() < (.22 + I.t * .07) * VFX.q && VFX.parts.length < VFX.cap()) VFX.add({ x: p.x, y: p.y, vx: -p.vx * .12 + rand(-25, 25), vy: -p.vy * .12 + rand(-25, 25), life: .4, max: .4, col: Math.random() < .5 ? c1 : c2, s: rand(1.2, 2.2) + I.t * .1, sh: I.sh, rot: rand(TAU), vr: 4, drag: 2, g: 0 });
+    if (Math.random() < (.22 + I.t * .07) * VFX.qn && VFX.parts.length < VFX.cap()) VFX.add({ x: p.x, y: p.y, vx: -p.vx * .12 + rand(-25, 25), vy: -p.vy * .12 + rand(-25, 25), life: .4, max: .4, col: Math.random() < .5 ? c1 : c2, s: rand(1.2, 2.2) + I.t * .1, sh: I.sh, rot: rand(TAU), vr: 4, drag: 2, g: 0 });
   }
   x.restore();
   for (const p of view.p) { if (!inV(p.x, p.y, 40)) continue; const I = fxInfo(p.ai ?? -1), c1 = PAL[p.col], c2 = PAL[p.col2] || '#fff'; x.save(); x.translate(p.x, p.y); x.rotate(Math.atan2(p.vy, p.vx)); drawShape(x, p.sh, p.r * (1 + I.t * .05), c1, c2, t + p.id); x.restore(); }
@@ -5176,7 +5288,11 @@ function lobbyPerf(dt) {
   P.n++; P.sum += dt;
   if (P.n >= 90) { if (P.sum / P.n > 1 / 40) { UI.lite = true; document.documentElement.classList.add('lite'); } P.n = 0; P.sum = 0; }
 }
-function applyCalm(on) { UI.calm = !!on; document.documentElement.classList.toggle('calm', UI.calm); }
+function applyCalm(on) {
+  UI.calm = !!on; document.documentElement.classList.toggle('calm', UI.calm);
+  for (const id of ['#calmT', '#sCalm']) { const e = $(id); if (e) e.checked = UI.calm; }
+  applySettings();
+}
 // Akzentfarbe der Oberfläche = Signaturfarbe der ausgerüsteten Aura (aufgehellt, damit Glows sichtbar bleiben)
 function setAccent(a) {
   const c = a ? a.c1 : '#7c8cff', l = luminance(c) < .55 ? mix(c, '#ffffff', .45) : c, st = document.documentElement.style;
@@ -5259,8 +5375,170 @@ function initLobbyUI() {
   }, true);
 }
 
+/* ---------- Einstellungen ----------
+   S.settings: Musik-/Effektlautstärke, Grafikqualität, Partikeldichte, Screenshake, Auto-Roll-Stopp.
+   Stumm (S.sound) und Weniger Bewegung (S.calm) bleiben wie bisher eigene Felder und sind mit den
+   Schaltern in der Lobby synchron. FX enthält die daraus abgeleiteten Faktoren, die Lobby, Cutscene,
+   Enthüllung und Kampf-VFX lesen. */
+const FX = { qmax: 1, glow: 1, dens: 1, part: 1, shake: 1, flash: 1 };
+const QUALITY = { low: { q: .45, glow: 0, n: 'Niedrig', d: 'Weniger Partikel, keine aufwendigen Glows und keine Milchglas-Unschärfe – für schwächere Geräte.' },
+  mid: { q: .72, glow: .6, n: 'Mittel', d: 'Ausgewogen: etwas weniger Partikel, Glows bleiben, ohne Milchglas-Unschärfe.' },
+  high: { q: 1, glow: 1, n: 'Hoch', d: 'Alle Partikel, Glows und Milchglas-Effekte.' } };
+const SHAKES = [['Aus', 0], ['Schwach', .45], ['Normal', 1], ['Stark', 1.6]];
+function applySettings() {
+  const st = S.settings, Q = QUALITY[st.quality] || QUALITY.high;
+  FX.qmax = Q.q; FX.glow = Q.glow; FX.dens = st.particles; FX.part = Q.q * st.particles;
+  FX.shake = SHAKES[st.shake][1] * (UI.calm ? .5 : 1); FX.flash = UI.calm ? .35 : 1;
+  const r = document.documentElement; r.dataset.q = st.quality; r.style.setProperty('--shk', FX.shake); r.style.setProperty('--fla', FX.flash);
+  if (typeof VFX !== 'undefined' && VFX.q > FX.qmax) VFX.q = FX.qmax;
+  AU.vol(); autoHint();
+}
+let saveSoonT = 0;
+function saveSoon() { clearTimeout(saveSoonT); saveSoonT = setTimeout(save, 350); }
+function autoHint() { const el = $('#autoHint'); if (!el) return; const T = TIERS[S.settings.autoStop]; el.textContent = 'ab ' + T.n; el.style.setProperty('--tc', T.c); el.parentNode.parentNode.title = `Rollt automatisch weiter und stoppt bei ${T.n} oder seltener (einstellbar in den Einstellungen)`; }
+// Ton an/aus – Lautsprecher oben und Schalter im Einstellungs-Panel bleiben synchron
+function syncSoundUI() {
+  const sb = $('#soundBtn'); if (sb) { sb.innerHTML = S.sound ? SVG.sound : SVG.mute; sb.title = S.sound ? 'Sound aus' : 'Sound an'; sb.setAttribute('aria-pressed', S.sound ? 'false' : 'true'); }
+  const sw = $('#sSound'); if (sw) sw.checked = S.sound;
+}
+function setSound(on) { S.sound = !!on; save(); AU.init(); syncSoundUI(); AU.vol(); if (S.sound) AU.play('click'); }
+// Spielername: sofort in der oberen Leiste, übernommen (bereinigt + gespeichert + an Mitspieler) nach kurzer Pause bzw. beim Verlassen
+function commitName(v) {
+  S.name = cleanName(v); save();
+  for (const id of ['#nameInput', '#sName']) { const e = $(id); if (e && document.activeElement !== e) e.value = S.name; }
+  if (NET.role === 'client') NET.tr && NET.tr.send({ t: 'name', name: S.name });
+  if (NET.role === 'host') { const p = NET.room.find(p => p.host); if (p) { p.name = S.name; sendRoom(); } }
+}
+// Fortschritt zurücksetzen (Auren, Währung, Tränke, Statistik) – Name und Einstellungen bleiben
+function resetProgress() {
+  if (NET.role) { toast('Verlasse zuerst den Multiplayer-Raum.', 'bad'); return false; }
+  const d = defaultSave();
+  for (const k of ['dust', 'rolls', 'owned', 'equipped', 'potions', 'boosts', 'queue', 'bonusCharges', 'stats', 'hist', 'newIds']) S[k] = d[k];
+  histSeen = -1; lastBoostKey = '';
+  save(); CLOUD.flush(); renderLobby();
+  toast('Fortschritt zurückgesetzt – viel Glück beim Neustart!', 'good');
+  return true;
+}
+function confirmReset() {
+  const WORD = 'ZURÜCKSETZEN', body = h('div', { class: 'reset-dlg' });
+  body.innerHTML = `<div class="rd-warn">${SVG.skull}<div><b>Das kann nicht rückgängig gemacht werden.</b><span>Gelöscht werden alle Auren deiner Sammlung, dein Sternenstaub, alle Tränke und aktiven Boosts sowie deine Statistik (${fmt(S.rolls)} Rolls, ${fmt(S.stats.wins)} Siege). Name und Einstellungen bleiben erhalten.</span></div></div>
+    <label class="rd-lbl" for="rdIn">Tippe <b>${WORD}</b> ein, um zu bestätigen:</label>
+    <input id="rdIn" class="rd-in" autocomplete="off" spellcheck="false" placeholder="${WORD}" aria-label="Bestätigungswort">
+    <div class="rd-btns"><button class="btn" id="rdNo">Abbrechen</button><button class="btn danger-solid" id="rdYes" disabled>Endgültig zurücksetzen</button></div>`;
+  const back = openModal('Fortschritt zurücksetzen?', body, 'narrow reset-modal');
+  const inp = body.querySelector('#rdIn'), yes = body.querySelector('#rdYes');
+  inp.oninput = () => { const okw = inp.value.trim().toUpperCase() === WORD; yes.disabled = !okw; inp.classList.toggle('ok', okw); };
+  inp.onkeydown = e => { if (e.key === 'Enter' && !yes.disabled) yes.click(); };
+  body.querySelector('#rdNo').onclick = () => closeModal(back);
+  yes.onclick = () => { if (yes.disabled) return; if (resetProgress()) closeAllModals(); };
+  setTimeout(() => inp.focus(), 60);
+}
+function openSettings() {
+  if (SCREEN !== 'lobby' || CS.on || REVEAL.open) return;
+  AU.init(); TIP.hide();
+  const st = S.settings;
+  const back = h('div', { class: 'modal-back drawer-back' }), dr = h('aside', { class: 'drawer', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'setTitle' });
+  const seg = (id, items) => `<div class="set-seg" id="${id}" role="radiogroup">${items.map(([l, v]) => `<button type="button" role="radio" data-v="${v}">${l}</button>`).join('')}</div>`;
+  dr.innerHTML = `<header class="drawer-h"><span class="ph-ic">${SVG.gear}</span><h2 id="setTitle">Einstellungen</h2><button class="x" aria-label="Einstellungen schließen">×</button></header>
+    <div class="drawer-b">
+      <section class="set-sec"><h3>${SVG.sound}<span>Sound &amp; Musik</span></h3>
+        <label class="set-row"><span class="sr-t"><b>Ton</b><small>Schaltet Musik und Effekte stumm – synchron mit dem Lautsprecher oben</small></span><input type="checkbox" class="switch" id="sSound"></label>
+        <div class="set-slider"><div class="ss-top"><b>Musik</b><output id="sMusicV"></output></div><input type="range" min="0" max="100" step="1" id="sMusic" aria-label="Musiklautstärke"></div>
+        <div class="set-slider"><div class="ss-top"><b>Soundeffekte</b><output id="sSfxV"></output></div><input type="range" min="0" max="100" step="1" id="sSfx" aria-label="Lautstärke der Soundeffekte"></div>
+      </section>
+      <section class="set-sec"><h3>${SVG.sparkle}<span>Grafik &amp; Effekte</span></h3>
+        <div class="set-field"><b>Qualität</b>${seg('sQual', Object.entries(QUALITY).map(([v, Q]) => [Q.n, v]))}<small id="sQualTxt"></small></div>
+        <div class="set-slider"><div class="ss-top"><b>Partikeldichte</b><output id="sPartV"></output></div><input type="range" min="25" max="150" step="5" id="sPart" aria-label="Partikeldichte"><small>Zusätzlich zur Qualitätsstufe – wirkt in der Lobby, in Cutscenes und im Kampf.</small></div>
+        <div class="set-field"><b>Screenshake</b>${seg('sShake', SHAKES.map(([l], i) => [l, i]))}</div>
+        <label class="set-row"><span class="sr-t"><b>Reduzierte Bewegung</b><small>Schwächt Animationen, Kamerawackeln und Bildschirm-Flashes ab</small></span><input type="checkbox" class="switch" id="sCalm"></label>
+      </section>
+      <section class="set-sec"><h3>${SVG.dice}<span>Auto-Roll</span></h3>
+        <div class="set-field"><b>Stoppt ab Seltenheit</b><small>Sobald eine Aura dieser Stufe oder seltener gerollt wird, hält Auto-Roll an und du erlebst den Treffer in Ruhe.</small>
+          <div class="tier-pick" id="sStop" role="radiogroup">${TIERS.map((T, i) => `<button type="button" role="radio" data-t="${i}" style="--tc:${T.c}">${T.n}</button>`).join('')}</div>
+          <div class="stop-now" id="sStopNow"></div></div>
+      </section>
+      <section class="set-sec"><h3>${SVG.user}<span>Spielstand</span></h3>
+        <div class="set-field"><label for="sName"><b>Spielername</b></label><div class="name-row"><input id="sName" maxlength="16" autocomplete="off" spellcheck="false"><span class="name-cnt" id="sNameCnt"></span></div><small>Wird sofort oben angezeigt und im Multiplayer verwendet.</small></div>
+        <div class="danger-zone"><div class="dz-t"><b>Fortschritt zurücksetzen</b><small>Löscht Auren, Sternenstaub, Tränke und Statistik. Name und Einstellungen bleiben.</small></div><button class="btn danger-solid" id="sReset">${SVG.skull}Fortschritt zurücksetzen</button></div>
+      </section>
+      <footer class="set-foot"><button class="btn" id="sDefaults">${SVG.history}Auf Standard zurücksetzen</button><small>Alle Einstellungen werden automatisch gespeichert. „Auf Standard zurücksetzen“ betrifft nur die Einstellungen – niemals deinen Spielfortschritt.</small></footer>
+    </div>`;
+  back.appendChild(dr); $('#modalRoot').appendChild(back); MODALS.push(back);
+  const close = () => closeModal(back);
+  dr.querySelector('.x').onclick = close;
+  back.addEventListener('click', e => { if (e.target === back) close(); });
+  const $d = s => dr.querySelector(s);
+  const range = (id, get, set, fmtV, onInput) => {
+    const el = $d('#' + id), out = $d('#' + id + 'V');
+    const paint = () => { const v = +el.value, p = (v - el.min) / (el.max - el.min) * 100; el.style.setProperty('--pct', p + '%'); out.textContent = fmtV(v); };
+    el.value = get(); paint();
+    el.oninput = () => { set(+el.value); paint(); saveSoon(); if (onInput) onInput(+el.value); };
+  };
+  const draw = () => {
+    syncSoundUI();
+    $d('#sCalm').checked = UI.calm;
+    for (const b of $d('#sQual').children) { const on = b.dataset.v === S.settings.quality; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); }
+    $d('#sQualTxt').textContent = QUALITY[S.settings.quality].d;
+    for (const b of $d('#sShake').children) { const on = +b.dataset.v === S.settings.shake; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); }
+    for (const b of $d('#sStop').children) { const on = +b.dataset.t === S.settings.autoStop; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); }
+    const T = TIERS[S.settings.autoStop];
+    $d('#sStopNow').innerHTML = `Auto-Roll stoppt bei <b style="color:${T.c};text-shadow:0 0 12px ${rgba(T.c, .6)}">${T.n}</b>${S.settings.autoStop < 8 ? ' oder seltener' : ''}`;
+    const nm = $d('#sName'); if (document.activeElement !== nm) nm.value = S.name; $d('#sNameCnt').textContent = nm.value.length + '/16';
+  };
+  let pv = 0;
+  range('sMusic', () => Math.round(S.settings.music * 100), v => { S.settings.music = v / 100; AU.vol(); }, v => v + ' %');
+  range('sSfx', () => Math.round(S.settings.sfx * 100), v => { S.settings.sfx = v / 100; AU.vol(); }, v => v + ' %', () => { const n = performance.now(); if (n - pv > 140) { pv = n; AU.play('preview'); } });
+  range('sPart', () => Math.round(S.settings.particles * 100), v => { S.settings.particles = v / 100; applySettings(); }, v => v + ' %');
+  $d('#sSound').onchange = e => setSound(e.target.checked);
+  $d('#sCalm').onchange = e => { S.calm = e.target.checked; save(); applyCalm(e.target.checked); draw(); };
+  $d('#sQual').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.settings.quality = b.dataset.v; applySettings(); save(); draw(); };
+  $d('#sShake').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.settings.shake = +b.dataset.v; applySettings(); save(); draw(); demoShake(); };
+  $d('#sStop').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.settings.autoStop = +b.dataset.t; applySettings(); save(); draw(); };
+  const nm = $d('#sName'); let nmT = 0;
+  nm.oninput = () => { $('#nameInput').value = nm.value; $d('#sNameCnt').textContent = nm.value.length + '/16'; clearTimeout(nmT); nmT = setTimeout(() => commitName(nm.value), 600); };
+  nm.onchange = () => { clearTimeout(nmT); commitName(nm.value); nm.value = S.name; draw(); };
+  back.onClose = () => { if (nmT) { clearTimeout(nmT); commitName(nm.value); } };
+  $d('#sReset').onclick = confirmReset;
+  $d('#sDefaults').onclick = () => {
+    S.settings = defaultSettings(); delete S.calm; S.sound = true; save();
+    applyCalm(!!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)); $('#calmT').checked = UI.calm;
+    applySettings(); syncSoundUI();
+    for (const [id, v] of [['sMusic', S.settings.music * 100], ['sSfx', S.settings.sfx * 100], ['sPart', S.settings.particles * 100]]) { const el = $d('#' + id); el.value = Math.round(v); el.oninput && el.dispatchEvent(new Event('input')); }
+    draw(); toast('Einstellungen auf Standard zurückgesetzt.', 'good');
+  };
+  draw(); fillIcons(back);
+  setTimeout(() => dr.querySelector('.x').focus({ preventScroll: true }), 50);
+  return back;
+}
+// kurzer Vorschau-Wackler beim Wählen der Screenshake-Stärke
+function demoShake() {
+  if (!FX.shake) return;
+  const app = $('#app'); app.classList.remove('shake', 'shake2'); void app.offsetWidth; app.classList.add('shake'); setTimeout(() => app.classList.remove('shake'), 600);
+}
+// ---------- Hintergrundmusik: ruhige, live erzeugte Ambient-Musik (Lobby) bzw. etwas treibender (Arena) ----------
+const MUSIC = {
+  timer: null, next: 0, step: 0,
+  start() { if (!this.timer) this.timer = setInterval(() => this.tick(), 100); },
+  tick() {
+    const c = AU.ctx; if (!c || c.state !== 'running' || !S.sound || S.settings.music <= .001 || document.hidden) { this.next = 0; return; }
+    const arena = SCREEN === 'arena', sd = arena ? 60 / 100 / 2 : 60 / 72 / 2;
+    if (this.next < c.currentTime) this.next = c.currentTime + .08;
+    while (this.next < c.currentTime + .35) { this.play(this.next, arena, sd); this.next += sd; this.step++; }
+  },
+  play(t, arena, sd) {
+    const PROG = arena ? [[110, [220, 261.6, 329.6, 392]], [87.3, [174.6, 220, 261.6, 329.6]], [98, [196, 246.9, 293.7, 392]], [82.4, [164.8, 196, 246.9, 329.6]]]
+      : [[110, [220, 261.6, 329.6, 392, 493.9]], [87.3, [174.6, 220, 261.6, 329.6, 392]], [130.8, [261.6, 329.6, 392, 493.9]], [98, [196, 246.9, 293.7, 329.6, 440]]];
+    const s = this.step % 32, [bass, ch] = PROG[Math.floor(this.step / 8) % 4], o = { out: AU.mus, delay: Math.max(0, t - AU.ctx.currentTime) };
+    if (s % 8 === 0) for (const f of ch) for (const det of [-7, 7]) AU.tone(f, sd * 8.6, { ...o, type: arena ? 'sawtooth' : 'triangle', vol: arena ? .009 : .016, att: sd * 2.5, hold: .55, det, lp: arena ? 1100 : 1700 });
+    if (arena ? s % 2 === 0 : s % 4 === 0) AU.tone(bass, arena ? sd * 1.6 : sd * 3.8, { ...o, type: 'sine', vol: arena ? .07 : .05, att: .02 });
+    if (arena && s % 4 === 0) AU.tone(60, .22, { ...o, type: 'sine', slide: .5, vol: .09 });
+    const arp = [0, 2, 1, 3, 2, 4, 1, 3];
+    if (!arena || s % 2 === 1) { const f = ch[arp[s % 8] % ch.length] * 2; if (Math.random() < (arena ? .55 : .8)) AU.tone(f, arena ? .35 : .9, { ...o, type: 'sine', vol: arena ? .012 : .014, verb: 1, att: .01 }); }
+  },
+};
+
 /* ---------- Lobby ---------- */
-let equipPreview = null, histSeen = -1;
+let equipPreview = null, histSeen = -1, lastSettingsKey = '';
 function renderLobby() {
   setDust(S.dust); $('#rollsVal').textContent = fmt(S.rolls);
   const oc = ownedCount(); $('#collVal').textContent = oc + '/' + AURAS.length; $('#collBar').style.width = (oc / AURAS.length * 100).toFixed(1) + '%';
@@ -5270,7 +5548,8 @@ function renderLobby() {
   renderEquip(); renderHistory(); renderPotions(); updateLuckUI();
   $('#rollBtn').classList.toggle('pulse', !S.rolls);
   $('#quickT').checked = !!S.quick; // Schalter folgen einem geladenen/importierten Spielstand
-  if (typeof S.calm === 'boolean' && S.calm !== UI.calm) { applyCalm(S.calm); $('#calmT').checked = S.calm; }
+  if (typeof S.calm === 'boolean' && S.calm !== UI.calm) applyCalm(S.calm);
+  const sk = JSON.stringify(S.settings) + S.sound; if (sk !== lastSettingsKey) { lastSettingsKey = sk; applySettings(); syncSoundUI(); }
 }
 function renderEquip() {
   const box = $('#equipBox'), cnt = $('#equipTierTxt');
@@ -5665,6 +5944,7 @@ function openHelp() {
     <div><b style="color:#fff">Auren</b><br>64 Auren in 9 Seltenheitsstufen – jede mit eigener Rolle, eigenen Werten und einem eigenständigen Moveset (Schadensart, Reichweite/Form, Zusatzeffekte und Taktik unterscheiden sich). Seltenere Auren haben komplexere Mechaniken wie Zeitreisen, Zwillinge, Seelentausch oder Zeitstopp.</div>
     <div><b style="color:#fff">Braukessel</b><br>Im Braukessel (Lobby) verschmilzt du überzählige Aura-Kopien, Sternenstaub und einfachere Tränke zu stärkeren Glückstränken (Rang I–VI: mehr Glück, längere Wirkung). Jedes Rezept zeigt, welche Zutaten nötig sind und wie viele du davon besitzt; von jeder Aura bleibt immer ein Exemplar erhalten. Gebraute Tränke benutzt du wie gekaufte über die Trank-Leiste in der Lobby.</div>
     <div><b style="color:#fff">Cutscenes</b><br>Ab der Stufe Göttlich wird der Bildschirm schon beim Drücken von ROLL dunkel – statt des Bands startet eine Cutscene in der Signaturfarbe der Aura, die sich langsam aufbaut und erst auf dem Höhepunkt Name und Wahrscheinlichkeit enthüllt. Je seltener, desto länger und heftiger. Tippen, Klicken, <span class="key">Leertaste</span>, <span class="key">Enter</span> oder <span class="key">Esc</span> überspringt sie, „Schnelle Animation“ verkürzt sie. In den Aura-Details kannst du sie erneut ansehen.</div>
+    <div><b style="color:#fff">Einstellungen</b><br>Über das Zahnrad oben in der Lobby: Lautstärke für Musik und Soundeffekte, Grafikqualität, Partikeldichte, Screenshake, reduzierte Bewegung, ab welcher Seltenheit Auto-Roll stoppt (Standard: Legendär), Spielername und das Zurücksetzen des Fortschritts. Alles wird automatisch gespeichert.</div>
     <div><b style="color:#fff">Oberfläche</b><br>Die Lobby nimmt die Signaturfarbe deiner ausgerüsteten Aura an. Fahre über Moves, Tränke oder letzte Rolls (bzw. tippe Moves an), um Details zu sehen. „Weniger Bewegung“ schaltet Animationen und die Bewegung des Hintergrunds ab – beim ersten Start wird dafür die Systemeinstellung „Bewegung reduzieren“ übernommen.</div>
     <div><b style="color:#fff">Multiplayer</b><br>Ein Spieler erstellt einen Raum und teilt den 6-stelligen Code. Andere öffnen dieselbe HTML-Datei und treten mit dem Code bei. Start ab 2 Spielern, bis zu 10 im Free-for-All. Die Verbindung läuft per WebRTC direkt zwischen den Browsern (Signaling über den öffentlichen PeerJS-Server).</div>
     <div><b style="color:#fff">Speicherstand</b><br>Dein Fortschritt (Auren, Sternenstaub, Tränke, Statistik) wird automatisch gespeichert – lokal im Browser und, wenn das Spiel als claude.ai-Artefakt läuft, zusätzlich dauerhaft in deinem privaten Speicher.<br>
@@ -5864,15 +6144,16 @@ function showReveal(r) {
     $('#revealRoot').appendChild(el);
     REVEAL.prev = new Preview(el.querySelector('canvas'), a.i, 1.6);
     if (!cs && t >= 1) { const fl = h('div', { class: 'flash' }); fl.style.background = t >= 6 ? '#ffffff' : `radial-gradient(circle, ${rgba(T.c, .9)}, ${rgba(T.c, .25 + t * .05)})`; fl.style.animationDuration = (0.6 + t * .12) + 's'; document.body.appendChild(fl); setTimeout(() => fl.remove(), 2000); }
-    if (!cs && t >= 3) { const app = $('#app'), cl = t >= 6 ? 'shake2' : 'shake'; app.classList.remove('shake', 'shake2'); void app.offsetWidth; app.classList.add(cl); setTimeout(() => app.classList.remove(cl), 1000); }
+    if (!cs && t >= 3 && FX.shake) { const app = $('#app'), cl = t >= 6 ? 'shake2' : 'shake'; app.classList.remove('shake', 'shake2'); void app.offsetWidth; app.classList.add(cl); setTimeout(() => app.classList.remove(cl), 1000); }
     if (!cs) AU.reveal(t); revealBurst(a);
     el.querySelector('#rvOk').onclick = () => closeReveal();
     const rcs = el.querySelector('#rvCs'); if (rcs) rcs.onclick = () => CS.start(a, null);
     const eb = el.querySelector('#rvEq'); if (eb) eb.onclick = () => { equipAura(a.id); eb.remove(); };
     el.querySelector('#rvInfo').onclick = () => { closeReveal(true); openDetail(a.i); };
     const auto = $('#autoT').checked;
-    if (auto && t >= 4) { $('#autoT').checked = false; toast('Auto-Roll gestoppt – seltene Aura gefunden!', 'good'); }
-    else if ((auto && t < 4) || (S.quick && t < 3)) REVEAL.timer = setTimeout(closeReveal, auto ? 1300 : 1100);
+    const stopAt = S.settings.autoStop;
+    if (auto && t >= stopAt) { $('#autoT').checked = false; toast(`Auto-Roll gestoppt – ${T.n}-Aura gefunden!`, 'good'); }
+    else if ((auto && t < stopAt) || (S.quick && t < 3)) REVEAL.timer = setTimeout(closeReveal, auto ? 1300 : 1100);
   };
   if (cs) CS.start(a, () => { stripLand(r.ai); go(); });
   else if (charge > 0) { const ov = h('div', { class: 'charge-overlay' }); $('#revealRoot').appendChild(ov); RFX.charge = { t: 0, dur: charge, col: T.c }; AU.play('charge', 1, charge); setTimeout(() => { ov.remove(); RFX.charge = null; go(); }, charge * 1000); }
@@ -5925,7 +6206,7 @@ const CS = {
       parts: [], dust: [], glints: [], rings: [], shards: [], smoke: [], cracks: [], flashes: [], sched: [],
       zoom: 1, punch: 0, shake: 0, rays: 0, fog: 0, glowT: 0, popA: 0, core: 0, white: 0, flashL: 0, rot: 0, tb: 0, tw: .3,
       pulse: 0, hb: .6 * k, pf: 0, sat: 0, satQ: -1, txtT: -1, txtAt: 0, after: 0,
-      q: clamp(innerWidth * innerHeight / (1280 * 720), .5, 1) * (coarse ? .75 : 1),
+      q: clamp(innerWidth * innerHeight / (1280 * 720), .5, 1) * (coarse ? .75 : 1) * FX.part,
       col: a.c1, col2: a.c2v, txt: luminance(a.c1) < .55 ? mix(a.c1, '#ffffff', .45) : a.c1, ink: mix(a.c1, '#04050a', .82),
     });
     this.tint();
@@ -5934,7 +6215,7 @@ const CS = {
     this.c.style.display = 'block';
     $('#csSkip').classList.add('on');
     $('#csSkip').innerHTML = coarse ? 'Überspringen ›' : 'Überspringen › <small>Leertaste</small>';
-    AU.init(); this.bus = AU.on ? AU.bus() : null;
+    AU.init(); this.bus = AU.on ? AU.bus() : null; AU.vol(); // Musik tritt zurück
   },
   // Die Signaturfarbe tritt im Erwachen allmählich hervor (anfangs blass, ab dem Aufbau voll)
   tint() {
@@ -6008,7 +6289,7 @@ const CS = {
     const c = this.c; c.width = c.height = 1; this.textC = null; // bleibt 250 ms unsichtbar liegen und schluckt den Klick des Überspring-Tipps
     $('#csSkip').classList.remove('on');
     this.parts = []; this.dust = []; this.glints = []; this.rings = []; this.shards = []; this.smoke = []; this.cracks = []; this.flashes = []; this.sched = [];
-    this.fadeBus(fade);
+    this.fadeBus(fade); AU.vol();
     setTimeout(() => { if (this.on) return; c.style.display = 'none'; if (REVEAL.el) REVEAL.el.classList.remove('lock'); }, 250);
   },
   fadeBus(s) {
@@ -6080,7 +6361,7 @@ const CS = {
     // Kamera, Licht und Nebel
     const zc = .05 + tk * .035;
     this.punch *= e(6);
-    this.zoom = (ph === 3 ? 1 + zc * k * k : ph >= 4 ? 1 + zc * Math.exp(-this.tb * 1.6) : 1) + this.punch;
+    this.zoom = (ph === 3 ? 1 + zc * k * k : ph >= 4 ? 1 + zc * Math.exp(-this.tb * 1.6) : 1) + this.punch * Math.min(1, FX.shake);
     this.shake = ph === 3 && !implode ? Math.max(this.shake * e(4), k * k * (1.5 + tk * 3)) : this.shake * e(implode ? 12 : 4);
     if (ph === 3) { this.rays = (.08 + k * (.35 + tk * .1)) * fall; this.fog = k * (.22 + tk * .08) * fall; }
     else if (ph === 2) { this.rays = k * k * .1; this.fog = 0; }
@@ -6136,14 +6417,14 @@ const CS = {
     for (const m of this.smoke) { m.life -= dt; m.x += m.vx * dt; m.y += m.vy * dt; m.r += 30 * dt; }
     this.smoke = this.smoke.filter(m => m.life > 0);
   },
-  flashA(f) { return f.t < 0 ? 0 : f.t < f.hold ? f.a : f.a * Math.max(0, 1 - (f.t - f.hold) / f.fade); },
+  flashA(f) { return (f.t < 0 ? 0 : f.t < f.hold ? f.a : f.a * Math.max(0, 1 - (f.t - f.hold) / f.fade)) * FX.flash; },
   draw() {
     const c = this.c, x = this.x, dpr = Math.min(2, window.devicePixelRatio || 1), w = innerWidth, hh = innerHeight;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(hh * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr); }
     const ph = this.ph, k = this.pk(), cx = w / 2, cy = hh * .5, tk = this.tk, R0 = Math.min(w, hh) * .1, L = Math.hypot(w, hh);
     x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, hh);
     const dark = ph === 0 ? csEase(k) : ph === 5 ? 1 - csEase(k) : 1, FA = ph === 5 ? 1 - csEase(k) : 1;
-    const sx = rand(-1, 1) * this.shake, sy = rand(-1, 1) * this.shake;
+    const sk = this.shake * FX.shake, sx = rand(-1, 1) * sk, sy = rand(-1, 1) * sk;
     const cT = this.colT, c2T = this.col2T, dcol = [cT, c2T, '#ffffff'];
     // Weiche, flächige Ebenen (Abdunkeln, Grundleuchten, Herzschlag, Randnebel, Lichtstrahlen) in 1/3-Auflösung
     // zeichnen und einmal hochskalieren – spart auf schwachen Geräten den Großteil der Füllrate.
@@ -6161,7 +6442,7 @@ const CS = {
       if (this.pulse > .02 && ph <= 3) glow(b, cT, cx, cy, R0 * (2.4 + ph * 1.2), this.pulse * (ph === 1 ? .16 : .24));
       if (this.fog > .01) {
         b.globalAlpha = Math.min(1, this.fog) * FA; b.drawImage(this.fogC, -w * .1, -hh * .1, w * 1.2, hh * 1.2); b.globalAlpha = FA;
-        for (let i = 0; i < 5; i++) { const an = i / 5 * TAU + this.time * .12 * (i % 2 ? 1 : -1); glow(b, i % 2 ? this.col : this.col2, cx + Math.cos(an) * w * .55, cy + Math.sin(an) * hh * .55, Math.max(w, hh) * .36, this.fog * .55); }
+        if (FX.glow) for (let i = 0; i < 5; i++) { const an = i / 5 * TAU + this.time * .12 * (i % 2 ? 1 : -1); glow(b, i % 2 ? this.col : this.col2, cx + Math.cos(an) * w * .55, cy + Math.sin(an) * hh * .55, Math.max(w, hh) * .36, this.fog * .55); }
       }
       if (this.rays > .01) {
         b.save(); b.translate(cx, cy); b.rotate(this.time * (.15 + tk * .05)); b.globalAlpha = Math.min(1, this.rays) * FA;
@@ -6251,7 +6532,7 @@ const CS = {
     const a1 = clamp(tt / .14, 0, 1) * FA, a2 = clamp((tt - .5) / .3, 0, 1) * FA;
     const sc = 1 + .55 * Math.exp(-tt * 9) + this.popA, ny = hh * .5 - T.ns * .35, oy = ny + T.ns * 1.05;
     x.save();
-    x.translate(w / 2 + rand(-1, 1) * this.shake * .3, rand(-1, 1) * this.shake * .3);
+    x.translate(w / 2 + rand(-1, 1) * this.shake * FX.shake * .3, rand(-1, 1) * this.shake * FX.shake * .3);
     if (br < 1) { // dunkle Unterlage für Lesbarkeit über dem Ausbruch
       x.save(); x.translate(0, ny + T.ns * .45); x.scale(2.4, 1); glow(x, '#04050a', 0, 0, T.ns * 1.7, .6 * a1 * (1 - br)); x.restore();
       if (this.glowT > .02) { x.globalCompositeOperation = 'lighter'; glow(x, this.col, 0, ny, T.ns * 3.2, this.glowT * .4 * a1 * (1 - br)); x.globalCompositeOperation = 'source-over'; }
@@ -6313,12 +6594,12 @@ const RFX = { c: null, x: null, parts: [], rings: [], stars: [], charge: null, t
 function revealBurst(a) {
   const t = a.t, T = TIERS[t], w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .36;
   RFX.tier = t;
-  const n = [26, 44, 75, 130, 210, 300, 420, 540, 680][t];
+  const n = Math.round([26, 44, 75, 130, 210, 300, 420, 540, 680][t] * FX.part);
   const cols = [T.c, a.c1, a.c2v, '#ffffff'];
   for (let i = 0; i < n; i++) { const an = rand(TAU), sp = rand(80, 260 + t * 120); RFX.parts.push({ x: cx, y: cy, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, life: rand(.9, 1.8 + t * .2), max: 2.4 + t * .2, col: t >= 7 ? `hsl(${rand(360)},95%,65%)` : pick(cols), s: rand(1.5, 3.5 + t * .35), g: t >= 5 ? 40 : 70, star: t >= 4 && Math.random() < .3 }); }
   const rings = t >= 6 ? 4 : t >= 3 ? 2 : 1;
   for (let k = 0; k < rings; k++) RFX.rings.push({ x: cx, y: cy, r: 10, spd: 700 + k * 350 + t * 60, d: k * .14, w: 4 + t, col: t >= 7 ? null : (k % 2 ? a.c1 : T.c), life: 1.4 });
-  if (t >= 7) { RFX.stars = Array.from({ length: 260 }, () => ({ a: rand(TAU), r: rand(40, Math.max(w, hh)), s: rand(.5, 2.2), tw: rand(TAU) })); }
+  if (t >= 7) { RFX.stars = Array.from({ length: Math.round(260 * Math.min(1, FX.part)) }, () => ({ a: rand(TAU), r: rand(40, Math.max(w, hh)), s: rand(.5, 2.2), tw: rand(TAU) })); }
 }
 function drawRFX(dt) {
   const c = RFX.c; if (!c) return;
@@ -6332,7 +6613,7 @@ function drawRFX(dt) {
   x.save(); x.globalCompositeOperation = 'lighter';
   if (RFX.charge) {
     const ch = RFX.charge; ch.t += dt; const k = clamp(ch.t / ch.dur, 0, 1);
-    for (let i = 0; i < 6 + k * 14; i++) { const an = rand(TAU), r = Math.max(w, hh) * .6; RFX.parts.push({ x: cx + Math.cos(an) * r, y: cy + Math.sin(an) * r, vx: -Math.cos(an) * r * 1.6, vy: -Math.sin(an) * r * 1.6, life: .55, max: .55, col: ch.col, s: rand(1.5, 3), g: 0, inward: 1 }); }
+    for (let i = 0; i < (6 + k * 14) * FX.part; i++) { const an = rand(TAU), r = Math.max(w, hh) * .6; RFX.parts.push({ x: cx + Math.cos(an) * r, y: cy + Math.sin(an) * r, vx: -Math.cos(an) * r * 1.6, vy: -Math.sin(an) * r * 1.6, life: .55, max: .55, col: ch.col, s: rand(1.5, 3), g: 0, inward: 1 }); }
     glow(x, ch.col, cx, cy, 40 + k * 200, .5 + k * .5); glow(x, '#ffffff', cx, cy, 10 + k * 60, k);
   }
   if (REVEAL.open && RFX.tier >= 7) {
@@ -6340,7 +6621,7 @@ function drawRFX(dt) {
     for (const s of RFX.stars) { const an = s.a + tt * .05 * (s.r < 300 ? 2 : 1); x.fillStyle = `rgba(255,255,255,${.35 + .35 * Math.sin(tt * 3 + s.tw)})`; x.fillRect(cx + Math.cos(an) * s.r, cy + Math.sin(an) * s.r * .7, s.s, s.s); }
     if (RFX.tier >= 8) for (let i = 0; i < 3; i++) { x.strokeStyle = `hsla(${(tt * 80 + i * 120) % 360},95%,65%,.35)`; x.lineWidth = 3; circ(x, cx, cy, 170 + i * 40 + Math.sin(tt * 2 + i) * 12); x.stroke(); }
   }
-  if (REVEAL.open && RFX.tier >= 5 && Math.random() < .5 + RFX.tier * .05) { const an = rand(TAU), r = rand(120, 260); RFX.parts.push({ x: cx + Math.cos(an) * r, y: cy + Math.sin(an) * r, vx: 0, vy: -rand(20, 60), life: 1.2, max: 1.2, col: RFX.tier >= 7 ? `hsl(${rand(360)},95%,70%)` : TIERS[RFX.tier].c, s: rand(1.5, 3), g: 0, star: true }); }
+  if (REVEAL.open && RFX.tier >= 5 && Math.random() < (.5 + RFX.tier * .05) * FX.part) { const an = rand(TAU), r = rand(120, 260); RFX.parts.push({ x: cx + Math.cos(an) * r, y: cy + Math.sin(an) * r, vx: 0, vy: -rand(20, 60), life: 1.2, max: 1.2, col: RFX.tier >= 7 ? `hsl(${rand(360)},95%,70%)` : TIERS[RFX.tier].c, s: rand(1.5, 3), g: 0, star: true }); }
   for (const p of RFX.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; if (!p.inward) { p.vx *= 1 - 1.4 * dt; p.vy = p.vy * (1 - 1.4 * dt) + p.g * dt; } }
   RFX.parts = RFX.parts.filter(p => p.life > 0); if (RFX.parts.length > 1600) RFX.parts.splice(0, RFX.parts.length - 1600);
   for (const p of RFX.parts) {
@@ -6383,8 +6664,7 @@ function drawBg(dt) {
   x.globalCompositeOperation = 'lighter';
   const M = Math.max(w, hh), pulse = UI.calm ? .5 : .5 + .5 * Math.sin(t * TAU / 3.2);
   glow(x, '#3b2a8a', w * (.22 + Math.sin(t * .05) * .05), hh * .28, M * .55, .32);
-  glow(x, '#0e5a8a', w * (.8 + Math.cos(t * .04) * .05), hh * .78, M * .5, .28);
-  glow(x, '#7a1f6a', w * .55, hh * (.08 + Math.sin(t * .03) * .05), M * .34, .16);
+  if (FX.glow) { glow(x, '#0e5a8a', w * (.8 + Math.cos(t * .04) * .05), hh * .78, M * .5, .28); glow(x, '#7a1f6a', w * .55, hh * (.08 + Math.sin(t * .03) * .05), M * .34, .16); }
   let g = x.createRadialGradient(w * .5, hh * 1.08, 0, w * .5, hh * 1.08, M * .78);
   g.addColorStop(0, tint(.15 + .05 * pulse)); g.addColorStop(1, tint(0)); x.fillStyle = g; x.fillRect(0, 0, w, hh);
   if (BG.focus) {
@@ -6392,9 +6672,10 @@ function drawBg(dt) {
     g = x.createRadialGradient(fx, fy, 0, fx, fy, R); g.addColorStop(0, tint(.2 + .08 * pulse)); g.addColorStop(.45, tint(.07 + .03 * pulse)); g.addColorStop(1, tint(0));
     x.fillStyle = g; x.fillRect(fx - R, fy - R, R * 2, R * 2);
   }
-  for (const s of BG.stars) { const y = (s.y * hh + t * 6 * s.z) % hh, a = .25 + .45 * (Math.sin(t * 1.3 + s.tw) * .5 + .5) * s.z; x.fillStyle = `rgba(200,215,255,${a})`; x.fillRect(s.x * w, y, s.z * 1.8, s.z * 1.8); }
-  for (const m of BG.motes) {
-    const y = (((m.y - t * m.sp) % 1) + 1) % 1, px = (m.x + Math.sin(t * .3 + m.ph) * .015) * w, py = y * hh;
+  const ns = Math.round(BG.stars.length * Math.min(1, .35 + .65 * FX.part)), nm = Math.round(BG.motes.length * Math.min(1, FX.part));
+  for (let i = 0; i < ns; i++) { const s = BG.stars[i], y = (s.y * hh + t * 6 * s.z) % hh, a = .25 + .45 * (Math.sin(t * 1.3 + s.tw) * .5 + .5) * s.z; x.fillStyle = `rgba(200,215,255,${a})`; x.fillRect(s.x * w, y, s.z * 1.8, s.z * 1.8); }
+  for (let i = 0; i < nm; i++) {
+    const m = BG.motes[i], y = (((m.y - t * m.sp) % 1) + 1) % 1, px = (m.x + Math.sin(t * .3 + m.ph) * .015) * w, py = y * hh;
     const a = (.18 + .22 * (Math.sin(t * 1.1 + m.ph) * .5 + .5)) * m.z * Math.min(1, y * 4, (1 - y) * 4), r = 1.2 + m.z * 2.2;
     x.fillStyle = tint(a * .45); circ(x, px, py, r * 3); x.fill(); x.fillStyle = `rgba(255,255,255,${a})`; circ(x, px, py, r * .6); x.fill();
   }
@@ -6421,11 +6702,12 @@ function frame(now) {
 function init() {
   fillIcons();
   RD.c = $('#gc'); RD.x = RD.c.getContext('2d'); RFX.c = $('#fxc'); RFX.x = RFX.c.getContext('2d');
-  setupArenaInput(); initStrip(); initBg(); initLobbyUI();
+  setupArenaInput(); initStrip(); initBg(); initLobbyUI(); applySettings(); MUSIC.start();
   const ni = $('#nameInput'); ni.value = S.name;
-  ni.addEventListener('change', () => { S.name = cleanName(ni.value); ni.value = S.name; save(); if (NET.role === 'client') NET.tr && NET.tr.send({ t: 'name', name: S.name }); if (NET.role === 'host') { const p = NET.room.find(p => p.host); if (p) { p.name = S.name; sendRoom(); } } });
-  const sb = $('#soundBtn'), setSnd = () => { sb.innerHTML = S.sound ? SVG.sound : SVG.mute; sb.title = S.sound ? 'Sound aus' : 'Sound an'; };
-  setSnd(); sb.onclick = () => { S.sound = !S.sound; save(); setSnd(); AU.init(); AU.play('click'); };
+  ni.addEventListener('input', () => { const sn = $('#sName'); if (sn) sn.value = ni.value; });
+  ni.addEventListener('change', () => { commitName(ni.value); ni.value = S.name; });
+  syncSoundUI(); $('#soundBtn').onclick = () => setSound(!S.sound);
+  $('#setBtn').onclick = () => openSettings();
   FS.init();
   const qt = $('#quickT'); qt.checked = !!S.quick; qt.onchange = () => { S.quick = qt.checked; save(); };
   $('#autoT').onchange = e => { if (e.target.checked && !ROLLST.busy && !REVEAL.open) doRoll(); };
