@@ -5243,7 +5243,7 @@ function openHelp() {
     <div><b style="color:#fff">Kampf</b><br>Jeder Move kostet Stamina (gelbe Leiste, regeneriert sich laufend) und hat eine Abklingzeit. Bei 0 HP scheidest du aus. Nach ~40 s schrumpft eine Sturmzone – wer draußen steht, verliert HP. Der letzte Überlebende gewinnt.</div>
     <div><b style="color:#fff">Auren</b><br>64 Auren in 9 Seltenheitsstufen – jede mit eigener Rolle, eigenen Werten und einem eigenständigen Moveset (Schadensart, Reichweite/Form, Zusatzeffekte und Taktik unterscheiden sich). Seltenere Auren haben komplexere Mechaniken wie Zeitreisen, Zwillinge, Seelentausch oder Zeitstopp.</div>
     <div><b style="color:#fff">Braukessel</b><br>Im Braukessel (Lobby) verschmilzt du überzählige Aura-Kopien, Sternenstaub und einfachere Tränke zu stärkeren Glückstränken (Rang I–VI: mehr Glück, längere Wirkung). Jedes Rezept zeigt, welche Zutaten nötig sind und wie viele du davon besitzt; von jeder Aura bleibt immer ein Exemplar erhalten. Gebraute Tränke benutzt du wie gekaufte über die Trank-Leiste in der Lobby.</div>
-    <div><b style="color:#fff">Cutscenes</b><br>Ab der Stufe Göttlich startet beim Erhalt einer Aura eine Cutscene in ihrer Signaturfarbe – je seltener, desto heftiger. Tippen, Klicken, <span class="key">Leertaste</span>, <span class="key">Enter</span> oder <span class="key">Esc</span> überspringt sie, „Schnelle Animation“ verkürzt sie. In den Aura-Details kannst du sie erneut ansehen.</div>
+    <div><b style="color:#fff">Cutscenes</b><br>Ab der Stufe Göttlich wird der Bildschirm schon beim Drücken von ROLL dunkel – statt des Bands startet eine Cutscene in der Signaturfarbe der Aura, die sich langsam aufbaut und erst auf dem Höhepunkt Name und Wahrscheinlichkeit enthüllt. Je seltener, desto länger und heftiger. Tippen, Klicken, <span class="key">Leertaste</span>, <span class="key">Enter</span> oder <span class="key">Esc</span> überspringt sie, „Schnelle Animation“ verkürzt sie. In den Aura-Details kannst du sie erneut ansehen.</div>
     <div><b style="color:#fff">Multiplayer</b><br>Ein Spieler erstellt einen Raum und teilt den 6-stelligen Code. Andere öffnen dieselbe HTML-Datei und treten mit dem Code bei. Start ab 2 Spielern, bis zu 10 im Free-for-All. Die Verbindung läuft per WebRTC direkt zwischen den Browsern (Signaling über den öffentlichen PeerJS-Server).</div>
     <div><b style="color:#fff">Speicherstand</b><br>Dein Fortschritt (Auren, Sternenstaub, Tränke, Statistik) wird automatisch gespeichert – lokal im Browser und, wenn das Spiel als claude.ai-Artefakt läuft, zusätzlich dauerhaft in deinem privaten Speicher.<br>
       <span id="saveState" style="color:#8c96bb"></span>
@@ -5388,6 +5388,11 @@ function doRoll() {
   if (a.t > S.stats.best) S.stats.best = a.t;
   save();
   ROLLST.busy = true; ROLLST.res = { ai, isNew, dust, L, bonus, once };
+  if (a.t >= 6) { // ab Göttlich: kein Band – sofort abdunkeln, das Ergebnis bleibt bis zur Enthüllung verborgen
+    STRIP.idle = false; $('#stripWrap').classList.remove('glow'); $('#rollBtn').disabled = true;
+    $('#rollsVal').textContent = fmt(S.rolls); updateLuckUI(); // Sternenstaub erst mit der Karte aktualisieren (verrät sonst die Stufe)
+    showReveal(ROLLST.res); return;
+  }
   const w = STRIP.c.clientWidth || 800, IW = STRIP.IW, WIN = 58;
   STRIP.items = Array.from({ length: 70 }, () => rollAura(2.5)); STRIP.items[WIN] = ai;
   if (Math.random() < 0.55 && a.t < 8) STRIP.items[WIN + (Math.random() < .5 ? 1 : -1)] = pick(TIER_AURAS[Math.min(8, a.t + randi(1, 3))]); // Beinahe-Treffer für Spannung
@@ -5405,6 +5410,14 @@ function onStripStop() {
   setTimeout(() => showReveal(r), S.quick ? 150 : 420);
 }
 const REVEAL = { open: false, el: null, prev: null };
+// Band hinter der Karte auf die gewonnene Aura stellen (wie nach einem normalen Roll), ohne Animation
+function stripLand(ai) {
+  const w = STRIP.c.clientWidth || 800, IW = STRIP.IW, WIN = 58;
+  STRIP.items = Array.from({ length: 70 }, () => rollAura(2.5)); STRIP.items[WIN] = ai;
+  STRIP.anim = null; STRIP.idle = false; STRIP.winIdx = WIN; STRIP.glow = 1; STRIP.lastIdx = -1;
+  STRIP.off = WIN * IW + IW / 2 - w / 2;
+  const sw = $('#stripWrap'); sw.style.setProperty('--glowc', rgba(TIERS[AURAS[ai].t].c, .65)); sw.classList.add('glow');
+}
 function showReveal(r) {
   const a = AURAS[r.ai], T = TIERS[a.t], t = a.t;
   REVEAL.open = true;
@@ -5412,6 +5425,7 @@ function showReveal(r) {
   const charge = !cs && t >= 4 ? (S.quick ? .4 : .55 + (t - 4) * .42) : 0;
   const go = () => {
     const el = REVEAL.el = h('div', { class: 'reveal' + (cs ? ' after-cs lock' : '') });
+    $('#dustVal').textContent = fmt(S.dust);
     el.style.setProperty('--rv', rgba(T.c, Math.min(.6, .26 + t * .04)));
     const rc = t >= 7 ? 'rgba(255,255,255,.07)' : rgba(T.c, .05 + t * .012);
     el.innerHTML = `${t >= 3 ? `<div class="rays" style="--rc:${rc};opacity:${Math.min(1, .3 + t * .09)}"></div>` : ''}<div class="reveal-card">
@@ -5436,7 +5450,7 @@ function showReveal(r) {
     if (auto && t >= 4) { $('#autoT').checked = false; toast('Auto-Roll gestoppt – seltene Aura gefunden!', 'good'); }
     else if ((auto && t < 4) || (S.quick && t < 3)) REVEAL.timer = setTimeout(closeReveal, auto ? 1300 : 1100);
   };
-  if (cs) CS.start(a, go);
+  if (cs) CS.start(a, () => { stripLand(r.ai); go(); });
   else if (charge > 0) { const ov = h('div', { class: 'charge-overlay' }); $('#revealRoot').appendChild(ov); RFX.charge = { t: 0, dur: charge, col: T.c }; AU.play('charge', 1, charge); setTimeout(() => { ov.remove(); RFX.charge = null; go(); }, charge * 1000); }
   else go();
 }
@@ -5450,15 +5464,25 @@ function closeReveal(noAuto) {
 }
 
 /* ---------- Cutscene ab „Göttlich“ ----------
-   Ablauf: Abdunkeln → ein losgelöster, funkelnder Stern in der Signaturfarbe erscheint, Name
-   und „1 zu X“ werden groß eingeblendet → Aufladen (Stern wächst, Energie strömt ein, farbiger
-   Nebel kriecht von den Rändern, Kamera zoomt) → Ausbruch (Flash, Druckwellen, Partikelregen)
-   → Aufhellen zur Enthüllungskarte. Göttlich: farbiger Flash. Kosmisch: zusätzlich weißer Blitz,
-   stärkerer Kamerastoß, Farbnebel. Transzendent: das Bild wird weiß, zerspringt in Scherben,
-   die zu Rauch zerfallen, dann folgt die Farbexplosion. Alle Farben stammen aus a.c1 / a.c2v.
-   Überspringen: Tippen/Klick, Leertaste, Enter, Esc oder Button; „Schnelle Animation“ halbiert. */
+   Startet sofort beim Drücken von ROLL (das Band läuft bei diesen Treffern gar nicht erst),
+   sodass vorher nichts vom Ergebnis zu sehen ist. Spannungsbogen in sechs Phasen:
+   0 Abdunkeln → 1 Stille (Dunkelheit, vereinzelte Lichtfunken, leiser Herzschlag)
+   → 2 Erwachen (ein Stern entzündet sich, die Signaturfarbe tritt allmählich hervor)
+   → 3 Aufbau (Energie strömt ein, Strahlen, Randnebel, Zoom, Beben, Vorblitze, Herzschlag
+     wird schneller, am Ende fällt alles in sich zusammen – kurze Stille)
+   → 4 Höhepunkt (Ausbruch mit Flash und Druckwellen, Name und „1 zu X“ schlagen groß ein)
+   → 5 Aufhellen zur Enthüllungskarte.
+   Je seltener, desto länger und heftiger: Kosmisch mit weißem Blitz, Farbnebel und Nachbeben,
+   Transzendent mit weißem Bild, das in Scherben zerspringt, bevor die Farbexplosion folgt.
+   Alle Farben stammen aus a.c1 / a.c2v. Überspringen: Tippen/Klick, Leertaste, Enter, Esc oder
+   Button; „Schnelle Animation“ halbiert die Länge. */
 const csEase = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
 const csBack = k => 1 + 2.70158 * Math.pow(k - 1, 3) + 1.70158 * Math.pow(k - 1, 2);
+const CS_DUR = [ // Abdunkeln, Stille, Erwachen, Aufbau, Höhepunkt, Aufhellen (Sekunden)
+  [.8, 2, 2.2, 2.6, 2.8, 1],       // Göttlich     ≈ 11 s
+  [.9, 2.6, 2.8, 3.4, 3.4, 1.1],   // Kosmisch     ≈ 14 s
+  [1, 3.2, 3.4, 4.2, 4.4, 1.2],    // Transzendent ≈ 17 s
+];
 const CS = {
   on: false, c: null, x: null, bus: null,
   start(a, done) {
@@ -5469,23 +5493,30 @@ const CS = {
       this.c.addEventListener('pointerdown', e => { e.preventDefault(); if (this.time > .15) this.skip(); });
       $('#csSkip').addEventListener('click', e => { e.stopPropagation(); this.skip(); });
     }
-    const tk = a.t - 6, k = S.quick ? .5 : 1;
-    const d = [[.9, 1.5, 1.3, 1.7, .9], [1, 1.8, 1.6, 2.1, .95], [1.15, 2.1, 2, 2.9, 1.05]][tk].map(v => v * k);
+    const tk = a.t - 6, k = S.quick ? .5 : 1, d = CS_DUR[tk].map(v => v * k);
     const at = []; let s = 0; for (const v of d) { at.push(s); s += v; }
     const coarse = window.matchMedia && matchMedia('(pointer:coarse)').matches;
     Object.assign(this, {
       on: true, a, tk, d, at, total: s, time: 0, ph: -1, done, cardShown: false, kq: k,
-      parts: [], dust: [], rings: [], shards: [], smoke: [], cracks: [], flashes: [], sched: [],
-      zoom: 1, punch: 0, shake: 0, rays: 0, fog: 0, glowT: 0, popA: 0, core: 0, white: 0, rot: 0, tb: 0, tw: .3,
+      parts: [], dust: [], glints: [], rings: [], shards: [], smoke: [], cracks: [], flashes: [], sched: [],
+      zoom: 1, punch: 0, shake: 0, rays: 0, fog: 0, glowT: 0, popA: 0, core: 0, white: 0, flashL: 0, rot: 0, tb: 0, tw: .3,
+      pulse: 0, hb: .6 * k, pf: 0, sat: 0, satQ: -1, txtT: -1, txtAt: 0, after: 0,
       q: clamp(innerWidth * innerHeight / (1280 * 720), .5, 1) * (coarse ? .75 : 1),
       col: a.c1, col2: a.c2v, txt: luminance(a.c1) < .55 ? mix(a.c1, '#ffffff', .45) : a.c1, ink: mix(a.c1, '#04050a', .82),
     });
+    this.tint();
     this.textC = null; this.buildCaches();
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); // Leertaste soll keinen Button auslösen
     this.c.style.display = 'block';
     $('#csSkip').classList.add('on');
     $('#csSkip').innerHTML = coarse ? 'Überspringen ›' : 'Überspringen › <small>Leertaste</small>';
     AU.init(); this.bus = AU.on ? AU.bus() : null;
+  },
+  // Die Signaturfarbe tritt im Erwachen allmählich hervor (anfangs blass, ab dem Aufbau voll)
+  tint() {
+    const q = Math.round(this.sat * 5) / 5, m = (1 - q) * .55;
+    if (q === this.satQ) return; this.satQ = q;
+    this.colT = mix(this.col, '#e8ecff', m); this.col2T = mix(this.col2, '#e8ecff', m);
   },
   // Teure Ebenen (Randnebel, Lichtstrahlen, leuchtender Text) einmal vorrendern, pro Frame nur noch skaliert zeichnen
   buildCaches() {
@@ -5503,46 +5534,47 @@ const CS = {
   },
   buildText(w, hh) {
     const a = this.a, dpr = Math.min(2, window.devicePixelRatio || 1), m = document.createElement('canvas').getContext('2d');
-    const ns0 = clamp(Math.min(w * .1, hh * .11), 30, 96);
+    const ns0 = clamp(Math.min(w * .11, hh * .13), 32, 112);
     m.font = `900 ${ns0}px Georgia, 'Times New Roman', serif`;
     const nw = m.measureText(a.n).width, ns = nw > w * .86 ? ns0 * w * .86 / nw : ns0;
-    const cw = Math.ceil(w * .96), ch = Math.ceil(ns * 2.9), mk = bright => {
-      const c = document.createElement('canvas'); c.width = Math.ceil(cw * dpr); c.height = Math.ceil(ch * dpr);
-      const x = c.getContext('2d'); x.scale(dpr, dpr); x.translate(cw / 2, ch * .47); x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.font = `800 ${Math.round(ns * .24)}px system-ui, sans-serif`; x.fillStyle = bright ? this.ink : rgba(this.txt, .85);
-      x.fillText(TIERS[a.t].n.toUpperCase().split('').join('\u200A'), 0, -ns * .8);
+    const cw = Math.ceil(w * .96), nh = Math.ceil(ns * 2), oh = Math.ceil(ns * .75);
+    const can = (hgt, f) => { const c = document.createElement('canvas'); c.width = Math.ceil(cw * dpr); c.height = Math.ceil(hgt * dpr); const x = c.getContext('2d'); x.scale(dpr, dpr); x.translate(cw / 2, hgt / 2); x.textAlign = 'center'; x.textBaseline = 'middle'; f(x); return c; };
+    const name = bright => can(nh, x => { // Stufe + Name
+      x.font = `800 ${Math.round(ns * .24)}px system-ui, sans-serif`; x.fillStyle = bright ? this.ink : rgba(this.txt, .9);
+      x.fillText(TIERS[a.t].n.toUpperCase().split('').join(' '), 0, -ns * .62);
       x.font = `900 ${ns}px Georgia, 'Times New Roman', serif`;
-      if (bright) { x.lineWidth = Math.max(2, ns * .06); x.strokeStyle = this.ink; x.strokeText(a.n, 0, 0); } else { x.shadowColor = this.col; x.shadowBlur = 26; }
-      x.fillStyle = this.txt; x.fillText(a.n, 0, 0);
-      if (!bright) { x.shadowBlur = 8; x.fillText(a.n, 0, 0); }
-      x.font = `700 ${Math.round(ns * .38)}px Georgia, 'Times New Roman', serif`;
+      if (bright) { x.lineWidth = Math.max(2, ns * .07); x.strokeStyle = this.ink; x.strokeText(a.n, 0, ns * .12); } else { x.shadowColor = this.col; x.shadowBlur = 28; }
+      x.fillStyle = this.txt; x.fillText(a.n, 0, ns * .12);
+      if (!bright) { x.shadowBlur = 8; x.fillText(a.n, 0, ns * .12); }
+    });
+    const odds = bright => can(oh, x => { // Drop-Wahrscheinlichkeit
+      x.font = `700 ${Math.round(ns * .4)}px Georgia, 'Times New Roman', serif`;
       const od = '1 zu ' + fmt(a.oneIn);
-      if (bright) { x.lineWidth = 3; x.strokeStyle = this.ink; x.strokeText(od, 0, ns * .8); } else { x.shadowColor = this.col; x.shadowBlur = 12; }
-      x.fillStyle = '#f4f6ff'; x.fillText(od, 0, ns * .8);
-      return c;
-    };
-    this.textC = { key: w + 'x' + hh + 'x' + dpr, norm: mk(false), bright: mk(true), cw, ch, ns };
+      if (bright) { x.lineWidth = 3.5; x.strokeStyle = this.ink; x.strokeText(od, 0, 0); } else { x.shadowColor = this.col; x.shadowBlur = 14; }
+      x.fillStyle = '#f4f6ff'; x.fillText(od, 0, 0);
+    });
+    this.textC = { key: w + 'x' + hh + 'x' + dpr, nameN: name(false), nameB: name(true), oddsN: odds(false), oddsB: odds(true), cw, nh, oh, ns };
   },
   pk() { const p = this.ph; return p < 0 ? 0 : clamp((this.time - this.at[p]) / this.d[p], 0, 1); },
   frame(dt) {
     if (!this.on) return;
     this.time += dt;
-    while (this.ph < 4 && this.time >= this.at[this.ph + 1]) this.enter(++this.ph);
+    while (this.ph < 5 && this.time >= this.at[this.ph + 1]) this.enter(++this.ph);
     if (this.time >= this.total) { this.end(1.6); return; }
     this.update(dt); this.draw();
   },
   enter(p) {
     if (p === 0) this.snd('dark');
-    else if (p === 1) this.snd('appear');
-    else if (p === 2) this.snd('charge');
-    else if (p === 3) this.burst();
-    else if (p === 4) { this.showCard(); this.snd('resolve'); }
+    else if (p === 2) this.snd('appear');
+    else if (p === 3) this.snd('charge');
+    else if (p === 4) this.burst();
+    else if (p === 5) { this.showCard(); this.snd('resolve'); }
   },
   showCard() { if (this.cardShown) return; this.cardShown = true; const f = this.done; this.done = null; if (f) f(); },
   skip() {
     if (!this.on) return;
-    if (this.ph >= 4) { this.end(.25); return; }
-    this.ph = 4; this.at[4] = this.time; this.d[4] = .32; this.total = this.time + .32;
+    if (this.ph >= 5) { this.end(.25); return; }
+    this.ph = 5; this.at[5] = this.time; this.d[5] = .32; this.total = this.time + .32;
     this.flashes.push({ col: this.col, a: .3, t: 0, hold: 0, fade: .3 });
     this.fadeBus(.25); this.showCard();
   },
@@ -5551,7 +5583,7 @@ const CS = {
     this.on = false; this.showCard();
     const c = this.c; c.width = c.height = 1; this.textC = null; // bleibt 250 ms unsichtbar liegen und schluckt den Klick des Überspring-Tipps
     $('#csSkip').classList.remove('on');
-    this.parts = []; this.dust = []; this.rings = []; this.shards = []; this.smoke = []; this.cracks = []; this.flashes = []; this.sched = [];
+    this.parts = []; this.dust = []; this.glints = []; this.rings = []; this.shards = []; this.smoke = []; this.cracks = []; this.flashes = []; this.sched = [];
     this.fadeBus(fade);
     setTimeout(() => { if (this.on) return; c.style.display = 'none'; if (REVEAL.el) REVEAL.el.classList.remove('lock'); }, 250);
   },
@@ -5561,32 +5593,44 @@ const CS = {
     for (const g of [b.gain, b.verb.gain]) try { g.cancelScheduledValues(n); g.setValueAtTime(g.value, n); g.linearRampToValueAtTime(0, n + s); } catch (e) { }
     setTimeout(() => { try { b.disconnect(); b.verb.disconnect(); } catch (e) { } }, s * 1000 + 400);
   },
+  // Höhepunkt: Ausbruch und Enthüllung von Name und Wahrscheinlichkeit
   burst() {
     const tk = this.tk, kq = this.kq;
-    this.tb = 0; this.sched = [];
-    if (tk === 0) { this.explode(); this.flashes.push({ col: this.col, a: .6, t: 0, hold: .05, fade: .6 }); }
-    else if (tk === 1) { this.explode(); this.flashes.push({ col: '#ffffff', a: .92, t: 0, hold: .07, fade: .45 }, { col: this.col, a: .62, t: -.2, hold: .1, fade: 1.1 }); }
-    else {
-      const hold = .75 * kq;
-      this.flashes.push({ col: '#ffffff', a: 1, t: 0, hold, fade: .85 * kq });
+    this.tb = 0; this.sched = []; this.pulse = 0;
+    if (tk === 0) { this.explode(); this.flashes.push({ col: this.col, a: .65, t: 0, hold: .06, fade: .7 }); this.txtAt = .12; }
+    else if (tk === 1) {
+      this.explode(); this.flashes.push({ col: '#ffffff', a: .95, t: 0, hold: .08, fade: .5 }, { col: this.col, a: .65, t: -.22, hold: .12, fade: 1.2 }); this.txtAt = .18;
+      this.sched.push({ t: 1.2 * kq, fn: () => this.aftershock() });
+    } else {
+      const hold = .8 * kq;
+      this.flashes.push({ col: '#ffffff', a: 1, t: 0, hold, fade: .9 * kq });
       this.shatter(); this.shake = 22; this.punch = .08; this.glowT = .6;
-      this.sched.push({ t: hold, fn: () => { this.explode(); this.flashes.push({ col: this.col, a: .65, t: 0, hold: .06, fade: 1 }); this.snd('burst2'); } });
+      this.txtAt = hold + .05;
+      this.sched.push({ t: hold, fn: () => { this.explode(); this.flashes.push({ col: this.col, a: .7, t: 0, hold: .08, fade: 1.1 }); this.snd('burst2'); } });
+      this.sched.push({ t: hold + 1.4 * kq, fn: () => this.aftershock() });
     }
     this.snd('burst');
   },
   explode() {
-    const w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .56, tk = this.tk, D = Math.hypot(w, hh);
-    const n = Math.round([380, 640, 900][tk] * this.q);
+    const w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .5, tk = this.tk, D = Math.hypot(w, hh);
+    const n = Math.round([420, 700, 950][tk] * this.q);
     for (let i = 0; i < n; i++) {
-      const an = rand(TAU), sp = rand(140, 560 + tk * 200) * (Math.random() < .22 ? 1.9 : 1);
-      this.parts.push({ x: cx, y: cy, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, dr: rand(.9, 2), g: rand(0, 30), life: rand(1, 2.2 + tk * .4), max: 2.6 + tk * .4, s: rand(1, 2.6 + tk * .5), col: Math.random() < .55 ? this.col : Math.random() < .6 ? this.col2 : '#ffffff', star: Math.random() < .14 });
+      const an = rand(TAU), sp = rand(140, 580 + tk * 220) * (Math.random() < .22 ? 1.9 : 1);
+      this.parts.push({ x: cx, y: cy, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, dr: rand(.9, 2), g: rand(0, 30), life: rand(1.2, 2.6 + tk * .5), max: 3 + tk * .5, s: rand(1, 2.6 + tk * .5), col: Math.random() < .55 ? this.col : Math.random() < .6 ? this.col2 : '#ffffff', star: Math.random() < .14 });
     }
     const rc = [this.col, '#ffffff', this.col2, this.col];
-    for (let i = 0; i < 2 + tk; i++) this.rings.push({ r: 6, v: D * (1.25 + i * .4), w: 12 + tk * 5 - i * 2, col: rc[i], life: 1.05 + i * .12, max: 1.05 + i * .12, d: i * .08 });
-    this.punch = .1 + tk * .07; this.shake = Math.max(this.shake, 8 + tk * 8); this.rays = 1; this.fog = .32 + tk * .14; this.glowT = 1; this.popA = .2 + tk * .06; this.core = 1;
+    for (let i = 0; i < 2 + tk; i++) this.rings.push({ r: 6, v: D * (1.25 + i * .4), w: 12 + tk * 5 - i * 2, col: rc[i], life: 1.1 + i * .14, max: 1.1 + i * .14, d: i * .08 });
+    this.punch = .12 + tk * .07; this.shake = Math.max(this.shake, 9 + tk * 8); this.rays = 1; this.fog = .34 + tk * .14; this.glowT = 1; this.popA = .2 + tk * .06; this.core = 1;
+  },
+  aftershock() { // Nachbeben (ab Kosmisch): zweite Druckwelle, kurzer Lichtstoß
+    const D = Math.hypot(innerWidth, innerHeight);
+    this.rings.push({ r: 20, v: D * 1.1, w: 8, col: this.col2, life: 1, max: 1, d: 0 });
+    this.flashes.push({ col: this.col, a: .22, t: 0, hold: .04, fade: .5 });
+    this.shake = Math.max(this.shake, 7); this.punch += .04; this.glowT = Math.max(this.glowT, .6); this.rays = Math.max(this.rays, .6);
+    this.snd('after');
   },
   shatter() {
-    const D = Math.hypot(innerWidth, innerHeight), cx = innerWidth / 2, cy = innerHeight * .56, n = 15;
+    const D = Math.hypot(innerWidth, innerHeight), cx = innerWidth / 2, cy = innerHeight * .5, n = 15;
     for (let i = 0; i < n; i++) {
       let a = i / n * TAU + rand(-.15, .15), r = 0; const len = D * rand(.1, .24), pts = [0, 0];
       while (r < len) {
@@ -5603,28 +5647,53 @@ const CS = {
     }
   },
   update(dt) {
-    const w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .56, ph = this.ph, k = this.pk(), tk = this.tk, q = this.q, D = Math.hypot(w, hh);
-    if (ph >= 3) { this.tb += dt; for (const s of this.sched) if (!s.done && this.tb >= s.t) { s.done = 1; s.fn(); } }
-    const e = f => Math.exp(-f * dt);
+    const w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .5, ph = this.ph, k = this.pk(), tk = this.tk, q = this.q, D = Math.hypot(w, hh);
+    const e = f => Math.exp(-f * dt), implode = ph === 3 && k > .88, fall = implode ? 1 - (k - .88) / .12 : 1;
+    if (ph >= 4) { this.tb += dt; for (const s of this.sched) if (!s.done && this.tb >= s.t) { s.done = 1; s.fn(); } if (this.txtT < 0 && this.tb >= this.txtAt) { this.txtT = 0; this.snd('reveal'); } }
+    if (this.txtT >= 0) this.txtT += dt;
+    // Farbe tritt hervor
+    this.sat = ph <= 1 ? .12 * (ph === 1 ? k : 0) : ph === 2 ? .12 + .88 * csEase(k) : 1; this.tint();
     // Kamera, Licht und Nebel
     const zc = .05 + tk * .035;
     this.punch *= e(6);
-    this.zoom = (ph === 2 ? 1 + zc * k * k : ph >= 3 ? 1 + zc * Math.exp(-this.tb * 1.6) : 1) + this.punch;
-    this.shake = ph === 2 ? Math.max(this.shake * e(4), k * k * (1.5 + tk * 3)) : this.shake * e(4);
-    if (ph === 2) { this.rays = k * (.35 + tk * .1); this.fog = k * (.22 + tk * .08); } else { this.rays *= e(1.1); this.fog *= e(.8); }
-    this.glowT *= e(2.5); this.popA *= e(5); this.core *= e(1.8);
-    this.rot += dt * (ph === 1 ? .5 : ph === 2 ? .5 + k * k * 6 : .3);
-    this.white = 0;
-    for (const f of this.flashes) { f.t += dt; if (f.col === '#ffffff') this.white += this.flashA(f); }
-    this.white = Math.min(1, this.white);
+    this.zoom = (ph === 3 ? 1 + zc * k * k : ph >= 4 ? 1 + zc * Math.exp(-this.tb * 1.6) : 1) + this.punch;
+    this.shake = ph === 3 && !implode ? Math.max(this.shake * e(4), k * k * (1.5 + tk * 3)) : this.shake * e(implode ? 12 : 4);
+    if (ph === 3) { this.rays = (.08 + k * (.35 + tk * .1)) * fall; this.fog = k * (.22 + tk * .08) * fall; }
+    else if (ph === 2) { this.rays = k * k * .1; this.fog = 0; }
+    else { this.rays *= e(1.1); this.fog *= e(.8); }
+    this.glowT *= e(2.5); this.popA *= e(5); this.core *= e(1.8); this.pulse *= e(4.5);
+    this.rot += dt * (ph === 2 ? .45 : ph === 3 ? .5 + k * k * 6 : .3);
+    this.white = 0; this.flashL = 0;
+    for (const f of this.flashes) { f.t += dt; const a = this.flashA(f); if (f.col === '#ffffff') this.white += a; this.flashL += a * (f.l ?? (f.l = luminance(f.col))); }
+    this.white = Math.min(1, this.white); this.flashL = Math.min(1, this.flashL);
     this.flashes = this.flashes.filter(f => f.t < f.hold + f.fade);
-    // Funkelnder Sternenstaub
-    if (ph >= 1 && ph <= 3) { const want = (50 + tk * 25) * q; if (this.dust.length < want && Math.random() < .7) this.dust.push({ x: rand(w), y: rand(hh), vx: rand(-8, 8), vy: rand(-22, -6), life: rand(2, 4), max: 4, s: rand(.8, 2.2), col: Math.random() < .55 ? this.col : Math.random() < .6 ? this.col2 : '#ffffff', tw: rand(TAU) }); }
-    for (const p of this.dust) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; if (ph === 2) { p.x += (cx - p.x) * dt * .3 * k; p.y += (cy - p.y) * dt * .3 * k; } }
+    // Herzschlag: Lichtpuls in der Mitte, wird im Aufbau immer schneller, verstummt vor dem Ausbruch
+    if (ph >= 1 && ph <= 3 && !implode && (this.hb -= dt) <= 0) {
+      this.hb = (ph === 1 ? lerp(1.25, 1, k) : ph === 2 ? lerp(1, .7, k) : lerp(.7, .26, k)) * (this.kq < 1 ? .7 : 1);
+      this.pulse = 1; this.snd('beat');
+    }
+    // Vorblitze im Aufbau
+    if (ph === 3 && k > .35 && !implode && (this.pf -= dt) <= 0) {
+      this.pf = lerp(1.1, .22, k) * (tk === 0 ? 1.5 : 1) * rand(.7, 1.3);
+      this.flashes.push({ col: tk === 2 && Math.random() < .35 ? '#ffffff' : this.col, a: .05 + .12 * k + tk * .03, t: 0, hold: .02, fade: .2 });
+      this.snd('crackle');
+    }
+    // Lichtfunken in der Stille und im Erwachen
+    if (ph === 1 || ph === 2) {
+      const rate = ph === 1 ? lerp(1.2, 3, k) : lerp(3, 9, k);
+      if (Math.random() < rate * dt) { const big = Math.random() < .25; this.glints.push({ x: rand(w * .08, w * .92), y: rand(hh * .1, hh * .9), s: big ? rand(4, 7) : rand(2, 4), life: rand(.5, 1.1), max: 1.1, a: (ph === 1 ? .35 : .6) * rand(.6, 1), c: Math.random() < .7 ? 0 : 1, rot: rand(TAU) }); if (big && ph === 1) this.snd('glint'); }
+    }
+    for (const g of this.glints) g.life -= dt;
+    this.glints = this.glints.filter(g => g.life > 0);
+    // Sternenstaub: anfangs spärlich, wird dichter
+    if (ph >= 1 && ph <= 4) { const want = (ph === 1 ? 14 : ph === 2 ? 14 + 40 * k : 54 + tk * 25) * q; if (this.dust.length < want && Math.random() < .7) this.dust.push({ x: rand(w), y: rand(hh), vx: rand(-8, 8), vy: rand(-22, -6), life: rand(2, 4), max: 4, s: rand(.8, 2.2), c: Math.random() < .55 ? 0 : Math.random() < .6 ? 1 : 2, tw: rand(TAU) }); }
+    for (const p of this.dust) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; if (ph === 3) { p.x += (cx - p.x) * dt * .3 * k; p.y += (cy - p.y) * dt * .3 * k; } }
     this.dust = this.dust.filter(p => p.life > 0);
-    if (ph === 1 && (this.tw -= dt) <= 0) { this.tw = rand(.22, .5); this.snd('twinkle'); }
-    // Energie strömt beim Aufladen zur Mitte
-    if (ph === 2 && k < .9) { const n = (2 + k * (6 + tk * 4)) * q * dt * 60; for (let i = 0; i < n; i++) { const an = rand(TAU), r = D * rand(.42, .65); this.parts.push({ x: cx + Math.cos(an) * r, y: cy + Math.sin(an) * r, px: 0, py: 0, inw: 1, sp: rand(.8, 1.5), life: 1.4, max: 1.4, s: rand(1, 2.2), col: Math.random() < .6 ? this.col : Math.random() < .5 ? this.col2 : '#ffffff' }); } }
+    if (ph === 2 && (this.tw -= dt) <= 0) { this.tw = rand(.25, .55); this.snd('twinkle'); }
+    // Energie strömt im Aufbau zur Mitte (nicht mehr während des Zusammenfallens)
+    if (ph === 3 && !implode) { const n = (1.5 + k * k * (8 + tk * 5)) * q * dt * 60; for (let i = 0; i < n; i++) { const an = rand(TAU), r = D * rand(.42, .65); this.parts.push({ x: cx + Math.cos(an) * r, y: cy + Math.sin(an) * r, px: 0, py: 0, inw: 1, sp: rand(.8, 1.5), life: 1.4, max: 1.4, s: rand(1, 2.2), col: Math.random() < .6 ? this.col : Math.random() < .5 ? this.col2 : '#ffffff' }); } }
+    // Nachglühen auf dem Höhepunkt: sanft fallende Funken
+    if (ph === 4 && this.tb > .6 && Math.random() < (14 + tk * 8) * q * dt) this.parts.push({ x: rand(w), y: -10, vx: rand(-15, 15), vy: rand(30, 80), dr: 0, g: 0, life: rand(2, 3.5), max: 3.5, s: rand(1.2, 2.6), col: Math.random() < .6 ? this.col : this.col2, star: Math.random() < .4 });
     for (const p of this.parts) {
       p.life -= dt;
       if (p.inw) { const dx = cx - p.x, dy = cy - p.y, dd = Math.hypot(dx, dy) || 1, v = Math.min(dd, (260 + 1500 * k + 900 * (1 - dd / D)) * p.sp * dt); p.px = p.x; p.py = p.y; p.x += dx / dd * v; p.y += dy / dd * v; if (dd < 10) p.life = 0; }
@@ -5647,11 +5716,12 @@ const CS = {
   draw() {
     const c = this.c, x = this.x, dpr = Math.min(2, window.devicePixelRatio || 1), w = innerWidth, hh = innerHeight;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(hh * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr); }
-    const ph = this.ph, k = this.pk(), cx = w / 2, cy = hh * .56, tk = this.tk, R0 = Math.min(w, hh) * .1, L = Math.hypot(w, hh);
+    const ph = this.ph, k = this.pk(), cx = w / 2, cy = hh * .5, tk = this.tk, R0 = Math.min(w, hh) * .1, L = Math.hypot(w, hh);
     x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, hh);
-    const dark = ph === 0 ? csEase(k) : ph === 4 ? 1 - csEase(k) : 1, FA = ph === 4 ? 1 - csEase(k) : 1;
+    const dark = ph === 0 ? csEase(k) : ph === 5 ? 1 - csEase(k) : 1, FA = ph === 5 ? 1 - csEase(k) : 1;
     const sx = rand(-1, 1) * this.shake, sy = rand(-1, 1) * this.shake;
-    // Weiche, flächige Ebenen (Abdunkeln, Grundleuchten, Randnebel, Lichtstrahlen) in 1/3-Auflösung
+    const cT = this.colT, c2T = this.col2T, dcol = [cT, c2T, '#ffffff'];
+    // Weiche, flächige Ebenen (Abdunkeln, Grundleuchten, Herzschlag, Randnebel, Lichtstrahlen) in 1/3-Auflösung
     // zeichnen und einmal hochskalieren – spart auf schwachen Geräten den Großteil der Füllrate.
     const bc = this.bgC || (this.bgC = document.createElement('canvas')), bw = Math.max(1, Math.ceil(w / 3)), bh = Math.max(1, Math.ceil(hh / 3));
     if (bc.width !== bw || bc.height !== bh) { bc.width = bw; bc.height = bh; }
@@ -5662,7 +5732,9 @@ const CS = {
     if (ph >= 1) {
       b.translate(cx + sx, cy + sy); b.scale(this.zoom, this.zoom); b.translate(-cx, -cy);
       b.globalCompositeOperation = 'lighter'; b.globalAlpha = FA;
-      glow(b, this.col, cx, cy, Math.max(w, hh) * .62, .07 + (ph === 2 ? .12 * k : 0) + this.core * .25);
+      const base = ph === 1 ? .025 + .03 * k : ph === 2 ? .055 + .03 * k : ph === 3 ? (.085 + .12 * k) * (implodeK(k)) : .07;
+      glow(b, cT, cx, cy, Math.max(w, hh) * .62, base + this.core * .25);
+      if (this.pulse > .02 && ph <= 3) glow(b, cT, cx, cy, R0 * (2.4 + ph * 1.2), this.pulse * (ph === 1 ? .16 : .24));
       if (this.fog > .01) {
         b.globalAlpha = Math.min(1, this.fog) * FA; b.drawImage(this.fogC, -w * .1, -hh * .1, w * 1.2, hh * 1.2); b.globalAlpha = FA;
         for (let i = 0; i < 5; i++) { const an = i / 5 * TAU + this.time * .12 * (i % 2 ? 1 : -1); glow(b, i % 2 ? this.col : this.col2, cx + Math.cos(an) * w * .55, cy + Math.sin(an) * hh * .55, Math.max(w, hh) * .36, this.fog * .55); }
@@ -5678,14 +5750,20 @@ const CS = {
     x.save();
     x.translate(cx + sx, cy + sy); x.scale(this.zoom, this.zoom); x.translate(-cx, -cy);
     x.globalCompositeOperation = 'lighter'; x.globalAlpha = FA;
-    for (const p of this.dust) { const a = clamp(Math.min(p.life, p.max - p.life) * 1.5, 0, 1) * (.45 + .55 * Math.sin(this.time * 4 + p.tw) ** 2); x.globalAlpha = a * FA; x.fillStyle = p.col; x.fillRect(p.x, p.y, p.s, p.s); if (p.s > 1.7) glow(x, p.col, p.x, p.y, p.s * 4, .5); }
+    // Lichtfunken
+    for (const g of this.glints) {
+      const t = 1 - g.life / g.max, a = Math.sin(Math.PI * clamp(t, 0, 1)) * g.a * FA, col = g.c ? c2T : cT;
+      glow(x, col, g.x, g.y, g.s * 5, a * .8); x.globalAlpha = a; x.fillStyle = '#ffffff';
+      x.save(); x.translate(g.x, g.y); x.rotate(g.rot + t); starP(x, 4, g.s * 1.6, g.s * .25); x.fill(); x.restore(); x.globalAlpha = FA;
+    }
+    for (const p of this.dust) { const a = clamp(Math.min(p.life, p.max - p.life) * 1.5, 0, 1) * (.45 + .55 * Math.sin(this.time * 4 + p.tw) ** 2) * (ph === 1 ? .55 : 1); const col = dcol[p.c]; x.globalAlpha = a * FA; x.fillStyle = col; x.fillRect(p.x, p.y, p.s, p.s); if (p.s > 1.7) glow(x, col, p.x, p.y, p.s * 4, .5); }
     x.globalAlpha = FA;
-    // Der Stern
-    if (ph >= 1 && ph <= 2) {
-      const tw = 1 + .1 * Math.sin(this.time * 11) + .05 * Math.sin(this.time * 27);
-      let R = ph === 1 ? R0 * csBack(clamp(k / .35, 0, 1)) : R0 * (1 + k * (.8 + tk * .35)) * (k > .86 ? 1 - (k - .86) / .14 * .8 : 1);
+    // Der Stern: entzündet sich im Erwachen, wächst im Aufbau und fällt vor dem Ausbruch in sich zusammen
+    if (ph === 2 || ph === 3) {
+      const tw = 1 + .1 * Math.sin(this.time * 11) + .05 * Math.sin(this.time * 27) + this.pulse * .18;
+      let R = ph === 2 ? R0 * (.9 * csBack(clamp(k / .4, 0, 1)) + .1 * k) : R0 * (1 + Math.pow(k, 1.5) * (.8 + tk * .4)) * (k > .88 ? 1 - (k - .88) / .12 * .85 : 1);
       R = Math.max(0, R * tw);
-      this.drawStar(x, cx, cy, R, ph === 2 ? k : 0, FA);
+      this.drawStar(x, cx, cy, R, ph === 3 ? k : 0, FA, cT, c2T);
     }
     if (this.core > .02) glow(x, '#ffffff', cx, cy, R0 * 2.2 * this.core, this.core);
     // Partikel und Druckwellen
@@ -5706,7 +5784,7 @@ const CS = {
     for (const f of this.flashes) { const a = this.flashA(f) * FA; if (a > 0) { x.fillStyle = rgba(f.col, a); x.fillRect(-w, -hh, w * 3, hh * 3); } }
     // Transzendent: Risse, Scherben und Rauch
     if (this.cracks.length) {
-      const ca = clamp((this.tb - .1) / .1, 0, 1) * (1 - clamp((this.tb - .8) / .7, 0, 1)) * FA;
+      const ca = clamp((this.tb - .1) / .1, 0, 1) * (1 - clamp((this.tb - .85) / .7, 0, 1)) * FA;
       if (ca > 0) {
         const gr = easeOut(clamp((this.tb - .1) / .22, 0, 1));
         glow(x, this.ink, cx, cy, 170 * gr, ca * .95); glow(x, this.ink, cx, cy, 70, ca);
@@ -5725,65 +5803,86 @@ const CS = {
       x.globalAlpha = 1;
     }
     x.restore();
-    this.drawText(FA);
+    this.drawText(ph === 5 ? clamp(1 - k * 2.5, 0, 1) : FA); // Text weicht schnell, damit er sich nicht mit der Karte überlagert
   },
-  drawStar(x, cx, cy, R, ch, FA) {
+  drawStar(x, cx, cy, R, ch, FA, c1, c2) {
     if (R <= .5) return;
-    glow(x, this.col, cx, cy, R * (3.4 + ch * 2), .5 + ch * .3); glow(x, this.col2, cx, cy, R * 1.6, .35);
-    const fw = innerWidth * (.18 + ch * .4), fl = x.createLinearGradient(cx - fw, 0, cx + fw, 0);
-    fl.addColorStop(0, rgba(this.col, 0)); fl.addColorStop(.5, rgba('#ffffff', .55)); fl.addColorStop(1, rgba(this.col, 0));
+    glow(x, c1, cx, cy, R * (3.4 + ch * 2), .5 + ch * .3); glow(x, c2, cx, cy, R * 1.6, .35);
+    const fw = innerWidth * (.12 + ch * .45), fl = x.createLinearGradient(cx - fw, 0, cx + fw, 0);
+    fl.addColorStop(0, rgba(c1, 0)); fl.addColorStop(.5, rgba('#ffffff', .55)); fl.addColorStop(1, rgba(c1, 0));
     x.fillStyle = fl; x.fillRect(cx - fw, cy - 1.5, fw * 2, 3);
     x.save(); x.translate(cx, cy); x.rotate(this.rot);
-    x.globalAlpha = .9 * FA; x.fillStyle = this.col; starP(x, 4, R * 1.45, R * .09); x.fill();
-    x.rotate(Math.PI / 4); x.globalAlpha = .55 * FA; x.fillStyle = this.col2; starP(x, 4, R * .55, R * .07); x.fill();
+    x.globalAlpha = .9 * FA; x.fillStyle = c1; starP(x, 4, R * 1.45, R * .09); x.fill();
+    x.rotate(Math.PI / 4); x.globalAlpha = .55 * FA; x.fillStyle = c2; starP(x, 4, R * .55, R * .07); x.fill();
     x.rotate(-Math.PI / 4); x.globalAlpha = FA; x.fillStyle = '#ffffff'; starP(x, 4, R * .75, R * .055); x.fill();
     x.restore(); x.globalAlpha = FA; glow(x, '#ffffff', cx, cy, R * .55, .9);
   },
+  // Enthüllung: Name schlägt groß ein, „1 zu X“ folgt einen Moment später
   drawText(FA) {
-    const x = this.x, w = innerWidth, hh = innerHeight, ph = this.ph;
-    const al = (ph === 1 ? clamp((this.pk() - .2) / .4, 0, 1) : ph >= 2 ? 1 : 0) * FA; if (al <= 0) return;
+    if (this.txtT < 0) return;
+    const x = this.x, w = innerWidth, hh = innerHeight, tt = this.txtT;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     if (!this.textC || this.textC.key !== w + 'x' + hh + 'x' + dpr) this.buildText(w, hh);
-    const T = this.textC, br = clamp((this.white - .15) / .3, 0, 1);
+    const T = this.textC, br = clamp((this.flashL - .2) / .3, 0, 1);
+    const a1 = clamp(tt / .14, 0, 1) * FA, a2 = clamp((tt - .5) / .3, 0, 1) * FA;
+    const sc = 1 + .55 * Math.exp(-tt * 9) + this.popA, ny = hh * .5 - T.ns * .35, oy = ny + T.ns * 1.05;
     x.save();
-    x.translate(w / 2 + rand(-1, 1) * this.shake * .35, hh * .2 + (1 - easeOut(al)) * 16 + rand(-1, 1) * this.shake * .35);
-    x.scale(1 + this.popA, 1 + this.popA);
-    if (this.glowT > .02 && br < 1) { x.globalCompositeOperation = 'lighter'; glow(x, this.col, 0, 0, T.ns * 3.2, this.glowT * .45 * al * (1 - br)); x.globalCompositeOperation = 'source-over'; }
-    if (br < 1) { x.globalAlpha = al * (1 - br); x.drawImage(T.norm, -T.cw / 2, -T.ch * .47, T.cw, T.ch); }
-    if (br > 0) { x.globalAlpha = al * br; x.drawImage(T.bright, -T.cw / 2, -T.ch * .47, T.cw, T.ch); }
+    x.translate(w / 2 + rand(-1, 1) * this.shake * .3, rand(-1, 1) * this.shake * .3);
+    if (br < 1) { // dunkle Unterlage für Lesbarkeit über dem Ausbruch
+      x.save(); x.translate(0, ny + T.ns * .45); x.scale(2.4, 1); glow(x, '#04050a', 0, 0, T.ns * 1.7, .6 * a1 * (1 - br)); x.restore();
+      if (this.glowT > .02) { x.globalCompositeOperation = 'lighter'; glow(x, this.col, 0, ny, T.ns * 3.2, this.glowT * .4 * a1 * (1 - br)); x.globalCompositeOperation = 'source-over'; }
+    }
+    x.save(); x.translate(0, ny); x.scale(sc, sc);
+    if (br < 1) { x.globalAlpha = a1 * (1 - br); x.drawImage(T.nameN, -T.cw / 2, -T.nh / 2, T.cw, T.nh); }
+    if (br > 0) { x.globalAlpha = a1 * br; x.drawImage(T.nameB, -T.cw / 2, -T.nh / 2, T.cw, T.nh); }
+    x.restore();
+    if (a2 > 0) {
+      x.translate(0, oy + (1 - easeOut(a2 / Math.max(FA, .001))) * 14);
+      if (br < 1) { x.globalAlpha = a2 * (1 - br); x.drawImage(T.oddsN, -T.cw / 2, -T.oh / 2, T.cw, T.oh); }
+      if (br > 0) { x.globalAlpha = a2 * br; x.drawImage(T.oddsB, -T.cw / 2, -T.oh / 2, T.cw, T.oh); }
+    }
     x.restore();
   },
   snd(n) {
     if (!this.bus || !AU.on) return;
     const o = { out: this.bus }, tk = this.tk, d = this.d, A = AU;
     switch (n) {
-      case 'dark': A.tone(55, this.total, { ...o, type: 'sine', vol: .2, att: d[0], hold: .85 }); A.tone(110, this.total, { ...o, type: 'triangle', vol: .035, att: d[0], hold: .8, lp: 500 }); A.noise(d[0] + .5, { ...o, f: 1400, slide: .15, vol: .07, ft: 'lowpass', att: .05 }); break;
-      case 'appear': [1047, 1319, 1568, 2093].forEach((f, i) => A.tone(f * (tk === 2 ? 1.06 : 1), 1.6, { ...o, type: 'sine', vol: .045, delay: i * .14, verb: 1 })); A.noise(1.2, { ...o, f: 7000, vol: .03, att: .4, verb: 1 }); break;
-      case 'twinkle': A.tone(rand(1800, 3200), .3, { ...o, type: 'sine', vol: .022, verb: 1 }); break;
-      case 'charge':
-        A.noise(d[2], { ...o, f: 220, slide: 22, vol: .11 + tk * .03, att: d[2] * .92, q: 1.5 });
-        A.tone(85, d[2], { ...o, type: 'sawtooth', slide: 4.5, vol: .06 + tk * .015, att: d[2] * .88, lp: 1600 });
-        if (tk >= 1) for (const f of [0, .42, .72, .92, 1.06, 1.16].map(v => v * d[2] / 1.25)) if (f < d[2] - .05) A.tone(58, .22, { ...o, type: 'sine', slide: .55, vol: .24, delay: f });
-        break;
-      case 'burst':
-        A.tone(46, 2.6 + tk * .5, { ...o, type: 'sine', slide: .42, vol: .42 });
-        A.noise(1.6 + tk * .5, { ...o, f: 520, slide: .14, vol: .3, ft: 'lowpass' });
-        A.noise(.5, { ...o, f: 3200, slide: .3, vol: .12 });
-        if (tk < 2) this.snd('chord');
-        if (tk >= 1) A.noise(2.6, { ...o, f: 140, vol: .22, ft: 'lowpass', delay: .12, att: .3 });
-        if (tk >= 2) for (let i = 0; i < 16; i++) A.noise(.14, { ...o, f: rand(3500, 9000), q: 5, vol: .1, delay: .02 + i * .028 + rand(.02) });
-        break;
-      case 'burst2': A.tone(40, 2.6, { ...o, type: 'sine', slide: .5, vol: .36 }); A.noise(1.4, { ...o, f: 900, slide: .2, vol: .2, ft: 'lowpass' }); this.snd('chord'); break;
-      case 'chord': {
-        const base = [523, 659, 784, 1047, 1319, 1568];
-        base.slice(0, 4 + tk).forEach((f, i) => A.tone(f, 2.4 + tk * .4, { ...o, type: tk ? 'sawtooth' : 'triangle', vol: .045, delay: .06 + i * .05, verb: 1, lp: 2800, det: i % 2 ? 6 : -6 }));
-        for (let i = 0; i < 10 + tk * 4; i++) A.tone(1568 * Math.pow(2, ((i * 5) % 12) / 12), .3, { ...o, type: 'sine', vol: .03, delay: .35 + i * .07, verb: 1 });
+      case 'dark': A.tone(55, this.total, { ...o, type: 'sine', vol: .18, att: d[0] + d[1] * .6, hold: .85 }); A.tone(110, this.total, { ...o, type: 'triangle', vol: .03, att: d[0] + d[1], hold: .8, lp: 500 }); A.noise(d[0] + .5, { ...o, f: 1400, slide: .15, vol: .07, ft: 'lowpass', att: .05 }); break;
+      case 'beat': A.tone(54, .28, { ...o, type: 'sine', slide: .55, vol: this.ph === 1 ? .16 : .24 }); A.tone(48, .22, { ...o, type: 'sine', slide: .6, vol: this.ph === 1 ? .1 : .16, delay: .16 }); break;
+      case 'glint': A.tone(rand(2200, 3400), .5, { ...o, type: 'sine', vol: .012, verb: 1 }); break;
+      case 'appear': [1047, 1319, 1568, 2093].forEach((f, i) => A.tone(f * (tk === 2 ? 1.06 : 1), 1.8, { ...o, type: 'sine', vol: .04, delay: i * .18, verb: 1 })); A.noise(1.6, { ...o, f: 7000, vol: .025, att: .6, verb: 1 }); break;
+      case 'twinkle': A.tone(rand(1800, 3200), .3, { ...o, type: 'sine', vol: .02, verb: 1 }); break;
+      case 'charge': {
+        const r = d[3] * .88; // Riser bis kurz vor dem Ausbruch, dann ein Einsaugen und Stille
+        A.noise(r, { ...o, f: 200, slide: 24, vol: .11 + tk * .03, att: r * .95, q: 1.5 });
+        A.tone(80, r, { ...o, type: 'sawtooth', slide: 5, vol: .06 + tk * .015, att: r * .9, lp: 1600 });
+        A.tone(160, r, { ...o, type: 'triangle', slide: 4, vol: .03, att: r * .9, det: 9 });
+        A.noise(d[3] * .1, { ...o, f: 4000, slide: .08, vol: .12, delay: r - .02, att: d[3] * .08 });
         break;
       }
-      case 'resolve': [523, 784, 1047, 1568].forEach((f, i) => A.tone(f, 1.8, { ...o, type: 'triangle', vol: .05, delay: i * .08, verb: 1 })); break;
+      case 'crackle': A.noise(.12, { ...o, f: rand(2500, 6000), q: 3, vol: .05 + tk * .015 }); break;
+      case 'burst':
+        A.tone(46, 2.8 + tk * .5, { ...o, type: 'sine', slide: .42, vol: .42 });
+        A.noise(1.8 + tk * .5, { ...o, f: 520, slide: .14, vol: .3, ft: 'lowpass' });
+        A.noise(.5, { ...o, f: 3200, slide: .3, vol: .12 });
+        if (tk >= 1) A.noise(2.8, { ...o, f: 140, vol: .22, ft: 'lowpass', delay: .12, att: .3 });
+        if (tk >= 2) for (let i = 0; i < 16; i++) A.noise(.14, { ...o, f: rand(3500, 9000), q: 5, vol: .1, delay: .02 + i * .028 + rand(.02) });
+        break;
+      case 'burst2': A.tone(40, 2.8, { ...o, type: 'sine', slide: .5, vol: .36 }); A.noise(1.6, { ...o, f: 900, slide: .2, vol: .2, ft: 'lowpass' }); break;
+      case 'reveal': {
+        const base = [523, 659, 784, 1047, 1319, 1568];
+        base.slice(0, 4 + tk).forEach((f, i) => A.tone(f, 2.8 + tk * .5, { ...o, type: tk ? 'sawtooth' : 'triangle', vol: .045, delay: .02 + i * .05, verb: 1, lp: 2800, det: i % 2 ? 6 : -6, hold: .3 }));
+        for (let i = 0; i < 12 + tk * 4; i++) A.tone(1568 * Math.pow(2, ((i * 5) % 12) / 12), .3, { ...o, type: 'sine', vol: .03, delay: .3 + i * .07, verb: 1 });
+        A.tone(392, .9, { ...o, type: 'triangle', vol: .05, delay: .5, verb: 1 }); A.tone(784, .9, { ...o, type: 'sine', vol: .04, delay: .52, verb: 1 });
+        break;
+      }
+      case 'after': A.tone(60, 1.4, { ...o, type: 'sine', slide: .5, vol: .22 }); A.noise(.9, { ...o, f: 700, slide: .3, vol: .12, ft: 'lowpass' }); break;
+      case 'resolve': [523, 784, 1047, 1568].forEach((f, i) => A.tone(f, 2, { ...o, type: 'triangle', vol: .05, delay: i * .09, verb: 1 })); break;
     }
   },
 };
+// Grundleuchten dimmt beim Zusammenfallen am Ende des Aufbaus
+function implodeK(k) { return k > .88 ? 1 - (k - .88) / .12 * .8 : 1; }
 
 /* ---------- Effekt-Ebene der Enthüllung ---------- */
 const RFX = { c: null, x: null, parts: [], rings: [], stars: [], charge: null, tier: 0, dirty: false };
