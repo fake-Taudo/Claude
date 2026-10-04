@@ -4593,7 +4593,7 @@ function getMoveView(f, i) { if (i === 0 && (f.fl & FL.form)) { const mm = AURAS
    ===================================================================== */
 const IN = { keys: new Set(), mx: 0, my: 0, mb: 0 };
 addEventListener('keydown', e => {
-  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) { if (e.code === 'Escape' && e.target.closest('.modal-back')) { e.target.blur(); onEscape(); } return; } // Esc schließt Menüs auch beim Tippen
   IN.keys.add(e.code);
   if (SCREEN_ARENA() && ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   if (e.code === 'Escape' && !e.repeat) onEscape();
@@ -5157,6 +5157,7 @@ function startClientMatch(m) {
 }
 function enterArena() {
   if (CS.on) CS.end(); if (REVEAL.open && REVEAL.el) closeReveal(true); RFX.parts = []; RFX.rings = [];
+  closeAllModals(); // z. B. offene Einstellungen, wenn der Host das Match startet
   showScreen('arena'); $('#resultsBox').innerHTML = ''; $('#banner').innerHTML = '';
   TOUCH.reset(); TOUCH.icons = ''; TOUCH.cache = {};
   if (MATCH.touch) $('#touchUi').classList.remove('hidden');
@@ -5412,6 +5413,8 @@ function commitName(v) {
 // Fortschritt zurücksetzen (Auren, Währung, Tränke, Statistik) – Name und Einstellungen bleiben
 function resetProgress() {
   if (NET.role) { toast('Verlasse zuerst den Multiplayer-Raum.', 'bad'); return false; }
+  if (ROLLST.busy || REVEAL.open || CS.on) { toast('Warte, bis der laufende Roll fertig ist.', 'bad'); return false; }
+  $('#autoT').checked = false;
   const d = defaultSave();
   for (const k of ['dust', 'rolls', 'owned', 'equipped', 'potions', 'boosts', 'queue', 'bonusCharges', 'stats', 'hist', 'newIds']) S[k] = d[k];
   histSeen = -1; lastBoostKey = '';
