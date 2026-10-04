@@ -6,9 +6,6 @@
 <title>Aura RNG Arena</title>
 <meta name="description" content="Aura-Rolling-Kampfspiel: Rolle seltene Auren, sammle sie und kämpfe mit ihren einzigartigen Movesets im Training oder im Echtzeit-Multiplayer.">
 <meta name="theme-color" content="#070a14">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -18,6 +15,10 @@
 /* =====================================================================
    AURA RNG ARENA – Stil: flaches Vektordesign mit Glow-Effekten
    ===================================================================== */
+/* Schriften liegen selbst gehostet neben der Seite (assets/fonts, SIL Open Font License) – keine Verbindung
+   zu Servern Dritter. Fehlen die Dateien (z. B. bei einer einzeln heruntergeladenen HTML), greifen Systemschriften. */
+@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("assets/fonts/inter-latin-wght.woff2") format("woff2")}
+@font-face{font-family:"Exo 2";font-style:normal;font-weight:600 800;font-display:swap;src:url("assets/fonts/exo2-latin-wght.woff2") format("woff2")}
 :root{
   --bg:#070a14; --bg2:#0b1022; --panel:rgba(16,22,44,.74); --panel2:rgba(22,30,60,.66);
   --line:rgba(140,160,235,.16); --line2:rgba(140,160,235,.28);
@@ -165,15 +166,17 @@ input,select{font:inherit;color:inherit}
 .st-tile b.tier{font-size:16.5px;line-height:26px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 14px currentColor}
 
 /* ---------- Roll-Bereich ---------- */
-.roll-area{display:flex;flex-direction:column;align-items:center;gap:var(--s5);min-height:0;padding:4px 0 8px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
-.roll-area::-webkit-scrollbar{display:none}
+.roll-area{display:flex;flex-direction:column;align-items:center;gap:var(--s5);min-height:0;padding:4px 0 8px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#2a3360 transparent}
+.roll-area::-webkit-scrollbar{width:6px}.roll-area::-webkit-scrollbar-thumb{background:#2a3360;border-radius:6px}
 .roll-area>:first-child{margin-top:auto}.roll-area>:last-child{margin-bottom:auto}
 .roll-head{text-align:center}
 .roll-title{font-family:var(--display);font-size:clamp(20px,1.9vw,28px);font-weight:800;letter-spacing:.3em;padding-left:.3em;text-transform:uppercase;background:linear-gradient(90deg,#fff,#c9d0ff 50%,#8ef6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .roll-sub{font-size:14px;color:var(--muted);margin-top:6px;text-wrap:balance}
-.strip-wrap{position:relative;width:100%;max-width:980px;height:var(--strip-h);border-radius:20px;background:linear-gradient(180deg,rgba(10,14,30,.78),rgba(14,20,42,.84));border:1px solid var(--glass-line2);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 0 40px rgba(0,0,0,.35);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%);flex:none}
-.strip-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
-.strip-wrap.glow{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 0 60px var(--glowc,rgba(124,140,255,.5)),0 0 50px var(--glowc,rgba(124,140,255,.5))}
+.strip-wrap{position:relative;width:100%;max-width:980px;height:var(--strip-h);flex:none;isolation:isolate}
+.strip-wrap::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:20px;background:linear-gradient(180deg,rgba(10,14,30,.8),rgba(14,20,42,.88));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(255,255,255,.05),inset 0 0 40px rgba(0,0,0,.35);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%)}
+.strip-wrap canvas{position:absolute;inset:0;width:100%;height:100%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%)}
+.strip-glow{position:absolute;inset:-28px -4%;z-index:-2;background:radial-gradient(48% 56% at 50% 50%,var(--glowc,rgba(124,140,255,.5)),transparent 72%);opacity:0;transition:opacity .5s;pointer-events:none}
+.strip-wrap.glow .strip-glow{opacity:1}
 .strip-marker{position:absolute;left:50%;top:0;bottom:0;width:24px;transform:translateX(-50%);pointer-events:none;z-index:2}
 .sm-line{position:absolute;left:50%;top:13px;bottom:13px;width:3px;transform:translateX(-50%);border-radius:3px;overflow:hidden;background:linear-gradient(180deg,#fff7c9,#fde047 30%,#f59e0b 70%,#fff7c9);box-shadow:0 0 10px #fde047,0 0 24px rgba(253,224,71,.6)}
 .sm-line::after{content:"";position:absolute;left:0;right:0;height:34px;top:-34px;background:linear-gradient(180deg,rgba(255,255,255,0),#fff,rgba(255,255,255,0));animation:smSweep 2.4s ease-in-out infinite}
@@ -304,6 +307,7 @@ input,select{font:inherit;color:inherit}
 .side-links .btn>span[data-icon]{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.07);color:#cdd4ff}
 .side-links .btn svg{width:16px;height:16px}
 .side-links .btn.wide{grid-column:span 2}
+.side-links .brew-btn{padding-right:44px}.side-links .btn .lbl{min-width:0;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- Letzte Rolls ---------- */
 .hist-panel{flex:1 0 auto}
@@ -400,7 +404,7 @@ input,select{font:inherit;color:inherit}
 }
 @media (min-width:1101px) and (max-width:1366px){.mode-btn .chev{display:none}}
 @media (min-width:1101px) and (max-width:1280px){.equip-actions .lf{display:none}.equip-actions .ls{display:inline}.role-badge svg{display:none}.st-tile{padding:9px 10px}.st-ic{right:7px;top:7px}}
-@media (min-width:1101px) and (max-height:760px){:root{--prev-h:clamp(104px,15vh,150px);--mm-h:34px}.equip-name{font-size:22px}}
+@media (min-width:1101px) and (max-height:760px){:root{--prev-h:clamp(104px,15vh,150px);--mm-h:34px;--rb:clamp(120px,18vh,160px);--strip-h:clamp(100px,14vh,124px)}.equip-name{font-size:22px}.roll-area{gap:12px}.roll-stage{margin:0}.roll-title{font-size:20px}}
 @media (max-width:1280px) and (min-width:1101px){.lobby-grid{grid-template-columns:300px minmax(0,1fr) 300px}}
 
 /* ---------- Modals ---------- */
@@ -676,7 +680,8 @@ input,select{font:inherit;color:inherit}
   .top-pill{justify-content:center;min-width:0;padding:0 10px 0 7px}
   .name-field input{flex:1;width:auto;min-width:0}
   .coll-pill .cp{min-width:0;flex:1}
-  .lobby-grid{display:flex;flex-direction:column;padding:14px 12px 22px}
+  .lobby-grid{display:flex;flex-direction:column;align-items:stretch;padding:14px 12px 22px}
+  .side-links{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.side-links .btn{min-width:0;white-space:normal;text-align:left;line-height:1.25}
   .col{display:contents}
   .roll-area{order:0}.kampf-panel{order:1}.equip-panel{order:2}.hist-panel{order:3}.stats-panel{order:4}
   .roll-title{font-size:20px}
@@ -688,8 +693,10 @@ input,select{font:inherit;color:inherit}
 @media (min-width:721px) and (max-width:900px){.top-pill .tpl{display:none}.name-field input{width:110px}}
 @media (max-width:480px){
   .top-pill .tpl{display:none}
+  .top-pill b{min-width:0;overflow:hidden;text-overflow:ellipsis}
   .roll-sub{font-size:13px}
 }
+@media (max-width:400px){.mode-btn{gap:12px;padding:12px}.mode-btn .mi{width:50px;height:50px}.mode-btn b{font-size:18px}.mode-btn .chev{display:none}.dust-pill .pi,.rolls-pill .pi,.coll-pill .pi{display:none}.top-pill{padding:0 9px}.brand h1{font-size:18px;letter-spacing:.16em}.logo-orb{width:32px;height:32px}}
 @media (max-width:1100px) and (max-height:500px){
   :root{--rb:150px;--strip-h:116px}
   .roll-sub{display:none}
@@ -751,7 +758,7 @@ input,select{font:inherit;color:inherit}
         <!-- Mitte: Rollen -->
         <section class="roll-area">
           <div class="roll-head"><div class="roll-title">Aura beschwören</div><div class="roll-sub">64 Auren in 9 Seltenheitsstufen – wie viel Glück hast du?</div></div>
-          <div class="strip-wrap" id="stripWrap"><canvas id="stripC"></canvas><div class="strip-marker" aria-hidden="true"><i class="sm-t"></i><i class="sm-line"></i><i class="sm-b"></i></div></div>
+          <div class="strip-wrap" id="stripWrap"><span class="strip-glow"></span><canvas id="stripC"></canvas><div class="strip-marker" aria-hidden="true"><i class="sm-t"></i><i class="sm-line"></i><i class="sm-b"></i></div></div>
           <div class="roll-stage" id="rollStage">
             <span class="rs-halo"></span><span class="rs-orbit o2"></span><span class="rs-orbit o1"></span>
             <button class="roll-btn pulse" id="rollBtn" aria-label="Aura rollen"><span class="rb-ring"></span><span class="rb-clip"></span><span class="rb-inner"><span class="rb-label">ROLL</span><small id="rollSub">1 Aura</small></span><span class="rb-busy" aria-hidden="true"><i></i><i></i><i></i></span></button>
@@ -781,7 +788,7 @@ input,select{font:inherit;color:inherit}
             <div class="side-links">
               <button class="btn" id="collBtn"><span data-icon="grid"></span>Sammlung</button>
               <button class="btn" id="shopBtn"><span data-icon="flask"></span>Alchemie</button>
-              <button class="btn wide brew-btn" id="craftBtn" title="Tränke aus Duplikaten brauen"><span data-icon="cauldron"></span>Braukessel · Tränke brauen<b class="badge" id="craftBadge" hidden></b></button>
+              <button class="btn wide brew-btn" id="craftBtn" title="Tränke aus Duplikaten brauen"><span data-icon="cauldron"></span><span class="lbl">Braukessel · Tränke brauen</span><b class="badge" id="craftBadge" hidden></b></button>
               <button class="btn wide" id="oddsBtn"><span data-icon="dice"></span>Wahrscheinlichkeiten</button>
               <button class="btn wide" id="helpBtn"><span data-icon="info"></span>Steuerung &amp; Regeln</button>
             </div>
@@ -5161,7 +5168,7 @@ function copyText(s) {
 }
 
 /* ---------- Lobby-Oberfläche: Akzentfarbe, Tooltips, Bewegung, Feedback ---------- */
-const UI = { calm: false, lite: false, pf: { n: 0, sum: 0, wait: 2.5 } };
+const UI = { calm: false, lite: false, kbNav: false, pf: { n: 0, sum: 0, wait: 2.5 } };
 // Schafft ein Gerät in der Lobby dauerhaft keine ~40 fps, wird die Live-Unschärfe der Glas-Panels abgeschaltet
 function lobbyPerf(dt) {
   if (UI.lite || UI.calm || dt > .2) return;
@@ -5201,7 +5208,7 @@ const TIP = {
   init() {
     this.el = h('div', { class: 'tip', role: 'tooltip' }); document.body.appendChild(this.el);
     const find = e => e.target && e.target.closest ? e.target.closest('[data-tip]') : null;
-    document.addEventListener('pointerover', e => { if (e.pointerType === 'touch') return; const t = find(e); if (t && t !== this.cur) this.show(t); });
+    document.addEventListener('pointerover', e => { if (e.pointerType === 'touch') return; const t = find(e); if (t) { if (t !== this.cur) this.show(t); } else if (this.cur && !this.cur.isConnected) this.hide(); });
     document.addEventListener('pointerout', e => { if (e.pointerType === 'touch') return; const t = find(e); if (t && !(e.relatedTarget && t.contains(e.relatedTarget))) this.hide(); });
     document.addEventListener('pointerdown', e => {
       const t = find(e);
@@ -5209,7 +5216,7 @@ const TIP = {
       if (!t || e.pointerType === 'touch') this.hide();
     }, true);
     document.addEventListener('focusin', e => { const t = find(e); if (t && t.matches(':focus-visible')) this.show(t); });
-    document.addEventListener('focusout', () => this.hide());
+    document.addEventListener('focusout', e => { if (e.target === this.cur) this.hide(); });
     addEventListener('scroll', () => { if (this.cur) this.place(); }, { capture: true, passive: true }); addEventListener('resize', () => this.hide());
   },
   show(t) {
@@ -5230,6 +5237,10 @@ const TIP = {
 };
 function initLobbyUI() {
   TIP.init();
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => STRIP.names.clear());
+  // Tab-Navigation merken: dann behält die Leertaste auf fokussierten Buttons ihr natives Verhalten
+  addEventListener('keydown', e => { if (e.key === 'Tab') UI.kbNav = true; }, true);
+  addEventListener('pointerdown', () => { UI.kbNav = false; }, true);
   const ct = $('#calmT'), pref = S.calm ?? !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   ct.checked = !!pref; applyCalm(pref);
   ct.onchange = () => { S.calm = ct.checked; save(); applyCalm(ct.checked); };
@@ -5258,6 +5269,8 @@ function renderLobby() {
   if (S.stats.best >= 0) { const T = TIERS[S.stats.best]; sb.textContent = T.n; sb.style.color = T.c; sb.className = 'tier'; } else { sb.textContent = '–'; sb.style.color = ''; sb.className = ''; }
   renderEquip(); renderHistory(); renderPotions(); updateLuckUI();
   $('#rollBtn').classList.toggle('pulse', !S.rolls);
+  $('#quickT').checked = !!S.quick; // Schalter folgen einem geladenen/importierten Spielstand
+  if (typeof S.calm === 'boolean' && S.calm !== UI.calm) { applyCalm(S.calm); $('#calmT').checked = S.calm; }
 }
 function renderEquip() {
   const box = $('#equipBox'), cnt = $('#equipTierTxt');
@@ -6431,7 +6444,8 @@ function init() {
   addEventListener('keydown', e => {
     if (CS.on && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); if (!e.repeat) CS.skip(); return; }
     if (REVEAL.open && (e.code === 'Enter' || e.code === 'Space') && REVEAL.el) { e.preventDefault(); if (!e.repeat) closeReveal(); return; }
-    if (SCREEN === 'lobby' && !MODALS.length && e.code === 'Space' && e.target === document.body) { e.preventDefault(); doRoll(); }
+    const tg = e.target;
+    if (SCREEN === 'lobby' && !MODALS.length && e.code === 'Space' && (tg === document.body || (tg.closest && tg.closest('#lobby') && !tg.matches('input, textarea, select') && !UI.kbNav))) { e.preventDefault(); doRoll(); }
   });
   addEventListener('beforeunload', () => { save(); CLOUD.flush(); if (NET.role === 'client') NET.tr && NET.tr.send({ t: 'leave' }); if (NET.role === 'host') NET.tr && NET.tr.broadcast({ t: 'reject', reason: 'Der Host hat das Spiel geschlossen.' }); });
   renderLobby(); lobbyEnter();
