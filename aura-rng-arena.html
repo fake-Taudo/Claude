@@ -1319,7 +1319,7 @@ const AU = {
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     let node = os;
     if (o.lp) { const fl = c.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = o.lp; os.connect(fl); node = fl; }
-    node.connect(g); g.connect(o.out || this.master); if (o.verb) g.connect(this.delay);
+    node.connect(g); g.connect(o.out || this.master); if (o.verb) g.connect(o.out ? o.out.verb : this.delay);
     os.start(t); os.stop(t + dur + 0.05);
   },
   noise(dur, o = {}) {
@@ -1329,10 +1329,10 @@ const AU = {
     if (o.slide) fl.frequency.exponentialRampToValueAtTime(Math.max(40, (o.f || 1200) * o.slide), t + dur);
     const g = c.createGain(); const v = (o.vol || 0.2) * (o.vm || 1);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + (o.att || 0.005)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(fl); fl.connect(g); g.connect(o.out || this.master); if (o.verb) g.connect(this.delay);
+    s.connect(fl); fl.connect(g); g.connect(o.out || this.master); if (o.verb) g.connect(o.out ? o.out.verb : this.delay);
     s.start(t, Math.random()); s.stop(t + dur + 0.05);
   },
-  bus() { const g = this.ctx.createGain(); g.gain.value = 1; g.connect(this.master); return g; },
+  bus() { const g = this.ctx.createGain(); g.gain.value = 1; g.connect(this.master); g.verb = this.ctx.createGain(); g.verb.connect(this.delay); return g; },
   chord(fs, dur, o = {}) { fs.forEach((f, i) => this.tone(f, dur, Object.assign({}, o, { delay: (o.delay || 0) + i * (o.arp || 0) }))); },
   play(n, vm = 1, a = 0) {
     if (!this.on) return;
@@ -4188,7 +4188,7 @@ addEventListener('keydown', e => {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
   IN.keys.add(e.code);
   if (SCREEN_ARENA() && ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
-  if (e.code === 'Escape') onEscape();
+  if (e.code === 'Escape' && !e.repeat) onEscape();
 });
 addEventListener('keyup', e => IN.keys.delete(e.code));
 addEventListener('blur', () => lostInput());
@@ -5462,7 +5462,8 @@ const csBack = k => 1 + 2.70158 * Math.pow(k - 1, 3) + 1.70158 * Math.pow(k - 1,
 const CS = {
   on: false, c: null, x: null, bus: null,
   start(a, done) {
-    if (this.on || !a || a.t < 6) { if (done) done(); return; }
+    if (this.on) { if (!done) return; this.end(.15); } // echter Roll löst eine laufende Wiederholung ab
+    if (!a || a.t < 6) { if (done) done(); return; }
     if (!this.c) {
       this.c = $('#csc'); this.x = this.c.getContext('2d');
       this.c.addEventListener('pointerdown', e => { e.preventDefault(); if (this.time > .15) this.skip(); });
@@ -5548,17 +5549,17 @@ const CS = {
   end(fade = .3) {
     if (!this.on) return;
     this.on = false; this.showCard();
-    const c = this.c; c.style.display = 'none'; c.width = c.height = 1; this.textC = null;
+    const c = this.c; c.width = c.height = 1; this.textC = null; // bleibt 250 ms unsichtbar liegen und schluckt den Klick des Überspring-Tipps
     $('#csSkip').classList.remove('on');
     this.parts = []; this.dust = []; this.rings = []; this.shards = []; this.smoke = []; this.cracks = []; this.flashes = []; this.sched = [];
     this.fadeBus(fade);
-    setTimeout(() => { if (REVEAL.el) REVEAL.el.classList.remove('lock'); }, 250);
+    setTimeout(() => { if (this.on) return; c.style.display = 'none'; if (REVEAL.el) REVEAL.el.classList.remove('lock'); }, 250);
   },
   fadeBus(s) {
     const b = this.bus; this.bus = null; if (!b || !AU.ctx) return;
     const n = AU.ctx.currentTime;
-    try { b.gain.cancelScheduledValues(n); b.gain.setValueAtTime(b.gain.value, n); b.gain.linearRampToValueAtTime(0, n + s); } catch (e) { }
-    setTimeout(() => { try { b.disconnect(); } catch (e) { } }, s * 1000 + 400);
+    for (const g of [b.gain, b.verb.gain]) try { g.cancelScheduledValues(n); g.setValueAtTime(g.value, n); g.linearRampToValueAtTime(0, n + s); } catch (e) { }
+    setTimeout(() => { try { b.disconnect(); b.verb.disconnect(); } catch (e) { } }, s * 1000 + 400);
   },
   burst() {
     const tk = this.tk, kq = this.kq;
