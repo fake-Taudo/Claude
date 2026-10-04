@@ -136,6 +136,7 @@ input,select{font:inherit;color:inherit}
 .boost b{color:var(--bc,#fff)}
 .boost .t{margin-left:auto;font-family:var(--mono);color:var(--muted)}
 .potion-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.potion-row.compact{gap:6px}.potion-row.compact .potion-chip{padding:3px 9px 3px 4px;gap:5px;font-size:11.5px}.potion-row.compact .potion-chip canvas{width:20px;height:20px}
 .potion-chip{display:flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;border-radius:999px;background:rgba(0,0,0,.25);border:1px solid var(--line);font-size:12px;transition:.2s}
 .potion-chip:hover{border-color:var(--pc,#7c8cff);box-shadow:0 0 12px var(--pc,#7c8cff)}
 .potion-chip canvas{width:22px;height:22px}
@@ -241,6 +242,58 @@ input,select{font:inherit;color:inherit}
 .pcard .own{font-size:12px;color:var(--muted)}
 .pcard .own b{color:var(--pc)}
 .info-box{padding:12px 14px;border-radius:12px;background:rgba(124,140,255,.08);border:1px solid rgba(124,140,255,.22);font-size:13px;color:#c6ccff;line-height:1.5;margin-bottom:14px}
+/* Braukessel */
+.side-links .brew-btn{position:relative;background:linear-gradient(135deg,rgba(52,211,153,.16),rgba(124,140,255,.12));border-color:rgba(52,211,153,.42)}
+.side-links .brew-btn.ready{border-color:#34d399;box-shadow:0 0 18px rgba(52,211,153,.32)}
+.brew-btn .badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#34d399;color:#04140c;font-size:12px;font-weight:900;display:grid;place-items:center}
+.brew-btn .badge[hidden]{display:none}
+.brew-top{display:flex;gap:16px;align-items:stretch;margin-bottom:14px}
+.brew-top .kessel{width:160px;min-height:130px;flex:none;border-radius:14px;background:radial-gradient(circle at 50% 75%,rgba(249,115,22,.12),rgba(0,0,0,.28) 70%);border:1px solid var(--line)}
+.brew-inv{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.brew-inv .info-box{margin:0}
+.brew-stock{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.dup-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dup-lbl{font-size:12px;color:var(--muted);margin-right:2px}
+.dup-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 8px;border-radius:999px;background:rgba(0,0,0,.25);border:1px solid var(--line);font-size:12px;color:var(--muted);white-space:nowrap}
+.dup-chip i{width:9px;height:9px;border-radius:50%;background:var(--tc);box-shadow:0 0 8px var(--tc)}
+.dup-chip b{color:#fff;font-weight:800}
+.dup-chip.zero{opacity:.42}
+.recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.rcard{display:flex;flex-direction:column;gap:9px;padding:14px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line);transition:border-color .2s,box-shadow .2s}
+.rcard.can{border-color:var(--pcb);box-shadow:0 0 22px var(--pcg)}
+.rcard.hl{animation:rchl 1.3s ease}
+@keyframes rchl{25%,55%{box-shadow:0 0 0 2px var(--pc),0 0 30px var(--pc)}}
+.rcard.brewed{animation:rcbrew .8s ease}
+@keyframes rcbrew{20%{transform:scale(1.025);box-shadow:0 0 44px var(--pc)}}
+.rc-h{display:flex;align-items:center;gap:11px}
+.rc-ic canvas{width:46px;height:46px;display:block}
+.rc-h h4{font-size:15px;line-height:1.2}
+.rc-h h4 small{font-size:12px;color:var(--muted)}
+.rc-sub{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+.rc-sub b{color:var(--pc)}
+.rc-sub .only{color:#6ee7b7}
+.rc-rank{padding:1px 8px;border-radius:999px;border:1px solid var(--pc);color:var(--pc);font-size:10.5px;font-weight:800;letter-spacing:.1em}
+.rc-fx{display:flex;gap:6px;flex-wrap:wrap}
+.rc-fx span{padding:3px 9px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:12px;font-weight:700;color:#e8ecff}
+.rc-ing{display:flex;flex-direction:column;gap:5px}
+.ing{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid transparent;font-size:12.5px}
+.ing .ic{width:26px;height:26px;flex:none;display:grid;place-items:center}
+.ing .ic img,.ing .ic canvas{width:24px;height:24px;border-radius:6px;display:block}
+.ing .ic.dd{border-radius:50%;background:radial-gradient(circle,var(--tc),transparent 70%);opacity:.7}
+.ing .ic.dust{color:#9fe8ff;font-size:16px}
+.ing .nm{flex:1;min-width:0;color:#d6dbf5}
+.ing .nm small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+.ing .q{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.ing .q b{font-size:13.5px}
+.ing.ok .q b{color:#4ade80}
+.ing.miss{border-color:rgba(244,63,94,.32);background:rgba(244,63,94,.06)}
+.ing.miss .q b{color:#fb7185}
+.ing.go{cursor:pointer}
+.ing.go:hover{border-color:var(--line2)}
+.rc-use{font-size:11.5px;color:var(--muted);line-height:1.45;min-height:1em}
+.rc-btns{display:flex;gap:8px;margin-top:auto}
+.rc-btns .btn{flex:1;justify-content:center}
+@media (max-width:620px){.brew-top{flex-direction:column}.brew-top .kessel{width:100%;min-height:0;height:110px}.recipe-grid{grid-template-columns:1fr}}
 
 /* Chancen */
 .odds{width:100%;border-collapse:collapse;font-size:13px}
@@ -285,13 +338,26 @@ input,select{font:inherit;color:inherit}
 .reveal-new{font-size:12px;font-weight:900;letter-spacing:.24em;padding:4px 12px;border-radius:999px;background:linear-gradient(90deg,#f472b6,#7c8cff);color:#fff;box-shadow:0 0 18px rgba(244,114,182,.6)}
 .reveal-dup{font-size:13px;color:#9fe8ff}
 .reveal-desc{max-width:520px;color:#c3cae6;font-size:14px;font-style:italic;line-height:1.5}
-.reveal-actions{display:flex;gap:10px;margin-top:8px}
+.reveal-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:8px}
+.reveal-card{max-height:calc(100% - 12px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.reveal-card::-webkit-scrollbar{display:none}
+@media (max-height:700px){.reveal-prev{width:170px;height:170px}.reveal-name{font-size:36px}.reveal-card{gap:7px;padding:16px 22px 14px}}
+@media (max-height:520px){.reveal-prev{width:104px;height:104px}.reveal-name{font-size:28px}.reveal-tier{font-size:12px}.reveal-desc{display:none}.reveal-card{gap:5px;padding:8px 18px}.reveal-actions{margin-top:4px}.reveal-actions .btn{padding:8px 14px}}
 .rainbow-text{background:linear-gradient(90deg,#ff6b6b,#ffd93d,#6bff95,#4dd8ff,#a66bff,#ff6bd6,#ff6b6b);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:rainbow 3s linear infinite}
 @keyframes rainbow{to{background-position:300% 0}}
 .cosmic-text{background:linear-gradient(90deg,#f0abfc,#818cf8,#22d3ee,#f0abfc);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:rainbow 4s linear infinite}
 .flash{position:fixed;inset:0;z-index:58;pointer-events:none;animation:flash .9s ease-out forwards}
 @keyframes flash{0%{opacity:0}8%{opacity:1}100%{opacity:0}}
 .charge-overlay{position:fixed;inset:0;z-index:54;background:radial-gradient(circle,rgba(0,0,0,.2),rgba(0,0,0,.92) 70%);animation:fadein .4s}
+/* Cutscene ab Göttlich */
+#csc{position:fixed;inset:0;width:100%;height:100%;z-index:70;display:none;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
+.cs-skip{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:71;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:rgba(10,14,30,.5);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:13px;font-weight:700;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer;visibility:hidden;opacity:0;transition:opacity .3s,visibility 0s .3s}
+.cs-skip.on{visibility:visible;opacity:.82;transition:opacity .4s .5s}
+.cs-skip:hover{opacity:1;border-color:#fff}
+.cs-skip small{font-weight:500;color:rgba(255,255,255,.6);font-size:11px}
+@media (pointer:coarse){.cs-skip{padding:12px 18px;font-size:14px}}
+.reveal.after-cs{background:radial-gradient(circle at 50% 36%,var(--rv,rgba(124,140,255,.25)),rgba(4,6,14,0) 62%),rgba(4,6,14,.8);animation:none}
+.reveal.lock .reveal-actions{pointer-events:none}
 
 /* ---------- Arena ---------- */
 #arena{background:#05070f}
@@ -439,6 +505,7 @@ input,select{font:inherit;color:inherit}
               <div class="side-links">
                 <button class="btn" id="collBtn"><span data-icon="grid"></span>Sammlung</button>
                 <button class="btn" id="shopBtn"><span data-icon="flask"></span>Alchemie</button>
+                <button class="btn wide brew-btn" id="craftBtn" title="Tränke aus Duplikaten brauen"><span data-icon="cauldron"></span>Braukessel · Tränke brauen<b class="badge" id="craftBadge" hidden></b></button>
                 <button class="btn wide" id="oddsBtn"><span data-icon="dice"></span>Wahrscheinlichkeiten</button>
                 <button class="btn wide" id="helpBtn"><span data-icon="info"></span>Steuerung &amp; Regeln</button>
               </div>
@@ -473,6 +540,8 @@ input,select{font:inherit;color:inherit}
   <div id="modalRoot"></div>
   <div id="revealRoot"></div>
   <canvas id="fxc"></canvas>
+  <canvas id="csc" aria-label="Cutscene – tippen zum Überspringen"></canvas>
+  <button class="cs-skip" id="csSkip" type="button">Überspringen ›</button>
   <div id="toasts"></div>
 </div>
 
@@ -1085,7 +1154,7 @@ const SAVE_KEY = 'auraRngArena.v1';
 function defaultSave() {
   return { name: 'Spieler' + randi(100, 999), dust: 60, rolls: 0, owned: {}, equipped: null,
     potions: { luck1: 1, klee: 2 }, boosts: [], queue: [], bonusCharges: 0,
-    sound: true, quick: false, stats: { wins: 0, matches: 0, kills: 0, best: -1 }, hist: [], newIds: {} };
+    sound: true, quick: false, stats: { wins: 0, matches: 0, kills: 0, best: -1, brewed: 0 }, hist: [], newIds: {} };
 }
 function normalizeSave(d) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
@@ -1164,13 +1233,21 @@ const ownedCount = () => Object.keys(S.owned).filter(k => AURA_BY_ID[k]).length;
    GLÜCKS-SYSTEM: Tränke & Boosts (eigener Beschaffungsweg: Sternenstaub)
    ===================================================================== */
 const POTIONS = [
-  { id: 'klee', n: 'Vierblättriges Kleeblatt', d: 'Einmalig: Der nächste Roll hat Glück ×3.', price: 40, col: '#4ade80', once: 3, ic: 'clover' },
-  { id: 'luck1', n: 'Glückstrank', d: '+100 % Glück für 3 Minuten. Mehrere Tränke verlängern die Dauer.', price: 60, col: '#22c55e', add: 1, dur: 180, ic: 'potion' },
-  { id: 'elixier', n: 'Sternenelixier', d: '+50 % Glück für 10 Minuten.', price: 110, col: '#38bdf8', add: 0.5, dur: 600, ic: 'potion' },
-  { id: 'fokus', n: 'Fokus-Kristall', d: 'Die nächsten 5 Rolls sind Bonus-Rolls (Glück ×2).', price: 150, col: '#fbbf24', bonus: 5, ic: 'gem' },
-  { id: 'luck2', n: 'Großer Glückstrank', d: '+250 % Glück für 2 Minuten.', price: 240, col: '#a855f7', add: 2.5, dur: 120, ic: 'potion' },
-  { id: 'himmel', n: 'Himmelsgabe', d: 'Einmalig: Der nächste Roll hat Glück ×10.', price: 320, col: '#67e8f9', once: 10, ic: 'star' },
-  { id: 'goettlich', n: 'Göttlicher Trank', d: '+900 % Glück für 60 Sekunden.', price: 1200, col: '#f0abfc', add: 9, dur: 60, ic: 'potion' },
+  { id: 'klee', sn: 'Klee', n: 'Vierblättriges Kleeblatt', d: 'Einmalig: Der nächste Roll hat Glück ×3.', price: 40, col: '#4ade80', once: 3, ic: 'clover' },
+  { id: 'luck1', sn: 'Glück', n: 'Glückstrank', d: '+100 % Glück für 3 Minuten. Mehrere Tränke verlängern die Dauer.', price: 60, col: '#22c55e', add: 1, dur: 180, ic: 'potion' },
+  { id: 'elixier', sn: 'Elixier', n: 'Sternenelixier', d: '+50 % Glück für 10 Minuten.', price: 110, col: '#38bdf8', add: 0.5, dur: 600, ic: 'potion' },
+  { id: 'fokus', sn: 'Fokus', n: 'Fokus-Kristall', d: 'Die nächsten 5 Rolls sind Bonus-Rolls (Glück ×2).', price: 150, col: '#fbbf24', bonus: 5, ic: 'gem' },
+  { id: 'luck2', sn: 'Gr. Glück', n: 'Großer Glückstrank', d: '+250 % Glück für 2 Minuten.', price: 240, col: '#a855f7', add: 2.5, dur: 120, ic: 'potion' },
+  { id: 'himmel', sn: 'Himmel', n: 'Himmelsgabe', d: 'Einmalig: Der nächste Roll hat Glück ×10.', price: 320, col: '#67e8f9', once: 10, ic: 'star' },
+  { id: 'goettlich', sn: 'Göttlich', n: 'Göttlicher Trank', d: '+900 % Glück für 60 Sekunden.', price: 1200, col: '#f0abfc', add: 9, dur: 60, ic: 'potion' },
+  // nur im Braukessel herstellbar (kein Preis) – je höher der Rang, desto stärker und länger
+  { id: 'luck3', sn: 'Verst. Glück', n: 'Verstärkter Glückstrank', d: '+200 % Glück für 5 Minuten.', col: '#34d399', add: 2, dur: 300, ic: 'flask2', rk: 2 },
+  { id: 'prisma', sn: 'Prisma', n: 'Fokus-Prisma', d: 'Die nächsten 12 Rolls sind Bonus-Rolls (Glück ×2).', col: '#fb923c', bonus: 12, ic: 'gem', rk: 2 },
+  { id: 'komet', sn: 'Komet', n: 'Kometenelixier', d: '+400 % Glück für 6 Minuten.', col: '#60a5fa', add: 4, dur: 360, ic: 'flask2', rk: 3 },
+  { id: 'seele', sn: 'Seele', n: 'Seelenfunke', d: 'Einmalig: Der nächste Roll hat Glück ×25.', col: '#f472b6', once: 25, ic: 'orb', rk: 3 },
+  { id: 'mythos', sn: 'Mythos', n: 'Mythenbräu', d: '+800 % Glück für 7 Minuten.', col: '#f43f5e', add: 8, dur: 420, ic: 'flask2', rk: 4 },
+  { id: 'nektar', sn: 'Nektar', n: 'Götternektar', d: '+1.500 % Glück für 8 Minuten.', col: '#fcd34d', add: 15, dur: 480, ic: 'flask2', rk: 5 },
+  { id: 'urknall', sn: 'Urknall', n: 'Urknall-Essenz', d: 'Einmalig: Der nächste Roll hat Glück ×100.', col: '#c4b5fd', once: 100, ic: 'nova', rk: 6 },
 ];
 const POT = Object.fromEntries(POTIONS.map(p => [p.id, p]));
 S.boosts = S.boosts.filter(b => POT[b.id] && b.rem > 0);
@@ -1187,7 +1264,8 @@ function usePotion(id) {
   save(); AU.play('potion'); toast(`${p.n} aktiviert!`, 'good'); return true;
 }
 function buyPotion(id) {
-  const p = POT[id]; if (S.dust < p.price) { toast('Nicht genug Sternenstaub.', 'bad'); AU.play('error'); return false; }
+  const p = POT[id]; if (!p || !p.price) return false;
+  if (S.dust < p.price) { toast('Nicht genug Sternenstaub.', 'bad'); AU.play('error'); return false; }
   S.dust -= p.price; S.potions[id] = (S.potions[id] || 0) + 1; save(); AU.play('buy'); return true;
 }
 function tickBoosts(dt) {
@@ -1237,10 +1315,11 @@ const AU = {
     if (o.det) os.detune.value = o.det;
     const v = (o.vol || 0.2) * (o.vm || 1);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + (o.att || 0.006));
+    if (o.hold) g.gain.setValueAtTime(v, t + Math.max(o.att || 0.006, dur * o.hold));
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     let node = os;
     if (o.lp) { const fl = c.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = o.lp; os.connect(fl); node = fl; }
-    node.connect(g); g.connect(this.master); if (o.verb) g.connect(this.delay);
+    node.connect(g); g.connect(o.out || this.master); if (o.verb) g.connect(this.delay);
     os.start(t); os.stop(t + dur + 0.05);
   },
   noise(dur, o = {}) {
@@ -1250,9 +1329,10 @@ const AU = {
     if (o.slide) fl.frequency.exponentialRampToValueAtTime(Math.max(40, (o.f || 1200) * o.slide), t + dur);
     const g = c.createGain(); const v = (o.vol || 0.2) * (o.vm || 1);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + (o.att || 0.005)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(fl); fl.connect(g); g.connect(this.master); if (o.verb) g.connect(this.delay);
+    s.connect(fl); fl.connect(g); g.connect(o.out || this.master); if (o.verb) g.connect(this.delay);
     s.start(t, Math.random()); s.stop(t + dur + 0.05);
   },
+  bus() { const g = this.ctx.createGain(); g.gain.value = 1; g.connect(this.master); return g; },
   chord(fs, dur, o = {}) { fs.forEach((f, i) => this.tone(f, dur, Object.assign({}, o, { delay: (o.delay || 0) + i * (o.arp || 0) }))); },
   play(n, vm = 1, a = 0) {
     if (!this.on) return;
@@ -1267,6 +1347,7 @@ const AU = {
       case 'charge': this.noise(a, { ...o, f: 200, slide: 14, vol: .16, att: a * .9 }); this.tone(80, a, { ...o, type: 'sawtooth', slide: 4, vol: .08, att: a * .8, lp: 900 }); break;
       case 'potion': this.chord([523, 784, 1047], .35, { ...o, type: 'triangle', vol: .08, arp: .05, verb: 1 }); this.noise(.25, { ...o, f: 3000, vol: .05 }); break;
       case 'buy': this.chord([988, 1319], .18, { ...o, type: 'square', vol: .05, arp: .06 }); break;
+      case 'brew': for (let i = 0; i < 7; i++) this.tone(260 + Math.random() * 420, .09, { ...o, type: 'sine', slide: 1.9, vol: .06, delay: i * .055 }); this.chord([523, 659, 784, 1047, 1319].slice(0, 2 + Math.min(3, a)), .45, { ...o, type: 'triangle', vol: .07, arp: .06, delay: .4, verb: 1 }); this.noise(.5, { ...o, f: 2500, slide: 2, vol: .04, delay: .35 }); break;
       case 'error': this.tone(180, .18, { ...o, type: 'square', vol: .06 }); break;
       case 'equip': this.chord([440, 660, 880], .25, { ...o, type: 'triangle', vol: .08, arp: .04 }); break;
       case 'shoot': this.tone(700 + a * 500, .08, { ...o, type: 'triangle', slide: .5, vol: .06 }); break;
@@ -1319,6 +1400,7 @@ const SVG = {
   users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.6 0 4.4 1.6 5 4.4"/></svg>',
   bot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><circle cx="9" cy="13" r="1.4"/><circle cx="15" cy="13" r="1.4"/><path d="M12 3v4M2 13h2M20 13h2"/></svg>',
   grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>',
+  cauldron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18M5 10c0 5 2.5 9 7 9s7-4 7-9"/><path d="M7 21l1-2.3M17 21l-1-2.3"/><circle cx="9" cy="5" r="1.4"/><circle cx="14" cy="3.5" r="1"/><circle cx="13.5" cy="7" r="1.2"/></svg>',
   flask: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.2 21.5h11.6a2 2 0 0 0 1.7-3L14 9V3"/><path d="M7 15h10"/></svg>',
   dice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>',
   info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>',
@@ -1383,11 +1465,23 @@ function drawPotionIcon(x, p, s) {
     x.fillStyle = p.col; path(x, [-.6, -.3, -.3, -.7, .3, -.7, .6, -.3, 0, .8]); x.fill(); x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = .06; path(x, [-.6, -.3, .6, -.3], false); x.stroke(); path(x, [-.3, -.7, 0, -.3, .3, -.7], false); x.stroke(); path(x, [0, -.3, 0, .8], false); x.stroke();
   } else if (p.ic === 'star') {
     x.fillStyle = p.col; starP(x, 8, .9, .35); x.fill(); x.fillStyle = '#fff'; starP(x, 4, .35, .12); x.fill();
+  } else if (p.ic === 'orb') {
+    const g = x.createRadialGradient(-.22, -.22, .04, 0, 0, .8); g.addColorStop(0, '#ffffff'); g.addColorStop(.35, p.col); g.addColorStop(1, rgba(p.col, .12));
+    x.fillStyle = g; circ(x, 0, 0, .76); x.fill();
+    x.shadowBlur = 0; x.strokeStyle = 'rgba(255,255,255,.65)'; x.lineWidth = .06; x.beginPath(); x.arc(0, 0, .52, -2.5, -.7); x.stroke();
+    x.fillStyle = '#fff'; starP(x, 4, .34, .07); x.fill();
+  } else if (p.ic === 'nova') {
+    x.fillStyle = p.col; starP(x, 12, .96, .42); x.fill();
+    x.fillStyle = '#fff'; starP(x, 4, .62, .09, 0); x.fill(); starP(x, 4, .36, .07, Math.PI / 4); x.fill(); circ(x, 0, 0, .15); x.fill();
   } else {
     x.fillStyle = 'rgba(255,255,255,.12)'; x.strokeStyle = 'rgba(255,255,255,.75)'; x.lineWidth = .08;
     x.beginPath(); x.moveTo(-.18, -.8); x.lineTo(-.18, -.35); x.arc(0, .25, .62, -Math.PI / 2 - .3, Math.PI * 1.5 + .3 - TAU, false); x.lineTo(.18, -.8); x.closePath(); x.fill(); x.stroke();
     x.save(); x.beginPath(); x.arc(0, .25, .56, 0, TAU); x.clip(); x.fillStyle = p.col; x.fillRect(-1, .05, 2, 1); x.fillStyle = 'rgba(255,255,255,.35)'; circ(x, -.2, .35, .1); x.fill(); x.restore();
     x.fillStyle = '#c9a26b'; x.fillRect(-.24, -.95, .48, .18);
+    if (p.ic === 'flask2') { // gebraute Tränke: Goldring und Funkeln je nach Rang
+      x.shadowBlur = 0; x.fillStyle = '#fcd34d'; x.fillRect(-.27, -.52, .54, .1);
+      x.fillStyle = '#fff'; [[.6, -.58], [-.66, -.2], [.7, .12], [-.58, .62]].slice(0, Math.max(1, (p.rk || 2) - 1)).forEach(([sx, sy]) => { x.save(); x.translate(sx, sy); starP(x, 4, .17, .045); x.fill(); x.restore(); });
+    }
   }
   x.restore();
 }
@@ -4654,6 +4748,7 @@ function startClientMatch(m) {
   enterArena();
 }
 function enterArena() {
+  if (CS.on) CS.end(); if (REVEAL.open && REVEAL.el) closeReveal(true); RFX.parts = []; RFX.rings = [];
   showScreen('arena'); $('#resultsBox').innerHTML = ''; $('#banner').innerHTML = '';
   TOUCH.reset(); TOUCH.icons = ''; TOUCH.cache = {};
   if (MATCH.touch) $('#touchUi').classList.remove('hidden');
@@ -4761,7 +4856,7 @@ function openModal(title, body, cls = '') {
 }
 function closeModal(back) { const i = MODALS.indexOf(back); if (i >= 0) MODALS.splice(i, 1); if (back.onClose) back.onClose(); back.remove(); }
 function closeAllModals() { while (MODALS.length) closeModal(MODALS[MODALS.length - 1]); }
-function onEscape() { if (REVEAL.open) { closeReveal(); return; } if (MODALS.length) closeModal(MODALS[MODALS.length - 1]); }
+function onEscape() { if (CS.on) { CS.skip(); return; } if (REVEAL.open) { closeReveal(); return; } if (MODALS.length) closeModal(MODALS[MODALS.length - 1]); }
 function tierBadge(t) { const T = TIERS[t], cls = t === 8 ? 'rainbow-text' : t === 7 ? 'cosmic-text' : ''; return `<span class="tier-badge" style="color:${T.c}"><span class="${cls}">${T.n}</span></span>`; }
 function nameAttr(a) { const c = luminance(a.c1) < 0.55 ? mix(a.c1, '#ffffff', 0.45) : a.c1; return a.t >= 7 ? `class="${a.t === 8 ? 'rainbow-text' : 'cosmic-text'}"` : `style="color:${c};text-shadow:0 0 18px ${rgba(a.c1, .6)}"`; }
 function copyText(s) {
@@ -4803,15 +4898,20 @@ function renderHistory() {
 }
 function renderPotions() {
   const row = $('#potionRow'); row.innerHTML = '';
+  const compact = POTIONS.filter(p => S.potions[p.id] > 0).length > 5; // viele Sorten: Kurznamen, damit die Leiste kompakt bleibt
+  row.classList.toggle('compact', compact);
   for (const p of POTIONS) {
     const n = S.potions[p.id] || 0; if (!n) continue;
     const b = h('button', { class: 'potion-chip', style: `--pc:${p.col}`, title: p.n + ' – ' + p.d + ' (Klicken zum Benutzen)' });
-    b.appendChild(potionCanvas(p, 22)); b.insertAdjacentHTML('beforeend', `<span>${esc(p.n)}</span><span class="cnt">×${n}</span>`);
+    b.appendChild(potionCanvas(p, 22)); b.insertAdjacentHTML('beforeend', `<span>${esc(compact ? p.sn : p.n)}</span><span class="cnt">×${n}</span>`);
     b.onclick = () => { if (usePotion(p.id)) { renderPotions(); updateLuckUI(); } };
     row.appendChild(b);
   }
-  if (!row.children.length) row.innerHTML = '<span class="hint">Keine Tränke im Inventar – hol dir welche im <a href="#" id="shopLink" style="color:#9fe8ff">Alchemie-Shop</a>.</span>';
+  if (!row.children.length) row.innerHTML = '<span class="hint">Keine Tränke im Inventar – hol dir welche im <a href="#" id="shopLink" style="color:#9fe8ff">Alchemie-Shop</a> oder braue sie im <a href="#" id="craftLink" style="color:#6ee7b7">Braukessel</a>.</span>';
   const sl = $('#shopLink'); if (sl) sl.onclick = e => { e.preventDefault(); openShop(); };
+  const cl = $('#craftLink'); if (cl) cl.onclick = e => { e.preventDefault(); openCraft(); };
+  const nb = craftableCount(), bd = $('#craftBadge'), cb = $('#craftBtn');
+  if (bd) { bd.hidden = !nb; bd.textContent = nb; cb.classList.toggle('ready', nb > 0); cb.title = nb ? `${nb} ${nb > 1 ? 'Rezepte sind' : 'Rezept ist'} jetzt braubar` : 'Tränke aus Duplikaten brauen'; }
 }
 let lastBoostKey = '';
 function updateLuckUI() {
@@ -4929,7 +5029,9 @@ function openDetail(i, onChange) {
   const drawAct = () => {
     const eqNow = S.equipped === a.id;
     act.innerHTML = owned ? (eqNow ? '<button class="btn" disabled>✓ Ausgerüstet &amp; kampfbereit</button>' : '<button class="btn primary" id="dEq">Als kampfbereit ausrüsten</button>') : `<span class="hint">Rolle diese Aura (Chance 1 zu ${fmt(a.oneIn)}), um sie auszurüsten.</span>`;
+    if (owned && a.t >= 6) act.insertAdjacentHTML('beforeend', '<button class="btn" id="dCs">▶ Cutscene ansehen</button>');
     const b = act.querySelector('#dEq'); if (b) b.onclick = () => { equipAura(a.id); drawAct(); onChange && onChange(); };
+    const cs = act.querySelector('#dCs'); if (cs) cs.onclick = () => CS.start(a, null);
   };
   drawAct();
 }
@@ -4940,23 +5042,189 @@ function equipAura(id) {
 }
 
 /* ---------- Alchemie-Shop ---------- */
-function openShop() {
+function openShop(onClose) {
   const body = h('div');
   const draw = () => {
-    body.innerHTML = `<div class="info-box"><b>So funktioniert Glück:</b> Jeder Roll prüft von der seltensten Stufe abwärts, ob sie getroffen wird – Glück multipliziert diese Chancen (Glück ×2: eine 1-zu-1.000-Aura wird zu 1 zu 500). Befristete Tränke addieren sich und laufen in Echtzeit ab, einmalige Items gelten für den nächsten Roll, jeder 10. Roll ist ein Bonus-Roll (×2).<br><b>Sternenstaub</b> bekommst du bei jedem Roll (je seltener, desto mehr) sowie für Siege, K.O.s und gute Platzierungen im Training und Multiplayer.</div>
+    body.innerHTML = `<div class="info-box"><b>So funktioniert Glück:</b> Jeder Roll prüft von der seltensten Stufe abwärts, ob sie getroffen wird – Glück multipliziert diese Chancen (Glück ×2: eine 1-zu-1.000-Aura wird zu 1 zu 500). Befristete Tränke addieren sich und laufen in Echtzeit ab, einmalige Items gelten für den nächsten Roll, jeder 10. Roll ist ein Bonus-Roll (×2).<br><b>Sternenstaub</b> bekommst du bei jedem Roll (je seltener, desto mehr) sowie für Siege, K.O.s und gute Platzierungen im Training und Multiplayer.<br><b>Stärkere Tränke (Rang II–VI)</b> gibt es nur im <a href="#" id="shopCraft" style="color:#6ee7b7">Braukessel</a> – dort verschmilzt du Aura-Duplikate, Sternenstaub und einfachere Tränke.</div>
       <div class="row wrap" style="margin-bottom:12px;justify-content:space-between"><div class="pill"><span class="dust">◆</span><b>${fmt(S.dust)}</b> Sternenstaub</div><div class="pill">Glück für den nächsten Roll <b>×${fmtL(nextLuck())}</b></div></div><div class="shop-grid"></div>`;
     const g = body.querySelector('.shop-grid');
-    for (const p of POTIONS) {
+    for (const p of [...POTIONS.filter(p => p.price), ...POTIONS.filter(p => !p.price)]) {
       const c = h('div', { class: 'pcard', style: `--pc:${p.col}` });
-      c.innerHTML = `<div class="ph"></div><p>${esc(p.d)}</p><div class="own">Im Besitz: <b>${S.potions[p.id] || 0}</b></div><div class="row"><button class="btn small gold" data-b>◆ ${fmt(p.price)} kaufen</button><button class="btn small" data-u ${S.potions[p.id] ? '' : 'disabled'}>Benutzen</button></div>`;
+      c.innerHTML = `<div class="ph"></div><p>${esc(p.d)}</p><div class="own">Im Besitz: <b>${S.potions[p.id] || 0}</b>${p.price ? '' : ` · <span style="color:#6ee7b7">Rang ${ROMAN[p.rk]} · nur durch Brauen</span>`}</div><div class="row">${p.price ? `<button class="btn small gold" data-b>◆ ${fmt(p.price)} kaufen</button>` : '<button class="btn small" data-k>Im Braukessel brauen</button>'}<button class="btn small" data-u ${S.potions[p.id] ? '' : 'disabled'}>Benutzen</button></div>`;
       const ph = c.querySelector('.ph'); ph.appendChild(potionCanvas(p, 44)); ph.insertAdjacentHTML('beforeend', `<h4 style="color:${p.col}">${esc(p.n)}</h4>`);
-      c.querySelector('[data-b]').onclick = () => { if (buyPotion(p.id)) { draw(); renderLobby(); } };
+      if (p.price) c.querySelector('[data-b]').onclick = () => { if (buyPotion(p.id)) { draw(); renderLobby(); } };
+      else c.querySelector('[data-k]').onclick = () => openCraft(p.id, draw);
       c.querySelector('[data-u]').onclick = () => { if (usePotion(p.id)) { draw(); renderLobby(); } };
       g.appendChild(c);
     }
+    body.querySelector('#shopCraft').onclick = e => { e.preventDefault(); openCraft(null, draw); };
   };
-  draw(); openModal('Alchemie-Shop · Glückstränke', body, 'mid');
+  draw(); const back = openModal('Alchemie-Shop · Glückstränke', body, 'mid');
+  if (typeof onClose === 'function') back.onClose = onClose; // (als Klick-Handler kommt hier ein Event an)
 }
+
+/* ---------- Braukessel: Tränke aus Duplikaten brauen ----------
+   Zutaten je Rezept: { dup: Stufe, n } = überzählige Aura-Kopien genau dieser Stufe
+   (von jeder Aura bleibt immer mindestens ein Exemplar), { pot: id, n } = vorhandene
+   Tränke als Vorstufe, { dust: n } = Sternenstaub. Höherer Rang = mehr Glück, längere Wirkung. */
+const RECIPES = [
+  { id: 'r_klee', out: 'klee', n: 2, rk: 1, ing: [{ dup: 0, n: 4 }, { dust: 10 }] },
+  { id: 'r_luck1', out: 'luck1', n: 1, rk: 1, ing: [{ pot: 'klee', n: 1 }, { dup: 0, n: 4 }, { dust: 20 }] },
+  { id: 'r_himmel', out: 'himmel', n: 1, rk: 2, ing: [{ pot: 'klee', n: 3 }, { dup: 2, n: 2 }, { dust: 60 }] },
+  { id: 'r_luck3', out: 'luck3', n: 1, rk: 2, ing: [{ pot: 'luck1', n: 2 }, { dup: 1, n: 3 }, { dust: 80 }] },
+  { id: 'r_prisma', out: 'prisma', n: 1, rk: 2, ing: [{ pot: 'fokus', n: 1 }, { dup: 2, n: 3 }, { dust: 120 }] },
+  { id: 'r_komet', out: 'komet', n: 1, rk: 3, ing: [{ pot: 'luck3', n: 1 }, { pot: 'elixier', n: 1 }, { dup: 3, n: 2 }, { dust: 350 }] },
+  { id: 'r_seele', out: 'seele', n: 1, rk: 3, ing: [{ pot: 'himmel', n: 1 }, { dup: 4, n: 2 }, { dust: 500 }] },
+  { id: 'r_mythos', out: 'mythos', n: 1, rk: 4, ing: [{ pot: 'komet', n: 2 }, { dup: 5, n: 1 }, { dust: 1200 }] },
+  { id: 'r_nektar', out: 'nektar', n: 1, rk: 5, ing: [{ pot: 'mythos', n: 1 }, { pot: 'goettlich', n: 1 }, { dup: 5, n: 2 }, { dust: 4000 }] },
+  { id: 'r_urknall', out: 'urknall', n: 1, rk: 6, ing: [{ pot: 'seele', n: 1 }, { pot: 'nektar', n: 1 }, { dup: 6, n: 1 }, { dust: 12000 }] },
+];
+const RECIPE_FOR = Object.fromEntries(RECIPES.map(r => [r.out, r]));
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI'];
+function dupStacks(t) { return TIER_AURAS[t].map(i => AURAS[i]).map(a => ({ a, n: Math.max(0, (S.owned[a.id] || 0) - 1) })).filter(o => o.n > 0); }
+function dupCount(t) { return dupStacks(t).reduce((s, o) => s + o.n, 0); }
+// Größte Stapel zuerst – so bleibt die Sammlung möglichst vielfältig
+function dupPick(t, n) {
+  const st = dupStacks(t), use = new Map();
+  for (let k = 0; k < n; k++) { let b = null; for (const o of st) if (o.n > 0 && (!b || o.n > b.n)) b = o; if (!b) return null; b.n--; use.set(b.a, (use.get(b.a) || 0) + 1); }
+  return [...use].map(([a, c]) => ({ a, n: c }));
+}
+const ingHave = g => g.dust !== undefined ? S.dust : g.pot ? (S.potions[g.pot] || 0) : dupCount(g.dup);
+const ingNeed = g => g.dust !== undefined ? g.dust : g.n;
+const craftMax = r => Math.min(...r.ing.map(g => Math.floor(ingHave(g) / ingNeed(g))));
+const craftableCount = () => RECIPES.filter(r => craftMax(r) > 0).length;
+function craft(r, times = 1) {
+  let done = 0;
+  for (; done < times && craftMax(r) > 0; done++) {
+    for (const g of r.ing) {
+      if (g.dust !== undefined) S.dust -= g.dust;
+      else if (g.pot) S.potions[g.pot] -= g.n;
+      else for (const u of dupPick(g.dup, g.n)) S.owned[u.a.id] -= u.n;
+    }
+    S.potions[r.out] = (S.potions[r.out] || 0) + r.n;
+  }
+  if (!done) { AU.play('error'); toast('Dafür fehlen noch Zutaten.', 'bad'); return 0; }
+  S.stats.brewed = (S.stats.brewed || 0) + done; save(); AU.play('brew', 1, r.rk);
+  toast(`${POT[r.out].n} gebraut${done * r.n > 1 ? ` (×${done * r.n})` : ''}!`, 'good');
+  return done;
+}
+function potFx(p) {
+  if (p.add) return [`Glück +${fmt(p.add * 100)} %`, `Dauer ${fmtTime(p.dur)} Min.`];
+  if (p.once) return [`Nächster Roll: Glück ×${p.once}`];
+  return [`${p.bonus} Bonus-Rolls`, 'je Glück ×2'];
+}
+// Kleiner animierter Braukessel im Kopf des Menüs
+function kesselAnim(cv) {
+  const st = { t: 0, col: '#34d399', k: 0, bub: [], sp: [], rise: null }, base = '#7c8cff';
+  let last = performance.now();
+  const loop = now => {
+    if (!cv.isConnected) return;
+    const dt = Math.min(.05, (now - last) / 1000); last = now; st.t += dt;
+    const d = Math.min(2, window.devicePixelRatio || 1), w = cv.clientWidth, hh = cv.clientHeight;
+    if (w && hh) {
+      if (cv.width !== Math.round(w * d) || cv.height !== Math.round(hh * d)) { cv.width = Math.round(w * d); cv.height = Math.round(hh * d); }
+      const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, hh);
+      const R = Math.min(w * .36, hh * .32), cx = w / 2, by = hh * .48;
+      st.k = Math.max(0, st.k - dt * .3);
+      x.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 5; i++) glow(x, i % 2 ? '#f97316' : '#facc15', cx + (i - 2) * R * .3 + Math.sin(st.t * 9 + i) * 2, by + R * 1.02, R * (.3 + .07 * Math.sin(st.t * 13 + i * 2)), .55);
+      glow(x, base, cx, by - R * .2, R * 1.6, .25 * (1 - st.k)); glow(x, st.col, cx, by - R * .2, R * 1.8, .45 * st.k);
+      x.globalCompositeOperation = 'source-over';
+      x.fillStyle = '#151a2e'; x.fillRect(cx - R * .62, by + R * .62, R * .14, R * .32); x.fillRect(cx + R * .48, by + R * .62, R * .14, R * .32);
+      x.beginPath(); x.moveTo(cx - R, by); x.bezierCurveTo(cx - R * 1.05, by + R * .95, cx + R * 1.05, by + R * .95, cx + R, by); x.closePath();
+      const bg = x.createLinearGradient(cx - R, 0, cx + R, 0); bg.addColorStop(0, '#0d1122'); bg.addColorStop(.35, '#2a3152'); bg.addColorStop(1, '#0b0e1c');
+      x.fillStyle = bg; x.fill(); x.strokeStyle = '#46507a'; x.lineWidth = 1.5; x.stroke();
+      x.beginPath(); x.ellipse(cx, by, R * .9, R * .2, 0, 0, TAU); x.fillStyle = base; x.globalAlpha = 1 - st.k; x.fill(); x.fillStyle = st.col; x.globalAlpha = st.k; x.fill(); x.globalAlpha = 1;
+      x.fillStyle = 'rgba(255,255,255,.18)'; x.beginPath(); x.ellipse(cx - R * .25, by - R * .05, R * .3, R * .06, 0, 0, TAU); x.fill();
+      x.beginPath(); x.ellipse(cx, by, R * 1.04, R * .26, 0, 0, TAU); x.lineWidth = R * .1; x.strokeStyle = '#3a4369'; x.stroke(); x.lineWidth = 1; x.strokeStyle = '#7883b5'; x.stroke();
+      if (Math.random() < dt * (5 + st.k * 20)) st.bub.push({ x: cx + rand(-.7, .7) * R, y: by + rand(-.08, .08) * R, r: 0, m: rand(2, 5 + st.k * 3), col: st.k > Math.random() ? st.col : base });
+      for (const b of st.bub) b.r += dt * 9;
+      st.bub = st.bub.filter(b => b.r < b.m);
+      for (const b of st.bub) { x.strokeStyle = rgba(b.col, .9 * (1 - b.r / b.m)); x.lineWidth = 1.4; circ(x, b.x, b.y - b.r * .6, b.r); x.stroke(); }
+      if (Math.random() < dt * (3 + st.k * 30)) st.sp.push({ x: cx + rand(-.6, .6) * R, y: by - R * .1, vy: -rand(14, 40 + st.k * 50), vx: rand(-8, 8), life: rand(.8, 1.6), col: st.k > Math.random() ? st.col : '#c6ccff' });
+      x.globalCompositeOperation = 'lighter';
+      for (const p of st.sp) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; glow(x, p.col, p.x, p.y, 5, clamp(p.life, 0, 1)); }
+      st.sp = st.sp.filter(p => p.life > 0 && p.y > -10);
+      if (st.rise) {
+        const r = st.rise; r.t += dt; const k = clamp(r.t / 1.4, 0, 1), y = by - R * .2 - easeOut(k) * R * .9, s = R * .7 * (1 + k * .2);
+        glow(x, r.p.col, cx, y, s * 1.4, 1 - k);
+        x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1 - k * k; x.drawImage(r.ic, cx - s / 2, y - s / 2, s, s); x.globalAlpha = 1;
+        if (k >= 1) st.rise = null;
+      }
+      x.globalCompositeOperation = 'source-over';
+    }
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+  return {
+    brew(p) {
+      st.col = p.col; st.k = 1; st.rise = { p, t: 0, ic: potionCanvas(p, 64) };
+      const w = cv.clientWidth, hh = cv.clientHeight, cx = w / 2, by = hh * .48;
+      for (let i = 0; i < 26; i++) { const an = -Math.PI / 2 + rand(-1, 1); st.sp.push({ x: cx, y: by - 6, vx: Math.cos(an) * rand(20, 90), vy: Math.sin(an) * rand(40, 120), life: rand(.6, 1.3), col: Math.random() < .7 ? p.col : '#ffffff' }); }
+    }
+  };
+}
+function openCraft(focus, onClose) {
+  const body = h('div', { class: 'brew' });
+  body.innerHTML = `<div class="brew-top"><canvas class="kessel"></canvas><div class="brew-inv">
+      <div class="info-box"><b>Braukessel:</b> Verschmelze überzählige Aura-Kopien (Duplikate), Sternenstaub und einfachere Tränke zu stärkeren Glückstränken. Je höher der Rang, desto mehr Glück und desto länger die Wirkung. Von jeder Aura bleibt immer mindestens ein Exemplar erhalten – verbraucht werden zuerst die Auren, von denen du die meisten Kopien besitzt.</div>
+      <div class="brew-stock"></div></div></div><div class="recipe-grid"></div>`;
+  const K = kesselAnim(body.querySelector('.kessel'));
+  const stock = body.querySelector('.brew-stock'), grid = body.querySelector('.recipe-grid');
+  const focusRecipe = id => { const el = grid.querySelector(`[data-r="${id}"]`); if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.remove('hl'); void el.offsetWidth; el.classList.add('hl'); };
+  const doCraft = (r, n) => {
+    if (!craft(r, n)) return;
+    K.brew(POT[r.out]); draw(); renderLobby();
+    const c = grid.querySelector(`[data-r="${r.id}"]`); if (c) c.classList.add('brewed');
+  };
+  const card = r => {
+    const p = POT[r.out], max = craftMax(r);
+    const c = h('div', { class: 'rcard' + (max ? ' can' : ''), style: `--pc:${p.col};--pcb:${rgba(p.col, .6)};--pcg:${rgba(p.col, .2)}` });
+    c.dataset.r = r.id;
+    c.innerHTML = `<div class="rc-h"><span class="rc-ic"></span><div><h4 style="color:${p.col}">${esc(p.n)}${r.n > 1 ? ` <small>×${r.n}</small>` : ''}</h4>
+        <div class="rc-sub"><span class="rc-rank">RANG ${ROMAN[r.rk]}</span><span>Im Besitz: <b>${S.potions[p.id] || 0}</b></span>${p.price ? '' : '<span class="only">nur durch Brauen</span>'}</div></div></div>
+      <div class="rc-fx">${potFx(p).map(s => `<span>${s}</span>`).join('')}</div>
+      <div class="rc-ing"></div><div class="rc-use"></div>
+      <div class="rc-btns"><button class="btn small primary" data-c ${max ? '' : 'disabled'}>${max ? 'Brauen' : 'Zutaten fehlen'}</button>${max > 1 ? `<button class="btn small" data-m>Alle brauen (${max}×)</button>` : ''}</div>`;
+    c.querySelector('.rc-ic').appendChild(potionCanvas(p, 46));
+    const ing = c.querySelector('.rc-ing'), use = [], miss = [];
+    for (const g of r.ing) {
+      const have = ingHave(g), need = ingNeed(g), ok = have >= need;
+      const row = h('div', { class: 'ing ' + (ok ? 'ok' : 'miss') }), ic = h('span', { class: 'ic' });
+      let name, sub = '';
+      if (g.dust !== undefined) { ic.className = 'ic dust'; ic.textContent = '◆'; name = 'Sternenstaub'; if (!ok) sub = 'Gibt es bei jedem Roll und für Siege'; }
+      else if (g.pot) {
+        const q = POT[g.pot], rr = RECIPE_FOR[g.pot]; ic.appendChild(potionCanvas(q, 24)); name = esc(q.n);
+        sub = rr && q.price ? 'Vorstufe · brauen oder im Shop kaufen' : rr ? `Vorstufe · hier brauen (Rang ${ROMAN[rr.rk]})` : 'Vorstufe · im Alchemie-Shop kaufen';
+        row.classList.add('go'); row.title = rr ? 'Zum Rezept springen' : 'Alchemie-Shop öffnen';
+        row.onclick = () => rr ? focusRecipe(rr.id) : openShop(draw);
+      } else {
+        const T = TIERS[g.dup], pk = dupPick(g.dup, Math.min(g.n, have) || 1);
+        if (pk && have) ic.innerHTML = `<img src="${auraIconURL(pk[0].a.i, 48)}" alt="">`; else { ic.className = 'ic dd'; ic.style.setProperty('--tc', T.c); }
+        name = `Duplikat · <span style="color:${T.c}">${T.n}</span>`; sub = 'überzählige Aura-Kopie dieser Stufe';
+        if (ok) use.push(...dupPick(g.dup, g.n).map(u => `<span style="color:${luminance(u.a.c1) < .45 ? mix(u.a.c1, '#ffffff', .4) : u.a.c1}">${esc(u.a.n)}</span> ×${u.n}`));
+        else miss.push(`noch ${need - have} ${T.n}-Duplikat${need - have > 1 ? 'e' : ''}`);
+      }
+      row.appendChild(ic); row.insertAdjacentHTML('beforeend', `<span class="nm">${name}${sub ? `<small>${sub}</small>` : ''}</span><span class="q"><b>${fmt(have)}</b> / ${fmt(need)}</span>`);
+      ing.appendChild(row);
+    }
+    c.querySelector('.rc-use').innerHTML = miss.length ? `Es fehlen ${miss.join(' und ')} – weiter rollen!` : use.length ? `Verbraucht: ${use.join(', ')}` : '';
+    c.querySelector('[data-c]').onclick = () => doCraft(r, 1);
+    const mb = c.querySelector('[data-m]'); if (mb) mb.onclick = () => doCraft(r, max);
+    return c;
+  };
+  const draw = () => {
+    stock.innerHTML = `<div class="pill"><span class="dust">◆</span><b>${fmt(S.dust)}</b> Sternenstaub</div>
+      <div class="dup-row"><span class="dup-lbl">Duplikate:</span>${TIERS.map((T, t) => { const n = dupCount(t); return `<span class="dup-chip${n ? '' : ' zero'}" style="--tc:${T.c}" title="Überzählige Kopien von ${T.n}-Auren"><i></i>${T.n}<b>${n}</b></span>`; }).join('')}</div>`;
+    grid.innerHTML = ''; for (const r of RECIPES) grid.appendChild(card(r));
+  };
+  draw();
+  const back = openModal('Braukessel · Tränke brauen', body);
+  back.onClose = () => { if (typeof onClose === 'function') onClose(); };
+  if (focus && RECIPE_FOR[focus]) setTimeout(() => focusRecipe(RECIPE_FOR[focus].id), 120);
+  return back;
+}
+
 
 /* ---------- Wahrscheinlichkeiten ---------- */
 function pct(p) { p *= 100; return p >= 1 ? fmt1(p) + ' %' : p >= 0.01 ? p.toLocaleString('de-DE', { maximumFractionDigits: 3 }) + ' %' : p.toLocaleString('de-DE', { maximumSignificantDigits: 2 }) + ' %'; }
@@ -4974,6 +5242,8 @@ function openHelp() {
     <div><b style="color:#fff">Karte</b><br>Jedes Match hat eine neue Karte (Ruinen, Kristallhöhle, Festung oder Leuchthain), die mit der Spielerzahl wächst. Hohe Mauern und Säulen blockieren Bewegung, Geschosse und Sicht (dahinter liegt ein Sichtschatten). Niedrige Barrikaden schützen vor Geschossen, man sieht aber darüber. Abgründe und Teiche erzwingen Umwege, lassen Geschosse aber durch. In Büschen bist du unsichtbar, bis du angreifst, getroffen wirst oder jemand ganz nah kommt. Die Kamera folgt dir; die Minikarte zeigt Grundriss und Sturmzone, Pfeile am Rand zeigen nahe Gegner außerhalb des Bildes.</div>
     <div><b style="color:#fff">Kampf</b><br>Jeder Move kostet Stamina (gelbe Leiste, regeneriert sich laufend) und hat eine Abklingzeit. Bei 0 HP scheidest du aus. Nach ~40 s schrumpft eine Sturmzone – wer draußen steht, verliert HP. Der letzte Überlebende gewinnt.</div>
     <div><b style="color:#fff">Auren</b><br>64 Auren in 9 Seltenheitsstufen – jede mit eigener Rolle, eigenen Werten und einem eigenständigen Moveset (Schadensart, Reichweite/Form, Zusatzeffekte und Taktik unterscheiden sich). Seltenere Auren haben komplexere Mechaniken wie Zeitreisen, Zwillinge, Seelentausch oder Zeitstopp.</div>
+    <div><b style="color:#fff">Braukessel</b><br>Im Braukessel (Lobby) verschmilzt du überzählige Aura-Kopien, Sternenstaub und einfachere Tränke zu stärkeren Glückstränken (Rang I–VI: mehr Glück, längere Wirkung). Jedes Rezept zeigt, welche Zutaten nötig sind und wie viele du davon besitzt; von jeder Aura bleibt immer ein Exemplar erhalten. Gebraute Tränke benutzt du wie gekaufte über die Trank-Leiste in der Lobby.</div>
+    <div><b style="color:#fff">Cutscenes</b><br>Ab der Stufe Göttlich startet beim Erhalt einer Aura eine Cutscene in ihrer Signaturfarbe – je seltener, desto heftiger. Tippen, Klicken, <span class="key">Leertaste</span>, <span class="key">Enter</span> oder <span class="key">Esc</span> überspringt sie, „Schnelle Animation“ verkürzt sie. In den Aura-Details kannst du sie erneut ansehen.</div>
     <div><b style="color:#fff">Multiplayer</b><br>Ein Spieler erstellt einen Raum und teilt den 6-stelligen Code. Andere öffnen dieselbe HTML-Datei und treten mit dem Code bei. Start ab 2 Spielern, bis zu 10 im Free-for-All. Die Verbindung läuft per WebRTC direkt zwischen den Browsern (Signaling über den öffentlichen PeerJS-Server).</div>
     <div><b style="color:#fff">Speicherstand</b><br>Dein Fortschritt (Auren, Sternenstaub, Tränke, Statistik) wird automatisch gespeichert – lokal im Browser und, wenn das Spiel als claude.ai-Artefakt läuft, zusätzlich dauerhaft in deinem privaten Speicher.<br>
       <span id="saveState" style="color:#8c96bb"></span>
@@ -5138,9 +5408,10 @@ const REVEAL = { open: false, el: null, prev: null };
 function showReveal(r) {
   const a = AURAS[r.ai], T = TIERS[a.t], t = a.t;
   REVEAL.open = true;
-  const charge = t >= 4 ? (S.quick ? .4 : .55 + (t - 4) * .42) : 0;
+  const cs = t >= 6; // ab Göttlich: eigene Cutscene, danach die Karte ohne zweiten Blitz
+  const charge = !cs && t >= 4 ? (S.quick ? .4 : .55 + (t - 4) * .42) : 0;
   const go = () => {
-    const el = REVEAL.el = h('div', { class: 'reveal' });
+    const el = REVEAL.el = h('div', { class: 'reveal' + (cs ? ' after-cs lock' : '') });
     el.style.setProperty('--rv', rgba(T.c, Math.min(.6, .26 + t * .04)));
     const rc = t >= 7 ? 'rgba(255,255,255,.07)' : rgba(T.c, .05 + t * .012);
     el.innerHTML = `${t >= 3 ? `<div class="rays" style="--rc:${rc};opacity:${Math.min(1, .3 + t * .09)}"></div>` : ''}<div class="reveal-card">
@@ -5151,20 +5422,22 @@ function showReveal(r) {
       ${r.isNew ? '<div class="reveal-new">NEU ENTDECKT!</div>' : `<div class="reveal-dup">Duplikat · ×${S.owned[a.id]} im Besitz</div>`}
       <div class="reveal-dup">+${fmt(r.dust)} ◆ Sternenstaub</div>
       <p class="reveal-desc">${esc(a.desc)}</p>
-      <div class="reveal-actions">${S.equipped === a.id ? '' : '<button class="btn" id="rvEq">Ausrüsten</button>'}<button class="btn" id="rvInfo">Moves ansehen</button><button class="btn primary" id="rvOk">Weiter</button></div></div>`;
+      <div class="reveal-actions">${S.equipped === a.id ? '' : '<button class="btn" id="rvEq">Ausrüsten</button>'}<button class="btn" id="rvInfo">Moves ansehen</button>${cs ? '<button class="btn" id="rvCs" title="Cutscene erneut ansehen">▶ Cutscene</button>' : ''}<button class="btn primary" id="rvOk">Weiter</button></div></div>`;
     $('#revealRoot').appendChild(el);
     REVEAL.prev = new Preview(el.querySelector('canvas'), a.i, 1.6);
-    if (t >= 1) { const fl = h('div', { class: 'flash' }); fl.style.background = t >= 6 ? '#ffffff' : `radial-gradient(circle, ${rgba(T.c, .9)}, ${rgba(T.c, .25 + t * .05)})`; fl.style.animationDuration = (0.6 + t * .12) + 's'; document.body.appendChild(fl); setTimeout(() => fl.remove(), 2000); }
-    if (t >= 3) { const app = $('#app'), cl = t >= 6 ? 'shake2' : 'shake'; app.classList.remove('shake', 'shake2'); void app.offsetWidth; app.classList.add(cl); setTimeout(() => app.classList.remove(cl), 1000); }
-    AU.reveal(t); revealBurst(a);
+    if (!cs && t >= 1) { const fl = h('div', { class: 'flash' }); fl.style.background = t >= 6 ? '#ffffff' : `radial-gradient(circle, ${rgba(T.c, .9)}, ${rgba(T.c, .25 + t * .05)})`; fl.style.animationDuration = (0.6 + t * .12) + 's'; document.body.appendChild(fl); setTimeout(() => fl.remove(), 2000); }
+    if (!cs && t >= 3) { const app = $('#app'), cl = t >= 6 ? 'shake2' : 'shake'; app.classList.remove('shake', 'shake2'); void app.offsetWidth; app.classList.add(cl); setTimeout(() => app.classList.remove(cl), 1000); }
+    if (!cs) AU.reveal(t); revealBurst(a);
     el.querySelector('#rvOk').onclick = () => closeReveal();
+    const rcs = el.querySelector('#rvCs'); if (rcs) rcs.onclick = () => CS.start(a, null);
     const eb = el.querySelector('#rvEq'); if (eb) eb.onclick = () => { equipAura(a.id); eb.remove(); };
     el.querySelector('#rvInfo').onclick = () => { closeReveal(true); openDetail(a.i); };
     const auto = $('#autoT').checked;
     if (auto && t >= 4) { $('#autoT').checked = false; toast('Auto-Roll gestoppt – seltene Aura gefunden!', 'good'); }
     else if ((auto && t < 4) || (S.quick && t < 3)) REVEAL.timer = setTimeout(closeReveal, auto ? 1300 : 1100);
   };
-  if (charge > 0) { const ov = h('div', { class: 'charge-overlay' }); $('#revealRoot').appendChild(ov); RFX.charge = { t: 0, dur: charge, col: T.c }; AU.play('charge', 1, charge); setTimeout(() => { ov.remove(); RFX.charge = null; go(); }, charge * 1000); }
+  if (cs) CS.start(a, go);
+  else if (charge > 0) { const ov = h('div', { class: 'charge-overlay' }); $('#revealRoot').appendChild(ov); RFX.charge = { t: 0, dur: charge, col: T.c }; AU.play('charge', 1, charge); setTimeout(() => { ov.remove(); RFX.charge = null; go(); }, charge * 1000); }
   else go();
 }
 function closeReveal(noAuto) {
@@ -5175,6 +5448,341 @@ function closeReveal(noAuto) {
   renderLobby();
   if (!noAuto && $('#autoT').checked) setTimeout(doRoll, 260);
 }
+
+/* ---------- Cutscene ab „Göttlich“ ----------
+   Ablauf: Abdunkeln → ein losgelöster, funkelnder Stern in der Signaturfarbe erscheint, Name
+   und „1 zu X“ werden groß eingeblendet → Aufladen (Stern wächst, Energie strömt ein, farbiger
+   Nebel kriecht von den Rändern, Kamera zoomt) → Ausbruch (Flash, Druckwellen, Partikelregen)
+   → Aufhellen zur Enthüllungskarte. Göttlich: farbiger Flash. Kosmisch: zusätzlich weißer Blitz,
+   stärkerer Kamerastoß, Farbnebel. Transzendent: das Bild wird weiß, zerspringt in Scherben,
+   die zu Rauch zerfallen, dann folgt die Farbexplosion. Alle Farben stammen aus a.c1 / a.c2v.
+   Überspringen: Tippen/Klick, Leertaste, Enter, Esc oder Button; „Schnelle Animation“ halbiert. */
+const csEase = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+const csBack = k => 1 + 2.70158 * Math.pow(k - 1, 3) + 1.70158 * Math.pow(k - 1, 2);
+const CS = {
+  on: false, c: null, x: null, bus: null,
+  start(a, done) {
+    if (this.on || !a || a.t < 6) { if (done) done(); return; }
+    if (!this.c) {
+      this.c = $('#csc'); this.x = this.c.getContext('2d');
+      this.c.addEventListener('pointerdown', e => { e.preventDefault(); if (this.time > .15) this.skip(); });
+      $('#csSkip').addEventListener('click', e => { e.stopPropagation(); this.skip(); });
+    }
+    const tk = a.t - 6, k = S.quick ? .5 : 1;
+    const d = [[.9, 1.5, 1.3, 1.7, .9], [1, 1.8, 1.6, 2.1, .95], [1.15, 2.1, 2, 2.9, 1.05]][tk].map(v => v * k);
+    const at = []; let s = 0; for (const v of d) { at.push(s); s += v; }
+    const coarse = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+    Object.assign(this, {
+      on: true, a, tk, d, at, total: s, time: 0, ph: -1, done, cardShown: false, kq: k,
+      parts: [], dust: [], rings: [], shards: [], smoke: [], cracks: [], flashes: [], sched: [],
+      zoom: 1, punch: 0, shake: 0, rays: 0, fog: 0, glowT: 0, popA: 0, core: 0, white: 0, rot: 0, tb: 0, tw: .3,
+      q: clamp(innerWidth * innerHeight / (1280 * 720), .5, 1) * (coarse ? .75 : 1),
+      col: a.c1, col2: a.c2v, txt: luminance(a.c1) < .55 ? mix(a.c1, '#ffffff', .45) : a.c1, ink: mix(a.c1, '#04050a', .82),
+    });
+    this.textC = null; this.buildCaches();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); // Leertaste soll keinen Button auslösen
+    this.c.style.display = 'block';
+    $('#csSkip').classList.add('on');
+    $('#csSkip').innerHTML = coarse ? 'Überspringen ›' : 'Überspringen › <small>Leertaste</small>';
+    AU.init(); this.bus = AU.on ? AU.bus() : null;
+  },
+  // Teure Ebenen (Randnebel, Lichtstrahlen, leuchtender Text) einmal vorrendern, pro Frame nur noch skaliert zeichnen
+  buildCaches() {
+    const fc = this.fogC = document.createElement('canvas'); fc.width = 160; fc.height = 90;
+    let x = fc.getContext('2d'), g = x.createRadialGradient(80, 45, 18, 80, 45, 92);
+    g.addColorStop(0, rgba(this.col, 0)); g.addColorStop(.6, rgba(this.col, .35)); g.addColorStop(1, rgba(this.col2, .8));
+    x.fillStyle = g; x.fillRect(0, 0, 160, 90);
+    const rc = this.raysC = document.createElement('canvas'); rc.width = rc.height = 512; x = rc.getContext('2d');
+    g = x.createRadialGradient(256, 256, 0, 256, 256, 256);
+    g.addColorStop(0, rgba(this.col, .5)); g.addColorStop(.45, rgba(this.col, .12)); g.addColorStop(1, rgba(this.col, 0));
+    x.fillStyle = g; x.beginPath();
+    const n = 12 + this.tk * 4;
+    for (let i = 0; i < n; i++) { const a = i * TAU / n + Math.sin(i * 7.3) * .2, wd = .03 + (i % 3) * .02; x.moveTo(256, 256); x.lineTo(256 + Math.cos(a - wd) * 256, 256 + Math.sin(a - wd) * 256); x.lineTo(256 + Math.cos(a + wd) * 256, 256 + Math.sin(a + wd) * 256); x.closePath(); }
+    x.fill();
+  },
+  buildText(w, hh) {
+    const a = this.a, dpr = Math.min(2, window.devicePixelRatio || 1), m = document.createElement('canvas').getContext('2d');
+    const ns0 = clamp(Math.min(w * .1, hh * .11), 30, 96);
+    m.font = `900 ${ns0}px Georgia, 'Times New Roman', serif`;
+    const nw = m.measureText(a.n).width, ns = nw > w * .86 ? ns0 * w * .86 / nw : ns0;
+    const cw = Math.ceil(w * .96), ch = Math.ceil(ns * 2.9), mk = bright => {
+      const c = document.createElement('canvas'); c.width = Math.ceil(cw * dpr); c.height = Math.ceil(ch * dpr);
+      const x = c.getContext('2d'); x.scale(dpr, dpr); x.translate(cw / 2, ch * .47); x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.font = `800 ${Math.round(ns * .24)}px system-ui, sans-serif`; x.fillStyle = bright ? this.ink : rgba(this.txt, .85);
+      x.fillText(TIERS[a.t].n.toUpperCase().split('').join('\u200A'), 0, -ns * .8);
+      x.font = `900 ${ns}px Georgia, 'Times New Roman', serif`;
+      if (bright) { x.lineWidth = Math.max(2, ns * .06); x.strokeStyle = this.ink; x.strokeText(a.n, 0, 0); } else { x.shadowColor = this.col; x.shadowBlur = 26; }
+      x.fillStyle = this.txt; x.fillText(a.n, 0, 0);
+      if (!bright) { x.shadowBlur = 8; x.fillText(a.n, 0, 0); }
+      x.font = `700 ${Math.round(ns * .38)}px Georgia, 'Times New Roman', serif`;
+      const od = '1 zu ' + fmt(a.oneIn);
+      if (bright) { x.lineWidth = 3; x.strokeStyle = this.ink; x.strokeText(od, 0, ns * .8); } else { x.shadowColor = this.col; x.shadowBlur = 12; }
+      x.fillStyle = '#f4f6ff'; x.fillText(od, 0, ns * .8);
+      return c;
+    };
+    this.textC = { key: w + 'x' + hh + 'x' + dpr, norm: mk(false), bright: mk(true), cw, ch, ns };
+  },
+  pk() { const p = this.ph; return p < 0 ? 0 : clamp((this.time - this.at[p]) / this.d[p], 0, 1); },
+  frame(dt) {
+    if (!this.on) return;
+    this.time += dt;
+    while (this.ph < 4 && this.time >= this.at[this.ph + 1]) this.enter(++this.ph);
+    if (this.time >= this.total) { this.end(1.6); return; }
+    this.update(dt); this.draw();
+  },
+  enter(p) {
+    if (p === 0) this.snd('dark');
+    else if (p === 1) this.snd('appear');
+    else if (p === 2) this.snd('charge');
+    else if (p === 3) this.burst();
+    else if (p === 4) { this.showCard(); this.snd('resolve'); }
+  },
+  showCard() { if (this.cardShown) return; this.cardShown = true; const f = this.done; this.done = null; if (f) f(); },
+  skip() {
+    if (!this.on) return;
+    if (this.ph >= 4) { this.end(.25); return; }
+    this.ph = 4; this.at[4] = this.time; this.d[4] = .32; this.total = this.time + .32;
+    this.flashes.push({ col: this.col, a: .3, t: 0, hold: 0, fade: .3 });
+    this.fadeBus(.25); this.showCard();
+  },
+  end(fade = .3) {
+    if (!this.on) return;
+    this.on = false; this.showCard();
+    const c = this.c; c.style.display = 'none'; c.width = c.height = 1; this.textC = null;
+    $('#csSkip').classList.remove('on');
+    this.parts = []; this.dust = []; this.rings = []; this.shards = []; this.smoke = []; this.cracks = []; this.flashes = []; this.sched = [];
+    this.fadeBus(fade);
+    setTimeout(() => { if (REVEAL.el) REVEAL.el.classList.remove('lock'); }, 250);
+  },
+  fadeBus(s) {
+    const b = this.bus; this.bus = null; if (!b || !AU.ctx) return;
+    const n = AU.ctx.currentTime;
+    try { b.gain.cancelScheduledValues(n); b.gain.setValueAtTime(b.gain.value, n); b.gain.linearRampToValueAtTime(0, n + s); } catch (e) { }
+    setTimeout(() => { try { b.disconnect(); } catch (e) { } }, s * 1000 + 400);
+  },
+  burst() {
+    const tk = this.tk, kq = this.kq;
+    this.tb = 0; this.sched = [];
+    if (tk === 0) { this.explode(); this.flashes.push({ col: this.col, a: .6, t: 0, hold: .05, fade: .6 }); }
+    else if (tk === 1) { this.explode(); this.flashes.push({ col: '#ffffff', a: .92, t: 0, hold: .07, fade: .45 }, { col: this.col, a: .62, t: -.2, hold: .1, fade: 1.1 }); }
+    else {
+      const hold = .75 * kq;
+      this.flashes.push({ col: '#ffffff', a: 1, t: 0, hold, fade: .85 * kq });
+      this.shatter(); this.shake = 22; this.punch = .08; this.glowT = .6;
+      this.sched.push({ t: hold, fn: () => { this.explode(); this.flashes.push({ col: this.col, a: .65, t: 0, hold: .06, fade: 1 }); this.snd('burst2'); } });
+    }
+    this.snd('burst');
+  },
+  explode() {
+    const w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .56, tk = this.tk, D = Math.hypot(w, hh);
+    const n = Math.round([380, 640, 900][tk] * this.q);
+    for (let i = 0; i < n; i++) {
+      const an = rand(TAU), sp = rand(140, 560 + tk * 200) * (Math.random() < .22 ? 1.9 : 1);
+      this.parts.push({ x: cx, y: cy, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, dr: rand(.9, 2), g: rand(0, 30), life: rand(1, 2.2 + tk * .4), max: 2.6 + tk * .4, s: rand(1, 2.6 + tk * .5), col: Math.random() < .55 ? this.col : Math.random() < .6 ? this.col2 : '#ffffff', star: Math.random() < .14 });
+    }
+    const rc = [this.col, '#ffffff', this.col2, this.col];
+    for (let i = 0; i < 2 + tk; i++) this.rings.push({ r: 6, v: D * (1.25 + i * .4), w: 12 + tk * 5 - i * 2, col: rc[i], life: 1.05 + i * .12, max: 1.05 + i * .12, d: i * .08 });
+    this.punch = .1 + tk * .07; this.shake = Math.max(this.shake, 8 + tk * 8); this.rays = 1; this.fog = .32 + tk * .14; this.glowT = 1; this.popA = .2 + tk * .06; this.core = 1;
+  },
+  shatter() {
+    const D = Math.hypot(innerWidth, innerHeight), cx = innerWidth / 2, cy = innerHeight * .56, n = 15;
+    for (let i = 0; i < n; i++) {
+      let a = i / n * TAU + rand(-.15, .15), r = 0; const len = D * rand(.1, .24), pts = [0, 0];
+      while (r < len) {
+        r += rand(10, 24); a += rand(-.16, .16); pts.push(Math.cos(a) * r, Math.sin(a) * r);
+        if (Math.random() < .2 && r < len * .8) { let b = a + rand(.35, .8) * (Math.random() < .5 ? -1 : 1), br = r; const bp = [Math.cos(a) * r, Math.sin(a) * r]; for (let j = 0; j < 3; j++) { br += rand(8, 18); b += rand(-.25, .25); bp.push(Math.cos(b) * br, Math.sin(b) * br); } this.cracks.push({ pts: bp, w: 2 }); }
+      }
+      this.cracks.push({ pts, w: rand(3.5, 6) });
+    }
+    for (const rr of [rand(28, 46), rand(78, 118)]) { const pts = []; for (let i = 0; i <= 18; i++) { const a = i / 18 * TAU, r2 = rr * rand(.85, 1.15); pts.push(Math.cos(a) * r2, Math.sin(a) * r2); } this.cracks.push({ pts, w: 1.6 }); }
+    for (let i = 0; i < 46; i++) {
+      const an = rand(TAU), r = rand(4, 70), s = rand(5, 18), sp = rand(160, 620), m = randi(3, 5), pts = [];
+      for (let j = 0; j < m; j++) { const a = j / m * TAU + rand(-.3, .3); pts.push(Math.cos(a) * s * rand(.5, 1.1), Math.sin(a) * s * rand(.5, 1.1)); }
+      this.shards.push({ x: cx + Math.cos(an) * r, y: cy + Math.sin(an) * r, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, rot: rand(TAU), vr: rand(-9, 9), pts, life: rand(1.4, 2.4), max: 2.4, sm: 0, d: .12 + rand(.1) });
+    }
+  },
+  update(dt) {
+    const w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .56, ph = this.ph, k = this.pk(), tk = this.tk, q = this.q, D = Math.hypot(w, hh);
+    if (ph >= 3) { this.tb += dt; for (const s of this.sched) if (!s.done && this.tb >= s.t) { s.done = 1; s.fn(); } }
+    const e = f => Math.exp(-f * dt);
+    // Kamera, Licht und Nebel
+    const zc = .05 + tk * .035;
+    this.punch *= e(6);
+    this.zoom = (ph === 2 ? 1 + zc * k * k : ph >= 3 ? 1 + zc * Math.exp(-this.tb * 1.6) : 1) + this.punch;
+    this.shake = ph === 2 ? Math.max(this.shake * e(4), k * k * (1.5 + tk * 3)) : this.shake * e(4);
+    if (ph === 2) { this.rays = k * (.35 + tk * .1); this.fog = k * (.22 + tk * .08); } else { this.rays *= e(1.1); this.fog *= e(.8); }
+    this.glowT *= e(2.5); this.popA *= e(5); this.core *= e(1.8);
+    this.rot += dt * (ph === 1 ? .5 : ph === 2 ? .5 + k * k * 6 : .3);
+    this.white = 0;
+    for (const f of this.flashes) { f.t += dt; if (f.col === '#ffffff') this.white += this.flashA(f); }
+    this.white = Math.min(1, this.white);
+    this.flashes = this.flashes.filter(f => f.t < f.hold + f.fade);
+    // Funkelnder Sternenstaub
+    if (ph >= 1 && ph <= 3) { const want = (50 + tk * 25) * q; if (this.dust.length < want && Math.random() < .7) this.dust.push({ x: rand(w), y: rand(hh), vx: rand(-8, 8), vy: rand(-22, -6), life: rand(2, 4), max: 4, s: rand(.8, 2.2), col: Math.random() < .55 ? this.col : Math.random() < .6 ? this.col2 : '#ffffff', tw: rand(TAU) }); }
+    for (const p of this.dust) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; if (ph === 2) { p.x += (cx - p.x) * dt * .3 * k; p.y += (cy - p.y) * dt * .3 * k; } }
+    this.dust = this.dust.filter(p => p.life > 0);
+    if (ph === 1 && (this.tw -= dt) <= 0) { this.tw = rand(.22, .5); this.snd('twinkle'); }
+    // Energie strömt beim Aufladen zur Mitte
+    if (ph === 2 && k < .9) { const n = (2 + k * (6 + tk * 4)) * q * dt * 60; for (let i = 0; i < n; i++) { const an = rand(TAU), r = D * rand(.42, .65); this.parts.push({ x: cx + Math.cos(an) * r, y: cy + Math.sin(an) * r, px: 0, py: 0, inw: 1, sp: rand(.8, 1.5), life: 1.4, max: 1.4, s: rand(1, 2.2), col: Math.random() < .6 ? this.col : Math.random() < .5 ? this.col2 : '#ffffff' }); } }
+    for (const p of this.parts) {
+      p.life -= dt;
+      if (p.inw) { const dx = cx - p.x, dy = cy - p.y, dd = Math.hypot(dx, dy) || 1, v = Math.min(dd, (260 + 1500 * k + 900 * (1 - dd / D)) * p.sp * dt); p.px = p.x; p.py = p.y; p.x += dx / dd * v; p.y += dy / dd * v; if (dd < 10) p.life = 0; }
+      else { p.x += p.vx * dt; p.y += p.vy * dt; const f = 1 - p.dr * dt; p.vx *= f; p.vy = p.vy * f + p.g * dt; }
+    }
+    this.parts = this.parts.filter(p => p.life > 0); if (this.parts.length > 2400) this.parts.splice(0, this.parts.length - 2400);
+    for (const r of this.rings) { if ((r.d -= dt) > 0) continue; r.life -= dt; r.r += r.v * dt; r.v *= 1 - 1.5 * dt; }
+    this.rings = this.rings.filter(r => r.life > 0);
+    // Scherben (Transzendent) zerfallen zu Rauch
+    for (const s of this.shards) {
+      if (s.d > 0) { s.d -= dt; continue; }
+      s.life -= dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 1 - .9 * dt; s.vy *= 1 - .9 * dt; s.rot += s.vr * dt;
+      if ((s.sm -= dt) <= 0 && this.smoke.length < 260) { s.sm = .05; this.smoke.push({ x: s.x, y: s.y, vx: s.vx * .1 + rand(-10, 10), vy: s.vy * .1 + rand(-10, 10), r: rand(10, 22), life: .9, max: .9 }); }
+    }
+    this.shards = this.shards.filter(s => s.life > 0);
+    for (const m of this.smoke) { m.life -= dt; m.x += m.vx * dt; m.y += m.vy * dt; m.r += 30 * dt; }
+    this.smoke = this.smoke.filter(m => m.life > 0);
+  },
+  flashA(f) { return f.t < 0 ? 0 : f.t < f.hold ? f.a : f.a * Math.max(0, 1 - (f.t - f.hold) / f.fade); },
+  draw() {
+    const c = this.c, x = this.x, dpr = Math.min(2, window.devicePixelRatio || 1), w = innerWidth, hh = innerHeight;
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(hh * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr); }
+    const ph = this.ph, k = this.pk(), cx = w / 2, cy = hh * .56, tk = this.tk, R0 = Math.min(w, hh) * .1, L = Math.hypot(w, hh);
+    x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, hh);
+    const dark = ph === 0 ? csEase(k) : ph === 4 ? 1 - csEase(k) : 1, FA = ph === 4 ? 1 - csEase(k) : 1;
+    const sx = rand(-1, 1) * this.shake, sy = rand(-1, 1) * this.shake;
+    // Weiche, flächige Ebenen (Abdunkeln, Grundleuchten, Randnebel, Lichtstrahlen) in 1/3-Auflösung
+    // zeichnen und einmal hochskalieren – spart auf schwachen Geräten den Großteil der Füllrate.
+    const bc = this.bgC || (this.bgC = document.createElement('canvas')), bw = Math.max(1, Math.ceil(w / 3)), bh = Math.max(1, Math.ceil(hh / 3));
+    if (bc.width !== bw || bc.height !== bh) { bc.width = bw; bc.height = bh; }
+    const b = bc.getContext('2d');
+    b.setTransform(1, 0, 0, 1, 0, 0); b.globalCompositeOperation = 'source-over'; b.globalAlpha = 1; b.clearRect(0, 0, bw, bh);
+    b.setTransform(bw / w, 0, 0, bh / hh, 0, 0);
+    b.fillStyle = `rgba(2,3,9,${dark})`; b.fillRect(0, 0, w, hh);
+    if (ph >= 1) {
+      b.translate(cx + sx, cy + sy); b.scale(this.zoom, this.zoom); b.translate(-cx, -cy);
+      b.globalCompositeOperation = 'lighter'; b.globalAlpha = FA;
+      glow(b, this.col, cx, cy, Math.max(w, hh) * .62, .07 + (ph === 2 ? .12 * k : 0) + this.core * .25);
+      if (this.fog > .01) {
+        b.globalAlpha = Math.min(1, this.fog) * FA; b.drawImage(this.fogC, -w * .1, -hh * .1, w * 1.2, hh * 1.2); b.globalAlpha = FA;
+        for (let i = 0; i < 5; i++) { const an = i / 5 * TAU + this.time * .12 * (i % 2 ? 1 : -1); glow(b, i % 2 ? this.col : this.col2, cx + Math.cos(an) * w * .55, cy + Math.sin(an) * hh * .55, Math.max(w, hh) * .36, this.fog * .55); }
+      }
+      if (this.rays > .01) {
+        b.save(); b.translate(cx, cy); b.rotate(this.time * (.15 + tk * .05)); b.globalAlpha = Math.min(1, this.rays) * FA;
+        b.drawImage(this.raysC, -L * .75, -L * .75, L * 1.5, L * 1.5); b.restore();
+      }
+      if (this.core > .02) glow(b, this.col, cx, cy, R0 * 6 * this.core, this.core);
+    }
+    x.drawImage(bc, 0, 0, w, hh);
+    if (ph < 1 && !this.parts.length) return;
+    x.save();
+    x.translate(cx + sx, cy + sy); x.scale(this.zoom, this.zoom); x.translate(-cx, -cy);
+    x.globalCompositeOperation = 'lighter'; x.globalAlpha = FA;
+    for (const p of this.dust) { const a = clamp(Math.min(p.life, p.max - p.life) * 1.5, 0, 1) * (.45 + .55 * Math.sin(this.time * 4 + p.tw) ** 2); x.globalAlpha = a * FA; x.fillStyle = p.col; x.fillRect(p.x, p.y, p.s, p.s); if (p.s > 1.7) glow(x, p.col, p.x, p.y, p.s * 4, .5); }
+    x.globalAlpha = FA;
+    // Der Stern
+    if (ph >= 1 && ph <= 2) {
+      const tw = 1 + .1 * Math.sin(this.time * 11) + .05 * Math.sin(this.time * 27);
+      let R = ph === 1 ? R0 * csBack(clamp(k / .35, 0, 1)) : R0 * (1 + k * (.8 + tk * .35)) * (k > .86 ? 1 - (k - .86) / .14 * .8 : 1);
+      R = Math.max(0, R * tw);
+      this.drawStar(x, cx, cy, R, ph === 2 ? k : 0, FA);
+    }
+    if (this.core > .02) glow(x, '#ffffff', cx, cy, R0 * 2.2 * this.core, this.core);
+    // Partikel und Druckwellen
+    x.lineCap = 'round';
+    for (const p of this.parts) {
+      const a = clamp(p.life / p.max * 1.5, 0, 1) * FA; if (a <= 0) continue;
+      x.globalAlpha = a; x.strokeStyle = p.col; x.lineWidth = p.s;
+      if (p.inw) { if (p.px) { x.beginPath(); x.moveTo(p.px - (p.x - p.px) * 2, p.py - (p.y - p.py) * 2); x.lineTo(p.x, p.y); x.stroke(); } continue; }
+      const sp = Math.hypot(p.vx, p.vy);
+      if (p.star) { glow(x, p.col, p.x, p.y, p.s * 5, .8); x.save(); x.translate(p.x, p.y); x.rotate(this.time * 3); x.fillStyle = p.col; starP(x, 4, p.s * 2.4, p.s * .5); x.fill(); x.restore(); }
+      else if (sp > 150) { const l = Math.min(.045, 18 / sp); x.beginPath(); x.moveTo(p.x - p.vx * l, p.y - p.vy * l); x.lineTo(p.x, p.y); x.stroke(); }
+      else { x.fillStyle = p.col; x.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s); }
+    }
+    x.globalAlpha = 1;
+    for (const r of this.rings) { if (r.d > 0) continue; const a = clamp(r.life / r.max, 0, 1) * FA; x.strokeStyle = rgba(r.col, a * .9); x.lineWidth = r.w * a + 1; circ(x, cx, cy, r.r); x.stroke(); }
+    // Vollflächige Flashes (Signaturfarbe oder Weiß)
+    x.globalCompositeOperation = 'source-over';
+    for (const f of this.flashes) { const a = this.flashA(f) * FA; if (a > 0) { x.fillStyle = rgba(f.col, a); x.fillRect(-w, -hh, w * 3, hh * 3); } }
+    // Transzendent: Risse, Scherben und Rauch
+    if (this.cracks.length) {
+      const ca = clamp((this.tb - .1) / .1, 0, 1) * (1 - clamp((this.tb - .8) / .7, 0, 1)) * FA;
+      if (ca > 0) {
+        const gr = easeOut(clamp((this.tb - .1) / .22, 0, 1));
+        glow(x, this.ink, cx, cy, 170 * gr, ca * .95); glow(x, this.ink, cx, cy, 70, ca);
+        x.strokeStyle = rgba(this.ink, ca); x.lineJoin = 'round';
+        for (const cr of this.cracks) { // Risse verjüngen sich nach außen
+          const m = cr.pts.length / 2 - 1;
+          for (let i = 0; i < m; i++) { x.lineWidth = cr.w * (1 - i / (m + 1)) + .5; x.beginPath(); x.moveTo(cx + cr.pts[i * 2] * gr, cy + cr.pts[i * 2 + 1] * gr); x.lineTo(cx + cr.pts[i * 2 + 2] * gr, cy + cr.pts[i * 2 + 3] * gr); x.stroke(); }
+        }
+      }
+    }
+    if (this.shards.length || this.smoke.length) {
+      const wq = Math.round(this.white * 10) / 10, sc = mix(this.col, this.ink, wq), smc = mix(this.col2, this.ink, wq);
+      for (const m of this.smoke) glow(x, smc, m.x, m.y, m.r, clamp(m.life / m.max, 0, 1) * .35 * FA);
+      x.fillStyle = sc;
+      for (const s of this.shards) { if (s.d > 0) continue; x.save(); x.translate(s.x, s.y); x.rotate(s.rot); x.globalAlpha = clamp(s.life / s.max * 1.4, 0, 1) * FA; path(x, s.pts); x.fill(); x.restore(); }
+      x.globalAlpha = 1;
+    }
+    x.restore();
+    this.drawText(FA);
+  },
+  drawStar(x, cx, cy, R, ch, FA) {
+    if (R <= .5) return;
+    glow(x, this.col, cx, cy, R * (3.4 + ch * 2), .5 + ch * .3); glow(x, this.col2, cx, cy, R * 1.6, .35);
+    const fw = innerWidth * (.18 + ch * .4), fl = x.createLinearGradient(cx - fw, 0, cx + fw, 0);
+    fl.addColorStop(0, rgba(this.col, 0)); fl.addColorStop(.5, rgba('#ffffff', .55)); fl.addColorStop(1, rgba(this.col, 0));
+    x.fillStyle = fl; x.fillRect(cx - fw, cy - 1.5, fw * 2, 3);
+    x.save(); x.translate(cx, cy); x.rotate(this.rot);
+    x.globalAlpha = .9 * FA; x.fillStyle = this.col; starP(x, 4, R * 1.45, R * .09); x.fill();
+    x.rotate(Math.PI / 4); x.globalAlpha = .55 * FA; x.fillStyle = this.col2; starP(x, 4, R * .55, R * .07); x.fill();
+    x.rotate(-Math.PI / 4); x.globalAlpha = FA; x.fillStyle = '#ffffff'; starP(x, 4, R * .75, R * .055); x.fill();
+    x.restore(); x.globalAlpha = FA; glow(x, '#ffffff', cx, cy, R * .55, .9);
+  },
+  drawText(FA) {
+    const x = this.x, w = innerWidth, hh = innerHeight, ph = this.ph;
+    const al = (ph === 1 ? clamp((this.pk() - .2) / .4, 0, 1) : ph >= 2 ? 1 : 0) * FA; if (al <= 0) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (!this.textC || this.textC.key !== w + 'x' + hh + 'x' + dpr) this.buildText(w, hh);
+    const T = this.textC, br = clamp((this.white - .15) / .3, 0, 1);
+    x.save();
+    x.translate(w / 2 + rand(-1, 1) * this.shake * .35, hh * .2 + (1 - easeOut(al)) * 16 + rand(-1, 1) * this.shake * .35);
+    x.scale(1 + this.popA, 1 + this.popA);
+    if (this.glowT > .02 && br < 1) { x.globalCompositeOperation = 'lighter'; glow(x, this.col, 0, 0, T.ns * 3.2, this.glowT * .45 * al * (1 - br)); x.globalCompositeOperation = 'source-over'; }
+    if (br < 1) { x.globalAlpha = al * (1 - br); x.drawImage(T.norm, -T.cw / 2, -T.ch * .47, T.cw, T.ch); }
+    if (br > 0) { x.globalAlpha = al * br; x.drawImage(T.bright, -T.cw / 2, -T.ch * .47, T.cw, T.ch); }
+    x.restore();
+  },
+  snd(n) {
+    if (!this.bus || !AU.on) return;
+    const o = { out: this.bus }, tk = this.tk, d = this.d, A = AU;
+    switch (n) {
+      case 'dark': A.tone(55, this.total, { ...o, type: 'sine', vol: .2, att: d[0], hold: .85 }); A.tone(110, this.total, { ...o, type: 'triangle', vol: .035, att: d[0], hold: .8, lp: 500 }); A.noise(d[0] + .5, { ...o, f: 1400, slide: .15, vol: .07, ft: 'lowpass', att: .05 }); break;
+      case 'appear': [1047, 1319, 1568, 2093].forEach((f, i) => A.tone(f * (tk === 2 ? 1.06 : 1), 1.6, { ...o, type: 'sine', vol: .045, delay: i * .14, verb: 1 })); A.noise(1.2, { ...o, f: 7000, vol: .03, att: .4, verb: 1 }); break;
+      case 'twinkle': A.tone(rand(1800, 3200), .3, { ...o, type: 'sine', vol: .022, verb: 1 }); break;
+      case 'charge':
+        A.noise(d[2], { ...o, f: 220, slide: 22, vol: .11 + tk * .03, att: d[2] * .92, q: 1.5 });
+        A.tone(85, d[2], { ...o, type: 'sawtooth', slide: 4.5, vol: .06 + tk * .015, att: d[2] * .88, lp: 1600 });
+        if (tk >= 1) for (const f of [0, .42, .72, .92, 1.06, 1.16].map(v => v * d[2] / 1.25)) if (f < d[2] - .05) A.tone(58, .22, { ...o, type: 'sine', slide: .55, vol: .24, delay: f });
+        break;
+      case 'burst':
+        A.tone(46, 2.6 + tk * .5, { ...o, type: 'sine', slide: .42, vol: .42 });
+        A.noise(1.6 + tk * .5, { ...o, f: 520, slide: .14, vol: .3, ft: 'lowpass' });
+        A.noise(.5, { ...o, f: 3200, slide: .3, vol: .12 });
+        if (tk < 2) this.snd('chord');
+        if (tk >= 1) A.noise(2.6, { ...o, f: 140, vol: .22, ft: 'lowpass', delay: .12, att: .3 });
+        if (tk >= 2) for (let i = 0; i < 16; i++) A.noise(.14, { ...o, f: rand(3500, 9000), q: 5, vol: .1, delay: .02 + i * .028 + rand(.02) });
+        break;
+      case 'burst2': A.tone(40, 2.6, { ...o, type: 'sine', slide: .5, vol: .36 }); A.noise(1.4, { ...o, f: 900, slide: .2, vol: .2, ft: 'lowpass' }); this.snd('chord'); break;
+      case 'chord': {
+        const base = [523, 659, 784, 1047, 1319, 1568];
+        base.slice(0, 4 + tk).forEach((f, i) => A.tone(f, 2.4 + tk * .4, { ...o, type: tk ? 'sawtooth' : 'triangle', vol: .045, delay: .06 + i * .05, verb: 1, lp: 2800, det: i % 2 ? 6 : -6 }));
+        for (let i = 0; i < 10 + tk * 4; i++) A.tone(1568 * Math.pow(2, ((i * 5) % 12) / 12), .3, { ...o, type: 'sine', vol: .03, delay: .35 + i * .07, verb: 1 });
+        break;
+      }
+      case 'resolve': [523, 784, 1047, 1568].forEach((f, i) => A.tone(f, 1.8, { ...o, type: 'triangle', vol: .05, delay: i * .08, verb: 1 })); break;
+    }
+  },
+};
 
 /* ---------- Effekt-Ebene der Enthüllung ---------- */
 const RFX = { c: null, x: null, parts: [], rings: [], stars: [], charge: null, tier: 0, dirty: false };
@@ -5249,13 +5857,14 @@ function drawBg(dt) {
    ===================================================================== */
 let lastFrame = performance.now(), uiT = 0, saveT = 0;
 function frame(now) {
-  const dt = Math.min(0.05, (now - lastFrame) / 1000); lastFrame = now;
+  const raw = (now - lastFrame) / 1000, dt = Math.min(0.05, raw); lastFrame = now;
   try {
     tickBoosts(dt);
     if (SCREEN === 'lobby') { drawBg(dt); drawStrip(dt); uiT -= dt; if (uiT <= 0) { uiT = 0.25; updateLuckUI(); } }
     else if (SCREEN === 'arena') arenaFrame(dt);
     for (const p of PREVIEWS) p.frame(dt);
     drawRFX(dt);
+    if (CS.on) CS.frame(Math.min(0.1, raw)); // Cutscene in Echtzeit, damit sie auch bei wenig FPS gleich lang bleibt
     saveT -= dt; if (saveT <= 0) { saveT = 5; if (S.boosts.length) save(); }
   } catch (e) { console.error(e); }
   requestAnimationFrame(frame);
@@ -5272,7 +5881,7 @@ function init() {
   const qt = $('#quickT'); qt.checked = !!S.quick; qt.onchange = () => { S.quick = qt.checked; save(); };
   $('#autoT').onchange = e => { if (e.target.checked && !ROLLST.busy && !REVEAL.open) doRoll(); };
   $('#rollBtn').onclick = doRoll;
-  $('#collBtn').onclick = openCollection; $('#shopBtn').onclick = openShop; $('#oddsBtn').onclick = openOdds; $('#helpBtn').onclick = openHelp;
+  $('#collBtn').onclick = openCollection; $('#shopBtn').onclick = openShop; $('#craftBtn').onclick = () => openCraft(); $('#oddsBtn').onclick = openOdds; $('#helpBtn').onclick = openHelp;
   $('#trBtn').onclick = openTraining; $('#mpBtn').onclick = () => openMP();
   $('#leaveBtn').onclick = () => {
     if (MATCH.mode === 'client') { if (MATCH.ended || confirm('Match verlassen? Du verlässt damit auch den Raum.')) { netLeave(); leaveArena(); } }
@@ -5284,13 +5893,14 @@ function init() {
   if (window.visualViewport) visualViewport.addEventListener('resize', relayout);
   addEventListener('pointerdown', () => AU.init(), { once: false, passive: true });
   addEventListener('keydown', e => {
-    if (REVEAL.open && (e.code === 'Enter' || e.code === 'Space') && REVEAL.el) { e.preventDefault(); closeReveal(); return; }
+    if (CS.on && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); if (!e.repeat) CS.skip(); return; }
+    if (REVEAL.open && (e.code === 'Enter' || e.code === 'Space') && REVEAL.el) { e.preventDefault(); if (!e.repeat) closeReveal(); return; }
     if (SCREEN === 'lobby' && !MODALS.length && e.code === 'Space' && e.target === document.body) { e.preventDefault(); doRoll(); }
   });
   addEventListener('beforeunload', () => { save(); CLOUD.flush(); if (NET.role === 'client') NET.tr && NET.tr.send({ t: 'leave' }); if (NET.role === 'host') NET.tr && NET.tr.broadcast({ t: 'reject', reason: 'Der Host hat das Spiel geschlossen.' }); });
   renderLobby();
   CLOUD.init();
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); CLOUD.flush(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); CLOUD.flush(); if (CS.on) CS.end(.2); } });
   const jc = new URLSearchParams(location.search).get('join');
   if (jc) setTimeout(() => { if (S.equipped) openMP(jc.toUpperCase()); else toast('Rolle zuerst eine Aura, dann kannst du dem Spiel ' + jc.toUpperCase() + ' beitreten.'); }, 400);
   requestAnimationFrame(frame);
