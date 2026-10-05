@@ -35,11 +35,6 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 input,select{font:inherit;color:inherit}
 ::selection{background:rgba(124,140,255,.4)}
 #app{position:fixed;inset:0;overflow:hidden}
-#app.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97) both}
-#app.shake2{animation:shake2 .9s cubic-bezier(.36,.07,.19,.97) both}
-/* Wackeln skaliert mit der Screenshake-Einstellung (--shk) */
-@keyframes shake{10%,90%{transform:translate(calc(var(--shk,1) * -2px),calc(var(--shk,1) * 1px))}20%,80%{transform:translate(calc(var(--shk,1) * 4px),calc(var(--shk,1) * -2px))}30%,50%,70%{transform:translate(calc(var(--shk,1) * -6px),calc(var(--shk,1) * 3px))}40%,60%{transform:translate(calc(var(--shk,1) * 6px),calc(var(--shk,1) * -3px))}}
-@keyframes shake2{10%,90%{transform:translate(calc(var(--shk,1) * -4px),calc(var(--shk,1) * 3px)) rotate(calc(var(--shk,1) * -.3deg))}20%,80%{transform:translate(calc(var(--shk,1) * 8px),calc(var(--shk,1) * -5px)) rotate(calc(var(--shk,1) * .4deg))}30%,50%,70%{transform:translate(calc(var(--shk,1) * -12px),calc(var(--shk,1) * 6px)) rotate(calc(var(--shk,1) * -.5deg))}40%,60%{transform:translate(calc(var(--shk,1) * 12px),calc(var(--shk,1) * -6px)) rotate(calc(var(--shk,1) * .5deg))}}
 #bgc{position:absolute;inset:0;width:100%;height:100%;z-index:0}
 @supports (height:100dvh){html,body{height:100dvh}}
 .screen{position:absolute;inset:0;display:none;z-index:1}
@@ -5633,9 +5628,24 @@ function openSettings() {
   return back;
 }
 // kurzer Vorschau-Wackler beim Wählen der Screenshake-Stärke
-function demoShake() {
-  if (!FX.shake) return;
-  const app = $('#app'); app.classList.remove('shake', 'shake2'); void app.offsetWidth; app.classList.add('shake'); setTimeout(() => app.classList.remove('shake'), 600);
+function demoShake() { shakeScreen('shake'); }
+/* Bildschirm-Wackeln: jede sichtbare Ebene (Lobby/Arena, Hintergrund, Effekt-Canvas, Enthüllung, offene Menüs) wackelt für sich.
+   Früher wackelte #app als Ganzes. Auf Mobilgeräten ist #app aber so hoch wie die ganze Seite, und ein transform auf einem
+   Vorfahren macht position:fixed-Elemente relativ zu diesem – Effekt-Canvas und Enthüllung wurden dann auf Seitenhöhe
+   gestreckt (Kreise als hohe Ellipsen) bzw. verschoben. Stärke folgt der Screenshake-Einstellung. */
+const SHAKE_KF = {
+  shake: { d: 500, k: [[.1, -2, 1, 0], [.2, 4, -2, 0], [.3, -6, 3, 0], [.4, 6, -3, 0], [.5, -6, 3, 0], [.6, 6, -3, 0], [.7, -6, 3, 0], [.8, 4, -2, 0], [.9, -2, 1, 0]] },
+  shake2: { d: 900, k: [[.1, -4, 3, -.3], [.2, 8, -5, .4], [.3, -12, 6, -.5], [.4, 12, -6, .5], [.5, -12, 6, -.5], [.6, 12, -6, .5], [.7, -12, 6, -.5], [.8, 8, -5, .4], [.9, -4, 3, -.3]] },
+};
+function shakeScreen(kind) {
+  if (!FX.shake || UI.calm) return;
+  const K = SHAKE_KF[kind] || SHAKE_KF.shake, f = FX.shake, ease = 'cubic-bezier(.36,.07,.19,.97)', zero = 'translate(0px,0px) rotate(0deg)';
+  const kf = [{ offset: 0, transform: zero, easing: ease }, ...K.k.map(([o, x, y, r]) => ({ offset: o, transform: `translate(${x * f}px,${y * f}px) rotate(${r * f}deg)`, easing: ease })), { offset: 1, transform: zero }];
+  for (const e of [$('.screen.active'), $('#bgc'), $('#fxc'), REVEAL.el, ...MODALS]) {
+    if (!e || !e.isConnected || !e.animate) continue;
+    if (e._shk) e._shk.cancel();
+    try { e._shk = e.animate(kf, { duration: K.d, composite: 'add' }); } catch (er) { e._shk = e.animate(kf, { duration: K.d }); }
+  }
 }
 // ---------- Hintergrundmusik: ruhige, live erzeugte Ambient-Musik (Lobby) bzw. etwas treibender (Arena) ----------
 const MUSIC = {
@@ -6310,7 +6320,7 @@ function showReveal(r) {
     $('#revealRoot').appendChild(el);
     REVEAL.prev = new Preview(el.querySelector('canvas'), a.i, 1.6);
     if (!cs && t >= 1) { const fl = h('div', { class: 'flash' }); fl.style.background = t >= 6 ? '#ffffff' : `radial-gradient(circle, ${rgba(T.c, .9)}, ${rgba(T.c, .25 + t * .05)})`; fl.style.animationDuration = (0.6 + t * .12) + 's'; document.body.appendChild(fl); setTimeout(() => fl.remove(), 2000); }
-    if (!cs && t >= 3 && FX.shake) { const app = $('#app'), cl = t >= 6 ? 'shake2' : 'shake'; app.classList.remove('shake', 'shake2'); void app.offsetWidth; app.classList.add(cl); setTimeout(() => app.classList.remove(cl), 1000); }
+    if (!cs && t >= 3) shakeScreen(t >= 6 ? 'shake2' : 'shake');
     if (!cs) AU.reveal(t); revealBurst(a);
     el.querySelector('#rvOk').onclick = () => closeReveal();
     const rcs = el.querySelector('#rvCs'); if (rcs) rcs.onclick = () => CS.start(a, null);
@@ -6372,7 +6382,7 @@ const CS = {
       parts: [], dust: [], glints: [], rings: [], shards: [], smoke: [], cracks: [], flashes: [], sched: [],
       zoom: 1, punch: 0, shake: 0, rays: 0, fog: 0, glowT: 0, popA: 0, core: 0, white: 0, flashL: 0, rot: 0, tb: 0, tw: .3,
       pulse: 0, hb: .6 * k, pf: 0, sat: 0, satQ: -1, txtT: -1, txtAt: 0, after: 0,
-      q: clamp(innerWidth * innerHeight / (1280 * 720), .5, 1) * (coarse ? .75 : 1) * FX.part,
+      q: clamp(VP.w * VP.h / (1280 * 720), .5, 1) * (coarse ? .75 : 1) * FX.part,
       col: a.c1, col2: a.c2v, txt: luminance(a.c1) < .55 ? mix(a.c1, '#ffffff', .45) : a.c1, ink: mix(a.c1, '#04050a', .82),
     });
     this.tint();
@@ -6483,7 +6493,7 @@ const CS = {
     this.snd('burst');
   },
   explode() {
-    const w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .5, tk = this.tk, D = Math.hypot(w, hh);
+    const w = VP.w, hh = VP.h, cx = w / 2, cy = hh * .5, tk = this.tk, D = Math.hypot(w, hh);
     const n = Math.round([420, 700, 950][tk] * this.q);
     for (let i = 0; i < n; i++) {
       const an = rand(TAU), sp = rand(140, 580 + tk * 220) * (Math.random() < .22 ? 1.9 : 1);
@@ -6494,14 +6504,14 @@ const CS = {
     this.punch = .12 + tk * .07; this.shake = Math.max(this.shake, 9 + tk * 8); this.rays = 1; this.fog = .34 + tk * .14; this.glowT = 1; this.popA = .2 + tk * .06; this.core = 1;
   },
   aftershock() { // Nachbeben (ab Kosmisch): zweite Druckwelle, kurzer Lichtstoß
-    const D = Math.hypot(innerWidth, innerHeight);
+    const D = Math.hypot(VP.w, VP.h);
     this.rings.push({ r: 20, v: D * 1.1, w: 8, col: this.col2, life: 1, max: 1, d: 0 });
     this.flashes.push({ col: this.col, a: .22, t: 0, hold: .04, fade: .5 });
     this.shake = Math.max(this.shake, 7); this.punch += .04; this.glowT = Math.max(this.glowT, .6); this.rays = Math.max(this.rays, .6);
     this.snd('after');
   },
   shatter() {
-    const D = Math.hypot(innerWidth, innerHeight), cx = innerWidth / 2, cy = innerHeight * .5, n = 15;
+    const D = Math.hypot(VP.w, VP.h), cx = VP.w / 2, cy = VP.h * .5, n = 15;
     for (let i = 0; i < n; i++) {
       let a = i / n * TAU + rand(-.15, .15), r = 0; const len = D * rand(.1, .24), pts = [0, 0];
       while (r < len) {
@@ -6518,7 +6528,7 @@ const CS = {
     }
   },
   update(dt) {
-    const w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .5, ph = this.ph, k = this.pk(), tk = this.tk, q = this.q, D = Math.hypot(w, hh);
+    const w = VP.w, hh = VP.h, cx = w / 2, cy = hh * .5, ph = this.ph, k = this.pk(), tk = this.tk, q = this.q, D = Math.hypot(w, hh);
     const e = f => Math.exp(-f * dt), implode = ph === 3 && k > .88, fall = implode ? 1 - (k - .88) / .12 : 1;
     if (ph >= 4) { this.tb += dt; for (const s of this.sched) if (!s.done && this.tb >= s.t) { s.done = 1; s.fn(); } if (this.txtT < 0 && this.tb >= this.txtAt) { this.txtT = 0; this.snd('reveal'); } }
     if (this.txtT >= 0) this.txtT += dt;
@@ -6585,7 +6595,7 @@ const CS = {
   },
   flashA(f) { return (f.t < 0 ? 0 : f.t < f.hold ? f.a : f.a * Math.max(0, 1 - (f.t - f.hold) / f.fade)) * FX.flash; },
   draw() {
-    const c = this.c, x = this.x, dpr = Math.min(dprCap(), window.devicePixelRatio || 1), w = innerWidth, hh = innerHeight;
+    const c = this.c, x = this.x, dpr = Math.min(dprCap(), window.devicePixelRatio || 1), w = VP.w, hh = VP.h;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(hh * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr); }
     const ph = this.ph, k = this.pk(), cx = w / 2, cy = hh * .5, tk = this.tk, R0 = Math.min(w, hh) * .1, L = Math.hypot(w, hh);
     x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, hh);
@@ -6679,7 +6689,7 @@ const CS = {
   drawStar(x, cx, cy, R, ch, FA, c1, c2) {
     if (R <= .5) return;
     glow(x, c1, cx, cy, R * (3.4 + ch * 2), .5 + ch * .3); glow(x, c2, cx, cy, R * 1.6, .35);
-    const fw = innerWidth * (.12 + ch * .45), fl = x.createLinearGradient(cx - fw, 0, cx + fw, 0);
+    const fw = VP.w * (.12 + ch * .45), fl = x.createLinearGradient(cx - fw, 0, cx + fw, 0);
     fl.addColorStop(0, rgba(c1, 0)); fl.addColorStop(.5, rgba('#ffffff', .55)); fl.addColorStop(1, rgba(c1, 0));
     x.fillStyle = fl; x.fillRect(cx - fw, cy - 1.5, fw * 2, 3);
     x.save(); x.translate(cx, cy); x.rotate(this.rot);
@@ -6691,7 +6701,7 @@ const CS = {
   // Enthüllung: Name schlägt groß ein, „1 zu X“ folgt einen Moment später
   drawText(FA) {
     if (this.txtT < 0) return;
-    const x = this.x, w = innerWidth, hh = innerHeight, tt = this.txtT;
+    const x = this.x, w = VP.w, hh = VP.h, tt = this.txtT;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     if (!this.textC || this.textC.key !== w + 'x' + hh + 'x' + dpr) this.buildText(w, hh);
     const T = this.textC, br = clamp((this.flashL - .2) / .3, 0, 1);
@@ -6756,9 +6766,12 @@ const CS = {
 function implodeK(k) { return k > .88 ? 1 - (k - .88) / .12 * .8 : 1; }
 
 /* ---------- Effekt-Ebene der Enthüllung ---------- */
+// Größe der Vollbild-Ebenen (#fxc/#csc, position:fixed): gemessen an der Canvas selbst, damit Puffer und Anzeige immer
+// dasselbe Seitenverhältnis haben (innerWidth/innerHeight weichen auf Mobilgeräten je nach Browserleiste ab)
+const VP = { w: innerWidth, h: innerHeight };
 const RFX = { c: null, x: null, parts: [], rings: [], stars: [], charge: null, tier: 0, dirty: false };
 function revealBurst(a) {
-  const t = a.t, T = TIERS[t], w = innerWidth, hh = innerHeight, cx = w / 2, cy = hh * .36;
+  const t = a.t, T = TIERS[t], w = VP.w, hh = VP.h, cx = w / 2, cy = hh * .36;
   RFX.tier = t;
   const n = Math.round([26, 44, 75, 130, 210, 300, 420, 540, 680][t] * FX.part);
   const cols = [T.c, a.c1, a.c2v, '#ffffff'];
@@ -6772,7 +6785,7 @@ function drawRFX(dt) {
   const active = RFX.parts.length || RFX.rings.length || RFX.charge || (REVEAL.open && RFX.tier >= 5);
   if (!active) { if (RFX.dirty) { RFX.x.setTransform(1, 0, 0, 1, 0, 0); RFX.x.clearRect(0, 0, c.width, c.height); RFX.dirty = false; } return; }
   RFX.dirty = true;
-  const d = Math.min(dprCap(), window.devicePixelRatio || 1), w = innerWidth, hh = innerHeight;
+  const d = Math.min(dprCap(), window.devicePixelRatio || 1), w = VP.w, hh = VP.h;
   if (c.width !== Math.round(w * d) || c.height !== Math.round(hh * d)) { c.width = Math.round(w * d); c.height = Math.round(hh * d); }
   const x = RFX.x; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, hh);
   const cx = w / 2, cy = hh * .36;
@@ -6891,6 +6904,8 @@ function frame(now) {
 function init() {
   fillIcons();
   RD.c = $('#gc'); RD.x = RD.c.getContext('2d'); RFX.c = $('#fxc'); RFX.x = RFX.c.getContext('2d');
+  if (window.ResizeObserver) new ResizeObserver(es => { const r = es[es.length - 1].contentRect; if (r.width && r.height) { VP.w = r.width; VP.h = r.height; } }).observe(RFX.c);
+  else addEventListener('resize', () => { VP.w = innerWidth; VP.h = innerHeight; });
   setupArenaInput(); initStrip(); initBg(); initLobbyUI(); applySettings(); MUSIC.start();
   const ni = $('#nameInput'); ni.value = S.name;
   ni.addEventListener('input', () => { const sn = $('#sName'); if (sn) sn.value = ni.value; });
