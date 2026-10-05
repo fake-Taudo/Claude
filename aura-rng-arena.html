@@ -76,12 +76,15 @@ input,select{font:inherit;color:inherit}
 .top-pill b{font-family:var(--display);font-size:17px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .top-pill .tpl{font-size:12.5px;letter-spacing:.04em}
 .dust-pill .pi{color:#7ef3ff;background:rgba(62,230,255,.13);box-shadow:0 0 12px rgba(62,230,255,.35)}
+.dust-pill{position:relative}
+.dust-pill::after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:1px solid transparent;opacity:0;pointer-events:none}
+.dust-pill.up::after{border-color:#7ef3ff;box-shadow:0 0 24px rgba(62,230,255,.65),inset 0 0 14px rgba(62,230,255,.25);animation:pillGlow 1.2s var(--ease)}
+.dust-pill.down::after{border-color:#fb7185;box-shadow:0 0 18px rgba(251,113,133,.45);animation:pillGlow .9s var(--ease)}
+@keyframes pillGlow{15%{opacity:1}}
 .dust-pill.up{animation:dustUp 1.2s var(--ease)}
 .dust-pill.up b{animation:dustTxt 1.2s var(--ease)}
-.dust-pill.down{animation:dustDown .9s var(--ease)}
-@keyframes dustUp{15%{border-color:#7ef3ff;box-shadow:0 0 24px rgba(62,230,255,.65),inset 0 0 14px rgba(62,230,255,.25);transform:scale(1.06)}}
+@keyframes dustUp{15%{transform:scale(1.06)}}
 @keyframes dustTxt{15%{color:#c8faff;text-shadow:0 0 14px #3ee6ff}}
-@keyframes dustDown{15%{border-color:#fb7185;box-shadow:0 0 18px rgba(251,113,133,.45)}}
 .coll-pill .cp{display:flex;flex-direction:column;gap:4px;min-width:96px}
 .coll-pill .cp-top{display:flex;align-items:baseline;gap:6px;line-height:1}
 .cp-bar{height:4px;border-radius:4px;background:rgba(255,255,255,.09);overflow:hidden}
@@ -123,6 +126,14 @@ input,select{font:inherit;color:inherit}
 /* Echtes Milchglas nur bei Maus-Bedienung (Desktop-GPU); Touch-Geräte und „Weniger Bewegung“ nutzen das dichtere Glas ohne Live-Unschärfe */
 @media (pointer:fine){html[data-q="high"]:not(.calm):not(.lite) .panel{background:var(--glass);backdrop-filter:blur(12px) saturate(130%);-webkit-backdrop-filter:blur(12px) saturate(130%)}}
 @media (pointer:coarse){.topbar{backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,rgba(8,11,24,.96),rgba(8,11,24,.86))}}
+html:not([data-q="high"]) .topbar,html.lite .topbar{backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(180deg,rgba(8,11,24,.96),rgba(8,11,24,.86))}
+html:not([data-q="high"]) .modal-back,html.lite .modal-back{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(3,5,12,.8)}
+/* Lobby verdeckt (Menü, Einstellungen, Enthüllung, Cutscene): Dauer-Animationen dahinter anhalten – dann muss auch die Unschärfe nicht ständig neu berechnet werden */
+html.ui-hold .lobby-grid *,html.ui-hold .lobby-grid *::before,html.ui-hold .lobby-grid *::after{animation-play-state:paused!important}
+/* Layout-Isolation: Änderungen in einem Panel lösen kein Neu-Layout der übrigen Lobby aus */
+.panel{contain:layout style}
+@media (min-width:1101px){.col{contain:layout paint style}}
+.modal-b,.drawer-b{contain:layout paint style}
 
 /* ---------- Ausgerüstete Aura ---------- */
 .equip-panel{flex:1 0 auto;display:flex;flex-direction:column}
@@ -133,8 +144,8 @@ input,select{font:inherit;color:inherit}
 .ep-ring{position:absolute;left:50%;top:50%;width:min(78%,calc(var(--prev-h) * 1.05));aspect-ratio:1;translate:-50% -50%;border-radius:50%;border:1px dashed rgba(var(--ac-rgb),.3);animation:spin 40s linear infinite;z-index:-1;will-change:transform}
 @keyframes epPulse{50%{transform:translate(-50%,-50%) scale(1.16);opacity:.65}}
 .equip-prev canvas{position:absolute;inset:0;width:100%;height:100%}
-.ep-odds{position:absolute;right:10px;top:10px;padding:4px 10px;border-radius:999px;background:rgba(6,8,18,.6);border:1px solid var(--glass-line2);font-size:12px;font-weight:600;color:#c9d0ee;backdrop-filter:blur(6px)}
-.ep-count{position:absolute;left:10px;top:10px;padding:4px 10px;border-radius:999px;background:rgba(6,8,18,.6);border:1px solid var(--glass-line2);font-size:12px;font-weight:700;color:#fff;backdrop-filter:blur(6px)}
+.ep-odds{position:absolute;right:10px;top:10px;padding:4px 10px;border-radius:999px;background:rgba(6,8,18,.78);border:1px solid var(--glass-line2);font-size:12px;font-weight:600;color:#c9d0ee}
+.ep-count{position:absolute;left:10px;top:10px;padding:4px 10px;border-radius:999px;background:rgba(6,8,18,.78);border:1px solid var(--glass-line2);font-size:12px;font-weight:700;color:#fff}
 .equip-head{display:flex;flex-direction:column;gap:10px}
 .equip-name{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:.01em;line-height:1.02;overflow-wrap:anywhere}
 .equip-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -175,12 +186,24 @@ input,select{font:inherit;color:inherit}
 .roll-sub{font-size:14px;color:var(--muted);margin-top:6px;text-wrap:balance}
 .strip-wrap{position:relative;width:100%;max-width:980px;height:var(--strip-h);flex:none;isolation:isolate}
 .strip-wrap::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:20px;background:linear-gradient(180deg,rgba(10,14,30,.8),rgba(14,20,42,.88));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(255,255,255,.05),inset 0 0 40px rgba(0,0,0,.35);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%)}
-.strip-wrap canvas{position:absolute;inset:0;width:100%;height:100%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%)}
+/* Band aus wiederverwendeten Karten: die Spur wird nur per translate3d verschoben (Compositor), Karten sind vorgerenderte Canvas-Bilder */
+.strip-view{position:absolute;inset:0;overflow:hidden;contain:strict;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%)}
+.strip-track{position:absolute;left:0;top:0;width:1px;height:100%;transform:translate3d(0,0,0)}
+.strip-track.moving{will-change:transform}
+.sc{position:absolute;left:0;top:13px;contain:layout style size}
+.sc canvas{display:block;width:100%;height:100%}
+.sc::before{content:"";position:absolute;inset:2px;border-radius:12px;box-shadow:0 0 30px 2px var(--wc,#fff);opacity:0;pointer-events:none}
+.sc.win::before{opacity:1;animation:scWin .38s ease-in-out infinite alternate}
+@keyframes scWin{from{opacity:.6}to{opacity:1}}
+.sc-rb{position:absolute;inset:2px;border-radius:12px;overflow:hidden;display:none;pointer-events:none}
+.sc.rb .sc-rb{display:block}
+.sc-rb i{position:absolute;left:0;bottom:0;width:200%;height:5px;background:linear-gradient(90deg,hsl(0 90% 62%) 0% 6.25%,hsl(45 90% 62%) 6.25% 12.5%,hsl(90 90% 62%) 12.5% 18.75%,hsl(135 90% 62%) 18.75% 25%,hsl(180 90% 62%) 25% 31.25%,hsl(225 90% 62%) 31.25% 37.5%,hsl(270 90% 62%) 37.5% 43.75%,hsl(315 90% 62%) 43.75% 50%,hsl(0 90% 62%) 50% 56.25%,hsl(45 90% 62%) 56.25% 62.5%,hsl(90 90% 62%) 62.5% 68.75%,hsl(135 90% 62%) 68.75% 75%,hsl(180 90% 62%) 75% 81.25%,hsl(225 90% 62%) 81.25% 87.5%,hsl(270 90% 62%) 87.5% 93.75%,hsl(315 90% 62%) 93.75% 100%);animation:scRb 2.88s linear infinite}
+@keyframes scRb{to{transform:translateX(-50%)}}
 .strip-glow{position:absolute;inset:-28px -4%;z-index:-2;background:radial-gradient(48% 56% at 50% 50%,var(--glowc,rgba(124,140,255,.5)),transparent 72%);opacity:0;transition:opacity .5s;pointer-events:none}
 .strip-wrap.glow .strip-glow{opacity:1}
 .strip-marker{position:absolute;left:50%;top:0;bottom:0;width:24px;transform:translateX(-50%);pointer-events:none;z-index:2}
 .sm-line{position:absolute;left:50%;top:13px;bottom:13px;width:3px;transform:translateX(-50%);border-radius:3px;overflow:hidden;background:linear-gradient(180deg,#fff7c9,#fde047 30%,#f59e0b 70%,#fff7c9);box-shadow:0 0 10px #fde047,0 0 24px rgba(253,224,71,.6)}
-.sm-line::after{content:"";position:absolute;left:0;right:0;height:34px;top:-34px;background:linear-gradient(180deg,rgba(255,255,255,0),#fff,rgba(255,255,255,0));animation:smSweep 2.4s ease-in-out infinite}
+.sm-line::after{content:"";position:absolute;left:0;right:0;top:0;height:100%;background:linear-gradient(180deg,rgba(255,255,255,0),#fff,rgba(255,255,255,0)) 0 0/100% 34px no-repeat;transform:translateY(-34px);animation:smSweep 2.4s ease-in-out infinite}
 .sm-t,.sm-b{position:absolute;left:50%;width:22px;height:13px;transform:translateX(-50%);background:linear-gradient(180deg,#fff7c9,#fbbf24);filter:drop-shadow(0 0 6px rgba(253,224,71,.85))}
 .sm-t{top:0;clip-path:polygon(0 0,100% 0,50% 100%)}
 .sm-b{bottom:0;clip-path:polygon(50% 0,100% 100%,0 100%)}
@@ -189,7 +212,7 @@ input,select{font:inherit;color:inherit}
 .strip-wrap.rolling .strip-marker::before{animation-duration:.7s}
 @keyframes smGlow{0%,100%{opacity:.35}50%{opacity:1}}
 
-@keyframes smSweep{0%{top:-34px}65%,100%{top:100%}}
+@keyframes smSweep{0%{transform:translateY(-34px)}65%,100%{transform:translateY(100%)}}
 .roll-stage{--rbc:124,140,255;position:relative;width:var(--rb);height:var(--rb);display:grid;place-items:center;flex:none;margin:8px 0}
 .roll-stage.bonus{--rbc:251,191,36}
 .rs-halo{position:absolute;inset:-46%;border-radius:50%;background:radial-gradient(circle,rgba(var(--rbc),.34),rgba(var(--rbc),.09) 45%,transparent 68%);animation:breathe 3.2s ease-in-out infinite;pointer-events:none;will-change:transform,opacity}
@@ -206,7 +229,9 @@ input,select{font:inherit;color:inherit}
 .rb-clip::before{content:"";position:absolute;top:6%;left:20%;right:20%;height:34%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0))}
 .rb-ripple{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.75),rgba(255,255,255,0) 70%);animation:ripple .65s ease-out forwards}
 @keyframes ripple{to{transform:scale(18);opacity:0}}
-.rb-ring{position:absolute;inset:-12px;border-radius:50%;background:conic-gradient(from 0deg,rgba(var(--rbc),0) 0deg,rgba(var(--rbc),.95) 60deg,rgba(255,255,255,.95) 92deg,rgba(var(--rbc),0) 140deg,rgba(var(--rbc),0) 185deg,rgba(240,171,252,.9) 245deg,rgba(255,255,255,.9) 272deg,rgba(var(--rbc),0) 320deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));filter:drop-shadow(0 0 6px rgba(var(--rbc),.9));animation:spin 5s linear infinite;pointer-events:none;will-change:transform}
+.rb-ring{position:absolute;inset:-12px;border-radius:50%;background:conic-gradient(from 0deg,rgba(var(--rbc),0) 0deg,rgba(var(--rbc),.95) 60deg,rgba(255,255,255,.95) 92deg,rgba(var(--rbc),0) 140deg,rgba(var(--rbc),0) 185deg,rgba(240,171,252,.9) 245deg,rgba(255,255,255,.9) 272deg,rgba(var(--rbc),0) 320deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));animation:spin 5s linear infinite;pointer-events:none;will-change:transform}
+/* weicher Schein unter den hellen Bögen (vorgerendert per Verlauf, rotiert synchron mit – ersetzt den teuren drop-shadow-Filter) */
+.rb-ring.rb-glow{inset:-18px;background:conic-gradient(from 0deg,rgba(var(--rbc),0) 0deg,rgba(var(--rbc),.95) 60deg,rgba(var(--rbc),.95) 92deg,rgba(var(--rbc),0) 140deg,rgba(var(--rbc),0) 185deg,rgba(var(--rbc),.9) 245deg,rgba(var(--rbc),.9) 272deg,rgba(var(--rbc),0) 320deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 19px),#000 calc(100% - 8px),transparent 100%);mask:radial-gradient(farthest-side,transparent calc(100% - 19px),#000 calc(100% - 8px),transparent 100%);opacity:.7}
 .rb-inner{position:relative;text-align:center;line-height:1;transition:opacity .2s,transform .25s var(--ease)}
 .rb-label{display:block;font-family:var(--display);font-size:calc(var(--rb) * .16);font-weight:800;letter-spacing:.16em;padding-left:.16em;text-shadow:0 0 18px rgba(255,255,255,.7),0 2px 0 rgba(0,0,0,.25)}
 .roll-btn small{display:block;margin-top:9px;font-size:clamp(11px,calc(var(--rb) * .06),13px);font-weight:700;letter-spacing:.16em;text-transform:uppercase;opacity:.88;white-space:nowrap}
@@ -220,6 +245,7 @@ input,select{font:inherit;color:inherit}
 .roll-btn:disabled::after{animation:none;opacity:0}
 .roll-btn:disabled .rb-inner{opacity:0;transform:scale(.85)}
 .roll-btn:disabled .rb-ring{animation-duration:.9s;background:conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,rgba(255,255,255,.95) 110deg,rgba(255,255,255,0) 118deg)}
+.roll-btn:disabled .rb-glow{background:conic-gradient(from 0deg,rgba(var(--rbc),0) 0deg,rgba(var(--rbc),.95) 110deg,rgba(var(--rbc),0) 118deg)}
 .rb-busy{position:absolute;display:flex;gap:8px;opacity:0;transition:opacity .2s}
 .roll-btn:disabled .rb-busy{opacity:1}
 .rb-busy i{width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 10px #fff;animation:dots 1s ease-in-out infinite}
@@ -255,7 +281,7 @@ input,select{font:inherit;color:inherit}
 .boost .t{display:inline-flex;align-items:center;gap:5px;margin-left:6px;font-family:var(--display);font-weight:700;font-size:16px;color:#fff;font-variant-numeric:tabular-nums}
 .boost .t svg{width:14px;height:14px;color:var(--muted)}
 .boost .bar{position:absolute;left:10px;right:10px;bottom:5px;height:3px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
-.boost .bar i{display:block;height:100%;background:var(--bc,#4ade80);box-shadow:0 0 8px var(--bc,#4ade80);border-radius:inherit;transition:width .3s linear}
+.boost .bar i{display:block;width:100%;height:100%;background:var(--bc,#4ade80);box-shadow:0 0 8px var(--bc,#4ade80);border-radius:inherit;transform-origin:0 50%;transition:transform .3s linear}
 .boost.low .t{color:#fca5a5;animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:.45}}
 .potion-sec{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:780px}
@@ -420,10 +446,11 @@ input,select{font:inherit;color:inherit}
 .rd-btns .btn{min-height:44px}
 @media (max-width:560px){.drawer{width:100%;border-left:0}.drawer::before{display:none}.drawer-b{padding:4px 16px 24px}.drawer-h{padding:14px 16px}}
 /* Qualitätsstufe Niedrig: aufwendige Lobby-Glows und Dauer-Animationen aus */
-html[data-q="low"] .rb-ring{filter:none}
+html[data-q="low"] .rb-glow{opacity:0}
 html[data-q="low"] .rs-orbit.o2,html[data-q="low"] .ep-ring{display:none}
 html[data-q="low"] .rs-halo,html[data-q="low"] .equip-prev::before,html[data-q="low"] .hist-item::before,html[data-q="low"] .strip-marker::before{animation:none}
 html[data-q="low"] .mode-btn::after,html[data-q="low"] .sm-line::after{display:none}
+html[data-q="low"] .sc.win::before,html[data-q="low"] .sc-rb i,html[data-q="low"] .logo-orb,html[data-q="low"] .rs-orbit.o1{animation:none}
 
 /* ---------- Allgemeine Pills und Werte-Kacheln (Menüs, Shop, Braukessel, Aura-Details) ---------- */
 .pill{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:999px;background:var(--chip);border:1px solid var(--glass-line2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);font-size:13.5px;color:var(--muted);white-space:nowrap}
@@ -517,6 +544,7 @@ html[data-q="low"] .mode-btn::after,html[data-q="low"] .sm-line::after{display:n
 .acard::before{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--tc);box-shadow:0 0 10px var(--tc)}
 .acard:hover{transform:translateY(-3px);border-color:var(--tc);box-shadow:0 8px 26px rgba(0,0,0,.4),0 0 20px var(--tcg)}
 .acard img{width:72px;height:72px}
+.coll-grid .acard{content-visibility:auto;contain-intrinsic-size:auto 150px}
 .acard .nm{font-size:13px;font-weight:700;text-align:center;line-height:1.2}
 .acard .tr{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--tc)}
 .acard .cnt{position:absolute;top:7px;right:8px;font-size:11px;font-weight:800;color:var(--muted)}
@@ -580,10 +608,14 @@ html[data-q="low"] .mode-btn::after,html[data-q="low"] .sm-line::after{display:n
 .recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
 .rcard{display:flex;flex-direction:column;gap:9px;padding:14px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line);transition:border-color .2s,box-shadow .2s}
 .rcard.can{border-color:var(--pcb);box-shadow:0 0 22px var(--pcg)}
-.rcard.hl{animation:rchl 1.3s ease}
-@keyframes rchl{25%,55%{box-shadow:0 0 0 2px var(--pc),0 0 30px var(--pc)}}
+.rcard{position:relative}
+.rcard::after{content:"";position:absolute;inset:-1px;border-radius:inherit;opacity:0;pointer-events:none;box-shadow:0 0 0 2px var(--pc),0 0 30px var(--pc)}
+.rcard.hl::after{animation:rchl 1.3s ease}
+@keyframes rchl{25%,55%{opacity:1}}
 .rcard.brewed{animation:rcbrew .8s ease}
-@keyframes rcbrew{20%{transform:scale(1.025);box-shadow:0 0 44px var(--pc)}}
+.rcard.brewed::after{box-shadow:0 0 44px var(--pc);animation:rcglow .8s ease}
+@keyframes rcglow{20%{opacity:1}}
+@keyframes rcbrew{20%{transform:scale(1.025)}}
 .rc-h{display:flex;align-items:center;gap:11px}
 .rc-ic canvas{width:46px;height:46px;display:block}
 .rc-h h4{font-size:15px;line-height:1.2}
@@ -645,10 +677,12 @@ html[data-q="low"] .mode-btn::after,html[data-q="low"] .sm-line::after{display:n
 
 /* ---------- Enthüllung ---------- */
 #fxc{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
-.reveal{position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(circle at 50% 36%,var(--rv,rgba(124,140,255,.25)),rgba(4,6,14,0) 58%),rgba(4,6,14,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:fadein .3s ease}
+.reveal{position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(circle at 50% 36%,var(--rv,rgba(124,140,255,.25)),rgba(4,6,14,0) 58%),rgba(4,6,14,.94);animation:fadein .3s ease}
 .rays{position:absolute;left:50%;top:36%;width:180vmax;height:180vmax;margin:-90vmax 0 0 -90vmax;background:repeating-conic-gradient(from 0deg,var(--rc) 0deg 7deg,transparent 7deg 20deg);animation:spin 40s linear infinite;-webkit-mask-image:radial-gradient(circle,#000 0,transparent 55%);mask-image:radial-gradient(circle,#000 0,transparent 55%);pointer-events:none}
 .reveal-card{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:26px 30px 24px;min-width:320px;max-width:92vw;animation:revealIn .7s cubic-bezier(.2,1.2,.3,1)}
-@keyframes revealIn{0%{transform:scale(.3);opacity:0;filter:brightness(3)}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1);filter:none}}
+@keyframes revealIn{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+.reveal-card::before{content:"";position:absolute;inset:0;border-radius:28px;background:radial-gradient(closest-side,rgba(255,255,255,.6),rgba(255,255,255,.14) 62%,rgba(255,255,255,0));opacity:0;animation:rvFlash .75s ease-out;pointer-events:none;z-index:-1}
+@keyframes rvFlash{0%{opacity:1}100%{opacity:0}}
 .reveal-prev{width:240px;height:240px;position:relative}
 .reveal-prev canvas{width:100%;height:100%}
 .reveal-tier{font-size:14px;font-weight:900;letter-spacing:.42em;text-transform:uppercase}
@@ -670,12 +704,12 @@ html[data-q="low"] .mode-btn::after,html[data-q="low"] .sm-line::after{display:n
 .charge-overlay{position:fixed;inset:0;z-index:54;background:radial-gradient(circle,rgba(0,0,0,.2),rgba(0,0,0,.92) 70%);animation:fadein .4s}
 /* Cutscene ab Göttlich */
 #csc{position:fixed;inset:0;width:100%;height:100%;z-index:70;display:none;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
-.cs-skip{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:71;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:rgba(10,14,30,.5);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:13px;font-weight:700;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer;visibility:hidden;opacity:0;transition:opacity .3s,visibility 0s .3s}
+.cs-skip{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:71;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:rgba(10,14,30,.66);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:13px;font-weight:700;cursor:pointer;visibility:hidden;opacity:0;transition:opacity .3s,visibility 0s .3s}
 .cs-skip.on{visibility:visible;opacity:.82;transition:opacity .4s .5s}
 .cs-skip:hover{opacity:1;border-color:#fff}
 .cs-skip small{font-weight:500;color:rgba(255,255,255,.6);font-size:11px}
 @media (pointer:coarse){.cs-skip{padding:12px 18px;font-size:14px}}
-.reveal.after-cs{background:radial-gradient(circle at 50% 36%,var(--rv,rgba(124,140,255,.25)),rgba(4,6,14,0) 62%),rgba(4,6,14,.8);animation:none}
+.reveal.after-cs{background:radial-gradient(circle at 50% 36%,var(--rv,rgba(124,140,255,.25)),rgba(4,6,14,0) 62%),rgba(4,6,14,.86);animation:none}
 .reveal.lock .reveal-actions{pointer-events:none}
 
 /* ---------- Arena ---------- */
@@ -685,7 +719,7 @@ html[data-q="low"] .mode-btn::after,html[data-q="low"] .sm-line::after{display:n
 .arena-banner{position:absolute;left:50%;top:22%;transform:translateX(-50%);text-align:center;z-index:3;pointer-events:none}
 .arena-banner h2{font-size:54px;font-weight:900;letter-spacing:.12em;text-shadow:0 0 30px currentColor}
 .arena-banner p{font-size:15px;color:#c6ccff;margin-top:6px}
-.results{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:rgba(3,5,12,.72);backdrop-filter:blur(6px);padding:18px}
+.results{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:rgba(3,5,12,.8);padding:18px}
 .results .modal{width:min(640px,100%)}
 .rank{width:100%;border-collapse:collapse;font-size:14px}
 .rank td,.rank th{padding:8px 8px;border-bottom:1px solid var(--line);text-align:left}
@@ -717,9 +751,12 @@ html[data-q="low"] .mode-btn::after,html[data-q="low"] .sm-line::after{display:n
 .tmain.noen{border-color:rgba(255,77,109,.7)}
 .tsp.locked canvas,.tmain.locked canvas{opacity:.22;filter:grayscale(1)}
 .tsp.down{transform:scale(.9)}
+.tsp::before{content:"";position:absolute;inset:-2px;border-radius:50%;box-shadow:0 0 26px var(--ac);opacity:0;pointer-events:none}
 .tsp.pop{animation:tpop .35s ease-out}
+.tsp.pop::before{animation:tpopG .35s ease-out}
+@keyframes tpopG{40%{opacity:1}}
 .tsp.deny{animation:tdeny .26s}
-@keyframes tpop{40%{transform:scale(1.12);box-shadow:0 0 26px var(--ac)}}
+@keyframes tpop{40%{transform:scale(1.12)}}
 @keyframes tdeny{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .tknob{position:absolute;left:50%;top:50%;width:40%;height:40%;margin:-20% 0 0 -20%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,var(--ac) 75%);box-shadow:0 0 20px var(--ac);opacity:0;transition:opacity .1s;pointer-events:none;z-index:5}
 .tmain.down{transform:scale(.97)}
@@ -844,10 +881,10 @@ html[data-q="low"] .mode-btn::after,html[data-q="low"] .sm-line::after{display:n
         <!-- Mitte: Rollen -->
         <section class="roll-area">
           <div class="roll-head"><div class="roll-title">Aura beschwören</div><div class="roll-sub">64 Auren in 9 Seltenheitsstufen – wie viel Glück hast du?</div></div>
-          <div class="strip-wrap" id="stripWrap"><span class="strip-glow"></span><canvas id="stripC"></canvas><div class="strip-marker" aria-hidden="true"><i class="sm-t"></i><i class="sm-line"></i><i class="sm-b"></i></div></div>
+          <div class="strip-wrap" id="stripWrap"><span class="strip-glow"></span><div class="strip-view" id="stripView"><div class="strip-track" id="stripTrack"></div></div><div class="strip-marker" aria-hidden="true"><i class="sm-t"></i><i class="sm-line"></i><i class="sm-b"></i></div></div>
           <div class="roll-stage" id="rollStage">
             <span class="rs-halo"></span><span class="rs-orbit o2"></span><span class="rs-orbit o1"></span>
-            <button class="roll-btn pulse" id="rollBtn" aria-label="Aura rollen"><span class="rb-ring"></span><span class="rb-clip"></span><span class="rb-inner"><span class="rb-label">ROLL</span><small id="rollSub">1 Aura</small></span><span class="rb-busy" aria-hidden="true"><i></i><i></i><i></i></span></button>
+            <button class="roll-btn pulse" id="rollBtn" aria-label="Aura rollen"><span class="rb-ring rb-glow"></span><span class="rb-ring"></span><span class="rb-clip"></span><span class="rb-inner"><span class="rb-label">ROLL</span><small id="rollSub">1 Aura</small></span><span class="rb-busy" aria-hidden="true"><i></i><i></i><i></i></span></button>
           </div>
           <div class="status-row">
             <div class="s-chip luck" id="luckChip" title="Glück-Multiplikator für den nächsten Roll"><span class="sc-ic" data-icon="clover"></span><span class="sc-t"><small>Glück</small><b id="luckVal">×1,00</b></span></div>
@@ -968,6 +1005,7 @@ function hexRgb(h) {
 function rgba(h, a) { const c = hexRgb(h); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
 function mix(h1, h2, t) { const a = hexRgb(h1), b = hexRgb(h2); return '#' + a.map((v, i) => Math.round(lerp(v, b[i], t)).toString(16).padStart(2, '0')).join(''); }
 function luminance(h) { const c = hexRgb(h); return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255; }
+function setTxt(el, v) { v = String(v); if (el && el.textContent !== v) el.textContent = v; } // DOM nur bei echter Änderung anfassen
 function h(tag, attrs = {}, inner = '') {
   const e = document.createElement(tag);
   for (const k in attrs) { if (k === 'class') e.className = attrs[k]; else if (k === 'style') e.style.cssText = attrs[k]; else if (k.startsWith('on')) e[k] = attrs[k]; else e.setAttribute(k, attrs[k]); }
@@ -1549,8 +1587,12 @@ function loadSave() {
   return defaultSave();
 }
 const S = loadSave();
+// Spielstand ohne Zeitstempel – zum Erkennen, ob sich seit dem letzten Schreiben überhaupt etwas geändert hat
+function saveBody() { const at = S.savedAt; S.savedAt = 0; const j = JSON.stringify(S); S.savedAt = at; return j; }
+let SAVE_BODY = ''; try { if (localStorage.getItem(SAVE_KEY)) SAVE_BODY = saveBody(); } catch (e) { }
 function save() {
-  S.savedAt = Date.now();
+  const b = saveBody(); if (b === SAVE_BODY) return; // localStorage nur bei echten Änderungen schreiben
+  SAVE_BODY = b; S.savedAt = Date.now();
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { }
   CLOUD.queue();
 }
@@ -1558,7 +1600,7 @@ function save() {
 function replaceSave(d) {
   const n = normalizeSave(d); if (!n) return false;
   for (const k of Object.keys(S)) delete S[k];
-  Object.assign(S, n);
+  Object.assign(S, n); SAVE_BODY = saveBody();
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { }
   return true;
 }
@@ -1827,6 +1869,9 @@ function glowSprite(col) { // weiches Leucht-Sprite pro Farbe (für additive Glo
   g.addColorStop(0, rgba(col, 1)); g.addColorStop(0.25, rgba(col, 0.55)); g.addColorStop(0.6, rgba(col, 0.14)); g.addColorStop(1, rgba(col, 0));
   x.fillStyle = g; x.fillRect(0, 0, 64, 64); return (GLOW_CACHE[col] = c);
 }
+// Tote Einträge ohne neues Array entfernen (weniger Garbage Collection als filter() in jedem Frame)
+function prune(a, keep) { let j = 0; for (let i = 0; i < a.length; i++) { const o = a[i]; if (keep(o)) a[j++] = o; } a.length = j; return a; }
+const ALIVE = o => o.life > 0, UNDER_MAX = o => o.t < o.max, KILL_LIVE = k => k.t < 6;
 function glow(ctx, col, x, y, r, a = 1) { if (a <= 0) return; const s = glowSprite(col); const pa = ctx.globalAlpha; ctx.globalAlpha = pa * a; ctx.drawImage(s, x - r, y - r, r * 2, r * 2); ctx.globalAlpha = pa; }
 
 function drawGlyph(x, a, s) { // Glyph einer Aura in Einheitsgröße zeichnen (Kontext ist bereits skaliert)
@@ -1939,7 +1984,7 @@ class AuraFX {
       if (p.ring) p.s += dt * r * 1.8;
     }
     const pc = intensity >= 1 ? 90 : Math.max(24, Math.round(90 * intensity)); if (this.p.length > pc) this.p.splice(0, this.p.length - pc);
-    this.p = this.p.filter(p => p.life > 0);
+    prune(this.p, ALIVE);
   }
   spawn(mo, sh, x, y, r) {
     const a = this.a, col = Math.random() < 0.65 ? a.c1 : a.c2v, an = rand(TAU);
@@ -2018,34 +2063,56 @@ function drawParticle(x, sh, px, py, s, rot, p) {
   }
   if (sh === 'square' && p && p.w) { x.fillRect(px - s * p.w, py - s * .2, s * p.w * 2, s * .4); }
 }
+/* Leuchtrand eines Körpers als vorgerendertes Sprite – ersetzt shadowBlur, das pro Frame und Kämpfer sehr teuer ist.
+   shadowBlur wirkt in Gerätepixeln (unabhängig von Zoom/Pixeldichte), daher ist die relative Breite des Scheins
+   .9 / Skalierung; dafür gibt es wenige Sprite-Varianten pro Farbe. */
+const RING_CACHE = {};
+function ringGlowAt(x, col, cx, cy, r, ts) {
+  if (r * ts < 1) return;
+  const b = .9 / ts, q = b < .37 ? .3 : b < .52 ? .45 : b < .75 ? .6 : b < 1.1 ? .9 : 1.3, key = col + q;
+  let sp = RING_CACHE[key];
+  if (!sp) {
+    const R = 40, m = Math.ceil(R * (1.07 + 1.5 * q)) + 2, c = document.createElement('canvas'); c.width = c.height = m * 2;
+    const g = c.getContext('2d'); g.shadowColor = col; g.shadowBlur = R * q; g.shadowOffsetX = m * 4; // nur der Schatten landet im Bild
+    g.lineWidth = R * .13; g.strokeStyle = col; circ(g, m - m * 4, m, R); g.stroke();
+    sp = RING_CACHE[key] = { c, m: m / R };
+  }
+  const e = sp.m * r; x.drawImage(sp.c, cx - e, cy - e, e * 2, e * 2);
+}
 /* Ein Kämpfer-Körper inkl. Aura – genutzt in Vorschau und Arena */
 function drawBody(x, a, cx, cy, r, ang, t, opt = {}) {
-  const al = opt.alpha ?? 1;
+  const al = opt.alpha ?? 1, ts = Math.abs(x.getTransform().a) || 1;
   x.save(); x.globalAlpha = al;
   if (a.t >= 8) { x.globalAlpha = al * .35; x.fillStyle = '#ff3d6e'; circ(x, cx - 2, cy, r); x.fill(); x.fillStyle = '#3ee6ff'; circ(x, cx + 2, cy, r); x.fill(); x.globalAlpha = al; }
   const g = x.createRadialGradient(cx - r * .3, cy - r * .35, r * .1, cx, cy, r);
   g.addColorStop(0, mix(a.c1, '#ffffff', .25)); g.addColorStop(.35, mix(a.c1, '#0b1022', .45)); g.addColorStop(1, '#0b1022');
   x.fillStyle = g; circ(x, cx, cy, r); x.fill();
-  x.lineWidth = Math.max(1.5, r * .13); x.strokeStyle = a.c1; x.shadowColor = a.c1; x.shadowBlur = r * .9; circ(x, cx, cy, r); x.stroke(); x.shadowBlur = 0;
+  ringGlowAt(x, a.c1, cx, cy, r, ts);
+  x.lineWidth = Math.max(1.5, r * .13); x.strokeStyle = a.c1; circ(x, cx, cy, r); x.stroke();
   // Glyph klein auf dem Körper
   x.save(); x.translate(cx, cy); x.scale(r * .5, r * .5); x.globalAlpha = al * .9; drawGlyph(x, a); x.restore();
   // Blickrichtung
   if (ang !== null && ang !== undefined) {
-    x.fillStyle = '#fff'; x.shadowColor = a.c1; x.shadowBlur = 8;
     const fx = cx + Math.cos(ang) * (r + 5), fy = cy + Math.sin(ang) * (r + 5);
-    x.beginPath(); x.moveTo(fx + Math.cos(ang) * 6, fy + Math.sin(ang) * 6); x.lineTo(fx + Math.cos(ang + 2.4) * 5, fy + Math.sin(ang + 2.4) * 5); x.lineTo(fx + Math.cos(ang - 2.4) * 5, fy + Math.sin(ang - 2.4) * 5); x.closePath(); x.fill(); x.shadowBlur = 0;
+    glow(x, a.c1, fx + Math.cos(ang) * 1.5, fy + Math.sin(ang) * 1.5, 5 + 9 / ts, .6); x.fillStyle = '#fff';
+    x.beginPath(); x.moveTo(fx + Math.cos(ang) * 6, fy + Math.sin(ang) * 6); x.lineTo(fx + Math.cos(ang + 2.4) * 5, fy + Math.sin(ang + 2.4) * 5); x.lineTo(fx + Math.cos(ang - 2.4) * 5, fy + Math.sin(ang - 2.4) * 5); x.closePath(); x.fill();
   }
   x.restore();
 }
 /* Animierte Vorschau auf einem Canvas (Lobby, Detail, Enthüllung) */
 const PREVIEWS = new Set();
+// Größe und Sichtbarkeit der Vorschau-Canvas über Observer statt Layout-Abfragen im Frame
+const PV_RO = window.ResizeObserver ? new ResizeObserver(es => { for (const e of es) e.target._sz = [e.contentRect.width, e.contentRect.height]; }) : null;
+const PV_IO = window.IntersectionObserver ? new IntersectionObserver(es => { for (const e of es) e.target._off = !e.isIntersecting; }) : null;
 class Preview {
   constructor(canvas, ai, scale = 1) { this.c = canvas; this.x = canvas.getContext('2d'); this.fx = new AuraFX(ai); this.scale = scale; this.t = 0; PREVIEWS.add(this); }
   set(ai) { this.fx.set(ai); }
-  destroy() { PREVIEWS.delete(this); }
+  destroy() { PREVIEWS.delete(this); if (PV_RO) PV_RO.unobserve(this.c); if (PV_IO) PV_IO.unobserve(this.c); }
   frame(dt) {
     if (!this.c.isConnected) { this.destroy(); return; }
-    const c = this.c, d = Math.min(2, window.devicePixelRatio || 1), w = c.clientWidth, hh = c.clientHeight;
+    if (this.lob === undefined) { this.lob = !!this.c.closest('#lobby'); if (PV_RO) PV_RO.observe(this.c); if (PV_IO) PV_IO.observe(this.c); }
+    if ((this.lob && UI.hold) || this.c._off) return; // Lobby verdeckt oder Canvas außerhalb des Bildes: nicht zeichnen
+    const c = this.c, d = Math.min(2, window.devicePixelRatio || 1), sz = c._sz, w = sz ? sz[0] : c.clientWidth, hh = sz ? sz[1] : c.clientHeight;
     if (!w || !hh) return;
     if (c.width !== Math.round(w * d) || c.height !== Math.round(hh * d)) { c.width = Math.round(w * d); c.height = Math.round(hh * d); }
     const x = this.x; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, hh);
@@ -2327,29 +2394,45 @@ function obPath(x, o, inset = 0) {
   if (o.r) { const r = Math.max(2, o.r - inset); if (o.cr) { for (let i = 0; i < 6; i++) { const a = i * TAU / 6 + (o.x % 7); const rr = r * (i % 2 ? .82 : 1.05); x.lineTo(o.x + Math.cos(a) * rr, o.y + Math.sin(a) * rr); } x.closePath(); } else if (o.k === 'pillar' && !o.tree) { for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + Math.PI / 8; x.lineTo(o.x + Math.cos(a) * r, o.y + Math.sin(a) * r); } x.closePath(); } else x.arc(o.x, o.y, r, 0, TAU); }
   else { const i2 = Math.min(inset, o.w / 2 - 1, o.h / 2 - 1); x.rect(o.x + i2, o.y + i2, o.w - 2 * i2, o.h - 2 * i2); }
 }
-// Hohe/feste Elemente (Mauern, Säulen, Barrikaden) – nur sichtbare zeichnen
+// Hohe/feste Elemente (Mauern, Säulen, Barrikaden) – nur sichtbare zeichnen. Statische Elemente werden pro Karte und
+// Zoomstufe einmal als Bild vorgerendert (pro Frame nur noch ein drawImage); Bäume wiegen sich und bleiben Vektorgrafik.
+const OBC = { map: null, k: 0, m: new Map() };
+function obSprite(o, T) {
+  let sp = OBC.m.get(o); if (sp) return sp;
+  const k = OBC.k, p = 6 + (o.r ? o.r * .07 : 0), x0 = o.bx1 - p, y0 = o.by1 - p, c = document.createElement('canvas');
+  c.width = Math.max(1, Math.ceil((o.bx2 - o.bx1 + p * 2) * k)); c.height = Math.max(1, Math.ceil((o.by2 - o.by1 + p * 2) * k));
+  const x = c.getContext('2d'); x.setTransform(k, 0, 0, k, -x0 * k, -y0 * k); drawOb(x, o, T, 0);
+  sp = { c, x0, y0, w: c.width / k, h: c.height / k }; OBC.m.set(o, sp); return sp;
+}
 function drawObstacles(x, V, t) {
-  if (!MAP) return; const T = MAP.th;
+  if (!MAP) return; const T = MAP.th, kNeed = RD.dpr * Math.max(RD.scale, (RD.L && RD.L.camS) || 1), spr = kNeed <= 2.5; // sehr hohe Auflösungen: Vektor (spart Speicher)
+  if (spr && (OBC.map !== MAP || kNeed > OBC.k * 1.02 || kNeed < OBC.k * .6)) { OBC.map = MAP; OBC.k = Math.ceil(kNeed * 4) / 4; OBC.m.clear(); }
+  const sq = x.imageSmoothingQuality; if (spr) x.imageSmoothingQuality = 'medium';
   for (const o of MAP.solid) {
     if (o.k === 'pit' || o.bx2 < V.x0 || o.bx1 > V.x1 || o.by2 < V.y0 || o.by1 > V.y1) continue;
-    if (o.k === 'wall') {
-      obPath(x, o, 0); x.fillStyle = T.top; x.fill();
-      x.strokeStyle = rgba(T.acc, .18); x.lineWidth = 8; x.stroke(); x.strokeStyle = rgba(T.acc, .85); x.lineWidth = 2; x.stroke();
-      x.strokeStyle = rgba(T.acc2, .22); x.lineWidth = 1.5; obPath(x, o, 7); x.stroke();
-    } else if (o.k === 'cover') {
-      obPath(x, o, 0); x.fillStyle = mix(T.top, '#000000', .25); x.fill(); x.strokeStyle = rgba(T.acc2, .6); x.lineWidth = 2; x.stroke();
-      x.save(); obPath(x, o, 3); x.clip(); x.strokeStyle = rgba(T.acc2, .16); x.lineWidth = 5; x.beginPath(); for (let i = -o.h; i < o.w + o.h; i += 16) { x.moveTo(o.x + i, o.y); x.lineTo(o.x + i - o.h, o.y + o.h); } x.stroke(); x.restore();
-    } else if (o.k === 'pillar') {
-      if (o.tree) {
-        x.fillStyle = mix(T.top, '#000000', .2); circ(x, o.x, o.y, o.r); x.fill();
-        for (let i = 0; i < 5; i++) { const a = i * TAU / 5 + o.x, sw = Math.sin(t * 1.3 + i + o.y) * 2; x.fillStyle = rgba(T.bush, .5 + (i % 2) * .2); circ(x, o.x + Math.cos(a) * o.r * .45 + sw, o.y + Math.sin(a) * o.r * .45, o.r * .62); x.fill(); }
-        x.strokeStyle = rgba(T.acc, .75); x.lineWidth = 2; circ(x, o.x, o.y, o.r); x.stroke(); x.fillStyle = rgba(T.acc2, .9); circ(x, o.x, o.y, 4); x.fill();
-      } else {
-        obPath(x, o, 0); x.fillStyle = o.cr ? mix(T.top, T.acc, .18) : T.top; x.fill();
-        x.strokeStyle = rgba(T.acc, .2); x.lineWidth = 8; x.stroke(); x.strokeStyle = rgba(o.cr ? T.acc2 : T.acc, .85); x.lineWidth = 2.2; x.stroke();
-        if (o.cr) { x.strokeStyle = rgba('#ffffff', .25); x.lineWidth = 1.2; x.beginPath(); x.moveTo(o.x - o.r * .4, o.y - o.r * .5); x.lineTo(o.x + o.r * .1, o.y + o.r * .1); x.lineTo(o.x + o.r * .5, o.y - o.r * .2); x.stroke(); }
-        else { x.strokeStyle = rgba(T.acc2, .25); x.lineWidth = 1.5; circ(x, o.x, o.y, o.r * .55); x.stroke(); }
-      }
+    if (spr && !o.tree) { const sp = obSprite(o, T); x.drawImage(sp.c, sp.x0, sp.y0, sp.w, sp.h); }
+    else drawOb(x, o, T, t);
+  }
+  if (spr) x.imageSmoothingQuality = sq;
+}
+function drawOb(x, o, T, t) {
+  if (o.k === 'wall') {
+    obPath(x, o, 0); x.fillStyle = T.top; x.fill();
+    x.strokeStyle = rgba(T.acc, .18); x.lineWidth = 8; x.stroke(); x.strokeStyle = rgba(T.acc, .85); x.lineWidth = 2; x.stroke();
+    x.strokeStyle = rgba(T.acc2, .22); x.lineWidth = 1.5; obPath(x, o, 7); x.stroke();
+  } else if (o.k === 'cover') {
+    obPath(x, o, 0); x.fillStyle = mix(T.top, '#000000', .25); x.fill(); x.strokeStyle = rgba(T.acc2, .6); x.lineWidth = 2; x.stroke();
+    x.save(); obPath(x, o, 3); x.clip(); x.strokeStyle = rgba(T.acc2, .16); x.lineWidth = 5; x.beginPath(); for (let i = -o.h; i < o.w + o.h; i += 16) { x.moveTo(o.x + i, o.y); x.lineTo(o.x + i - o.h, o.y + o.h); } x.stroke(); x.restore();
+  } else if (o.k === 'pillar') {
+    if (o.tree) {
+      x.fillStyle = mix(T.top, '#000000', .2); circ(x, o.x, o.y, o.r); x.fill();
+      for (let i = 0; i < 5; i++) { const a = i * TAU / 5 + o.x, sw = Math.sin(t * 1.3 + i + o.y) * 2; x.fillStyle = rgba(T.bush, .5 + (i % 2) * .2); circ(x, o.x + Math.cos(a) * o.r * .45 + sw, o.y + Math.sin(a) * o.r * .45, o.r * .62); x.fill(); }
+      x.strokeStyle = rgba(T.acc, .75); x.lineWidth = 2; circ(x, o.x, o.y, o.r); x.stroke(); x.fillStyle = rgba(T.acc2, .9); circ(x, o.x, o.y, 4); x.fill();
+    } else {
+      obPath(x, o, 0); x.fillStyle = o.cr ? mix(T.top, T.acc, .18) : T.top; x.fill();
+      x.strokeStyle = rgba(T.acc, .2); x.lineWidth = 8; x.stroke(); x.strokeStyle = rgba(o.cr ? T.acc2 : T.acc, .85); x.lineWidth = 2.2; x.stroke();
+      if (o.cr) { x.strokeStyle = rgba('#ffffff', .25); x.lineWidth = 1.2; x.beginPath(); x.moveTo(o.x - o.r * .4, o.y - o.r * .5); x.lineTo(o.x + o.r * .1, o.y + o.r * .1); x.lineTo(o.x + o.r * .5, o.y - o.r * .2); x.stroke(); }
+      else { x.strokeStyle = rgba(T.acc2, .25); x.lineWidth = 1.5; circ(x, o.x, o.y, o.r * .55); x.stroke(); }
     }
   }
 }
@@ -3612,10 +3695,11 @@ function stampDecal(x, y, r, col, str = 1, crack = false) {
   if (crack) { d.strokeStyle = `rgba(0,0,0,${.45 * str})`; d.lineWidth = 2.5; for (let i = 0; i < 7; i++) { let a = rand(TAU), px = x, py = y; d.beginPath(); d.moveTo(px, py); for (let k = 0; k < 4; k++) { a += rand(-.5, .5); px += Math.cos(a) * r * .28; py += Math.sin(a) * r * .28; d.lineTo(px, py); } d.stroke(); } }
 }
 
+const VFX_KEYS = ['rings', 'lines', 'arcs', 'flashes', 'ghosts', 'rays', 'pillars', 'bubbles', 'runes', 'tps', 'nums', 'texts'];
 const VFX_LIM = [['rings', 90], ['flashes', 70], ['lines', 80], ['arcs', 40], ['rays', 24], ['pillars', 8], ['ghosts', 60], ['runes', 20], ['bubbles', 20], ['tps', 20], ['nums', 60], ['texts', 20]];
 const VFX = {
   parts: [], rings: [], lines: [], arcs: [], flashes: [], ghosts: [], rays: [], pillars: [], bubbles: [], runes: [], tps: [], later: [],
-  nums: [], texts: [], kills: [], shake: 0, flash: null, vign: 0, q: 1, qn: 1, ema: 1 / 60, crowd: 1,
+  nums: [], texts: [], kills: [], pool: [], shake: 0, flash: null, vign: 0, q: 1, qn: 1, ema: 1 / 60, crowd: 1,
   clear() {
     for (const k of ['parts', 'rings', 'lines', 'arcs', 'flashes', 'ghosts', 'rays', 'pillars', 'bubbles', 'runes', 'tps', 'later', 'nums', 'texts', 'kills']) this[k] = [];
     this.shake = 0; this.flash = null; this.vign = 0; this.lastUpd = performance.now(); decalInit();
@@ -3636,7 +3720,8 @@ const VFX = {
     for (let i = 0; i < n; i++) {
       const a = o.ang !== undefined ? o.ang + rand(-(o.spread || 0), o.spread || 0) : rand(TAU), v = rand(o.smin ?? (o.spd || 100) * .3, o.spd || 100);
       const r0 = o.out ? rand(o.out * .15, o.out) : 0, L = rand(.7, 1.15) * (o.life || .5);
-      const p = { x: x + Math.cos(a) * r0, y: y + Math.sin(a) * r0, vx: Math.cos(a) * v + (o.vx || 0), vy: Math.sin(a) * v + (o.vy || 0), life: L, max: L, col: cols[(Math.random() * cols.length) | 0], s: rand(.7, 1.3) * (o.s || 2), sh: o.sh || 'dot', rot: rand(TAU), vr: rand(-6, 6), drag: o.drag ?? 3, g: o.g || 0, dark: o.dark, jit: o.jit };
+      const p = this.pool.pop() || { pl: 1 }; // Objekt-Pool: abgelaufene Partikel werden wiederverwendet (gleiche Felder, kein Garbage)
+      p.x = x + Math.cos(a) * r0; p.y = y + Math.sin(a) * r0; p.vx = Math.cos(a) * v + (o.vx || 0); p.vy = Math.sin(a) * v + (o.vy || 0); p.life = L; p.max = L; p.col = cols[(Math.random() * cols.length) | 0]; p.s = rand(.7, 1.3) * (o.s || 2); p.sh = o.sh || 'dot'; p.rot = rand(TAU); p.vr = rand(-6, 6); p.drag = o.drag ?? 3; p.g = o.g || 0; p.dark = o.dark; p.jit = o.jit;
       if (o.inward) { const rr0 = o.inward; p.x = x + Math.cos(a) * rr0; p.y = y + Math.sin(a) * rr0; p.vx = -Math.cos(a) * rr0 / L * 1.1; p.vy = -Math.sin(a) * rr0 / L * 1.1; p.drag = 0; }
       this.parts.push(p);
     }
@@ -3852,9 +3937,9 @@ const VFX = {
     if (this.later.length) { for (const l of this.later) l.t -= dt; const due = this.later.filter(l => l.t <= 0); this.later = this.later.filter(l => l.t > 0); for (const l of due) l.fn(); }
     for (const p of this.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; const dr = Math.max(0, 1 - p.drag * dt); p.vx *= dr; p.vy = p.vy * dr + p.g * dt; p.rot += p.vr * dt; if (p.jit && Math.random() < .25) { p.x += rand(-p.jit, p.jit); p.y += rand(-p.jit, p.jit); } }
     for (const f of this.flashes) if (f.vx && f.t > 0) { f.x += f.vx * dt; f.y += f.vy * dt; }
-    this.parts = this.parts.filter(p => p.life > 0);
-    for (const k of ['rings', 'lines', 'arcs', 'flashes', 'ghosts', 'rays', 'pillars', 'bubbles', 'runes', 'tps', 'nums', 'texts']) { const arr = this[k]; for (const o of arr) o.t += dt; this[k] = arr.filter(o => o.t < o.max); }
-    for (const k of this.kills) k.t += dt; this.kills = this.kills.filter(k => k.t < 6);
+    { const a = this.parts, pool = this.pool; let j = 0; for (let i = 0; i < a.length; i++) { const p = a[i]; if (p.life > 0) a[j++] = p; else if (p.pl && pool.length < 900) pool.push(p); } a.length = j; }
+    for (const k of VFX_KEYS) { const arr = this[k]; for (const o of arr) o.t += dt; prune(arr, UNDER_MAX); }
+    for (const k of this.kills) k.t += dt; prune(this.kills, KILL_LIVE);
     this.shake *= Math.exp(-dt * 9); if (this.shake < .2) this.shake = 0;
     this.vign = Math.max(0, this.vign - dt * 1.3);
     if (this.flash) { this.flash.t += dt; if (this.flash.t > .5) this.flash = null; }
@@ -4139,8 +4224,11 @@ function hudLayout(w, hh) {
 }
 // Kamera-Zoom: der freie Bildbereich zeigt auf der kurzen Seite ~620 (Touch) bzw. ~720 Welteinheiten, auf der langen höchstens ~1100/1300
 function camScale(A, touch) { const aw = A.r - A.l, ah = A.b - A.t, sh = Math.min(aw, ah), lg = Math.max(aw, ah), v = touch ? [620, 1100] : [720, 1300]; return clamp(Math.max(sh / v[0], lg / v[1]), .3, 1.6); }
+// Schwache Geräte (wenige Kerne/wenig Speicher) oder Qualität „Niedrig“: Vollbild-Canvas mit höchstens 1,5-facher Pixeldichte
+const WEAK_DEV = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3;
+function dprCap() { return S.settings.quality === 'low' || WEAK_DEV ? 1.5 : 2; }
 function resizeArena() {
-  const c = RD.c, d = RD.dpr = Math.min(2, window.devicePixelRatio || 1);
+  const c = RD.c, d = RD.dpr = Math.min(RD.cap = dprCap(), window.devicePixelRatio || 1);
   const w = c.clientWidth, hh = c.clientHeight; c.width = Math.round(w * d); c.height = Math.round(hh * d);
   RD.cw = w; RD.ch = hh; RD.dprRaw = window.devicePixelRatio || 1; RD.touchL = !!MATCH.touch;
   const L = RD.L = hudLayout(w, hh);
@@ -4150,7 +4238,7 @@ function resizeArena() {
 // Größe, Drehung, Zoom (devicePixelRatio) oder Eingabemodus geändert? -> neu layouten (pro Frame geprüft)
 function checkArenaSize() {
   const c = RD.c; if (!c) return;
-  if (c.clientWidth !== RD.cw || c.clientHeight !== RD.ch || (window.devicePixelRatio || 1) !== RD.dprRaw || !!MATCH.touch !== RD.touchL) {
+  if (c.clientWidth !== RD.cw || c.clientHeight !== RD.ch || (window.devicePixelRatio || 1) !== RD.dprRaw || !!MATCH.touch !== RD.touchL || dprCap() !== RD.cap) {
     const rot = RD.cw && (c.clientWidth > c.clientHeight) !== (RD.cw > RD.ch);
     if (rot) TOUCH.reset(); // laufende Touch-Gesten beziehen sich auf die alte Anordnung
     resizeArena();
@@ -4318,12 +4406,12 @@ function drawFighter(x, f, t, dt, local) {
   const fx = getFX(f), hf = RD.flashT.get(f.id) || 0;
   if (f.kind === 'minion') {
     fx.update(dt, f.x, f.y, f.r, .35); fx.drawBack(x, f.x, f.y, f.r, .5 * al);
-    x.save(); x.globalAlpha = al; x.fillStyle = mix(a.c1, '#0b1022', .5); circ(x, f.x, f.y, f.r); x.fill(); x.strokeStyle = a.c1; x.lineWidth = 2; x.shadowColor = a.c1; x.shadowBlur = 10; x.stroke(); x.shadowBlur = 0;
+    x.save(); x.globalAlpha = al; x.fillStyle = mix(a.c1, '#0b1022', .5); circ(x, f.x, f.y, f.r); x.fill(); ringGlowAt(x, a.c1, f.x, f.y, f.r, RD.dpr * RD.scale); x.strokeStyle = a.c1; x.lineWidth = 2; x.stroke();
     x.fillStyle = a.c2v; circ(x, f.x + Math.cos(f.ang) * f.r * .45, f.y + Math.sin(f.ang) * f.r * .45, f.r * .3); x.fill(); x.restore();
   } else if (f.kind === 'turret') {
     fx.update(dt, f.x, f.y, f.r, .3); fx.drawBack(x, f.x, f.y, f.r, .6);
-    x.save(); x.translate(f.x, f.y); x.fillStyle = '#121a36'; x.strokeStyle = a.c1; x.lineWidth = 2.5; x.shadowColor = a.c1; x.shadowBlur = 12;
-    x.beginPath(); for (let i = 0; i < 6; i++) { const an = i * TAU / 6; x.lineTo(Math.cos(an) * f.r, Math.sin(an) * f.r); } x.closePath(); x.fill(); x.stroke(); x.shadowBlur = 0;
+    x.save(); x.translate(f.x, f.y); ringGlowAt(x, a.c1, 0, 0, f.r, RD.dpr * RD.scale); x.fillStyle = '#121a36'; x.strokeStyle = a.c1; x.lineWidth = 2.5;
+    x.beginPath(); for (let i = 0; i < 6; i++) { const an = i * TAU / 6; x.lineTo(Math.cos(an) * f.r, Math.sin(an) * f.r); } x.closePath(); x.fill(); x.stroke();
     x.rotate(f.ang); x.fillStyle = a.c1; x.fillRect(0, -3, f.r + 6, 6); x.fillStyle = a.c2v; circ(x, 0, 0, f.r * .4); x.fill(); x.restore();
   } else {
     fx.update(dt, f.x, f.y, f.r, me ? Math.max(.6, VFX.q) * FX.dens : VFX.qn * VFX.crowd);
@@ -4373,7 +4461,7 @@ function drawArena(view, dt, local) {
   if (!MAP) setMap(genMap(4, 1));
   if (!FLOOR) FLOOR = buildFloor();
   if (!DECAL.c) decalInit();
-  const w = c.clientWidth, hh = c.clientHeight;
+  const w = RD.cw || c.clientWidth, hh = RD.ch || c.clientHeight;
   updateCamera(dt, local);
   const V = RD.view || { x0: 0, y0: 0, x1: W, y1: H }, inV = (px, py, m) => px > V.x0 - m && px < V.x1 + m && py > V.y0 - m && py < V.y1 + m;
   // Wer ist aus Sicht des eigenen Spielers sichtbar? (Mauern werfen Sichtschatten, Büsche verbergen)
@@ -4398,10 +4486,11 @@ function drawArena(view, dt, local) {
   x.setTransform(RD.dpr * RD.scale, 0, 0, RD.dpr * RD.scale, RD.dpr * (RD.ox + sx), RD.dpr * (RD.oy + sy));
   { const sx = clamp(Math.floor(V.x0), 0, W), sy = clamp(Math.floor(V.y0), 0, H), ex = clamp(Math.ceil(V.x1), 0, W), ey = clamp(Math.ceil(V.y1), 0, H); if (ex > sx && ey > sy) x.drawImage(FLOOR, sx, sy, ex - sx, ey - sy, sx, sy, ex - sx, ey - sy); }
   VFX.drawGround(x, V);
-  x.save(); x.shadowColor = '#7c8cff'; x.shadowBlur = 24; x.strokeStyle = 'rgba(124,140,255,.75)'; x.lineWidth = 3; x.strokeRect(0, 0, W, H); x.restore();
+  { const u = 1 / (RD.dpr * RD.scale); x.strokeStyle = 'rgba(124,140,255,.06)'; x.lineWidth = 38 * u; x.strokeRect(0, 0, W, H); x.strokeStyle = 'rgba(124,140,255,.11)'; x.lineWidth = 18 * u; x.strokeRect(0, 0, W, H); x.strokeStyle = 'rgba(124,140,255,.75)'; x.lineWidth = 3; x.strokeRect(0, 0, W, H); } // Leuchtrand aus Schichten statt shadowBlur
   if (view.stormR < MAP.storm0 - 10) {
     x.save(); x.beginPath(); x.rect(0, 0, W, H); x.arc(CX, CY, view.stormR, 0, TAU, true); x.fillStyle = 'rgba(255,40,90,.13)'; x.fill();
-    x.strokeStyle = 'rgba(255,77,140,.85)'; x.lineWidth = 3; x.shadowColor = '#ff4d8c'; x.shadowBlur = 18; x.setLineDash([16, 10]); x.lineDashOffset = -t * 40; circ(x, CX, CY, view.stormR); x.stroke(); x.restore();
+    { const u = 1 / (RD.dpr * RD.scale); circ(x, CX, CY, view.stormR); x.strokeStyle = 'rgba(255,77,140,.07)'; x.lineWidth = 30 * u; x.stroke(); x.strokeStyle = 'rgba(255,77,140,.13)'; x.lineWidth = 13 * u; x.stroke(); }
+    x.strokeStyle = 'rgba(255,77,140,.85)'; x.lineWidth = 3; x.setLineDash([16, 10]); x.lineDashOffset = -t * 40; circ(x, CX, CY, view.stormR); x.stroke(); x.restore();
   }
   for (const z of view.z) if (inV(z.x, z.y, (z.sh === 'l' ? z.len : z.r || 100) + 60)) drawZone(x, z, t, dt);
   for (const p of view.po || []) { for (const [px, py, cc2] of [[p.x1, p.y1, p.col], [p.x2, p.y2, p.col2]]) { x.save(); x.translate(px, py); x.rotate(t * 3); x.globalCompositeOperation = 'lighter'; glow(x, PAL[cc2], 0, 0, 60, .7); x.strokeStyle = PAL[cc2]; x.lineWidth = 3; x.beginPath(); x.ellipse(0, 0, 28, 20, 0, 0, TAU); x.stroke(); x.rotate(-t * 6); x.beginPath(); x.ellipse(0, 0, 18, 12, 0, 0, TAU); x.stroke(); x.restore(); if (Math.random() < .3) VFX.spawn(1, px, py, { col: PAL[cc2], sh: 'dot', inward: 34, life: .4, s: 1.8 }); } }
@@ -4414,9 +4503,10 @@ function drawArena(view, dt, local) {
   for (const wl of view.wl) {
     const k = Math.min(1, wl.t / .3), I = fxInfo(wl.ai ?? -1), col = PAL[wl.col];
     if (!RD.seen.has('w' + wl.id)) { RD.seen.add('w' + wl.id); VFX.spawn(12 * I.tv.p, (wl.x1 + wl.x2) / 2, (wl.y1 + wl.y2) / 2, { cols: [col, '#ffffff'], sh: I.sh, spd: 180, life: .4, s: 2 }); }
-    x.save(); x.globalAlpha = k; x.lineCap = 'round'; x.shadowColor = col; x.shadowBlur = 16 + I.t * 2;
-    x.strokeStyle = wl.refl ? 'rgba(226,232,240,.9)' : col; x.lineWidth = 12 + Math.sin(t * 9 + wl.id) * 1.5; x.beginPath(); x.moveTo(wl.x1, wl.y1); x.lineTo(wl.x2, wl.y2); x.stroke();
-    x.shadowBlur = 0; x.strokeStyle = wl.refl ? col : 'rgba(255,255,255,.7)'; x.lineWidth = 3; x.stroke(); x.restore();
+    x.save(); x.globalAlpha = k; x.lineCap = 'round'; x.beginPath(); x.moveTo(wl.x1, wl.y1); x.lineTo(wl.x2, wl.y2);
+    { const u = (16 + I.t * 2) / (RD.dpr * RD.scale); x.strokeStyle = rgba(col, .14); x.lineWidth = 12 + u * 2.2; x.stroke(); x.strokeStyle = rgba(col, .22); x.lineWidth = 12 + u; x.stroke(); } // Schein aus Schichten statt shadowBlur
+    x.strokeStyle = wl.refl ? 'rgba(226,232,240,.9)' : col; x.lineWidth = 12 + Math.sin(t * 9 + wl.id) * 1.5; x.stroke();
+    x.strokeStyle = wl.refl ? col : 'rgba(255,255,255,.7)'; x.lineWidth = 3; x.stroke(); x.restore();
     if (Math.random() < .25 * VFX.qn) { const kk = Math.random(); VFX.add({ x: lerp(wl.x1, wl.x2, kk), y: lerp(wl.y1, wl.y2, kk), vx: rand(-20, 20), vy: -rand(20, 50), life: .5, max: .5, col, s: 1.8, sh: 'spark', rot: 0, vr: 0, drag: 2, g: 0 }); }
   }
   x.save(); x.globalCompositeOperation = 'lighter';
@@ -4471,8 +4561,18 @@ function slotIcon(ai, i, m) {
   const c = document.createElement('canvas'); c.width = c.height = 96; const x = c.getContext('2d'); drawMoveIcon(x, m, 96, AURAS[ai].c1, AURAS[ai].c2v); return (RD.slotIcons[k] = c);
 }
 const KEYS = ['LMB', 'Q', 'E', 'R'];
+// Countdown-Zahl mit Leuchten einmal vorrendern (ein großer Text mit shadowBlur pro Frame ist teuer)
+const CD_SPR = { k: '', v: null };
+function cdSprite(txt, sc) {
+  const key = txt + '|' + sc; if (CD_SPR.k === key) return CD_SPR.v;
+  const c = document.createElement('canvas'), x = c.getContext('2d'), f = `900 96px ${FONT}`; x.font = f;
+  const pad = 60 / sc + 6, w = x.measureText(txt).width + pad * 2, hh = 96 + pad * 2;
+  c.width = Math.ceil(w * sc); c.height = Math.ceil(hh * sc);
+  x.setTransform(sc, 0, 0, sc, 0, 0); x.font = f; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fff'; x.shadowColor = '#7c8cff'; x.shadowBlur = 40; x.fillText(txt, w / 2, hh / 2);
+  CD_SPR.k = key; return (CD_SPR.v = { c, w, h: hh });
+}
 function drawHUD(view, local, dt) {
-  const x = RD.x, L = RD.L; if (!L || RD.c.clientWidth < 160 || RD.c.clientHeight < 160) return;
+  const x = RD.x, L = RD.L; if (!L || (RD.cw || 0) < 160 || (RD.ch || 0) < 160) return;
   const w = L.Wu, hh = L.Hu; // UI-Einheiten (CSS px / ui)
   x.setTransform(RD.dpr * L.ui, 0, 0, RD.dpr * L.ui, 0, 0);
   if (VFX.flash) { const k = 1 - VFX.flash.t / .5; x.globalCompositeOperation = 'lighter'; x.fillStyle = rgba(VFX.flash.col, VFX.flash.a * k * k); x.fillRect(0, 0, w, hh); x.globalCompositeOperation = 'source-over'; }
@@ -4514,7 +4614,7 @@ function drawHUD(view, local, dt) {
   }
   if (MATCH.ping !== undefined && MATCH.mode === 'client' && L.ping) { x.font = `600 11px ${FONT}`; x.fillStyle = '#5d668a'; x.textAlign = 'left'; x.fillText('Ping ' + MATCH.ping + ' ms', L.ping.x, L.ping.y); }
   // Countdown
-  if (view.phase === 'count') { x.textAlign = 'center'; const n = Math.ceil(view.cd); x.font = `900 96px ${FONT}`; x.fillStyle = '#fff'; x.shadowColor = '#7c8cff'; x.shadowBlur = 40; x.fillText(n > 0 ? n : 'KAMPF!', w / 2, hh * .4); x.shadowBlur = 0; if (MAP) { x.font = `800 14px ${FONT}`; x.fillStyle = MAP.th.acc; x.fillText('KARTE: ' + MAP.th.n.toUpperCase(), w / 2, hh * .4 + 70); } }
+  if (view.phase === 'count') { x.textAlign = 'center'; const n = Math.ceil(view.cd), sp = cdSprite(n > 0 ? String(n) : 'KAMPF!', RD.dpr * L.ui); x.drawImage(sp.c, w / 2 - sp.w / 2, hh * .4 - sp.h / 2, sp.w, sp.h); if (MAP) { x.font = `800 14px ${FONT}`; x.fillStyle = MAP.th.acc; x.fillText('KARTE: ' + MAP.th.n.toUpperCase(), w / 2, hh * .4 + 70); } }
   drawMinimap(x, L, view, local); drawEdgeArrows(x, L, view, local);
   if (!local) return;
   if (MATCH.touch) { drawTouchHUD(x, L, local); return; }
@@ -4560,7 +4660,7 @@ function drawMinimap(x, L, view, local) {
   x.beginPath(); x.rect(M.x, M.y, M.w, mh); x.clip();
   if (view.stormR < MAP.storm0 - 10) { x.strokeStyle = '#ff4d8c'; x.lineWidth = 1.5; circ(x, M.x + CX * s, M.y + CY * s, view.stormR * s); x.stroke(); }
   if (RD.view && local && local.alive) { const v = RD.view; x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 1; x.strokeRect(M.x + v.x0 * s, M.y + v.y0 * s, (v.x1 - v.x0) * s, (v.y1 - v.y0) * s); }
-  if (local && local.alive) { x.fillStyle = '#3ee6ff'; x.shadowColor = '#3ee6ff'; x.shadowBlur = 6; circ(x, M.x + local.x * s, M.y + local.y * s, 3.2); x.fill(); x.shadowBlur = 0; }
+  if (local && local.alive) { const px = M.x + local.x * s, py = M.y + local.y * s; glow(x, '#3ee6ff', px, py, 10, .75); x.fillStyle = '#3ee6ff'; circ(x, px, py, 3.2); x.fill(); }
   x.restore(); x.strokeStyle = 'rgba(140,160,235,.35)'; x.lineWidth = 1; x.strokeRect(M.x, M.y, M.w, mh);
 }
 // Pfeile am Rand für sichtbare Gegner in der Nähe, die gerade außerhalb des Bildausschnitts sind
@@ -4573,7 +4673,7 @@ function drawEdgeArrows(x, L, view, local) {
     const d = Math.hypot(f.x - local.x, f.y - local.y); if (d > 1500) continue;
     const dx = sx - cx, dy = sy - cy, k = Math.min((dx > 0 ? r - cx : cx - l) / (Math.abs(dx) || 1e-6), (dy > 0 ? b - cy : cy - tp) / (Math.abs(dy) || 1e-6)), px = cx + dx * k, py = cy + dy * k, a = Math.atan2(dy, dx);
     const col = AURAS[f.aura].c1; x.save(); x.translate(px, py); x.rotate(a); x.globalAlpha = clamp(1.3 - d / 1500, .45, 1);
-    x.fillStyle = col; x.shadowColor = col; x.shadowBlur = 8; path(x, [9, 0, -6, -7, -3, 0, -6, 7]); x.fill(); x.restore();
+    glow(x, col, 1, 0, 15, .7); x.fillStyle = col; path(x, [9, 0, -6, -7, -3, 0, -6, 7]); x.fill(); x.restore();
   }
 }
 function drawTouchHUD(x, L, local) {
@@ -5083,7 +5183,7 @@ let MATCH = { mode: null, names: {}, byPid: {}, bots: [], touch: false };
 const TICK = 1 / 60; let simAcc = 0, simLast = 0, ticker = null;
 function startTicker() {
   if (ticker) return;
-  try { const blob = new Blob(['setInterval(function(){postMessage(0)},1000/60)'], { type: 'text/javascript' }); ticker = new Worker(URL.createObjectURL(blob)); ticker.onmessage = simPump; }
+  try { startTicker.url = startTicker.url || URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},1000/60)'], { type: 'text/javascript' })); ticker = new Worker(startTicker.url); ticker.onmessage = simPump; } // Skript-URL nur einmal erzeugen (kein Blob-Leck pro Match)
   catch (e) { ticker = { iv: setInterval(simPump, 16), terminate() { clearInterval(this.iv); } }; }
 }
 function stopTicker() { if (ticker) { ticker.terminate(); ticker = null; } }
@@ -5212,6 +5312,7 @@ function leaveArena() {
   const mode = MATCH.mode;
   if (mode === 'host' && !MATCH.ended && WD) NET.tr && NET.tr.broadcast({ t: 'end', rank: rankNow(), n: WD.f.filter(f => f.kind === 'player').length });
   stopTicker(); WD = null; MATCH.mode = null; MATCH.view = null; IN.mb = 0; TOUCH.reset();
+  OBC.m.clear(); OBC.map = null; FLOOR = null; MINI = null; DECAL.c = null; RD.fx.clear(); RD.trails.clear(); VFX.pool.length = 0; // große Arena-Canvas freigeben (werden beim nächsten Match neu erzeugt)
   $('#touchUi').classList.add('hidden'); $('#resultsBox').innerHTML = '';
   showScreen('lobby');
   if (mode === 'host') sendRoom();
@@ -5289,6 +5390,23 @@ function lobbyPerf(dt) {
   P.n++; P.sum += dt;
   if (P.n >= 90) { if (P.sum / P.n > 1 / 40) { UI.lite = true; document.documentElement.classList.add('lite'); } P.n = 0; P.sum = 0; }
 }
+// Erster Start: Bildrate in der Lobby messen. Bleibt sie unter ~45 fps, eine Grafikstufe tiefer schalten (dezenter Hinweis,
+// jederzeit in den Einstellungen änderbar). Verdeckte Lobby, verstecktes Tab und einzelne Hänger zählen nicht mit.
+const PERF = { wait: 3, n: 0, sum: 0, steps: 0 };
+function perfCheck(raw) {
+  if (S.perfChecked || UI.hold || document.hidden || raw > .25) return;
+  if ((PERF.wait -= raw) > 0) return;
+  PERF.n++; PERF.sum += raw; if (PERF.n < 150) return;
+  const fps = PERF.n / PERF.sum, q = S.settings.quality, down = q === 'high' ? 'mid' : q === 'mid' ? 'low' : null;
+  PERF.n = 0; PERF.sum = 0;
+  if (fps < 45 && down && PERF.steps < 2) {
+    PERF.steps++; PERF.wait = 2; S.settings.quality = down; if (down === 'low') S.perfChecked = true;
+    applySettings(); save();
+    toast(`Grafik automatisch auf „${QUALITY[down].n}“ gestellt (ca. ${Math.round(fps)} fps) – änderbar in den Einstellungen.`);
+    return;
+  }
+  S.perfChecked = true; save();
+}
 function applyCalm(on) {
   UI.calm = !!on; document.documentElement.classList.toggle('calm', UI.calm);
   for (const id of ['#calmT', '#sCalm']) { const e = $(id); if (e) e.checked = UI.calm; }
@@ -5305,13 +5423,13 @@ function setDust(v) {
   const el = $('#dustVal'); if (!el) return;
   if (el.dataset.v === undefined) { el.dataset.v = v; el.textContent = fmt(v); return; }
   const from = +el.dataset.v; el.dataset.v = v;
-  if (from === v) { el.textContent = fmt(v); return; }
+  if (from === v) { if (!el._tw) setTxt(el, fmt(v)); return; }
   const pill = el.closest('.top-pill'); pill.classList.remove('up', 'down'); void pill.offsetWidth; pill.classList.add(v > from ? 'up' : 'down');
-  cancelAnimationFrame(el._raf);
+  if (el._tw) { TICKS.delete(el._tw); el._tw = null; }
   if (UI.calm) { el.textContent = fmt(v); return; }
   const t0 = performance.now(), dur = clamp(Math.log10(Math.abs(v - from) + 1) * 280, 320, 1200);
-  const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(from + (v - from) * e); if (k < 1) el._raf = requestAnimationFrame(step); };
-  el._raf = requestAnimationFrame(step);
+  const step = (dt, now) => { const k = Math.min(1, Math.max(0, now - t0) / dur), e = 1 - Math.pow(1 - k, 3); setTxt(el, fmt(from + (v - from) * e)); if (k >= 1) { TICKS.delete(step); el._tw = null; } };
+  el._tw = step; TICKS.add(step); // läuft in der zentralen Schleife statt in einem eigenen requestAnimationFrame
 }
 // Einblenden der Lobby (beim Start und bei der Rückkehr aus der Arena)
 function lobbyEnter() {
@@ -5354,7 +5472,7 @@ const TIP = {
 };
 function initLobbyUI() {
   TIP.init();
-  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => STRIP.names.clear());
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { STRIP.names.clear(); for (const sl of STRIP.pool) sl.k = null; });
   // Tab-Navigation merken: dann behält die Leertaste auf fokussierten Buttons ihr natives Verhalten
   addEventListener('keydown', e => { if (e.key === 'Tab') UI.kbNav = true; }, true);
   addEventListener('pointerdown', () => { UI.kbNav = false; }, true);
@@ -5382,11 +5500,12 @@ function initLobbyUI() {
    Schaltern in der Lobby synchron. FX enthält die daraus abgeleiteten Faktoren, die Lobby, Cutscene,
    Enthüllung und Kampf-VFX lesen. */
 const FX = { qmax: 1, glow: 1, dens: 1, part: 1, shake: 1, flash: 1 };
-const QUALITY = { low: { q: .45, glow: 0, n: 'Niedrig', d: 'Weniger Partikel, keine aufwendigen Glows und keine Milchglas-Unschärfe – für schwächere Geräte.' },
+const QUALITY = { low: { q: .35, glow: 0, n: 'Niedrig', d: 'Deutlich weniger Partikel, keine aufwendigen Glows, keine Milchglas-Unschärfe und geringere Pixeldichte – für schwächere Geräte.' },
   mid: { q: .72, glow: .6, n: 'Mittel', d: 'Ausgewogen: etwas weniger Partikel, Glows bleiben, ohne Milchglas-Unschärfe.' },
   high: { q: 1, glow: 1, n: 'Hoch', d: 'Alle Partikel, Glows und Milchglas-Effekte.' } };
 const SHAKES = [['Aus', 0], ['Schwach', .45], ['Normal', 1], ['Stark', 1.6]];
 function applySettings() {
+  if (BG.c && SCREEN === 'lobby' && UI.hold) { BG.drawn = false; BG.sT = 0; requestAnimationFrame(() => drawBg(0)); } // Lobby pausiert (Menü offen): Änderungen trotzdem einmal sichtbar machen
   const st = S.settings, Q = QUALITY[st.quality] || QUALITY.high;
   FX.qmax = Q.q; FX.glow = Q.glow; FX.dens = st.particles; FX.part = Q.q * st.particles;
   FX.shake = SHAKES[st.shake][1] * (UI.calm ? .5 : 1); FX.flash = UI.calm ? .35 : 1;
@@ -5494,7 +5613,7 @@ function openSettings() {
   range('sPart', () => Math.round(S.settings.particles * 100), v => { S.settings.particles = v / 100; applySettings(); }, v => v + ' %');
   $d('#sSound').onchange = e => setSound(e.target.checked);
   $d('#sCalm').onchange = e => { S.calm = e.target.checked; save(); applyCalm(e.target.checked); draw(); };
-  $d('#sQual').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.settings.quality = b.dataset.v; applySettings(); save(); draw(); };
+  $d('#sQual').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.settings.quality = b.dataset.v; S.perfChecked = true; applySettings(); save(); draw(); };
   $d('#sShake').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.settings.shake = +b.dataset.v; applySettings(); save(); draw(); demoShake(); };
   $d('#sStop').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.settings.autoStop = +b.dataset.t; applySettings(); save(); draw(); };
   const nm = $d('#sName'); let nmT = 0;
@@ -5616,13 +5735,13 @@ function renderPotions() {
 let lastBoostKey = '', lastBonusHtml = '';
 function updateLuckUI() {
   const L = nextLuck(), bonus = isBonusRoll();
-  $('#luckVal').textContent = '×' + fmtL(L); $('#luckChip').classList.toggle('big', L >= 3);
+  setTxt($('#luckVal'), '×' + fmtL(L)); $('#luckChip').classList.toggle('big', L >= 3);
   const until = (10 - (S.rolls + 1) % 10) % 10;
   const bh = S.bonusCharges > 0 ? `<small>Fokus · Bonus ×2</small><b>noch ${S.bonusCharges} ${S.bonusCharges === 1 ? 'Roll' : 'Rolls'}</b>` : until === 0 ? '<small>Bonus-Roll ×2</small><b>Nächster Roll!</b>' : `<small>Bonus-Roll ×2</small><b>in ${until} ${until === 1 ? 'Roll' : 'Rolls'}</b>`;
   if (bh !== lastBonusHtml) { lastBonusHtml = bh; $('#bonusCtr').innerHTML = bh; }
   $('#bonusChip').classList.toggle('ready', bonus);
   $('#rollBtn').classList.toggle('bonus', bonus); $('#rollStage').classList.toggle('bonus', bonus);
-  $('#rollSub').textContent = bonus ? 'Bonus ×2' : (S.queue[0] ? POT[S.queue[0]].n.split(' ').pop() + ' ×' + POT[S.queue[0]].once : '1 Aura');
+  setTxt($('#rollSub'), bonus ? 'Bonus ×2' : (S.queue[0] ? POT[S.queue[0]].n.split(' ').pop() + ' ×' + POT[S.queue[0]].once : '1 Aura'));
   const key = S.boosts.map(b => b.id).join() + '|' + S.queue.join();
   const bl = $('#boostList');
   if (key !== lastBoostKey) {
@@ -5631,7 +5750,7 @@ function updateLuckUI() {
     for (const b of S.boosts) { const p = POT[b.id]; chip(p, { 'data-b': b.id }, `<span class="bt"><b>+${fmt(p.add * 100)} % Glück</b><span>${esc(p.n)}</span></span><span class="t">${SVG.clock}<em></em></span><span class="bar"><i></i></span>`); }
     S.queue.forEach((id, i) => { const p = POT[id]; chip(p, {}, `<span class="bt"><b>Glück ×${p.once}</b><span>${i ? 'danach' : 'nächster Roll'} · ${esc(p.n)}</span></span>`); });
   }
-  for (const b of S.boosts) { const el = bl.querySelector(`[data-b="${b.id}"]`); if (!el) continue; el.querySelector('.t em').textContent = fmtTime(b.rem); el.querySelector('.bar i').style.width = clamp(b.rem / POT[b.id].dur, 0, 1) * 100 + '%'; el.classList.toggle('low', b.rem < 15); }
+  for (const b of S.boosts) { const el = bl.querySelector(`[data-b="${b.id}"]`); if (!el) continue; setTxt(el.querySelector('.t em'), fmtTime(b.rem)); el.querySelector('.bar i').style.transform = `scaleX(${clamp(b.rem / POT[b.id].dur, 0, 1).toFixed(4)})`; el.classList.toggle('low', b.rem < 15); }
 }
 
 /* ---------- Move-Tags für die Detailansicht ---------- */
@@ -5691,8 +5810,9 @@ function openCollection() {
     list.sort(cmp);
     body.querySelector('#cSum').innerHTML = `<b>${ownedCount()}</b> / ${AURAS.length} entdeckt`;
     const g = body.querySelector('#cGrid');
-    g.innerHTML = list.map(a => { const T = TIERS[a.t], n = S.owned[a.id] || 0; return `<div class="acard ${n ? '' : 'locked'}" style="--tc:${T.c};--tcg:${rgba(T.c, .35)}" data-i="${a.i}">${S.equipped === a.id ? '<span class="eq">AKTIV</span>' : ''}${n ? `<span class="cnt">×${n}</span>` : ''}<img src="${auraIconURL(a.i, 96)}" alt="">${n ? '' : '<span class="lock">GESPERRT</span>'}<div class="nm">${esc(a.n)}</div><div class="tr">${T.n}</div></div>`; }).join('') || '<p class="hint">Keine Auren gefunden.</p>';
+    g.innerHTML = list.map(a => { const T = TIERS[a.t], n = S.owned[a.id] || 0; return `<div class="acard ${n ? '' : 'locked'}" style="--tc:${T.c};--tcg:${rgba(T.c, .35)}" data-i="${a.i}">${S.equipped === a.id ? '<span class="eq">AKTIV</span>' : ''}${n ? `<span class="cnt">×${n}</span>` : ''}<img data-ai="${a.i}" alt="">${n ? '' : '<span class="lock">GESPERRT</span>'}<div class="nm">${esc(a.n)}</div><div class="tr">${T.n}</div></div>`; }).join('') || '<p class="hint">Keine Auren gefunden.</p>';
     g.querySelectorAll('.acard').forEach(c => c.onclick = () => openDetail(+c.dataset.i, draw));
+    lazyIcons(g);
   };
   body.querySelector('#cSort').onchange = e => { st.sort = e.target.value; draw(); };
   body.querySelector('#cOwned').onchange = e => { st.owned = e.target.checked; draw(); };
@@ -5700,6 +5820,11 @@ function openCollection() {
   drawChips(); draw();
 }
 
+// Aura-Icons (PNG-Daten-URLs) erst erzeugen, wenn die Karte sichtbar wird – nicht alle 64 auf einmal beim Öffnen
+const ICON_IO = window.IntersectionObserver ? new IntersectionObserver(es => { for (const e of es) { const im = e.target; if (!im.isConnected) ICON_IO.unobserve(im); else if (e.isIntersecting) { ICON_IO.unobserve(im); im.src = auraIconURL(+im.dataset.ai, 96); } } }) : null;
+function lazyIcons(root) {
+  for (const im of root.querySelectorAll('img[data-ai]')) { const u = URL_CACHE[im.dataset.ai + ':96']; if (u) im.src = u; else if (ICON_IO) ICON_IO.observe(im); else im.src = auraIconURL(+im.dataset.ai, 96); }
+}
 /* ---------- Detailansicht ---------- */
 function openDetail(i, onChange) {
   const a = AURAS[i], owned = S.owned[a.id] || 0, eq = S.equipped === a.id;
@@ -5819,10 +5944,9 @@ function potFx(p) {
 // Kleiner animierter Braukessel im Kopf des Menüs
 function kesselAnim(cv) {
   const st = { t: 0, col: '#34d399', k: 0, bub: [], sp: [], rise: null }, base = '#7c8cff';
-  let last = performance.now();
-  const loop = now => {
-    if (!cv.isConnected) return;
-    const dt = Math.min(.05, (now - last) / 1000); last = now; st.t += dt;
+  const loop = dt => {
+    if (!cv.isConnected) { TICKS.delete(loop); return; } // Menü geschlossen: Routine abmelden
+    st.t += dt;
     const d = Math.min(2, window.devicePixelRatio || 1), w = cv.clientWidth, hh = cv.clientHeight;
     if (w && hh) {
       if (cv.width !== Math.round(w * d) || cv.height !== Math.round(hh * d)) { cv.width = Math.round(w * d); cv.height = Math.round(hh * d); }
@@ -5856,9 +5980,8 @@ function kesselAnim(cv) {
       }
       x.globalCompositeOperation = 'source-over';
     }
-    requestAnimationFrame(loop);
   };
-  requestAnimationFrame(loop);
+  TICKS.add(loop);
   return {
     brew(p) {
       st.col = p.col; st.k = 1; st.rise = { p, t: 0, ic: potionCanvas(p, 64) };
@@ -6035,7 +6158,8 @@ function renderMP() {
 /* =====================================================================
    ROLLEN: Band-Animation (wie das Kisten-Öffnen in CS2) + Enthüllung
    ===================================================================== */
-const STRIP = { c: null, x: null, items: [], off: 0, IW: 112, anim: null, idle: true, lastIdx: -1, glow: 0, winIdx: -1, names: new Map() };
+const STRIP = { c: null, track: null, items: [], off: 0, IW: 112, anim: null, idle: true, lastIdx: -1, glow: 0, winIdx: -1, names: new Map(),
+  w: 0, h: 0, d: 1, cw: 0, ch: 0, pool: [], tx: NaN, vis: true, moving: false };
 const UIFONT = '"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
 function stripName(x, n, maxW) { // Namen vollständig oder sauber mit Auslassungspunkten
   const k = n + '|' + maxW + '|' + x.font; let v = STRIP.names.get(k); if (v) return v;
@@ -6043,43 +6167,82 @@ function stripName(x, n, maxW) { // Namen vollständig oder sauber mit Auslassun
   if (STRIP.names.size > 600) STRIP.names.clear(); STRIP.names.set(k, v); return v;
 }
 const ROLLST = { busy: false, res: null };
-function initStrip() { STRIP.c = $('#stripC'); STRIP.x = STRIP.c.getContext('2d'); STRIP.items = Array.from({ length: 60 }, () => rollAura(3)); }
-function drawStrip(dt) {
-  const c = STRIP.c, d = Math.min(2, window.devicePixelRatio || 1), w = c.clientWidth, hh = c.clientHeight; if (!w || !hh) return;
-  if (c.width !== Math.round(w * d) || c.height !== Math.round(hh * d)) { c.width = Math.round(w * d); c.height = Math.round(hh * d); }
-  const x = STRIP.x, IW = STRIP.IW = clamp(Math.round(hh * 0.78), 86, 118);
-  x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, hh);
+/* Das Band besteht aus wenigen wiederverwendeten Karten-Elementen in einer Spur, die nur per translate3d verschoben
+   wird – kein Neuzeichnen pro Frame. Verlässt eine Karte links das Bild, wird sie rechts mit der nächsten Aura neu
+   belegt (ein einziges Vorrendern ins Karten-Canvas). Position und Easing bleiben zeitbasiert wie bisher. */
+const SC_PAD = 2; // Rand im Kartenbild, damit der Rahmen nicht abgeschnitten wird
+function initStrip() {
+  STRIP.c = $('#stripView'); STRIP.track = $('#stripTrack'); STRIP.items = Array.from({ length: 60 }, () => rollAura(3));
+  const fit = () => stripResize(STRIP.c.clientWidth, STRIP.c.clientHeight);
+  if (window.ResizeObserver) new ResizeObserver(es => { const r = es[es.length - 1].contentRect; stripResize(r.width, r.height); }).observe(STRIP.c);
+  else addEventListener('resize', fit);
+  if (window.IntersectionObserver) new IntersectionObserver(es => { STRIP.vis = es[es.length - 1].isIntersecting; }).observe(STRIP.c);
+  fit();
+}
+function stripResize(w, hh) {
+  w = Math.round(w); hh = Math.round(hh); const d = Math.min(2, window.devicePixelRatio || 1);
+  if (w === STRIP.w && hh === STRIP.h && d === STRIP.d) return;
+  STRIP.w = w; STRIP.h = hh; STRIP.d = d; if (!w || hh < 60) { STRIP.w = 0; return; }
+  const IW = STRIP.IW = clamp(Math.round(hh * 0.78), 86, 118), cw = STRIP.cw = IW - 10, ch = STRIP.ch = hh - 30, P = STRIP.pool, n = Math.ceil(w / IW) + 3;
+  while (P.length < n) {
+    const el = h('div', { class: 'sc' }, '<canvas></canvas><span class="sc-rb"><i></i></span>'), cv = el.firstChild;
+    STRIP.track.appendChild(el); P.push({ el, cv, x: cv.getContext('2d'), i: -1, k: null });
+  }
+  while (P.length > n) P.pop().el.remove();
+  const ew = cw + SC_PAD * 2, eh = ch + SC_PAD * 2;
+  for (const sl of P) { sl.el.style.width = ew + 'px'; sl.el.style.height = eh + 'px'; sl.cv.width = Math.round(ew * d); sl.cv.height = Math.round(eh * d); sl.i = -1; sl.k = null; }
+  STRIP.tx = NaN;
+}
+// Kartenbild einer Aura in das Canvas einer Band-Karte zeichnen (nur beim Neubelegen, nicht pro Frame)
+function stripPaint(x, ai, win) {
+  const cw = STRIP.cw, ch = STRIP.ch, d = STRIP.d, a = AURAS[ai], T = TIERS[a.t];
+  x.setTransform(d, 0, 0, d, SC_PAD * d, SC_PAD * d); x.clearRect(-SC_PAD, -SC_PAD, cw + SC_PAD * 2, ch + SC_PAD * 2);
+  const g = x.createLinearGradient(0, 0, 0, ch); g.addColorStop(0, '#151b38'); g.addColorStop(1, mix('#151b38', a.t >= 7 ? a.c1 : T.c, .28));
+  x.fillStyle = g; rr(x, 0, 0, cw, ch, 12); x.fill();
+  x.strokeStyle = rgba(T.c, win ? .95 : .4); x.lineWidth = win ? 2.5 : 1.2; x.stroke();
+  x.save(); rr(x, 0, 0, cw, ch, 12); x.clip();
+  if (a.t >= 7) { for (let k = 0; k < 8; k++) { x.fillStyle = `hsl(${k * 45},90%,62%)`; x.fillRect(k * cw / 8, ch - 5, cw / 8 + 1, 5); } }
+  else { x.fillStyle = T.c; x.fillRect(0, ch - 5, cw, 5); }
+  x.restore();
+  const sz = Math.min(cw - 16, ch - 36); x.drawImage(auraIconCanvas(ai, 128), (cw - sz) / 2, 6, sz, sz);
+  x.font = `600 12px ${UIFONT}`; x.textAlign = 'center'; x.fillStyle = win ? '#fff' : '#d3d9f3';
+  x.fillText(stripName(x, a.n, cw - 12), cw / 2, ch - 14);
+}
+// sichtbare Karten belegen und die Spur verschieben (nur Transform-Schreibzugriffe, keine Layout-Abfragen)
+function stripSync(rest) {
+  const P = STRIP.pool, n = P.length; if (!n) return;
+  const IW = STRIP.IW, first = Math.max(0, Math.floor(STRIP.off / IW) - 1);
+  for (let i = first; i < first + n; i++) {
+    const sl = P[i % n], ai = STRIP.items[i], win = i === STRIP.winIdx && STRIP.glow > 0, k = ai === undefined ? -1 : ai * 2 + (win ? 1 : 0);
+    if (sl.i !== i) { sl.i = i; sl.el.style.transform = `translate3d(${i * IW + 5 - SC_PAD}px,0,0)`; }
+    if (sl.k === k) continue;
+    sl.k = k; sl.el.hidden = k < 0; if (k < 0) continue;
+    stripPaint(sl.x, ai, win);
+    const t = AURAS[ai].t; sl.el.classList.toggle('rb', t >= 7); sl.el.classList.toggle('win', win);
+    if (win) sl.el.style.setProperty('--wc', TIERS[t].c);
+  }
+  let tx = -STRIP.off; if (rest) tx = Math.round(tx * STRIP.d) / STRIP.d; // in Ruhe pixelgenau (scharf)
+  if (tx !== STRIP.tx) { STRIP.tx = tx; STRIP.track.style.transform = `translate3d(${tx}px,0,0)`; }
+}
+// hold = Lobby ist verdeckt (Menü, Enthüllung, Cutscene): Leerlauf-Drift ruht, die Spur wird nicht aktualisiert
+function drawStrip(dt, hold) {
+  if (Math.min(2, window.devicePixelRatio || 1) !== STRIP.d && STRIP.c) stripResize(STRIP.c.clientWidth, STRIP.c.clientHeight);
+  if (!STRIP.w) return;
+  const w = STRIP.w, IW = STRIP.IW;
   if (STRIP.anim) {
     const A = STRIP.anim; A.t += dt; const p = clamp(A.t / A.dur, 0, 1);
     STRIP.off = A.from + (A.to - A.from) * (1 - Math.pow(1 - p, A.k));
     const idx = Math.floor((STRIP.off + w / 2) / IW);
     if (idx !== STRIP.lastIdx) { STRIP.lastIdx = idx; const v = A.k * Math.pow(1 - p, A.k - 1) * (A.to - A.from) / A.dur; AU.play('tick', 1, clamp(1 - v / 5000, 0, 1)); }
     if (p >= 1) { STRIP.anim = null; onStripStop(); }
-  } else if (STRIP.idle) {
+  } else if (STRIP.idle && !hold) {
     STRIP.off += dt * (UI.calm ? 0 : 24);
     if (STRIP.off > IW * 30) { STRIP.off -= IW * 15; STRIP.items = STRIP.items.slice(15).concat(Array.from({ length: 15 }, () => rollAura(3))); }
   }
   if (STRIP.glow > 0 && !ROLLST.busy) STRIP.glow = Math.max(0, STRIP.glow - dt * 2);
-  const cw = IW - 10, ch = hh - 30, top = 15;
-  const first = Math.max(0, Math.floor(STRIP.off / IW) - 1), last = Math.min(STRIP.items.length - 1, Math.ceil((STRIP.off + w) / IW) + 1);
-  for (let i = first; i <= last; i++) {
-    const ai = STRIP.items[i]; if (ai === undefined) continue;
-    const a = AURAS[ai], T = TIERS[a.t], cx = i * IW - STRIP.off + 5;
-    const win = i === STRIP.winIdx && STRIP.glow > 0;
-    x.save();
-    if (win) { x.shadowColor = T.c; x.shadowBlur = 30 + Math.sin(performance.now() / 120) * 10; }
-    const g = x.createLinearGradient(0, top, 0, top + ch); g.addColorStop(0, '#151b38'); g.addColorStop(1, mix('#151b38', a.t >= 7 ? a.c1 : T.c, .28));
-    x.fillStyle = g; rr(x, cx, top, cw, ch, 12); x.fill(); x.shadowBlur = 0;
-    x.strokeStyle = rgba(T.c, win ? .95 : .4); x.lineWidth = win ? 2.5 : 1.2; x.stroke();
-    x.save(); rr(x, cx, top, cw, ch, 12); x.clip();
-    if (a.t >= 7) { for (let k = 0; k < 8; k++) { x.fillStyle = `hsl(${(k * 45 + performance.now() / 8) % 360},90%,62%)`; x.fillRect(cx + k * cw / 8, top + ch - 5, cw / 8 + 1, 5); } }
-    else { x.fillStyle = T.c; x.fillRect(cx, top + ch - 5, cw, 5); }
-    x.restore();
-    const s = Math.min(cw - 16, ch - 36); x.drawImage(auraIconCanvas(ai, 128), cx + (cw - s) / 2, top + 6, s, s);
-    x.font = `600 12px ${UIFONT}`; x.textAlign = 'center'; x.fillStyle = win ? '#fff' : '#d3d9f3';
-    x.fillText(stripName(x, a.n, cw - 12), cx + cw / 2, top + ch - 14);
-    x.restore();
-  }
+  const mv = !!STRIP.anim || (STRIP.idle && !UI.calm && !hold);
+  if (mv !== STRIP.moving) { STRIP.moving = mv; STRIP.track.classList.toggle('moving', mv); } // will-change nur während der Bewegung
+  if (STRIP.vis && !hold) stripSync(!mv);
 }
 function doRoll() {
   if (ROLLST.busy || REVEAL.open) return; AU.init();
@@ -6100,7 +6263,7 @@ function doRoll() {
     $('#rollsVal').textContent = fmt(S.rolls); updateLuckUI(); // Sternenstaub erst mit der Karte aktualisieren (verrät sonst die Stufe)
     showReveal(ROLLST.res); return;
   }
-  const w = STRIP.c.clientWidth || 800, IW = STRIP.IW, WIN = 58;
+  const w = STRIP.w || 800, IW = STRIP.IW, WIN = 58;
   STRIP.items = Array.from({ length: 70 }, () => rollAura(2.5)); STRIP.items[WIN] = ai;
   if (Math.random() < 0.55 && a.t < 8) STRIP.items[WIN + (Math.random() < .5 ? 1 : -1)] = pick(TIER_AURAS[Math.min(8, a.t + randi(1, 3))]); // Beinahe-Treffer für Spannung
   const dur = T.roll * (S.quick ? 0.45 : 1), jit = a.t >= 5 ? -0.43 : rand(-0.36, 0.36);
@@ -6119,7 +6282,7 @@ function onStripStop() {
 const REVEAL = { open: false, el: null, prev: null };
 // Band hinter der Karte auf die gewonnene Aura stellen (wie nach einem normalen Roll), ohne Animation
 function stripLand(ai) {
-  const w = STRIP.c.clientWidth || 800, IW = STRIP.IW, WIN = 58;
+  const w = STRIP.w || 800, IW = STRIP.IW, WIN = 58;
   STRIP.items = Array.from({ length: 70 }, () => rollAura(2.5)); STRIP.items[WIN] = ai;
   STRIP.anim = null; STRIP.idle = false; STRIP.winIdx = WIN; STRIP.glow = 1; STRIP.lastIdx = -1;
   STRIP.off = WIN * IW + IW / 2 - w / 2;
@@ -6422,7 +6585,7 @@ const CS = {
   },
   flashA(f) { return (f.t < 0 ? 0 : f.t < f.hold ? f.a : f.a * Math.max(0, 1 - (f.t - f.hold) / f.fade)) * FX.flash; },
   draw() {
-    const c = this.c, x = this.x, dpr = Math.min(2, window.devicePixelRatio || 1), w = innerWidth, hh = innerHeight;
+    const c = this.c, x = this.x, dpr = Math.min(dprCap(), window.devicePixelRatio || 1), w = innerWidth, hh = innerHeight;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(hh * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr); }
     const ph = this.ph, k = this.pk(), cx = w / 2, cy = hh * .5, tk = this.tk, R0 = Math.min(w, hh) * .1, L = Math.hypot(w, hh);
     x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, hh);
@@ -6609,7 +6772,7 @@ function drawRFX(dt) {
   const active = RFX.parts.length || RFX.rings.length || RFX.charge || (REVEAL.open && RFX.tier >= 5);
   if (!active) { if (RFX.dirty) { RFX.x.setTransform(1, 0, 0, 1, 0, 0); RFX.x.clearRect(0, 0, c.width, c.height); RFX.dirty = false; } return; }
   RFX.dirty = true;
-  const d = Math.min(2, window.devicePixelRatio || 1), w = innerWidth, hh = innerHeight;
+  const d = Math.min(dprCap(), window.devicePixelRatio || 1), w = innerWidth, hh = innerHeight;
   if (c.width !== Math.round(w * d) || c.height !== Math.round(hh * d)) { c.width = Math.round(w * d); c.height = Math.round(hh * d); }
   const x = RFX.x; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, hh);
   const cx = w / 2, cy = hh * .36;
@@ -6626,7 +6789,7 @@ function drawRFX(dt) {
   }
   if (REVEAL.open && RFX.tier >= 5 && Math.random() < (.5 + RFX.tier * .05) * FX.part) { const an = rand(TAU), r = rand(120, 260); RFX.parts.push({ x: cx + Math.cos(an) * r, y: cy + Math.sin(an) * r, vx: 0, vy: -rand(20, 60), life: 1.2, max: 1.2, col: RFX.tier >= 7 ? `hsl(${rand(360)},95%,70%)` : TIERS[RFX.tier].c, s: rand(1.5, 3), g: 0, star: true }); }
   for (const p of RFX.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; if (!p.inward) { p.vx *= 1 - 1.4 * dt; p.vy = p.vy * (1 - 1.4 * dt) + p.g * dt; } }
-  RFX.parts = RFX.parts.filter(p => p.life > 0); if (RFX.parts.length > 1600) RFX.parts.splice(0, RFX.parts.length - 1600);
+  prune(RFX.parts, ALIVE); if (RFX.parts.length > 1600) RFX.parts.splice(0, RFX.parts.length - 1600);
   for (const p of RFX.parts) {
     const k = clamp(p.life / p.max * 1.6, 0, 1);
     if (p.col[0] === '#') glow(x, p.col, p.x, p.y, p.s * 5, k * .7);
@@ -6640,7 +6803,7 @@ function drawRFX(dt) {
     if (r.col) { x.strokeStyle = rgba(r.col, k * .9); x.lineWidth = r.w * k + 1; circ(x, cx, cy, r.r); x.stroke(); }
     else rainbowRing(x, cx, cy, r.r, r.w * k + 1, performance.now() / 400, 36, k);
   }
-  RFX.rings = RFX.rings.filter(r => r.life > 0);
+  prune(RFX.rings, ALIVE);
   x.restore();
 }
 
@@ -6654,15 +6817,8 @@ function initBg() {
   BG.motes = Array.from({ length: 42 }, () => ({ x: Math.random(), y: Math.random(), z: rand(.3, 1), ph: rand(TAU), sp: rand(.006, .02) }));
 }
 function bgFocus() { const b = $('#rollBtn'); if (!b || !b.offsetWidth) return null; const r = b.getBoundingClientRect(), c = BG.c.getBoundingClientRect(); return [r.left + r.width / 2 - c.left, r.top + r.height / 2 - c.top, r.width]; }
-function drawBg(dt) {
-  BG.acc = (BG.acc || 0) + dt; if (BG.acc < 1 / 21 && BG.drawn) return; dt = Math.min(.1, BG.acc); BG.acc = 0; BG.drawn = true; // 20 fps genügen für die langsame Drift und sparen die meisten Neuberechnungen der Glas-Unschärfe
-  const c = BG.c, d = Math.min(1.5, window.devicePixelRatio || 1), w = c.clientWidth, hh = c.clientHeight; if (!w) return;
-  if (c.width !== Math.round(w * d) || c.height !== Math.round(hh * d)) { c.width = Math.round(w * d); c.height = Math.round(hh * d); }
-  if (!UI.calm) BG.t += dt;
-  const x = BG.x, t = BG.t; x.setTransform(d, 0, 0, d, 0, 0);
-  const k = Math.min(1, dt * 1.2); for (let i = 0; i < 3; i++) BG.tint[i] += (BG.tintTo[i] - BG.tint[i]) * k;
-  const [tr, tg, tb] = BG.tint.map(Math.round), tint = a => `rgba(${tr},${tg},${tb},${a})`;
-  if ((BG.fT -= dt) <= 0) { BG.fT = .4; BG.focus = bgFocus(); }
+function bgSoft(x, kx, ky, w, hh, t, tint) {
+  x.setTransform(kx, 0, 0, ky, 0, 0); x.globalCompositeOperation = 'source-over';
   x.fillStyle = '#070a14'; x.fillRect(0, 0, w, hh);
   x.globalCompositeOperation = 'lighter';
   const M = Math.max(w, hh), pulse = UI.calm ? .5 : .5 + .5 * Math.sin(t * TAU / 3.2);
@@ -6675,6 +6831,27 @@ function drawBg(dt) {
     g = x.createRadialGradient(fx, fy, 0, fx, fy, R); g.addColorStop(0, tint(.2 + .08 * pulse)); g.addColorStop(.45, tint(.07 + .03 * pulse)); g.addColorStop(1, tint(0));
     x.fillStyle = g; x.fillRect(fx - R, fy - R, R * 2, R * 2);
   }
+  x.globalCompositeOperation = 'source-over';
+}
+function drawBg(dt) {
+  // 20 fps genügen für die langsame Drift (während das Band rollt 12 fps, damit es die volle Bildrate bekommt); weiche Verläufe brauchen keine volle Auflösung
+  const fps = STRIP.anim ? 12 : 20;
+  BG.acc = (BG.acc || 0) + dt; if (BG.acc < 1 / (fps + 1) && BG.drawn) return; dt = Math.min(.1, BG.acc); BG.acc = 0; BG.drawn = true;
+  const c = BG.c, d = Math.min(S.settings.quality === 'high' ? 1.5 : 1, window.devicePixelRatio || 1), w = c.clientWidth, hh = c.clientHeight; if (!w) return;
+  if (c.width !== Math.round(w * d) || c.height !== Math.round(hh * d)) { c.width = Math.round(w * d); c.height = Math.round(hh * d); }
+  if (!UI.calm) BG.t += dt;
+  const x = BG.x, t = BG.t; x.setTransform(d, 0, 0, d, 0, 0);
+  const k = Math.min(1, dt * 1.2); for (let i = 0; i < 3; i++) BG.tint[i] += (BG.tintTo[i] - BG.tint[i]) * k;
+  const [tr, tg, tb] = BG.tint.map(Math.round), tint = a => `rgba(${tr},${tg},${tb},${a})`;
+  if ((BG.fT -= dt) <= 0) { BG.fT = .4; BG.focus = bgFocus(); }
+  // Weiche Ebenen (Nebel, Farbverlauf, Lichtschein hinter dem Roll-Button) in 1/4-Auflösung vorrendern, höchstens 10× pro Sekunde;
+  // pro Hintergrund-Frame dann nur ein hochskaliertes drawImage plus Sterne und Lichtpartikel in voller Auflösung
+  const sw = Math.max(8, Math.ceil(w / 4)), sh = Math.max(8, Math.ceil(hh / 4));
+  if (!BG.soft) { BG.soft = document.createElement('canvas'); BG.sx = BG.soft.getContext('2d'); }
+  if (BG.soft.width !== sw || BG.soft.height !== sh) { BG.soft.width = sw; BG.soft.height = sh; BG.sT = 0; }
+  if ((BG.sT = (BG.sT || 0) - dt) <= 0) { BG.sT = .1; bgSoft(BG.sx, sw / w, sh / hh, w, hh, t, tint); }
+  x.drawImage(BG.soft, 0, 0, w, hh);
+  x.globalCompositeOperation = 'lighter';
   const ns = Math.round(BG.stars.length * Math.min(1, .35 + .65 * FX.part)), nm = Math.round(BG.motes.length * Math.min(1, FX.part));
   for (let i = 0; i < ns; i++) { const s = BG.stars[i], y = (s.y * hh + t * 6 * s.z) % hh, a = .25 + .45 * (Math.sin(t * 1.3 + s.tw) * .5 + .5) * s.z; x.fillStyle = `rgba(200,215,255,${a})`; x.fillRect(s.x * w, y, s.z * 1.8, s.z * 1.8); }
   for (let i = 0; i < nm; i++) {
@@ -6689,13 +6866,22 @@ function drawBg(dt) {
    HAUPTSCHLEIFE & START
    ===================================================================== */
 let lastFrame = performance.now(), uiT = 0, saveT = 0;
+const TICKS = new Set(); // weitere Zeichenroutinen (Braukessel, Zähler) laufen in dieser einen Schleife mit
+// Lobby verdeckt? Dann ruhen Hintergrund, Band-Drift, Lobby-Vorschau und CSS-Dauer-Animationen
+function lobbyHold() { return MODALS.length > 0 || CS.on || REVEAL.open; }
 function frame(now) {
   const raw = (now - lastFrame) / 1000, dt = Math.min(0.05, raw); lastFrame = now;
   try {
     tickBoosts(dt);
-    if (SCREEN === 'lobby') { drawBg(dt); drawStrip(dt); lobbyPerf(raw); uiT -= dt; if (uiT <= 0) { uiT = 0.25; updateLuckUI(); } }
+    if (SCREEN === 'lobby') {
+      const hold = lobbyHold(); if (hold !== UI.hold) { UI.hold = hold; document.documentElement.classList.toggle('ui-hold', hold); }
+      if (!hold) drawBg(dt);
+      drawStrip(Math.min(.1, raw), hold); lobbyPerf(raw); perfCheck(raw);
+      uiT -= dt; if (uiT <= 0) { uiT = 0.25; updateLuckUI(); }
+    }
     else if (SCREEN === 'arena') arenaFrame(dt);
     for (const p of PREVIEWS) p.frame(dt);
+    for (const f of TICKS) f(dt, now);
     drawRFX(dt);
     if (CS.on) CS.frame(Math.min(0.1, raw)); // Cutscene in Echtzeit, damit sie auch bei wenig FPS gleich lang bleibt
     saveT -= dt; if (saveT <= 0) { saveT = 5; if (S.boosts.length) save(); }
