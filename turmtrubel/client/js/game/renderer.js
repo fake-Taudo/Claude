@@ -3,7 +3,7 @@ import { ARENA_W, ARENA_H, RIVER_Y0, RIVER_Y1, BRIDGES, TOWER_SLOTS, placementRe
 import { EF, EMOTES } from '/shared/protocol.js';
 import { drawUnit, drawBuilding, drawTower, drawEmoteFace, drawSpellIcon, TEAM, OUTLINE, shade } from './sprites.js';
 import { FONT, text as ctext, tnum, rr as rrect } from './canvastext.js';
-import { softShadow } from '../design/light.js';
+import { softShadow, softGlow } from '../design/light.js';
 import { LIGHT } from '../design/tokens.js';
 
 const TAU = Math.PI * 2;
@@ -12,6 +12,14 @@ const ROLLING = new Set(['roll', 'log', 'barrelRoll']);
 const ARC_KINDS = new Set(['boulder', 'bomb', 'dynamite', 'rocket']);
 const EVO_SPARK = { count: 1, scaleCount: false, shape: 'star', colors: ['team', '#ffffff'], spread: 0.35, up: [0.6, 1.3], drag: 0.3, life: [0.5, 0.8], size: [0.18, 0.26], sizeEnd: 0.03, alpha: [1, 0], blend: 'add', prio: 0 };
 const FUSE_SPARK = { count: 1, scaleCount: false, shape: 'dot', colors: ['#ffcf3d', '#fff3b0'], speed: [0.3, 1], up: [0.3, 1], life: [0.15, 0.3], size: [0.12, 0.18], sizeEnd: 0.02, alpha: [1, 0], blend: 'add', prio: 0 };
+
+/** Hex-Farbe mit Deckkraft als rgba(). */
+function hexA(hex, a) {
+  let h = hex.slice(1);
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  const n = parseInt(h, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
 
 /** Flughöhe eines Projektils in Feldern (Bogenflug für Mörser, Bomben, Raketen …). */
 export function projZ(p) {
@@ -90,7 +98,7 @@ export class Renderer {
   // ───────────── Hintergrund ─────────────
   renderBackground(cw, ch, dpr) {
     const view = this.game.view;
-    const key = [cw, ch, dpr, view.mode, view.s, view.ox, view.oy].join('|');
+    const key = [cw, ch, dpr, view.mode, view.s, view.ox, view.oy, this.game.hud?.version || 0, this.bgLayer ? 1 : 0].join('|');
     if (key === this.bgKey) return;
     this.bgKey = key;
     const bg = this.bg;
@@ -103,145 +111,31 @@ export class Renderer {
     const c = bg.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     const s = view.s;
-
-    // Umgebung
-    const g = c.createLinearGradient(0, 0, 0, ch);
-    g.addColorStop(0, '#2f6b3a');
-    g.addColorStop(1, '#255a31');
-    c.fillStyle = g;
-    c.fillRect(0, 0, cw, ch);
     const A = view.rect(0, 0, ARENA_W, ARENA_H);
-    // Deko-Bäume & Büsche außerhalb der Arena
-    for (let i = 0; i < 90; i++) {
-      const x = hash(i) * cw;
-      const y = hash(i + 500) * ch;
-      if (x > A.x - s * 0.8 && x < A.x + A.w + s * 0.8 && y > A.y - s * 0.8 && y < A.y + A.h + s * 0.8) continue;
-      const r = s * (0.5 + hash(i + 900) * 0.7);
-      c.fillStyle = 'rgba(0,0,0,0.18)';
-      c.beginPath();
-      c.ellipse(x + r * 0.2, y + r * 0.5, r, r * 0.5, 0, 0, TAU);
-      c.fill();
-      c.fillStyle = hash(i + 77) > 0.5 ? '#3f8f45' : '#4ea552';
-      c.strokeStyle = OUTLINE;
-      c.lineWidth = 2;
-      c.beginPath();
-      c.arc(x, y, r, 0, TAU);
-      c.fill();
-      c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.12)';
-      c.beginPath();
-      c.arc(x - r * 0.3, y - r * 0.3, r * 0.4, 0, TAU);
-      c.fill();
-    }
-    // Rahmen
-    c.fillStyle = '#6b5a45';
-    c.strokeStyle = OUTLINE;
-    c.lineWidth = 3;
-    c.beginPath();
-    c.roundRect(A.x - s * 0.35, A.y - s * 0.35, A.w + s * 0.7, A.h + s * 0.7, s * 0.5);
-    c.fill();
-    c.stroke();
-    // Rasen-Schachbrett
-    for (let ty = 0; ty < ARENA_H; ty++) {
-      for (let tx = 0; tx < ARENA_W; tx++) {
-        const r = view.rect(tx, ty, tx + 1, ty + 1);
-        const odd = (tx + ty) % 2;
-        const v = hash(tx * 37 + ty * 11) * 0.04 - 0.02;
-        c.fillStyle = shade(odd ? '#86d160' : '#7bc656', v);
-        c.fillRect(r.x, r.y, r.w + 0.5, r.h + 0.5);
-      }
-    }
-    // Wege von den Brücken zu den Wachtürmen
-    c.fillStyle = 'rgba(233, 214, 160, 0.35)';
-    for (const b of BRIDGES) {
-      for (const [y0, y1] of [[6.5, RIVER_Y0], [RIVER_Y1, 25.5]]) {
-        const r = view.rect(b.x0 + 0.3, y0, b.x1 - 0.3, y1);
-        c.fillRect(r.x, r.y, r.w, r.h);
-      }
-    }
-    // Turmplätze
-    for (const t of TOWER_SLOTS) {
-      const half = (t.key === 'king' ? 4 : 3) / 2 + 0.35;
-      const r = view.rect(t.x - half, t.y - half, t.x + half, t.y + half);
-      c.fillStyle = '#d9ceb6';
-      c.strokeStyle = 'rgba(28,24,48,0.5)';
-      c.lineWidth = 2;
-      c.beginPath();
-      c.roundRect(r.x, r.y, r.w, r.h, s * 0.3);
-      c.fill();
-      c.stroke();
-      c.strokeStyle = 'rgba(120,100,80,0.35)';
-      c.lineWidth = 1;
-      for (let k = 1; k < half * 2; k++) {
-        const rr = view.rect(t.x - half + k, t.y - half, t.x - half + k, t.y + half);
-        c.beginPath();
-        c.moveTo(rr.x, rr.y);
-        c.lineTo(rr.x + rr.w, rr.y + rr.h);
-        c.stroke();
-        const r2 = view.rect(t.x - half, t.y - half + k, t.x + half, t.y - half + k);
-        c.beginPath();
-        c.moveTo(r2.x, r2.y);
-        c.lineTo(r2.x + r2.w, r2.y + r2.h);
-        c.stroke();
-      }
-    }
-    // Fluss
-    const R = view.rect(0, RIVER_Y0 - 0.1, ARENA_W, RIVER_Y1 + 0.1);
-    const rg = view.mode === 'portrait' ? c.createLinearGradient(0, R.y, 0, R.y + R.h) : c.createLinearGradient(R.x, 0, R.x + R.w, 0);
-    rg.addColorStop(0, '#2c86d6');
-    rg.addColorStop(0.5, '#47b4f5');
-    rg.addColorStop(1, '#2c86d6');
-    c.fillStyle = rg;
-    c.fillRect(R.x, R.y, R.w, R.h);
-    c.strokeStyle = '#6b8f3a';
-    c.lineWidth = Math.max(2, s * 0.12);
-    const e0 = view.rect(0, RIVER_Y0 - 0.1, ARENA_W, RIVER_Y0 - 0.1);
-    const e1 = view.rect(0, RIVER_Y1 + 0.1, ARENA_W, RIVER_Y1 + 0.1);
-    for (const e of [e0, e1]) {
-      c.beginPath();
-      c.moveTo(e.x, e.y);
-      c.lineTo(e.x + e.w, e.y + e.h);
-      c.stroke();
-    }
-    // Brücken
-    for (const b of BRIDGES) {
-      const r = view.rect(b.x0, RIVER_Y0 - 0.45, b.x1, RIVER_Y1 + 0.45);
-      c.fillStyle = 'rgba(0,0,0,0.25)';
-      c.fillRect(r.x + 3, r.y + 4, r.w, r.h);
-      c.fillStyle = '#b07a45';
-      c.strokeStyle = OUTLINE;
-      c.lineWidth = 2.5;
-      c.beginPath();
-      c.roundRect(r.x, r.y, r.w, r.h, s * 0.15);
-      c.fill();
-      c.stroke();
-      c.strokeStyle = 'rgba(60,35,15,0.55)';
-      c.lineWidth = 1.5;
-      const planks = 8;
-      for (let k = 1; k < planks; k++) {
-        const y = RIVER_Y0 - 0.45 + ((RIVER_Y1 - RIVER_Y0 + 0.9) * k) / planks;
-        const l = view.rect(b.x0, y, b.x1, y);
-        c.beginPath();
-        c.moveTo(l.x, l.y);
-        c.lineTo(l.x + l.w, l.y + l.h);
-        c.stroke();
-      }
-      // Geländer
-      c.fillStyle = '#8a5a32';
-      c.strokeStyle = OUTLINE;
-      c.lineWidth = 2;
-      for (const x of [b.x0, b.x1]) {
-        const rr = view.rect(x - 0.12, RIVER_Y0 - 0.5, x + 0.12, RIVER_Y1 + 0.5);
-        c.beginPath();
-        c.roundRect(rr.x, rr.y, rr.w, rr.h, 3);
-        c.fill();
-        c.stroke();
-      }
-    }
-    // feine Randschatten
-    c.strokeStyle = 'rgba(0,0,0,0.18)';
-    c.lineWidth = s * 0.25;
-    c.strokeRect(A.x + s * 0.12, A.y + s * 0.12, A.w - s * 0.24, A.h - s * 0.24);
+    const mySide = this.game.side;
+    paintSurroundings(c, cw, ch, A, s);
+    // Ab hier in Weltkoordinaten (1 = ein Feld): gleiche Zeichnung für hochkant und quer
+    const [x0, y0] = view.toScreen(0, 0);
+    const [x1, y1] = view.toScreen(1, 0);
+    const [x2, y2] = view.toScreen(0, 1);
+    c.setTransform(dpr * (x1 - x0), dpr * (y1 - y0), dpr * (x2 - x0), dpr * (y2 - y0), dpr * x0, dpr * y0);
+    const px = 1 / s; // ein CSS-Pixel in Feldern
+    paintArena(c, px, mySide);
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Licht von oben links über die ganze Arena + Vignette
+    const lg = c.createLinearGradient(A.x, A.y, A.x + A.w, A.y + A.h);
+    lg.addColorStop(0, 'rgba(255,248,220,0.10)');
+    lg.addColorStop(0.5, 'rgba(255,248,220,0)');
+    lg.addColorStop(1, 'rgba(10,20,40,0.12)');
+    c.fillStyle = lg;
+    c.fillRect(A.x, A.y, A.w, A.h);
+    const vg = c.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.35, cw / 2, ch / 2, Math.hypot(cw, ch) * 0.62);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(6,10,24,0.38)');
+    c.fillStyle = vg;
+    c.fillRect(0, 0, cw, ch);
+    // Statische HUD-Teile (Panels, Mulden) nur in die sichtbare Hintergrund-Ebene
+    if (this.bgLayer) this.game.hud?.paintStatic(c);
   }
 
   drawRiverAnim(ctx, t) {
@@ -347,6 +241,34 @@ export class Renderer {
   }
 
   // ───────────── Zonen (Zauber) ─────────────
+  /** Kleines gecachtes Sprite (Gerätepixel w×h), gezeichnet über draw(ctx, w, h). */
+  cached(key, w, h, draw) {
+    this.spriteMap ||= new Map();
+    let cv = this.spriteMap.get(key);
+    if (cv) return cv;
+    cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.ceil(w));
+    cv.height = Math.max(1, Math.ceil(h));
+    draw(cv.getContext('2d'), cv.width, cv.height);
+    this.spriteMap.set(key, cv);
+    if (this.spriteMap.size > 400) this.spriteMap.delete(this.spriteMap.keys().next().value);
+    return cv;
+  }
+
+  /** Zonen-Scheibe: weiche Fläche mit leuchtendem Rand in der Effektfarbe (gecacht je Farbe). */
+  zoneDisc(col) {
+    return this.cached('zd|' + col, 256, 256, (c, W) => {
+      const r = W / 2;
+      const g = c.createRadialGradient(r, r, 0, r, r, r);
+      g.addColorStop(0, hexA(col, 0.16));
+      g.addColorStop(0.72, hexA(col, 0.24));
+      g.addColorStop(0.93, hexA(col, 0.55));
+      g.addColorStop(1, hexA(col, 0));
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, W);
+    });
+  }
+
   drawZonesGround(ctx, zones, t) {
     const view = this.game.view;
     const s = view.s;
@@ -355,22 +277,28 @@ export class Renderer {
       const [x, y] = view.toScreen(z.x, z.y);
       const r = z.r * s;
       const col = ZONE_COLORS[z.fx] || '#ffffff';
-      ctx.save();
-      const pulse = 0.85 + Math.sin(t * 4 + z.id) * 0.05;
-      ctx.globalAlpha = 0.28 * (z.fade ?? 1);
-      ctx.fillStyle = col;
+      const fade = z.fade ?? 1;
+      const pulse = 1 + Math.sin(t * 4 + z.id) * 0.02;
+      ctx.globalAlpha = fade;
+      const disc = this.zoneDisc(col);
+      ctx.drawImage(disc, x - r * pulse, y - r * pulse, r * 2 * pulse, r * 2 * pulse);
+      // Teamfarbener Rand (Radius lesbar) + drehender Runenring in Effektfarbe
+      ctx.lineWidth = Math.max(1.5, s * 0.07);
+      ctx.strokeStyle = z.owner === this.game.side ? TEAM.blue.main : TEAM.red.main;
+      ctx.globalAlpha = 0.75 * fade;
       ctx.beginPath();
-      ctx.ellipse(x, y, r * pulse, r * pulse, 0, 0, TAU);
-      ctx.fill();
-      ctx.globalAlpha = 0.8 * (z.fade ?? 1);
-      ctx.strokeStyle = col;
-      ctx.lineWidth = Math.max(2, s * 0.12);
-      ctx.setLineDash([s * 0.4, s * 0.25]);
-      ctx.lineDashOffset = -t * s;
-      ctx.beginPath();
-      ctx.ellipse(x, y, r, r, 0, 0, TAU);
+      ctx.arc(x, y, r, 0, TAU);
       ctx.stroke();
-      ctx.restore();
+      ctx.strokeStyle = col;
+      ctx.globalAlpha = 0.55 * fade;
+      ctx.lineWidth = Math.max(1.2, s * 0.05);
+      ctx.setLineDash([s * 0.18, s * 0.32]);
+      ctx.lineDashOffset = -t * s * 0.6;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 0.86, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -531,7 +459,7 @@ export class Renderer {
       if (alive) continue;
       const size = towerRules?.[slot.key]?.size ?? (slot.key === 'king' ? 4 : 3);
       const [x, y] = view.toScreen(slot.x, slot.y);
-      drawTower(ctx, { x, y, U: (size / 2) * view.s, destroyed: true, team: slot.side === this.game.side ? 'blue' : 'red', dpr: this.game.dpr });
+      drawTower(ctx, { x, y, U: (size / 2) * view.s, destroyed: true, team: slot.side === this.game.side ? 'blue' : 'red', dpr: this.game.spriteDpr });
     }
   }
 
@@ -540,7 +468,7 @@ export class Renderer {
     const view = this.game.view;
     const s = view.s;
     const mySide = this.game.side;
-    const dpr = this.game.dpr;
+    const dpr = this.game.spriteDpr;
     // Weiche Bodenschatten (gecacht je Größe), nach unten rechts versetzt (Licht von oben links);
     // Bodeneinheiten tragen darin einen feinen Fußring in Teamfarbe.
     const [ox, oy] = LIGHT.shadowOffset;
@@ -556,6 +484,13 @@ export class Renderer {
       if (v.flying) ctx.globalAlpha = 0.6;
       ctx.drawImage(img, x - w / 2 + r * ox, y + fy - h / 2 + r * oy, w, h);
       if (v.flying) ctx.globalAlpha = 1;
+      // Champions und Helden: pulsierender Goldring am Boden
+      if (v.cls === 'champion' || v.cls === 'hero') {
+        const g = softGlow(v.cls === 'hero' ? '#ff9a7a' : '#ffd84d', r * 1.3 * dpr, 0.55);
+        ctx.globalAlpha = 0.45 + Math.sin(t * 4 + v.seed) * 0.15;
+        ctx.drawImage(g, x - r * 1.3, y - r * 0.6, r * 2.6, r * 1.2);
+        ctx.globalAlpha = 1;
+      }
     }
     const ground = [];
     const air = [];
@@ -593,7 +528,7 @@ export class Renderer {
       const stage = Math.max(v.stage || 0, v.hp <= v.maxHp * 0.33 ? 2 : v.hp <= v.maxHp * 0.66 ? 1 : 0);
       const back = v.owner === this.game.side && view.mode !== 'rotated';
       const active = !!(f & EF.ACTIVE);
-      const top = drawTower(ctx, { x: v.sx, y: v.sy, U: v.half * s, t, king: v.king, active, team, hurt: v.hurt, atk: v.atk, aim, quality, dpr: this.game.dpr, stage, back });
+      const top = drawTower(ctx, { x: v.sx, y: v.sy, U: v.half * s, t, king: v.king, active, team, hurt: v.hurt, atk: v.atk, aim, quality, dpr: this.game.spriteDpr, stage, back });
       // Schlafender König: schwebende „z“
       if (v.king && !active && top) {
         for (let i = 0; i < 2; i++) {
@@ -617,7 +552,7 @@ export class Renderer {
     const label = v.info?.label;
     if (v.kind === 'building') {
       const squash = spawnK < 1 ? 1 - spawnK : 0;
-      drawBuilding(ctx, v.look, { x: v.sx, y: v.sy + v.half * s * 0.35, U: v.half * s * 0.95, t, atk: v.atk, hurt: v.hurt, team, aim, aux: v.aux, alpha, evo: v.evo, quality, squash, label, dpr: this.game.dpr });
+      drawBuilding(ctx, v.look, { x: v.sx, y: v.sy + v.half * s * 0.35, U: v.half * s * 0.95, t, atk: v.atk, hurt: v.hurt, team, aim, aux: v.aux, alpha, evo: v.evo, quality, squash, label, dpr: this.game.spriteDpr });
       return;
     }
     // Sprung/Wurf: Bogenflug aus dem lp-/th-Ereignis, sonst kleines Hüpfen
@@ -650,7 +585,7 @@ export class Renderer {
       squash,
       label,
       back: !!v.back,
-      dpr: this.game.dpr,
+      dpr: this.game.spriteDpr,
     });
     if (f & EF.CLONE && quality > 0) {
       ctx.save();
@@ -667,46 +602,101 @@ export class Renderer {
     if (v.evo && quality > 0 && Math.random() < 0.12) this.game.fx.burst(EVO_SPARK, { x: v.x, y: v.y, z: v.flying ? 1.1 : 0.2, k: 1, teamColor: v.look.accent || '#d7b5ff' });
   }
 
+  /** Eisblock (facettierter Kristall), gecacht je Größe. */
+  iceBlock(w, h, dpr) {
+    const W = Math.round(w * dpr);
+    const H = Math.round(h * dpr);
+    return this.cached('ice|' + W + '|' + H, W + 4, H + 4, (c) => {
+      c.translate(2, 2);
+      const pts = [[0.12, 0.18], [0.45, 0.02], [0.86, 0.12], [0.98, 0.5], [0.9, 0.94], [0.5, 1], [0.08, 0.9], [0.02, 0.5]].map(([x, y]) => [x * W, y * H]);
+      c.beginPath();
+      pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+      c.closePath();
+      const g = c.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, 'rgba(240,252,255,0.85)');
+      g.addColorStop(0.5, 'rgba(160,226,255,0.6)');
+      g.addColorStop(1, 'rgba(90,170,230,0.75)');
+      c.fillStyle = g;
+      c.fill();
+      c.lineWidth = Math.max(1.5, W * 0.035);
+      c.strokeStyle = '#2a6f9e';
+      c.lineJoin = 'round';
+      c.stroke();
+      // Facetten und Glanz
+      c.strokeStyle = 'rgba(255,255,255,0.75)';
+      c.lineWidth = Math.max(1, W * 0.02);
+      c.beginPath();
+      c.moveTo(W * 0.45, H * 0.02);
+      c.lineTo(W * 0.5, H * 0.45);
+      c.lineTo(W * 0.98, H * 0.5);
+      c.moveTo(W * 0.5, H * 0.45);
+      c.lineTo(W * 0.08, H * 0.9);
+      c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.7)';
+      c.beginPath();
+      c.moveTo(W * 0.18, H * 0.2);
+      c.lineTo(W * 0.4, H * 0.1);
+      c.lineTo(W * 0.3, H * 0.42);
+      c.closePath();
+      c.fill();
+    });
+  }
+
+  /** Gelber Betäubungs-Stern mit Kontur, gecacht. */
+  stunStar(px, dpr) {
+    const R = Math.round(px * dpr);
+    return this.cached('st|' + R, R * 2 + 4, R * 2 + 4, (c) => {
+      c.fillStyle = '#ffe14d';
+      c.strokeStyle = OUTLINE;
+      c.lineWidth = Math.max(1, R * 0.18);
+      c.lineJoin = 'round';
+      starPath(c, R + 2, R + 2, R);
+      c.fill();
+      c.stroke();
+    });
+  }
+
   drawStatus(ctx, v, t) {
     if (v.kind === 'tower') return;
     const s = this.game.view.s;
+    const dpr = this.game.spriteDpr;
     const f = v.flags;
-    const top = v.sy - (v.flying ? s * 1.1 : 0) - (v.kind === 'building' ? v.half * s * 1.6 : v.U * 1.75);
+    const lift = v.flying ? s * 1.1 : 0;
+    const top = v.sy - lift - (v.kind === 'building' ? v.half * s * 1.6 : v.U * 1.75);
+    const glow = (col, rx, ry, a) => {
+      const g = softGlow(col, Math.max(rx, ry) * dpr, 0.3);
+      ctx.globalAlpha = a;
+      ctx.drawImage(g, v.sx - rx, v.sy - lift - v.U * 0.65 - ry, rx * 2, ry * 2);
+      ctx.globalAlpha = 1;
+    };
+    if (f & EF.RAGE) glow('#e07bff', v.U * 1.0, v.U * 1.15, 0.45 + Math.sin(t * 10) * 0.12);
+    if (f & EF.BUFF) glow('#ffd84d', v.U * 1.0, v.U * 1.1, 0.35 + Math.sin(t * 8) * 0.1);
+    if (f & EF.REFLECT) {
+      glow('#bff4ff', v.U * 1.1, v.U * 1.2, 0.5 + Math.sin(t * 12) * 0.12);
+      ctx.globalAlpha = 0.6;
+      ctx.strokeStyle = '#e8fbff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(v.sx, v.sy - lift - v.U * 0.7, v.U * 1.05, v.U * 1.15, 0, 0, TAU);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
     if (f & EF.STUN) {
       if (v.ice) {
-        ctx.save();
-        ctx.globalAlpha = 0.55;
-        ctx.fillStyle = '#bff4ff';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        const w = (v.kind === 'building' ? v.half * 2 : v.radius * 2.6) * s;
-        ctx.beginPath();
-        ctx.roundRect(v.sx - w / 2, top + s * 0.1, w, v.sy - top, s * 0.15);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
+        const w = (v.kind === 'building' ? v.half * 2.1 : v.radius * 2.8) * s;
+        const h = v.sy - lift - top + s * 0.2;
+        const img = this.iceBlock(w, h, dpr);
+        ctx.globalAlpha = 0.92;
+        ctx.drawImage(img, v.sx - w / 2 - 2 / dpr, top - s * 0.1 - 2 / dpr, img.width / dpr, img.height / dpr);
+        ctx.globalAlpha = 1;
       } else {
+        const star = this.stunStar(s * 0.14, dpr);
+        const sw = star.width / dpr;
         for (let i = 0; i < 3; i++) {
           const a = t * 5 + (i * TAU) / 3;
-          const x = v.sx + Math.cos(a) * s * 0.4;
-          const y = top - s * 0.05 + Math.sin(a) * s * 0.12;
-          ctx.fillStyle = '#ffe14d';
-          ctx.strokeStyle = OUTLINE;
-          ctx.lineWidth = 1.2;
-          starPath(ctx, x, y, s * 0.13);
-          ctx.fill();
-          ctx.stroke();
+          ctx.drawImage(star, v.sx + Math.cos(a) * s * 0.4 - sw / 2, top - s * 0.05 + Math.sin(a) * s * 0.12 - sw / 2, sw, sw);
         }
       }
-    }
-    if (f & EF.RAGE) {
-      ctx.save();
-      ctx.globalAlpha = 0.25 + Math.sin(t * 10) * 0.1;
-      ctx.fillStyle = '#d23cf0';
-      ctx.beginPath();
-      ctx.ellipse(v.sx, v.sy - v.U * 0.6 - (v.flying ? s * 1.1 : 0), v.U * 0.9, v.U * 1.0, 0, 0, TAU);
-      ctx.fill();
-      ctx.restore();
     }
     if (f & EF.SLOW && !(f & EF.STUN)) {
       ctx.fillStyle = '#7fb8ff';
@@ -719,27 +709,13 @@ export class Renderer {
       }
       ctx.globalAlpha = 1;
     }
-    if (f & EF.REFLECT) {
-      ctx.save();
-      ctx.globalAlpha = 0.45 + Math.sin(t * 12) * 0.15;
-      ctx.strokeStyle = '#e8fbff';
-      ctx.fillStyle = 'rgba(190, 240, 255, 0.25)';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.ellipse(v.sx, v.sy - v.U * 0.7, v.U * 1.05, v.U * 1.15, 0, 0, TAU);
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    }
     if (f & EF.CURSE) {
-      // Fluch: grüner Totenkopf-Wirbel über dem Kopf
+      // Fluch: grüner Wirbel über dem Kopf
       for (let i = 0; i < 3; i++) {
         const a = t * 3 + (i * TAU) / 3;
-        ctx.fillStyle = '#7cc36b';
-        ctx.globalAlpha = 0.85;
-        ctx.beginPath();
-        ctx.arc(v.sx + Math.cos(a) * s * 0.35, top - s * 0.15 + Math.sin(a) * s * 0.1, s * 0.09, 0, TAU);
-        ctx.fill();
+        const g = softGlow('#7cc36b', s * 0.16 * dpr, 0.5);
+        ctx.globalAlpha = 0.9;
+        ctx.drawImage(g, v.sx + Math.cos(a) * s * 0.35 - s * 0.16, top - s * 0.15 + Math.sin(a) * s * 0.1 - s * 0.16, s * 0.32, s * 0.32);
       }
       ctx.globalAlpha = 1;
     }
@@ -768,15 +744,6 @@ export class Renderer {
       ctx.beginPath();
       ctx.ellipse(v.sx, v.sy, s * 0.7, s * 0.3, 0, 0, TAU);
       ctx.stroke();
-      ctx.restore();
-    }
-    if (f & EF.BUFF) {
-      ctx.save();
-      ctx.globalAlpha = 0.3 + Math.sin(t * 8) * 0.1;
-      ctx.fillStyle = '#ffd84d';
-      ctx.beginPath();
-      ctx.ellipse(v.sx, v.sy - v.U * 0.6, v.U * 1.0, v.U * 1.05, 0, 0, TAU);
-      ctx.fill();
       ctx.restore();
     }
   }
@@ -877,7 +844,7 @@ export class Renderer {
 
   drawBar(ctx, v) {
     const s = this.game.view.s;
-    const dpr = this.game.dpr;
+    const dpr = this.game.spriteDpr;
     const damaged = v.hp < v.maxHp - 0.5;
     const special = v.cls === 'champion' || v.cls === 'hero';
     const mine = v.owner === this.game.side;
@@ -1427,3 +1394,301 @@ function hatchRed(c) {
   hatchCache = c.createPattern(p, 'repeat');
   return hatchCache;
 }
+
+// ───────────── Arena-Hintergrund (einmal gezeichnet, gecacht) ─────────────
+const GRASS = ['#7fbe55', '#76b44d'];
+const BRICK = { fill: '#e2b360', joint: 'rgba(150,95,35,0.5)', edge: '#b37a33' };
+const STONE_BANK = '#9d9485';
+const WATER = ['#2a78bf', '#3f9ee0', '#5cbcf2'];
+
+/** Umgebung außerhalb der Arena (Bildschirmraum): dunkles Gras, Bäume, Büsche, Felsen mit Licht von oben links. */
+function paintSurroundings(c, cw, ch, A, s) {
+  const g = c.createLinearGradient(0, 0, cw, ch);
+  g.addColorStop(0, '#3a7a40');
+  g.addColorStop(1, '#24562e');
+  c.fillStyle = g;
+  c.fillRect(0, 0, cw, ch);
+  // Gras-Tupfer
+  for (let i = 0; i < 260; i++) {
+    const x = hash(i + 3000) * cw;
+    const y = hash(i + 4000) * ch;
+    c.fillStyle = hash(i + 5000) > 0.5 ? 'rgba(120,190,90,0.18)' : 'rgba(10,40,20,0.18)';
+    c.fillRect(x, y, s * 0.12, s * 0.12);
+  }
+  const inArena = (x, y, m) => x > A.x - m && x < A.x + A.w + m && y > A.y - m && y < A.y + A.h + m;
+  const items = [];
+  for (let i = 0; i < 120; i++) {
+    const x = hash(i) * cw;
+    const y = hash(i + 500) * ch;
+    const r = s * (0.55 + hash(i + 900) * 0.75);
+    if (inArena(x, y, r + s * 0.9)) continue;
+    items.push({ x, y, r, kind: hash(i + 77) > 0.78 ? 'rock' : hash(i + 78) > 0.45 ? 'tree' : 'bush', i });
+  }
+  items.sort((a, b) => a.y - b.y);
+  for (const it of items) {
+    const { x, y, r } = it;
+    // weicher Schatten nach unten rechts
+    const sg = c.createRadialGradient(x + r * 0.35, y + r * 0.55, 0, x + r * 0.35, y + r * 0.55, r * 1.1);
+    sg.addColorStop(0, 'rgba(5,15,10,0.35)');
+    sg.addColorStop(1, 'rgba(5,15,10,0)');
+    c.fillStyle = sg;
+    c.fillRect(x - r, y - r, r * 2.6, r * 2.6);
+    c.lineWidth = Math.max(1.5, s * 0.07);
+    c.strokeStyle = '#1c1830';
+    if (it.kind === 'rock') {
+      c.beginPath();
+      c.moveTo(x - r * 0.8, y + r * 0.3);
+      c.lineTo(x - r * 0.5, y - r * 0.5);
+      c.lineTo(x + r * 0.3, y - r * 0.7);
+      c.lineTo(x + r * 0.85, y - r * 0.1);
+      c.lineTo(x + r * 0.6, y + r * 0.45);
+      c.closePath();
+      const rg = c.createLinearGradient(x - r, y - r, x + r, y + r);
+      rg.addColorStop(0, '#c9c3b8');
+      rg.addColorStop(1, '#7d766b');
+      c.fillStyle = rg;
+      c.fill();
+      c.stroke();
+      continue;
+    }
+    const blobs = it.kind === 'tree' ? [[0, -0.15, 1], [-0.55, 0.2, 0.7], [0.55, 0.2, 0.72], [0, 0.35, 0.65]] : [[-0.35, 0.1, 0.6], [0.35, 0.1, 0.62], [0, -0.15, 0.6]];
+    const base = it.kind === 'tree' ? (hash(it.i + 33) > 0.5 ? '#3f8f45' : '#4a9c4a') : '#5aa84f';
+    c.beginPath();
+    for (const [bx, by, br] of blobs) {
+      c.moveTo(x + bx * r + br * r * 0.62, y + by * r);
+      c.arc(x + bx * r, y + by * r, br * r * 0.62, 0, TAU);
+    }
+    const tg = c.createLinearGradient(x - r, y - r, x + r * 0.6, y + r);
+    tg.addColorStop(0, shade(base, 0.25));
+    tg.addColorStop(0.55, base);
+    tg.addColorStop(1, shade(base, -0.3));
+    c.fillStyle = tg;
+    c.fill();
+    c.stroke();
+    c.fillStyle = 'rgba(255,255,230,0.22)';
+    c.beginPath();
+    c.ellipse(x - r * 0.25, y - r * 0.35, r * 0.28, r * 0.16, -0.5, 0, TAU);
+    c.fill();
+  }
+}
+
+/** Arena in Weltkoordinaten: Mauerrand, Gras, Wege, Turmplätze, Fluss mit Ufern, Brücken, Banner. px = 1 CSS-Pixel in Feldern. */
+function paintArena(c, px, mySide) {
+  const W = ARENA_W;
+  const H = ARENA_H;
+  const ink = '#1c1830';
+  // Mauer rundum (Steinblöcke mit Licht oben)
+  c.fillStyle = '#857c6e';
+  c.strokeStyle = ink;
+  c.lineWidth = 3 * px;
+  c.beginPath();
+  c.roundRect(-0.7, -0.7, W + 1.4, H + 1.4, 0.6);
+  c.fill();
+  c.stroke();
+  c.strokeStyle = 'rgba(40,32,26,0.35)';
+  c.lineWidth = 1.2 * px;
+  for (let i = 0; i < (W + H) * 2; i++) {
+    // Fugen entlang des Rands
+    const t = i * 0.9;
+    let x;
+    let y;
+    if (t < W) [x, y] = [t, -0.35];
+    else if (t < W + H) [x, y] = [W + 0.35, t - W];
+    else if (t < 2 * W + H) [x, y] = [W - (t - W - H), H + 0.35];
+    else [x, y] = [-0.35, H - (t - 2 * W - H)];
+    c.beginPath();
+    c.arc(x, y, 0.16, 0, TAU);
+    c.stroke();
+  }
+  c.fillStyle = 'rgba(255,245,220,0.22)';
+  c.fillRect(-0.6, -0.6, W + 1.2, 0.18);
+  // Gras: Schachbrett in zwei gedämpften Tönen mit leichter Variation
+  for (let ty = 0; ty < H; ty++) {
+    for (let tx = 0; tx < W; tx++) {
+      const v = hash(tx * 37 + ty * 11) * 0.05 - 0.025;
+      c.fillStyle = shade(GRASS[(tx + ty) % 2], v);
+      c.fillRect(tx, ty, 1 + px, 1 + px);
+    }
+  }
+  // Grasbüschel und helle Tupfer
+  c.lineWidth = 1.3 * px;
+  c.lineCap = 'round';
+  for (let i = 0; i < 900; i++) {
+    const x = hash(i + 11000) * W;
+    const y = hash(i + 12000) * H;
+    if (y > RIVER_Y0 - 0.2 && y < RIVER_Y1 + 0.2) continue;
+    if (hash(i + 13000) > 0.35) {
+      c.strokeStyle = 'rgba(40,95,30,0.45)';
+      c.beginPath();
+      c.moveTo(x - 0.08, y - 0.1);
+      c.lineTo(x, y + 0.06);
+      c.lineTo(x + 0.09, y - 0.12);
+      c.stroke();
+    } else {
+      c.fillStyle = 'rgba(220,255,170,0.35)';
+      c.fillRect(x, y, 0.07, 0.07);
+    }
+  }
+  // Wege aus Ziegeln: Querweg an den Burgtürmen, Längswege über die Wachtürme bis zur Brücke
+  const paths = [];
+  for (const b of BRIDGES) {
+    paths.push([b.cx - 0.95, 3 - 0.95, 1.9, RIVER_Y0 - 2.05]);
+    paths.push([b.cx - 0.95, RIVER_Y1, 1.9, 29 + 0.95 - RIVER_Y1]);
+  }
+  paths.push([BRIDGES[0].cx, 3 - 0.8, BRIDGES[1].cx - BRIDGES[0].cx, 1.6]);
+  paths.push([BRIDGES[0].cx, 29 - 0.8, BRIDGES[1].cx - BRIDGES[0].cx, 1.6]);
+  for (const [x, y, w, h] of paths) {
+    c.fillStyle = 'rgba(60,40,20,0.22)';
+    c.fillRect(x + 0.08, y + 0.1, w, h);
+    c.fillStyle = BRICK.fill;
+    c.fillRect(x, y, w, h);
+  }
+  // Ziegelfugen (nur auf den Wegen)
+  c.save();
+  c.beginPath();
+  for (const [x, y, w, h] of paths) c.rect(x, y, w, h);
+  c.clip();
+  c.strokeStyle = BRICK.joint;
+  c.lineWidth = 1 * px;
+  for (let y = 0; y < H; y += 0.5) {
+    c.beginPath();
+    c.moveTo(0, y);
+    c.lineTo(W, y);
+    c.stroke();
+    const off = (y * 2) % 2 ? 0.5 : 0;
+    for (let x = off; x < W; x += 1) {
+      c.beginPath();
+      c.moveTo(x, y);
+      c.lineTo(x, y + 0.5);
+      c.stroke();
+    }
+  }
+  c.fillStyle = 'rgba(255,240,200,0.12)';
+  for (let i = 0; i < 160; i++) c.fillRect(hash(i + 20000) * W, hash(i + 21000) * H, 0.45, 0.2);
+  c.restore();
+  c.strokeStyle = BRICK.edge;
+  c.lineWidth = 1.5 * px;
+  for (const [x, y, w, h] of paths) c.strokeRect(x, y, w, h);
+  // Turmplätze: Steinplatten mit Fugen
+  for (const t of TOWER_SLOTS) {
+    const half = (t.key === 'king' ? 4 : 3) / 2 + 0.3;
+    c.fillStyle = 'rgba(40,30,20,0.25)';
+    c.fillRect(t.x - half + 0.1, t.y - half + 0.12, half * 2, half * 2);
+    c.fillStyle = '#d6cab0';
+    c.strokeStyle = 'rgba(28,24,48,0.55)';
+    c.lineWidth = 1.5 * px;
+    c.beginPath();
+    c.roundRect(t.x - half, t.y - half, half * 2, half * 2, 0.25);
+    c.fill();
+    c.stroke();
+    c.strokeStyle = 'rgba(120,100,80,0.35)';
+    c.lineWidth = 1 * px;
+    for (let k = 1; k < half * 2; k++) {
+      c.beginPath();
+      c.moveTo(t.x - half + k, t.y - half);
+      c.lineTo(t.x - half + k, t.y + half);
+      c.moveTo(t.x - half, t.y - half + k);
+      c.lineTo(t.x + half, t.y - half + k);
+      c.stroke();
+    }
+  }
+  // Fluss: Wasser mit Tiefenverlauf, Steinufer mit Licht von oben
+  const wg = c.createLinearGradient(0, RIVER_Y0, 0, RIVER_Y1);
+  wg.addColorStop(0, WATER[0]);
+  wg.addColorStop(0.35, WATER[1]);
+  wg.addColorStop(0.7, WATER[2]);
+  wg.addColorStop(1, WATER[1]);
+  c.fillStyle = wg;
+  c.fillRect(-0.7, RIVER_Y0, W + 1.4, RIVER_Y1 - RIVER_Y0);
+  c.fillStyle = 'rgba(10,40,80,0.35)';
+  c.fillRect(-0.7, RIVER_Y0, W + 1.4, 0.28);
+  for (const [y, top] of [[RIVER_Y0 - 0.22, true], [RIVER_Y1 - 0.06, false]]) {
+    for (let x = -0.7; x < W + 0.7; x += 0.62) {
+      const w = 0.58 + hash(Math.round(x * 10) + (top ? 0 : 99)) * 0.1;
+      c.fillStyle = shade(STONE_BANK, hash(Math.round(x * 7) + (top ? 5 : 55)) * 0.12 - 0.06);
+      c.strokeStyle = ink;
+      c.lineWidth = 1.2 * px;
+      c.beginPath();
+      c.roundRect(x, y, w, 0.28, 0.08);
+      c.fill();
+      c.stroke();
+      c.fillStyle = 'rgba(255,250,235,0.35)';
+      c.fillRect(x + 0.06, y + 0.03, w - 0.12, 0.06);
+    }
+  }
+  // Brücken: Planken, Seitenbalken, Pfosten mit Metallbändern, Schatten aufs Wasser
+  for (const b of BRIDGES) {
+    const by0 = RIVER_Y0 - 0.5;
+    const by1 = RIVER_Y1 + 0.5;
+    c.fillStyle = 'rgba(5,25,50,0.35)';
+    c.fillRect(b.x0 + 0.15, by0 + 0.2, b.x1 - b.x0, by1 - by0);
+    c.fillStyle = '#b98250';
+    c.strokeStyle = ink;
+    c.lineWidth = 2.2 * px;
+    c.beginPath();
+    c.roundRect(b.x0, by0, b.x1 - b.x0, by1 - by0, 0.12);
+    c.fill();
+    c.stroke();
+    for (let k = 0; k < 9; k++) {
+      const y = by0 + ((by1 - by0) * k) / 9;
+      const pg = c.createLinearGradient(0, y, 0, y + (by1 - by0) / 9);
+      pg.addColorStop(0, shade('#c99560', hash(k + b.x0 * 10) * 0.12 - 0.04));
+      pg.addColorStop(1, shade('#a8713e', hash(k + 40) * 0.1 - 0.05));
+      c.fillStyle = pg;
+      c.fillRect(b.x0 + 0.22, y + 0.03, b.x1 - b.x0 - 0.44, (by1 - by0) / 9 - 0.06);
+    }
+    for (const x of [b.x0, b.x1 - 0.24]) {
+      c.fillStyle = '#7a4b2a';
+      c.strokeStyle = ink;
+      c.lineWidth = 1.6 * px;
+      c.beginPath();
+      c.roundRect(x, by0 - 0.1, 0.24, by1 - by0 + 0.2, 0.06);
+      c.fill();
+      c.stroke();
+    }
+    for (const [x, y] of [[b.x0 + 0.12, by0 - 0.1], [b.x1 - 0.12, by0 - 0.1], [b.x0 + 0.12, by1 + 0.1], [b.x1 - 0.12, by1 + 0.1]]) {
+      const pg = c.createRadialGradient(x - 0.08, y - 0.08, 0.02, x, y, 0.26);
+      pg.addColorStop(0, '#d39a62');
+      pg.addColorStop(1, '#6b4226');
+      c.fillStyle = pg;
+      c.strokeStyle = ink;
+      c.lineWidth = 1.6 * px;
+      c.beginPath();
+      c.arc(x, y, 0.24, 0, TAU);
+      c.fill();
+      c.stroke();
+      c.strokeStyle = '#4a6fa5';
+      c.lineWidth = 2.2 * px;
+      c.beginPath();
+      c.arc(x, y, 0.16, 0, TAU);
+      c.stroke();
+    }
+  }
+  // Teamfarbene Banner an den Seitenmauern (eigene Hälfte blau, gegnerische rot)
+  for (let y = 2; y < H - 1; y += 3.4) {
+    if (y > RIVER_Y0 - 1 && y < RIVER_Y1 + 1) continue;
+    const mine = mySide === 0 ? y > MID_Y_WORLD : y < MID_Y_WORLD;
+    const col = mine ? TEAM.blue.main : TEAM.red.main;
+    for (const x of [-0.62, W + 0.18]) {
+      c.fillStyle = col;
+      c.strokeStyle = ink;
+      c.lineWidth = 1.4 * px;
+      c.beginPath();
+      c.moveTo(x, y);
+      c.lineTo(x + 0.44, y);
+      c.lineTo(x + 0.44, y + 0.9);
+      c.lineTo(x + 0.22, y + 0.72);
+      c.lineTo(x, y + 0.9);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.35)';
+      c.fillRect(x + 0.04, y + 0.04, 0.12, 0.6);
+    }
+  }
+  // Feiner Innenschatten der Mauer
+  c.strokeStyle = 'rgba(0,0,0,0.16)';
+  c.lineWidth = 0.22;
+  c.strokeRect(0.11, 0.11, W - 0.22, H - 0.22);
+}
+const MID_Y_WORLD = ARENA_H / 2;

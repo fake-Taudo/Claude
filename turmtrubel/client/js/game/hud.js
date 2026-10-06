@@ -10,6 +10,8 @@ import { drawEmoteFace } from './sprites.js';
 import { starPath } from './renderer.js';
 import { T, reducedMotion } from '../ui/tokens.js';
 import { OUTLINE, text, tnum, ellipsize, setFont, rr } from './canvastext.js';
+import { paintPanel, paintWell, cardSprite, selectGlow, elixirOverlay, timerBox, crownSprite, emoteButton, teamPill } from './hudart.js';
+import { softGlow } from '../design/light.js';
 
 const TAU = Math.PI * 2;
 const GAP = 6;
@@ -170,6 +172,12 @@ export class Hud {
     this.placeEmoteMenu(L);
     this.L = L;
     this.gradKey = '';
+    // Version nur bei echter Layout-Änderung erhöhen (sonst würde die Hintergrund-Ebene unnötig neu gezeichnet)
+    const sig = JSON.stringify([L.panel, L.topbar, L.cards, L.next, L.elixir, L.view]);
+    if (sig !== this.layoutSig) {
+      this.layoutSig = sig;
+      this.version = (this.version || 0) + 1;
+    }
     return L;
   }
 
@@ -453,8 +461,27 @@ export class Hud {
     this.drawEmoteMenu(ctx, now);
   }
 
+  /**
+   * Statische HUD-Teile (Panels, Kartenmulden, Elixier-Rinne) in die Hintergrund-Ebene zeichnen –
+   * einmal je Layout statt jeden Frame (siehe Renderer.renderBackground).
+   */
+  paintStatic(c) {
+    const L = this.L;
+    if (!L) return;
+    const P = L.panel;
+    paintPanel(c, P.x, P.y, P.w, P.h, L.topbar ? 'top' : 'left');
+    if (L.topbar) paintPanel(c, 0, 0, L.topbar.w, L.topbar.h, 'bottom');
+    for (const r of L.cards) paintWell(c, r.x - 3, r.y - 3, r.w + 6, r.h + 6, Math.max(8, r.w * 0.14));
+    paintWell(c, L.next.x - 2, L.next.y - 2, L.next.w + 4, L.next.h + 4, 8);
+    const e = L.elixir;
+    paintWell(c, e.x - 2, e.y - 2, e.w + 4, e.h + 4, (e.h + 4) / 2);
+    this.staticPainted = this.version;
+  }
+
   drawPanels(ctx) {
     const L = this.L;
+    // Panels liegen bereits in der Hintergrund-Ebene
+    if (this.staticPainted === this.version) return;
     const P = L.panel;
     if (this.gradKey !== `${L.w}x${L.h}${L.mode}${L.side}`) {
       this.gradKey = `${L.w}x${L.h}${L.mode}${L.side}`;
@@ -581,6 +608,15 @@ export class Hud {
     }
     ctx.save();
     ctx.globalAlpha = alpha;
+    // Sprite immer in Slot-Größe; Zwischengrößen (Zyklus) per Transformation
+    if (w !== r.w || h !== r.h) {
+      ctx.translate(x, y);
+      ctx.scale(w / r.w, h / r.h);
+      x = 0;
+      y = 0;
+      w = r.w;
+      h = r.h;
+    }
     if (selected) {
       // Ausgewählt: 10 px Lift, Skalierung 1.06, Teamfarben-Glow
       const k = this.rm ? 1 : easeOut((now - this.selAt) / 0.12);
@@ -592,22 +628,40 @@ export class Hud {
       ctx.translate(-w / 2, -h / 2);
       x = 0;
       y = 0;
-      ctx.save();
-      if (this.hi) {
-        ctx.shadowColor = T.blue.main;
-        ctx.shadowBlur = 18;
-      }
-      rr(ctx, x - 3, y - 3, w + 6, h + 6, 12);
-      ctx.fillStyle = T.blue.light;
-      ctx.fill();
-      ctx.restore();
-    } else {
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      rr(ctx, x + 2, y + 4, w, h, 9);
-      ctx.fill();
     }
-    this.drawCardFace(ctx, id, x, y, w, h, { evo: evoReady, gray: ready && !afford ? 0.35 : 0, dim: !ready ? 0.55 : !afford ? 0.18 : 0 });
-    // Bezahlbar geworden: kurzer Glanz
+    const dpr = g.spriteDpr;
+    const pips = !evoReady && Array.isArray(evoInfo) ? [evoInfo[0], evoInfo[1]] : null;
+    const cls = card.class;
+    const colorSp = cardSprite(g.db, id, w, h, { evo: evoReady, cost, pips, dpr });
+    if (selected && this.hi) {
+      const gl = selectGlow(w, h, dpr);
+      ctx.drawImage(gl.cv, x - 14, y - 14, gl.w, gl.h);
+    }
+    if (ready && afford) ctx.drawImage(colorSp.cv, x - colorSp.ox, y - colorSp.oy, colorSp.w, colorSp.h);
+    else {
+      // Zu wenig Elixier: Graustufen; die Farbe füllt sich von unten mit dem Elixier-Fortschritt
+      const graySp = cardSprite(g.db, id, w, h, { evo: evoReady, cost, pips, dpr, gray: true, tint: ready ? 'red' : 'gray' });
+      ctx.drawImage(graySp.cv, x - graySp.ox, y - graySp.oy, graySp.w, graySp.h);
+      const frac = ready && cost > 0 ? clamp(elixir / cost, 0, 1) : 0;
+      if (frac > 0.02) {
+        const fh = h * frac;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x - 2, y + h - fh, w + 4, fh + 4);
+        ctx.clip();
+        ctx.globalAlpha *= 0.85;
+        ctx.drawImage(colorSp.cv, x - colorSp.ox, y - colorSp.oy, colorSp.w, colorSp.h);
+        ctx.restore();
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.fillRect(x + 3, y + h - fh - 1, w - 6, 2);
+      }
+      if (!ready) {
+        ctx.fillStyle = 'rgba(10,8,30,0.45)';
+        rr(ctx, x, y, w, h, Math.max(6, w * 0.12));
+        ctx.fill();
+      }
+    }
+    // Bezahlbar geworden: Glanzstreifen läuft über die Karte, kurzer Pop
     const ga = now - this.affordAt[i];
     if (ga >= 0 && ga < 0.45) {
       ctx.save();
@@ -620,7 +674,7 @@ export class Hud {
         const gx = x - w + (ga / 0.45) * w * 2.4;
         const gr = ctx.createLinearGradient(gx, y, gx + w * 0.5, y + h * 0.4);
         gr.addColorStop(0, 'rgba(255,255,255,0)');
-        gr.addColorStop(0.5, 'rgba(255,255,255,0.7)');
+        gr.addColorStop(0.5, 'rgba(255,255,255,0.75)');
         gr.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = gr;
         ctx.fillRect(x, y, w, h);
@@ -630,41 +684,20 @@ export class Hud {
     if (evoReady) {
       ctx.save();
       ctx.globalAlpha = this.rm ? 0.8 : 0.6 + Math.sin(now * 6) * 0.3;
-      ctx.strokeStyle = '#f2d4ff';
+      ctx.strokeStyle = '#ffb8ff';
       ctx.lineWidth = 3;
-      rr(ctx, x - 2, y - 2, w + 4, h + 4, 11);
+      rr(ctx, x - 2.5, y - 2.5, w + 5, h + 5, Math.max(8, w * 0.14));
       ctx.stroke();
       ctx.restore();
-      text(ctx, 'EVO', x + w / 2, y + h - Math.max(9, w * 0.13), Math.max(12, w * 0.2), '#f2d4ff');
-    } else if (Array.isArray(evoInfo)) {
-      const n = evoInfo[1];
-      for (let p = 0; p < n; p++) {
-        const px = x + w / 2 + (p - (n - 1) / 2) * w * 0.2;
-        ctx.beginPath();
-        ctx.arc(px, y + h - 7, Math.max(3, w * 0.06), 0, TAU);
-        ctx.fillStyle = p < evoInfo[0] ? '#c77dff' : 'rgba(30,24,50,0.8)';
-        ctx.fill();
-        ctx.lineWidth = 1.5;
-        ctx.strokeStyle = OUTLINE;
-        ctx.stroke();
-      }
+      text(ctx, 'EVO', x + w / 2, y + h - Math.max(9, w * 0.13), Math.max(12, w * 0.2), '#ffd6ff');
     }
     if (selected) {
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 3;
-      rr(ctx, x - 1.5, y - 1.5, w + 3, h + 3, 10);
+      rr(ctx, x - 1.5, y - 1.5, w + 3, h + 3, Math.max(8, w * 0.13));
       ctx.stroke();
     }
-    const dr = Math.max(9, w * 0.17);
-    drawElixirDrop(ctx, x + dr * 0.95, y + dr * 1.2, dr, cost ?? '?', ready && !afford ? 'red' : null);
-    if (card.class !== 'normal') {
-      ctx.fillStyle = CLASS_COLORS[card.class];
-      ctx.strokeStyle = OUTLINE;
-      ctx.lineWidth = 1.5;
-      starPath(ctx, x + w - dr * 0.9, y + dr * 1.1, dr * 0.8);
-      ctx.fill();
-      ctx.stroke();
-    }
+    void cls;
     if (this.fineInput && w >= 56) keycap(ctx, x + w - 13, y + h - 13, String(i + 1));
     ctx.restore();
   }
@@ -680,8 +713,10 @@ export class Hud {
     const k = this.rm ? 1 : clamp((now - this.nextAt) / 0.25, 0, 1);
     ctx.save();
     ctx.globalAlpha = k;
-    this.drawCardFace(ctx, me.n, r.x, r.y, r.w, r.h, { evo: evoReady, radius: 7 });
-    if (card) drawElixirDrop(ctx, r.x + r.w * 0.22, r.y + r.w * 0.26, Math.max(8, r.w * 0.17), costLabel(card));
+    if (card) {
+      const sp = cardSprite(g.db, me.n, r.w, r.h, { evo: evoReady, cost: costLabel(card), dpr: g.spriteDpr, radius: 7 });
+      ctx.drawImage(sp.cv, r.x - sp.ox, r.y - sp.oy, sp.w, sp.h);
+    }
     ctx.restore();
   }
 
@@ -691,38 +726,54 @@ export class Hud {
     const fk = (now - this.flash.at) / 0.25;
     const flashing = fk >= 0 && fk < 1;
     const sx = flashing && !this.rm ? Math.sin(fk * Math.PI * 6) * 5 * (1 - fk) : 0;
+    const dbl = g.snapMult > 1;
     ctx.save();
     ctx.translate(sx, 0);
-    rr(ctx, r.x, r.y, r.w, r.h, r.h / 2);
-    ctx.fillStyle = T.bg900;
-    ctx.fill();
+    if (this.staticPainted !== this.version) {
+      rr(ctx, r.x, r.y, r.w, r.h, r.h / 2);
+      ctx.fillStyle = T.bg900;
+      ctx.fill();
+    }
     const k = clamp(elixir / 10, 0, 1);
     const xAt = (v) => r.x + (r.w * clamp(v, 0, 10)) / 10;
     ctx.save();
     rr(ctx, r.x, r.y, r.w, r.h, r.h / 2);
     ctx.clip();
     if (k > 0) {
-      if (!this.gFill) {
+      // Flüssigkeit: Verlauf (bei Doppel-Elixier heller), Oberflächenwelle, Glanzlinie, aufsteigende Blasen
+      const key = dbl ? 'd' : 'n';
+      if (!this.gFill || this.gFillKey !== key) {
         const gr = ctx.createLinearGradient(0, r.y, 0, r.y + r.h);
-        gr.addColorStop(0, '#ff8af0');
-        gr.addColorStop(1, '#b02ee0');
+        gr.addColorStop(0, dbl ? '#ffd0ff' : '#ff9af0');
+        gr.addColorStop(0.45, dbl ? '#f05cff' : '#d13cf0');
+        gr.addColorStop(1, dbl ? '#a02ee0' : '#7a1fb5');
         this.gFill = gr;
+        this.gFillKey = key;
       }
+      const fw = r.w * k;
       ctx.fillStyle = this.gFill;
-      ctx.fillRect(r.x, r.y, r.w * k, r.h);
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.fillRect(r.x, r.y + 2, r.w * k, r.h * 0.25);
-      // Schimmer (nur Qualität ≥ Mittel, keine reduzierte Bewegung)
+      ctx.fillRect(r.x, r.y, fw, r.h);
+      // Welle an der Vorderkante
+      if (k < 1 && !this.rm) {
+        const wx = r.x + fw;
+        ctx.beginPath();
+        ctx.moveTo(wx - 2, r.y);
+        ctx.quadraticCurveTo(wx + 4 + Math.sin(now * 7) * 2.5, r.y + r.h * 0.5, wx - 2, r.y + r.h);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillRect(r.x + 4, r.y + r.h * 0.2, Math.max(0, fw - 8), Math.max(1.5, r.h * 0.12));
       if (this.hi && !this.rm) {
-        const band = r.w * 0.12;
-        const bx = r.x + ((now * 0.35) % 1.3) * r.w - band;
-        if (bx < r.x + r.w * k) {
-          const sg = ctx.createLinearGradient(bx, 0, bx + band, 0);
-          sg.addColorStop(0, 'rgba(255,255,255,0)');
-          sg.addColorStop(0.5, 'rgba(255,255,255,0.28)');
-          sg.addColorStop(1, 'rgba(255,255,255,0)');
-          ctx.fillStyle = sg;
-          ctx.fillRect(bx, r.y, Math.min(band, r.x + r.w * k - bx), r.h);
+        const n = dbl ? 9 : 6;
+        ctx.fillStyle = 'rgba(255,240,255,0.55)';
+        for (let i = 0; i < n; i++) {
+          const ph = (now * (dbl ? 0.9 : 0.55) + i * 0.37) % 1;
+          const bx = r.x + ((i * 0.618 + Math.floor(now * 0.2 + i) * 0.27) % 1) * fw;
+          const by = r.y + r.h * (1 - ph);
+          ctx.beginPath();
+          ctx.arc(bx, by, Math.max(1, r.h * (0.06 + (i % 3) * 0.025)), 0, TAU);
+          ctx.fill();
         }
       }
     }
@@ -742,28 +793,19 @@ export class Hud {
       ctx.fillRect(r.x, r.y, r.w, r.h);
     }
     ctx.restore();
-    ctx.strokeStyle = 'rgba(28,24,48,0.6)';
-    ctx.lineWidth = 1.5;
-    for (let i = 1; i < 10; i++) {
-      const x = r.x + (r.w * i) / 10;
-      ctx.beginPath();
-      ctx.moveTo(x, r.y + 3);
-      ctx.lineTo(x, r.y + r.h - 3);
-      ctx.stroke();
-    }
+    // Glas-Fugen der 10 Segmente + Glanz (gecacht)
+    const ov = elixirOverlay(r.w, r.h, g.spriteDpr);
+    ctx.drawImage(ov.cv, r.x, r.y, ov.w, ov.h);
     rr(ctx, r.x, r.y, r.w, r.h, r.h / 2);
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = OUTLINE;
     ctx.stroke();
-    // Voll: sanfter Puls
+    // Voll: weicher Puls
     if (k >= 1) {
-      ctx.save();
-      ctx.globalAlpha = this.rm ? 0.6 : 0.35 + Math.sin(now * 4) * 0.25;
-      ctx.strokeStyle = T.elixir.light;
-      ctx.lineWidth = 3;
-      rr(ctx, r.x - 3, r.y - 3, r.w + 6, r.h + 6, r.h / 2 + 3);
-      ctx.stroke();
-      ctx.restore();
+      const gl = softGlow(dbl ? '#ffb8ff' : '#ff9af0', r.h * 1.6 * g.spriteDpr, 0.4);
+      ctx.globalAlpha = this.rm ? 0.5 : 0.35 + Math.sin(now * 4) * 0.25;
+      ctx.drawImage(gl, r.x - r.h * 0.6, r.y - r.h * 0.8, r.w + r.h * 1.2, r.h * 2.6);
+      ctx.globalAlpha = 1;
     }
     if (selCost != null) {
       const mx = xAt(selCost);
@@ -774,10 +816,22 @@ export class Hud {
       ctx.fill();
       ctx.stroke();
     }
-    if (g.snapMult > 1) tnum(ctx, '×' + g.snapMult, r.x + r.w - 6, r.y + r.h / 2 + 1, Math.max(12, r.h * 0.72), T.gold.light, 'right', 3);
+    if (dbl) tnum(ctx, '×' + g.snapMult, r.x + r.w - 6, r.y + r.h / 2 + 1, Math.max(12, r.h * 0.72), T.gold.light, 'right', 3);
     ctx.restore();
     const d = L.drop;
-    drawElixirDrop(ctx, d.x + sx, d.y, d.r, Math.floor(elixir));
+    // Elixierzahl im großen Tropfen (Pop, wenn sich die ganze Zahl ändert)
+    const whole = Math.floor(elixir);
+    if (whole !== this.elxWhole) {
+      if (this.elxWhole != null && whole > this.elxWhole) this.elxPopAt = now;
+      this.elxWhole = whole;
+    }
+    const pk = this.rm ? 1 : clamp((now - (this.elxPopAt ?? -9)) / 0.22, 0, 1);
+    const ps = 1 + 0.18 * Math.sin(pk * Math.PI);
+    ctx.save();
+    ctx.translate(d.x + sx, d.y);
+    ctx.scale(ps, ps);
+    drawElixirDrop(ctx, 0, 0, d.r * 1.08, whole);
+    ctx.restore();
   }
 
   drawTimer(ctx, now) {
@@ -789,59 +843,29 @@ export class Hud {
     const cx = r.x + r.w / 2;
     const cy = r.y + r.h / 2;
     ctx.save();
-    // Letzte 10 s: warm + sanfter Puls je Sekunde (nur Transform)
+    // Letzte 10 s: rot + Puls je Sekunde (nur Transform)
     if (low && !this.rm) {
       const frac = tl % 1;
-      const p = frac > 0.72 ? (frac - 0.72) / 0.28 : 0;
-      const sc = 1 + 0.07 * p;
+      const p = frac > 0.7 ? (frac - 0.7) / 0.3 : 0;
+      const sc = 1 + 0.1 * Math.sin(p * Math.PI);
       ctx.translate(cx, cy);
       ctx.scale(sc, sc);
       ctx.translate(-cx, -cy);
     }
-    rr(ctx, r.x, r.y, r.w, r.h, r.h / 2);
-    ctx.fillStyle = ot ? '#7a2e0c' : low ? '#6b1426' : T.bg900;
-    ctx.fill();
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = OUTLINE;
-    ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    rr(ctx, r.x + 4, r.y + 3, r.w - 8, r.h * 0.3, r.h * 0.15);
-    ctx.fill();
-    const color = ot ? '#ffcf6b' : low ? '#ffb020' : '#ffffff';
-    tnum(ctx, fmtTime(tl), cx, cy + 1, clamp(r.h * 0.62, 20, 30), color, 'center', 3.5);
+    const box = timerBox(r.w, r.h, low ? 'low' : ot ? 'ot' : 'normal', g.spriteDpr);
+    ctx.drawImage(box.cv, r.x - 2, r.y - 2, box.w, box.h);
+    const color = low ? '#ff4d57' : ot ? '#ffcf6b' : '#ffffff';
+    const withLabel = r.h >= 38;
+    if (withLabel) {
+      text(ctx, ot ? 'Verlängerung' : 'Restzeit', cx, r.y + r.h * 0.26, clamp(r.h * 0.24, 10, 13), '#fff3c4', 'center', 2.5);
+      tnum(ctx, fmtTime(tl), cx, r.y + r.h * 0.64, clamp(r.h * 0.5, 18, 28), color, 'center', 3.5);
+    } else tnum(ctx, fmtTime(tl), cx, cy + 1, clamp(r.h * 0.62, 18, 30), color, 'center', 3.5);
     ctx.restore();
-    // Phasen-Badges (nur wenn die Phase im Spiel existiert)
+    // Doppel-/Dreifach-Elixier: Tropfen-Abzeichen unter der Box
     if (g.snapMult > 1) {
-      const bx = r.x + r.w - 4;
-      const by = r.y + 4;
-      ctx.beginPath();
-      ctx.arc(bx, by, 11, 0, TAU);
-      ctx.fillStyle = T.elixir.main;
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = OUTLINE;
-      ctx.stroke();
-      text(ctx, '×2', bx, by + 1, 12, '#ffffff', 'center', 2.5);
-    }
-    if (ot) {
-      const bx = r.x + 4;
-      const by = r.y + 4;
-      ctx.beginPath();
-      ctx.arc(bx, by, 11, 0, TAU);
-      ctx.fillStyle = '#ff9a3d';
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = OUTLINE;
-      ctx.stroke();
-      // Stoppuhr-Symbol
-      ctx.beginPath();
-      ctx.arc(bx, by + 1, 5.5, 0, TAU);
-      ctx.moveTo(bx, by + 1);
-      ctx.lineTo(bx, by - 2.5);
-      ctx.moveTo(bx, by + 1);
-      ctx.lineTo(bx + 2.8, by + 1);
-      ctx.lineWidth = 1.8;
-      ctx.stroke();
+      const bx = r.x + r.w - 2;
+      const by = r.y + r.h + 2;
+      drawElixirDrop(ctx, bx, by, 10, '×' + g.snapMult);
     }
   }
 
@@ -864,17 +888,9 @@ export class Hud {
     const tc = team === 'red' ? T.red : T.blue;
     const g = this.game;
     ctx.save();
-    if (!r.grad) {
-      r.grad = ctx.createLinearGradient(0, r.y, 0, r.y + r.h);
-      r.grad.addColorStop(0, tc.main);
-      r.grad.addColorStop(1, tc.dark);
-    }
-    rr(ctx, r.x, r.y, r.w, r.h, r.h / 2);
-    ctx.fillStyle = r.grad;
-    ctx.fill();
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = OUTLINE;
-    ctx.stroke();
+    void tc;
+    const pill = teamPill(r.w, r.h, team, g.spriteDpr);
+    ctx.drawImage(pill.cv, r.x - 2, r.y - 2, pill.w, pill.h);
     let cs = clamp(r.h * 0.58, 12, 22);
     let padX = Math.max(8, r.h * 0.28);
     const atEnd = r.crowns === 'end';
@@ -895,16 +911,23 @@ export class Hud {
       targets.push([x, y]);
       const filled = i < count;
       const pt = this.crownPop[k][i];
+      const crown = (f) => {
+        const sp = crownSprite(cs, f, g.spriteDpr);
+        ctx.drawImage(sp.cv, -cs / 2 - 2, -cs * 0.39 - 2, sp.w, sp.h);
+      };
       if (filled && pt != null && now < pt) {
         // Krone ist noch unterwegs → Slot leer zeigen
-        drawCrown(ctx, x, y, cs, false);
+        ctx.save();
+        ctx.translate(x, y);
+        crown(false);
+        ctx.restore();
         continue;
       }
       const sc = filled && pt != null && now - pt < 0.45 && !this.rm ? 0.6 + 0.4 * easeBack((now - pt) / 0.45) : 1;
       ctx.save();
       ctx.translate(x, y);
       ctx.scale(sc, sc);
-      drawCrown(ctx, 0, 0, cs, filled);
+      crown(filled);
       // Glanz nach dem Gewinn
       if (filled && pt != null && now - pt < 0.7 && now >= pt) {
         ctx.globalAlpha = 1 - (now - pt) / 0.7;
@@ -968,15 +991,9 @@ export class Hud {
     const cd = g.me?.emo || 0;
     const max = g.rules.emoteCooldown ?? 3;
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r - 1, 0, TAU);
-    ctx.fillStyle = this.emoteOpen ? T.gold.light : '#ffffff';
-    ctx.fill();
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = OUTLINE;
-    ctx.stroke();
-    ctx.globalAlpha = cd > 0 ? 0.5 : 1;
-    drawEmoteFace(ctx, 'thumbs', b.x - b.r * 0.06, b.y, b.r * 0.58, 0);
+    ctx.globalAlpha = cd > 0 ? 0.6 : 1;
+    const sp = emoteButton(b.r - 2, this.emoteOpen, g.spriteDpr);
+    ctx.drawImage(sp.cv, b.x - (b.r - 2) - 2, b.y - (b.r - 2) - 2, sp.w, sp.h);
     ctx.restore();
     if (cd > 0) {
       // Abklingzeit als Ring um den Knopf
@@ -1207,10 +1224,20 @@ export class Hud {
     const h = r.h * sc;
     const x = clamp(p.x - w / 2, 2, this.L.w - w - 2);
     const y = clamp(p.y - h - (inA ? g.view.s * 1.6 : 16), 2, this.L.h - h - 2);
+    // Neigung nach Ziehrichtung, Schatten wächst mit dem Abheben
+    const vx = p.x - (this.dragPrevX ?? p.x);
+    this.dragPrevX = p.x;
+    this.dragTilt = (this.dragTilt || 0) * 0.8 + clamp(vx * 0.012, -0.14, 0.14) * 0.2;
+    const sp = cardSprite(g.db, id, r.w, r.h, { cost: card ? g.handCost(g.sel, card) ?? '?' : '?', dpr: g.spriteDpr });
     ctx.save();
-    ctx.globalAlpha = inA ? 0.8 : 0.95;
-    this.drawCardFace(ctx, id, x, y, w, h, { radius: 8 });
-    if (card) drawElixirDrop(ctx, x + w * 0.17, y + w * 0.2, Math.max(8, w * 0.15), g.handCost(g.sel, card) ?? '?');
+    ctx.globalAlpha = inA ? 0.82 : 0.96;
+    ctx.translate(x + w / 2, y + h / 2);
+    ctx.rotate(this.rm ? 0 : this.dragTilt);
+    ctx.scale(sc, sc);
+    ctx.fillStyle = 'rgba(5,8,25,0.35)';
+    rr(ctx, -r.w / 2 + 6, -r.h / 2 + 12, r.w, r.h, 10);
+    ctx.fill();
+    ctx.drawImage(sp.cv, -r.w / 2 - sp.ox, -r.h / 2 - sp.oy, sp.w, sp.h);
     ctx.restore();
   }
 }

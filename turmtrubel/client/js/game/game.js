@@ -8,6 +8,7 @@ import { text as ctext } from './canvastext.js';
 import { cardArt } from '../ui/art.js';
 import { safeInsets, reducedMotion } from '../ui/tokens.js';
 import { sprites } from '../design/spritecache.js';
+import { drawTower } from './sprites.js';
 
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -131,8 +132,27 @@ export class Game {
   /** Vor dem Kampf (Ladescreen): Layout berechnen und Arena-Hintergrund vorzeichnen. */
   prepare() {
     this.resize();
-    this.renderer.renderBackground(this.cw, this.ch, this.dpr);
+    this.renderer.renderBackground(this.cw, this.ch, this.renderer.bgLayer ? this.bgDpr : this.dpr);
     this.fx.prewarm();
+    this.prewarmTowers();
+  }
+
+  /** Türme samt Figuren im Ladescreen vorrendern (sonst kostet der erste Kampf-Frame mehrere hundert ms). */
+  prewarmTowers() {
+    if (typeof document === 'undefined') return;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 4;
+    const ctx = cv.getContext('2d');
+    const s = this.view.s;
+    const q = QUALITY_LEVEL[this.app.settings.quality] ?? 2;
+    for (const king of [true, false]) {
+      const size = this.rules.towers?.[king ? 'king' : 'princess']?.size ?? (king ? 4 : 3);
+      for (const team of ['blue', 'red']) {
+        const back = team === 'blue' && this.view.mode !== 'rotated';
+        for (const atk of [0, 0.9]) for (const aim of [0, Math.PI]) drawTower(ctx, { x: 0, y: 0, U: (size / 2) * s, t: 0, king, active: atk > 0, team, atk, aim, quality: q, dpr: this.spriteDpr, stage: 0, back });
+        drawTower(ctx, { x: 0, y: 0, U: (size / 2) * s, destroyed: true, team, dpr: this.spriteDpr });
+      }
+    }
   }
 
   settingsChanged() {
@@ -149,7 +169,7 @@ export class Game {
 
   /** Werte für das Debug-Overlay und den Benchmark. */
   debugStats() {
-    return { ...this.fx.debugStats(), sprites: sprites.info() };
+    return { ...this.fx.debugStats(), sprites: sprites.info(), prof: this.prof, dpr: this.dpr };
   }
 
   resize() {
@@ -163,6 +183,10 @@ export class Game {
     this.cw = cw;
     this.ch = ch;
     this.dpr = dpr;
+    // Hintergrund-Ebene und Sprites behalten die volle Auflösung der Qualitätsstufe – ein Wechsel der
+    // dynamischen Auflösung erzeugt so keine Neuzeichnungen (Sprites werden beim Kopieren skaliert)
+    this.bgDpr = Math.min(window.devicePixelRatio || 1, maxDpr);
+    this.spriteDpr = this.bgDpr;
     this.canvas.width = Math.round(cw * dpr);
     this.canvas.height = Math.round(ch * dpr);
     this.canvas.style.width = cw + 'px';
@@ -902,6 +926,12 @@ export class Game {
   }
 
   keyDown(e) {
+    // F3: Debug-Overlay (FPS, Partikel, Sprite-Cache) – auch nach Kampfende
+    if (e.key === 'F3') {
+      e.preventDefault();
+      this.debug = !this.debug;
+      return;
+    }
     if (!this.me || this.ended) return;
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     if (e.key >= '1' && e.key <= '4') {
@@ -1096,10 +1126,50 @@ export class Game {
     if (this.needResize) this.resize();
     this.checkConnection();
     // Hit-Stop verzögert nur die Darstellungszeit (Simulation und Eingaben bleiben unberührt)
-    const renderT = performance.now() + (this.offset ?? 0) - INTERP_MS - this.fx.stopDebt;
+    const t0 = performance.now();
+    const renderT = t0 + (this.offset ?? 0) - INTERP_MS - this.fx.stopDebt;
     this.updateWorld(renderT, now, dt);
+    const t1 = performance.now();
     this.fx.update(dt);
+    const t2 = performance.now();
     this.draw(now, dt);
+    const t3 = performance.now();
+    // Zeitmessung für das Debug-Overlay (F3) und Benchmarks: langsamster Frame mit Aufteilung
+    const P = (this.prof ||= { n: 0, worst: null, sum: { world: 0, fx: 0, draw: 0 } });
+    const cur = { world: t1 - t0, fx: t2 - t1, draw: t3 - t2, total: t3 - t0, sprites: sprites.stats.built, parts: this.fx.count, dpr: this.dpr, at: now, ...this.drawParts };
+    P.n++;
+    P.acc ||= {};
+    for (const k of ['world', 'fx', 'draw', 'ground', 'units', 'hud', 'pre']) P.acc[k] = (P.acc[k] || 0) + (cur[k] || 0);
+    P.sum.world += cur.world;
+    P.sum.fx += cur.fx;
+    P.sum.draw += cur.draw;
+    if (!P.worst || cur.total > P.worst.total) P.worst = cur;
+    P.last = cur;
+    this.fps = this.fps == null ? 60 : this.fps * 0.95 + (dt > 0 ? 1 / dt : 60) * 0.05;
+    if (this.debug) this.drawDebug();
+  }
+
+  /** Debug-Overlay (F3): FPS, Bildzeit-Aufteilung, Partikel, Sprite-Cache, Auflösung. */
+  drawDebug() {
+    const ctx = this.ctx;
+    const st = this.fx.debugStats();
+    const sp = sprites.info();
+    const L = this.prof?.last || {};
+    const lines = [
+      `${Math.round(this.fps)} fps · ${(this.ft ?? 0).toFixed(1)} ms · DPR ${this.dpr}${this.dynDpr ? ' (dyn.)' : ''}`,
+      `Welt ${L.world?.toFixed(1)} · FX ${L.fx?.toFixed(1)} · Zeichnen ${L.draw?.toFixed(1)} ms`,
+      `Partikel ${st.particles}/${this.fx.max}${this.fx.loadScale < 1 ? ' ×' + this.fx.loadScale.toFixed(1) : ''} · Decals ${st.decals} · Spuren ${st.trails}`,
+      `Sprites ${sp.entries} · ${sp.mb} MB · gebaut ${sp.built} · verschoben ${sp.deferred}`,
+      `Einheiten ${this.vis.size} · Hit-Stop ${Math.round(this.fx.stopDebt)} ms`,
+    ];
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    ctx.fillStyle = 'rgba(8,10,30,0.78)';
+    ctx.fillRect(8, 60, 300, lines.length * 16 + 10);
+    ctx.font = '12px monospace';
+    ctx.fillStyle = '#9dff8a';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    lines.forEach((l, i) => ctx.fillText(l, 14, 66 + i * 16));
   }
 
   /**
@@ -1147,6 +1217,7 @@ export class Game {
 
   draw(now, dt) {
     const ctx = this.ctx;
+    this.drawT0 = performance.now();
     sprites.newFrame();
     const { cw, ch, dpr } = this;
     const R = this.renderer;
@@ -1156,7 +1227,7 @@ export class Game {
     const [ox, oy] = fx.shakeOffset(this.view.s);
     const base = [dpr, ox, oy];
     fx.setView(this.view);
-    R.renderBackground(cw, ch, dpr);
+    R.renderBackground(cw, ch, R.bgLayer ? this.bgDpr : dpr);
     if (R.bgLayer) {
       // Hintergrund liegt als eigene Ebene darunter: hier nur leeren; Wackeln per CSS-Transform (Compositor)
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1199,6 +1270,7 @@ export class Game {
       }
     }
 
+    const tA = performance.now();
     // Boden: Decals → Zauberzonen → Trümmer → Boden-Ringe und -Partikel
     fx.drawDecals(ctx);
     R.drawZonesGround(ctx, this.zones, now);
@@ -1206,11 +1278,13 @@ export class Game {
     if (this.latest) R.drawRubble(ctx, list, this.rules.towers);
     fx.drawRings(ctx, true);
     fx.drawParticles(ctx, 0, base);
+    const tB = performance.now();
     // Figuren, Strahlen, Projektile, Luftzonen
     R.drawEntities(ctx, list, now, q);
     R.drawBeams(ctx, list, now);
     R.drawProjectiles(ctx, this.projList || [], now);
     R.drawZonesAir(ctx, this.zones, now);
+    const tC = performance.now();
     // Effekte: normal geblendet (Rauch, Splitter) → additiv (Feuer, Funken, Glühen) → Blitze → Ringe in der Luft
     fx.drawParticles(ctx, 1, base);
     fx.drawParticles(ctx, 2, base);
@@ -1228,8 +1302,10 @@ export class Game {
     R.drawEmotes(ctx, this.emotes, now);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     fx.drawFlash(ctx, cw, ch);
-
+    const tD = performance.now();
     this.hud.draw(ctx, now, dt);
+    const tE = performance.now();
+    this.drawParts = { ground: tB - tA, units: tC - tB, fx: tD - tC, hud: tE - tD, pre: tA - (this.drawT0 || tA) };
 
     // Gezogene Karte: Kartenbild über dem Finger
     this.hud.drawDrag(ctx);

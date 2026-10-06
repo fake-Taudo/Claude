@@ -3,11 +3,13 @@
 // Aufrufer direkt). Schlüssel enthalten Größe in Gerätepixeln, damit Zoom/DPR-Wechsel neue Einträge erzeugen.
 
 export class SpriteCache {
-  constructor({ budgetMB = 24, buildsPerFrame = 8 } = {}) {
+  constructor({ budgetMB = 24, buildsPerFrame = 8, frameMs = 6 } = {}) {
     this.map = new Map();
     this.bytes = 0;
     this.budget = budgetMB * 1024 * 1024;
     this.buildsPerFrame = buildsPerFrame;
+    this.frameMs = frameMs;
+    this.frameStart = 0;
     this.builds = 0;
     this.stats = { hits: 0, misses: 0, built: 0, evicted: 0, deferred: 0 };
   }
@@ -20,6 +22,7 @@ export class SpriteCache {
   /** Zu Beginn jedes Frames aufrufen. */
   newFrame() {
     this.builds = 0;
+    this.frameStart = typeof performance !== 'undefined' ? performance.now() : 0;
   }
 
   /** Eintrag holen (und als zuletzt benutzt markieren). */
@@ -42,7 +45,8 @@ export class SpriteCache {
     const e = this.get(key);
     if (e) return e;
     this.stats.misses++;
-    if (!force && this.builds >= this.buildsPerFrame) {
+    // Frame-Limit: höchstens N Neubauten und ein Zeitbudget pro Frame (mindestens einer kommt immer durch)
+    if (!force && (this.builds >= this.buildsPerFrame || (this.builds > 0 && performance.now() - this.frameStart > this.frameMs))) {
       this.stats.deferred++;
       return null;
     }

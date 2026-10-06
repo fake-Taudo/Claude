@@ -464,7 +464,11 @@ async function runPerf(browser, url, vp) {
     P.stop = true;
     const f = P.frames.slice(3).sort((a, b) => a - b);
     const avg = f.reduce((a, b) => a + b, 0) / Math.max(1, f.length);
-    return { frames: f.length, fps: Math.round(1000 / avg), p95ms: Math.round(f[Math.floor(f.length * 0.95)] || 0), worstMs: Math.round(f.at(-1) || 0), longTasks: P.long.length, longMaxMs: Math.round(Math.max(0, ...P.long)) };
+    const w = window.turmtrubel.game?.prof?.worst;
+    const worst = w && { world: Math.round(w.world), fx: Math.round(w.fx), draw: Math.round(w.draw), at: Math.round(w.at * 10) / 10 };
+    const pr = window.turmtrubel.game?.prof;
+    if (pr?.acc) worst.avg = Object.fromEntries(Object.entries(pr.acc).map(([k, v]) => [k, Math.round((v / pr.n) * 10) / 10]));
+    return { frames: f.length, fps: Math.round(1000 / avg), p95ms: Math.round(f[Math.floor(f.length * 0.95)] || 0), worstMs: Math.round(f.at(-1) || 0), longTasks: P.long.length, longMaxMs: Math.round(Math.max(0, ...P.long)), worstFrame: worst, dpr: window.turmtrubel.game?.dpr };
   });
   await ctx.close();
   return r;
@@ -490,7 +494,7 @@ if (args.perf) {
       if (only ? !only.includes(vp.name) : !['desk-1280x800', 'phone-844x390', 'phone-360x640'].includes(vp.name)) continue;
       perf[vp.name] = await runPerf(browser, url, vp);
       const p = perf[vp.name];
-      console.log(`${vp.name.padEnd(16)} CPU ${Number(args.cpu || 4)}× · ${p.fps} fps · p95 ${p.p95ms} ms · schlechtester Frame ${p.worstMs} ms · Long Tasks ${p.longTasks} (max ${p.longMaxMs} ms)`);
+      console.log(`${vp.name.padEnd(16)} CPU ${Number(args.cpu || 4)}× · ${p.fps} fps · p95 ${p.p95ms} ms · schlechtester Frame ${p.worstMs} ms · Long Tasks ${p.longTasks} (max ${p.longMaxMs} ms) · DPR ${p.dpr} · langsamster JS-Frame ${JSON.stringify(p.worstFrame)}`);
     }
   } finally {
     await browser.close();

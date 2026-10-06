@@ -1959,8 +1959,8 @@ export function drawBuilding(ctx, look, o) {
 // Figur und Kanone kommen getrennt darüber (Figuren-Cache bzw. gedrehtes Sprite).
 const STONE = { top: '#d9d2c5', face: '#b4ab9d', dark: '#8c8376', mortar: 'rgba(60,48,40,0.32)', merlon: '#f1ece2', plinth: '#9a9184' };
 export const TOWER_GEO = {
-  king: { W: 0.94, H: 0.78, fig: 0.64 },
-  princess: { W: 0.9, H: 0.88, fig: 0.56 },
+  king: { W: 0.94, H: 1.02, D: 1.42, fig: 0.86 },
+  princess: { W: 0.9, H: 0.98, D: 1.3, fig: 0.72 },
 };
 
 function towerBody(P, king, stage) {
@@ -1968,8 +1968,8 @@ function towerBody(P, king, stage) {
   const G = king ? TOWER_GEO.king : TOWER_GEO.princess;
   const W = G.W;
   const H = G.H;
-  const top0 = -W - H; // Plattform oben
   const top1 = W - H; // Kante Plattform/Front
+  const top0 = top1 - G.D; // Plattform oben (perspektivisch verkürzt)
   const bot = W; // Boden vorne
   // Sockel mit Stacheln
   rrect(c, -W - 0.08, bot - 0.22, (W + 0.08) * 2, 0.34, 0.08);
@@ -2045,7 +2045,7 @@ function towerBody(P, king, stage) {
   for (let i = 1; i < n - 1; i++) merlon(W - 0.18, top0 + i * mw * 2 * ((top1 - top0) / (W * 2)), 0.2, mw * 0.8, false);
   for (let i = 0; i < n; i++) merlon(-W + i * mw * 2, top1 - 0.2, mw, 0.3, i === 0 || i === n - 1);
   // Goldene Kronen-Plakette (Schild) auf der Front
-  const py = top1 + (bot - top1) * (king ? 0.36 : 0.45);
+  const py = top1 + (bot - top1) * (king ? 0.3 : 0.45);
   c.beginPath();
   c.moveTo(-0.28, py - 0.2);
   c.lineTo(0.28, py - 0.2);
@@ -2059,13 +2059,13 @@ function towerBody(P, king, stage) {
   if (king) {
     // Tor mit Stufen in Teamfarbe
     c.beginPath();
-    c.moveTo(-0.24, bot - 0.14);
-    c.lineTo(-0.24, bot - 0.32);
-    c.arc(0, bot - 0.32, 0.24, Math.PI, 0);
-    c.lineTo(0.24, bot - 0.14);
+    c.moveTo(-0.2, bot - 0.14);
+    c.lineTo(-0.2, bot - 0.26);
+    c.arc(0, bot - 0.26, 0.2, Math.PI, 0);
+    c.lineTo(0.2, bot - 0.14);
     c.closePath();
     fill(P, '#3d2a1c');
-    rrect(c, -0.3, bot - 0.16, 0.6, 0.12, 0.03);
+    rrect(c, -0.28, bot - 0.17, 0.56, 0.12, 0.03);
     fill(P, P.team);
   } else {
     // Leiter an der Front
@@ -2116,9 +2116,9 @@ function towerBody(P, king, stage) {
 
 function buildTowerSprite(king, team, stage, Ud, quality) {
   const W = Math.ceil(Ud * 2.6 + 24);
-  const H = Math.ceil(Ud * 3.2 + 24);
+  const H = Math.ceil(Ud * 3.4 + 24);
   const cx = Math.round(W / 2);
-  const cy = Math.ceil(Ud * 1.25 + 12);
+  const cy = Math.ceil(Ud * 2.1 + 12);
   const cv = scratchCanvas(0, W, H);
   const raw = cv.getContext('2d');
   raw.setTransform(Ud, 0, 0, Ud, cx, cy);
@@ -2230,7 +2230,7 @@ export function drawTower(ctx, o) {
   if (e) blitSprite(ctx, e, o.x, o.y, corr, corr, 1, o.hurt || 0, dpr);
   const G = king ? TOWER_GEO.king : TOWER_GEO.princess;
   const fx = o.x;
-  const fy = o.y - G.H * o.U + 0.12 * o.U;
+  const fy = o.y + (G.W - G.H - G.D * 0.38) * o.U;
   const back = !!o.back;
   const facing = o.aim == null ? 1 : Math.cos(o.aim) >= 0 ? 1 : -1;
   if (king) {
