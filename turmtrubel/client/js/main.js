@@ -165,6 +165,10 @@ class App {
     $('#menu-rename').addEventListener('click', () => this.openRename());
     $('#menu-settings').addEventListener('click', () => openSettings(this));
     $('#btn-deckbuilder').addEventListener('click', () => this.deckBuilder.open(this.store.active));
+    window.addEventListener('resize', () => {
+      clearTimeout(this.stageTimer);
+      this.stageTimer = setTimeout(() => currentScreen() === 's-menu' && this.drawMenuStage(), 150);
+    });
     $('#menu-deck-select').addEventListener('change', (e) => {
       this.store.active = Number(e.target.value);
       this.store.save();
@@ -395,6 +399,7 @@ class App {
     $('#menu-rename').title = `${this.store.name} – Namen ändern`;
     this.renderMenuDeck();
     showScreen('s-menu');
+    this.drawMenuStage();
     this.audio.music('menu');
     const cs = $('#conn-state');
     if (this.net?.welcomed) {
@@ -735,6 +740,68 @@ class App {
     // Die VS-Einblendung darf ausspielen (≈ 1,2 s), danach melden wir „geladen“
     const wait = Math.max(0, 1200 - (performance.now() - t0));
     setTimeout(() => this.game === game && this.net.send(C2S.LOADED), reducedMotion() ? 0 : wait);
+  }
+
+  /**
+   * Kleine Arena-Bühne im Hauptmenü: Gras, Weg, Fluss mit Brücke, blauer und roter Königsturm.
+   * Wird beim Öffnen des Menüs und bei Größenänderung neu gezeichnet (statisch, kein Frame-Loop).
+   */
+  drawMenuStage() {
+    const cv = $('#menu-stage');
+    const w = cv?.clientWidth;
+    const hh = cv?.clientHeight;
+    if (!w || !hh) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(hh * dpr);
+    const c = cv.getContext('2d');
+    c.scale(dpr, dpr);
+    const g = c.createLinearGradient(0, 0, 0, hh);
+    g.addColorStop(0, '#93d96a');
+    g.addColorStop(1, '#5aa83a');
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, hh);
+    c.fillStyle = 'rgba(255,255,255,0.07)';
+    const T = 16;
+    for (let y = 0; y < hh; y += T) for (let x = (y / T) % 2 ? T : 0; x < w; x += T * 2) c.fillRect(x, y, T, T);
+    const py = hh * 0.7;
+    // Weg zwischen den Türmen
+    c.fillStyle = '#e9c47c';
+    c.fillRect(0, py - 10, w, 20);
+    c.fillStyle = 'rgba(120,80,30,0.25)';
+    c.fillRect(0, py + 7, w, 3);
+    // Fluss mit Steinkante und Brücke
+    const rx = w / 2;
+    c.fillStyle = '#7d8496';
+    c.fillRect(rx - 17, 0, 34, hh);
+    const rg = c.createLinearGradient(rx - 14, 0, rx + 14, 0);
+    rg.addColorStop(0, '#3a9ee6');
+    rg.addColorStop(0.5, '#5cc3ff');
+    rg.addColorStop(1, '#3a9ee6');
+    c.fillStyle = rg;
+    c.fillRect(rx - 14, 0, 28, hh);
+    c.fillStyle = '#a0703f';
+    c.fillRect(rx - 22, py - 13, 44, 26);
+    c.strokeStyle = '#1c1830';
+    c.lineWidth = 2;
+    c.strokeRect(rx - 22, py - 13, 44, 26);
+    c.strokeStyle = 'rgba(28,24,48,0.35)';
+    c.lineWidth = 1.5;
+    for (let i = 1; i < 5; i++) {
+      c.beginPath();
+      c.moveTo(rx - 22 + i * 8.8, py - 12);
+      c.lineTo(rx - 22 + i * 8.8, py + 12);
+      c.stroke();
+    }
+    const U = Math.min(30, hh * 0.27);
+    drawTower(c, { x: w * 0.17, y: py - U * 0.15, U, king: true, team: 'blue', t: 0, quality: 2 });
+    drawTower(c, { x: w * 0.83, y: py - U * 0.15, U, king: true, team: 'red', t: 0, quality: 2 });
+    // Vignette (Licht von oben links)
+    const v = c.createRadialGradient(w * 0.42, hh * 0.3, hh * 0.3, w / 2, hh / 2, w * 0.7);
+    v.addColorStop(0, 'rgba(255,255,230,0.08)');
+    v.addColorStop(1, 'rgba(8,6,30,0.42)');
+    c.fillStyle = v;
+    c.fillRect(0, 0, w, hh);
   }
 
   /** Burgturm-Vorschau in Teamfarbe für den VS-Screen (kein Gegner-Deck, §4 Fairness). */

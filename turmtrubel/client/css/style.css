@@ -1490,3 +1490,41 @@ body.card-dragging, body.card-dragging * { cursor: grabbing !important; user-sel
   .evo-compare .card { width: 78px; }
   .tab { padding: 6px 10px 4px; font-size: 15px; }
 }
+
+/* ───── Hauptmenü: Arena-Bühne über „Freundschaftskampf“ ───── */
+.hero-stage {
+  position: relative;
+  height: 112px;
+  flex: none;
+  border: var(--outline);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #5aa83a;
+  box-shadow: inset 0 3px 0 rgb(0 0 0 / 0.25), 0 3px 0 var(--ink-900);
+}
+#menu-stage { display: block; width: 100%; height: 100%; }
+.hero-vs {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: var(--outline);
+  background: radial-gradient(circle at 38% 32%, #fff3a6, #ffc22e 55%, #f5a623);
+  box-shadow: inset 0 -4px 0 #b86b0b, 0 3px 0 var(--ink-900), 0 0 18px rgb(255 216 77 / 0.55);
+  animation: vs-pop 0.6s 0.15s var(--ease-pop) both;
+}
+.hero-vs svg.i { width: 32px; height: 32px; }
+@media (max-height: 520px) and (orientation: landscape) {
+  .hero-stage { display: none; }
+}
+.deck-head .panel-title { white-space: nowrap; }
+.deck-head .select { min-width: 0; flex: 0 1 auto; }
+@media (max-width: 420px) {
+  .deck-head .panel-title { font-size: 21px; }
+  .deck-head .select { max-width: 52%; }
+}
