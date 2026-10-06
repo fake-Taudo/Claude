@@ -7,6 +7,7 @@ import { Store } from './store.js';
 import { $, h, ico, showScreen, currentScreen, toast, modal, confirmDialog, fmtTime } from './ui/dom.js';
 import { cardEl } from './ui/cardview.js';
 import { prerenderAll, cardArt, cardArtGray } from './ui/art.js';
+import { loadPresets } from './vfx/presets.js';
 import { drawTower } from './game/sprites.js';
 import { DeckBuilder } from './ui/deckbuilder.js';
 import { openSettings } from './ui/settings.js';
@@ -81,6 +82,13 @@ class App {
       return;
     }
     bar.style.transform = 'scaleX(0.15)';
+    // VFX-Presets (Effekt-Katalog); ohne sie läuft das Spiel weiter, nur ohne Effekte
+    try {
+      this.vfxPresets = await loadPresets();
+    } catch (e) {
+      this.vfxPresets = {};
+      console.warn(e);
+    }
     this.store = new Store(this.db);
     if (this.store.resetDecks) {
       // Gespeicherte Decks mit Karten, die es nicht mehr gibt → Startdecks (einmalig speichern)

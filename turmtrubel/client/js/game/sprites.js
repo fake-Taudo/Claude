@@ -1425,12 +1425,14 @@ export const UNIT_FRAMES = {
   atk1: { walk: false, phase: 0, seed: HALF_PI, atk: 0.8, mood: 'angry' },
   atk2: { walk: false, phase: 0, seed: -HALF_PI, atk: 0.32, mood: 'angry' },
   stun: { walk: false, phase: 0, seed: HALF_PI, atk: 0, mood: 'stun' },
+  sleep: { walk: false, phase: 0, seed: HALF_PI, atk: 0, mood: 'sleep' },
 };
 const FLAPPERS = new Set(['moth', 'bug', 'winged', 'dragon']);
 
 /** Welcher Frame passt zum aktuellen Zustand? */
 export function unitFrameOf(L, o) {
   if (o.mood === 'stun') return 'stun';
+  if (o.mood === 'sleep') return 'sleep';
   if (o.atk > 0) return o.atk >= 0.6 ? 'atk1' : 'atk2';
   const ph = (o.t || 0) * 11 + (o.seed || 0);
   if (o.walk) return Math.sin(ph) >= 0 ? 'walk1' : 'walk2';
@@ -1952,125 +1954,304 @@ export function drawBuilding(ctx, look, o) {
 }
 
 // ───────────── Kronentürme ─────────────
-/** o = { x, y, U (halbe Kante px), t, king, active, team, hurt, atk, destroyed, aim, quality, mood } */
-export function drawTower(ctx, o) {
-  const T = TEAM[o.team] || TEAM.blue;
-  ctx.save();
-  ctx.translate(o.x, o.y);
-  ctx.scale(o.U, o.U);
-  ctx.lineWidth = Math.max(1.6 / o.U, 0.035);
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = OUTLINE;
-  const P = { ctx, t: o.t || 0, atk: o.atk || 0, hurt: o.hurt || 0, team: T.main, teamDark: T.dark, quality: o.quality ?? 2, mood: o.mood };
-  const c = ctx;
-  if (o.destroyed) {
-    for (const [rx, ry, rr, col] of [
-      [-0.5, 0.2, 0.35, '#8f877c'],
-      [0.35, 0.3, 0.4, '#a79f94'],
-      [0, -0.1, 0.45, '#9a9286'],
-      [0.55, -0.25, 0.25, '#b5aea3'],
-      [-0.4, -0.35, 0.28, '#8a8277'],
-    ]) {
-      ell(c, rx, ry, rr, rr * 0.75);
-      fill(P, col);
-    }
-    rrect(c, -0.2, -0.1, 0.15, 0.5, 0.03);
-    fill(P, '#6b4226');
-    poly(c, [-0.05, -0.1, 0.35, 0.0, -0.05, 0.12]);
-    fill(P, P.teamDark);
-    ctx.restore();
-    return;
+// Ursprung = Mitte der Grundfläche am Boden, U = halbe Kantenlänge in px. Schräge Draufsicht: oben die
+// Plattform mit Zinnen, darunter die Frontseite. Der Unterbau wird je Team/Typ/Schadenstufe/Größe gecacht,
+// Figur und Kanone kommen getrennt darüber (Figuren-Cache bzw. gedrehtes Sprite).
+const STONE = { top: '#d9d2c5', face: '#b4ab9d', dark: '#8c8376', mortar: 'rgba(60,48,40,0.32)', merlon: '#f1ece2', plinth: '#9a9184' };
+export const TOWER_GEO = {
+  king: { W: 0.94, H: 0.78, fig: 0.64 },
+  princess: { W: 0.9, H: 0.88, fig: 0.56 },
+};
+
+function towerBody(P, king, stage) {
+  const c = P.ctx;
+  const G = king ? TOWER_GEO.king : TOWER_GEO.princess;
+  const W = G.W;
+  const H = G.H;
+  const top0 = -W - H; // Plattform oben
+  const top1 = W - H; // Kante Plattform/Front
+  const bot = W; // Boden vorne
+  // Sockel mit Stacheln
+  rrect(c, -W - 0.08, bot - 0.22, (W + 0.08) * 2, 0.34, 0.08);
+  fill(P, STONE.plinth);
+  for (let i = 0; i < 6; i++) {
+    const x = -W + 0.12 + (i * (W * 2 - 0.24)) / 5;
+    poly(c, [x - 0.07, bot - 0.2, x + 0.07, bot - 0.2, x, bot - 0.06]);
+    fill(P, '#6f675d');
   }
-  const W = o.king ? 0.92 : 0.85;
-  const topY = o.king ? -1.35 : -1.75;
-  // Sockel / Turmkörper
-  rrect(c, -W, topY, W * 2, W + 0.8 - topY, 0.14);
-  fill(P, '#b8b0a4');
+  // Frontseite (Ziegel)
+  rrect(c, -W, top1 - 0.04, W * 2, bot - top1 - 0.12, 0.06);
+  fill(P, STONE.face);
   c.save();
-  rrect(c, -W, topY, W * 2, W + 0.8 - topY, 0.14);
+  rrect(c, -W, top1 - 0.04, W * 2, bot - top1 - 0.12, 0.06);
   c.clip();
-  c.lineWidth *= 0.6;
-  c.strokeStyle = 'rgba(50,40,60,0.28)';
-  const rows = 6;
-  const h = (W + 0.8 - topY) / rows;
-  for (let i = 1; i < rows; i++) {
-    const y = topY + i * h;
-    c.beginPath();
-    c.moveTo(-W, y);
-    c.lineTo(W, y);
-    c.stroke();
-    for (let k = -2; k <= 2; k++) {
-      const x = k * 0.4 + (i % 2 ? 0.2 : 0);
+  c.lineWidth *= 0.55;
+  c.strokeStyle = STONE.mortar;
+  const rows = 4;
+  const rh = (bot - top1 - 0.12) / rows;
+  for (let i = 0; i < rows; i++) {
+    const y = top1 - 0.04 + i * rh;
+    if (i) {
+      c.beginPath();
+      c.moveTo(-W, y);
+      c.lineTo(W, y);
+      c.stroke();
+    }
+    for (let k = -3; k <= 3; k++) {
+      const x = k * 0.36 + (i % 2 ? 0.18 : 0);
       c.beginPath();
       c.moveTo(x, y);
-      c.lineTo(x, y - h);
+      c.lineTo(x, y + rh);
       c.stroke();
     }
   }
-  c.fillStyle = 'rgba(255,255,255,0.12)';
-  c.fillRect(-W, topY, W * 0.5, 3);
   c.restore();
-  // Zinnen
-  const n = o.king ? 5 : 4;
-  for (let i = 0; i < n; i++) {
-    const bw = (W * 2) / (n * 2 - 1);
-    rrect(c, -W + i * bw * 2, topY - 0.22, bw, 0.26, 0.04);
-    fill(P, '#c8c0b4');
-  }
-  // Teamfarbene Banner
-  for (const bx of o.king ? [-0.55, 0.55] : [0]) {
-    const sway = Math.sin(P.t * 2 + bx) * 0.03;
-    poly(c, [bx - 0.2, topY + 0.15, bx + 0.2, topY + 0.15, bx + 0.2 + sway, topY + 0.85, bx, topY + 0.7, bx - 0.2 + sway, topY + 0.85]);
-    fill(P, P.team);
-    if (o.king) star(P, bx, topY + 0.42, 0.1, '#ffd84d');
-  }
-  // Tor
-  c.beginPath();
-  c.moveTo(-0.28, W + 0.8);
-  c.lineTo(-0.28, W + 0.8 - 0.45);
-  c.arc(0, W + 0.8 - 0.45, 0.28, Math.PI, 0);
-  c.lineTo(0.28, W + 0.8);
-  c.closePath();
-  fill(P, '#4a3322');
-
-  // Figur auf dem Turm
+  // Plattform (Draufsicht) mit Innenboden
+  rrect(c, -W, top0, W * 2, top1 - top0, 0.08);
+  fill(P, STONE.top);
+  const inset = 0.2;
+  rrect(c, -W + inset, top0 + inset, (W - inset) * 2, top1 - top0 - inset * 2, 0.05);
+  fill(P, king ? '#9b6a3e' : '#b9b0a2');
   c.save();
-  c.translate(0, topY - 0.05);
-  const fu = o.king ? 0.62 : 0.5;
-  c.scale(fu, fu);
-  c.lineWidth /= fu;
-  if (o.king) {
-    // Kanone
-    c.save();
-    c.translate(0.1, -0.35);
-    c.rotate(o.aim ?? -Math.PI / 2);
-    const rec = P.atk > 0.5 ? (P.atk - 0.5) * 0.4 : 0;
-    rrect(c, -0.1 - rec, -0.2, 1.0, 0.4, 0.15);
-    fill(P, '#3b3f48');
-    c.restore();
-    const kingP = { ...P, walk: false, atk: 0, mood: o.active ? (P.atk > 0 ? 'angry' : null) : 'sleep', phase: 0, seed: 0 };
-    c.save();
-    c.translate(-0.45, 0);
-    humanoid(kingP, { skin: '#f2c7a5', cloth: '#7a3fb5', hat: 'crown', beard: '#f3f0e8', weapon: 'fists', cape: true }, 'hum');
-    c.restore();
-    if (!o.active) {
-      c.save();
-      c.fillStyle = '#ffffff';
-      c.font = 'bold 0.5px sans-serif';
-      c.globalAlpha = 0.6 + Math.sin(P.t * 3) * 0.3;
-      c.fillText('z', 0.1, -1.7 - (P.t % 1) * 0.3);
-      c.font = 'bold 0.35px sans-serif';
-      c.fillText('z', 0.4, -2.1 - (P.t % 1) * 0.3);
-      c.restore();
-    }
-  } else {
-    const aimRight = o.aim == null ? true : Math.cos(o.aim) >= 0;
-    c.scale(aimRight ? 1 : -1, 1);
-    humanoid({ ...P, walk: false, phase: 0, seed: 0, mood: P.atk > 0 ? 'angry' : null }, { skin: '#f5d0b0', cloth: '#c9a13b', hat: 'ponytail', weapon: 'bow', hairColor: '#e8883a' }, 'hum');
+  rrect(c, -W + inset, top0 + inset, (W - inset) * 2, top1 - top0 - inset * 2, 0.05);
+  c.clip();
+  c.lineWidth *= 0.5;
+  c.strokeStyle = king ? 'rgba(60,35,15,0.45)' : STONE.mortar;
+  for (let i = 1; i < 6; i++) {
+    const x = -W + inset + (i * (W - inset) * 2) / 6;
+    c.beginPath();
+    c.moveTo(x, top0);
+    c.lineTo(x, top1);
+    c.stroke();
   }
   c.restore();
-  ctx.restore();
+  // Zinnen auf allen vier Seiten; Ecken in Teamfarbe (fehlende Zinnen je Schadenstufe)
+  const missing = stage >= 2 ? [2, 7, 9] : stage >= 1 ? [7] : [];
+  const n = king ? 5 : 4;
+  const mw = (W * 2) / (n * 2 - 1);
+  let idx = 0;
+  const merlon = (x, y, w, h, corner) => {
+    const id = idx++;
+    if (missing.includes(id)) return;
+    rrect(c, x, y, w, h, 0.04);
+    fill(P, corner ? P.team : STONE.merlon);
+    if (corner) {
+      rrect(c, x, y, w, h * 0.38, 0.03);
+      fill(P, shade(P.team, 0.35), false);
+    }
+  };
+  for (let i = 0; i < n; i++) merlon(-W + i * mw * 2, top0 - 0.08, mw, 0.24, i === 0 || i === n - 1);
+  for (let i = 1; i < n - 1; i++) merlon(-W - 0.02, top0 + i * mw * 2 * ((top1 - top0) / (W * 2)), 0.2, mw * 0.8, false);
+  for (let i = 1; i < n - 1; i++) merlon(W - 0.18, top0 + i * mw * 2 * ((top1 - top0) / (W * 2)), 0.2, mw * 0.8, false);
+  for (let i = 0; i < n; i++) merlon(-W + i * mw * 2, top1 - 0.2, mw, 0.3, i === 0 || i === n - 1);
+  // Goldene Kronen-Plakette (Schild) auf der Front
+  const py = top1 + (bot - top1) * (king ? 0.36 : 0.45);
+  c.beginPath();
+  c.moveTo(-0.28, py - 0.2);
+  c.lineTo(0.28, py - 0.2);
+  c.lineTo(0.28, py + 0.06);
+  c.quadraticCurveTo(0.26, py + 0.22, 0, py + 0.3);
+  c.quadraticCurveTo(-0.26, py + 0.22, -0.28, py + 0.06);
+  c.closePath();
+  fill(P, '#e7b432');
+  poly(c, [-0.17, py + 0.1, -0.19, py - 0.1, -0.08, py - 0.01, 0, py - 0.13, 0.08, py - 0.01, 0.19, py - 0.1, 0.17, py + 0.1]);
+  fill(P, '#fff0a0');
+  if (king) {
+    // Tor mit Stufen in Teamfarbe
+    c.beginPath();
+    c.moveTo(-0.24, bot - 0.14);
+    c.lineTo(-0.24, bot - 0.32);
+    c.arc(0, bot - 0.32, 0.24, Math.PI, 0);
+    c.lineTo(0.24, bot - 0.14);
+    c.closePath();
+    fill(P, '#3d2a1c');
+    rrect(c, -0.3, bot - 0.16, 0.6, 0.12, 0.03);
+    fill(P, P.team);
+  } else {
+    // Leiter an der Front
+    c.save();
+    c.lineWidth *= 1.6;
+    c.strokeStyle = '#7a4b2a';
+    for (const lx of [0.42, 0.62]) {
+      c.beginPath();
+      c.moveTo(lx, top1 + 0.04);
+      c.lineTo(lx, bot - 0.18);
+      c.stroke();
+    }
+    c.lineWidth /= 1.6;
+    for (let i = 0; i < 4; i++) {
+      const y = top1 + 0.14 + i * 0.17;
+      c.beginPath();
+      c.moveTo(0.42, y);
+      c.lineTo(0.62, y);
+      c.stroke();
+    }
+    c.restore();
+  }
+  // Schaden: Risse, Ruß, abgebrochene Ecke
+  if (stage >= 1) {
+    c.save();
+    c.strokeStyle = 'rgba(40,28,22,0.8)';
+    c.lineWidth *= 0.9;
+    const cracks = stage >= 2 ? [[-0.6, top1 + 0.05, -0.42, py, -0.55, bot - 0.3], [0.7, top1 + 0.1, 0.5, py + 0.1, 0.62, bot - 0.25], [-0.1, top0 + 0.3, 0.15, top0 + 0.6, 0.05, top1 - 0.2]] : [[0.55, top1 + 0.05, 0.4, py, 0.5, bot - 0.35]];
+    for (const [x0, y0, x1, y1, x2, y2] of cracks) {
+      c.beginPath();
+      c.moveTo(x0, y0);
+      c.lineTo(x1, y1);
+      c.lineTo(x2, y2);
+      c.stroke();
+    }
+    c.restore();
+  }
+  if (stage >= 2) {
+    poly(c, [-W - 0.02, top1 - 0.25, -W + 0.42, top1 - 0.22, -W + 0.3, top1 + 0.2, -W - 0.02, top1 + 0.32]);
+    fill(P, '#5e564c');
+    for (const [sx, sy, sr] of [[-0.45, top0 + 0.5, 0.32], [0.35, top1 + 0.25, 0.26]]) {
+      ell(c, sx, sy, sr, sr * 0.7);
+      c.fillStyle = 'rgba(30,24,20,0.28)';
+      c.fill();
+    }
+  }
+}
+
+function buildTowerSprite(king, team, stage, Ud, quality) {
+  const W = Math.ceil(Ud * 2.6 + 24);
+  const H = Math.ceil(Ud * 3.2 + 24);
+  const cx = Math.round(W / 2);
+  const cy = Math.ceil(Ud * 1.25 + 12);
+  const cv = scratchCanvas(0, W, H);
+  const raw = cv.getContext('2d');
+  raw.setTransform(Ud, 0, 0, Ud, cx, cy);
+  const lc = new LitCtx(raw, { gloss: quality > 0, minGlossPx: 14 });
+  lc.lineWidth = Math.max(1, Ud * 0.022) / Ud;
+  lc.lineJoin = 'round';
+  lc.lineCap = 'round';
+  lc.strokeStyle = OUTLINE;
+  const T = TEAM[team] || TEAM.blue;
+  towerBody({ ctx: lc, t: 0, atk: 0, hurt: 0, team: T.main, teamDark: T.dark, quality }, king, stage);
+  const x0 = Math.max(0, Math.floor(lc.ux0) - 2);
+  const y0 = Math.max(0, Math.floor(lc.uy0) - 2);
+  const x1 = Math.min(W, Math.ceil(lc.ux1) + 2);
+  const y1 = Math.min(H, Math.ceil(lc.uy1) + 2);
+  const out = finishSprite(cv, x0, y0, x1 - x0, y1 - y0, { outline: Math.max(1.5, Math.min(3.5, Ud * 0.04)), rim: Math.max(1, Ud * 0.025) });
+  return { canvas: out, ox: cx - x0 + out.pad, oy: cy - y0 + out.pad };
+}
+
+function buildRubbleSprite(team, Ud, quality) {
+  const W = Math.ceil(Ud * 2.6 + 24);
+  const cx = Math.round(W / 2);
+  const cy = Math.round(W / 2);
+  const cv = scratchCanvas(0, W, W);
+  const raw = cv.getContext('2d');
+  raw.setTransform(Ud, 0, 0, Ud, cx, cy);
+  const lc = new LitCtx(raw, { gloss: quality > 0, minGlossPx: 10 });
+  lc.lineWidth = Math.max(1, Ud * 0.022) / Ud;
+  lc.lineJoin = 'round';
+  lc.strokeStyle = OUTLINE;
+  const T = TEAM[team] || TEAM.blue;
+  const P = { ctx: lc, t: 0, hurt: 0, team: T.main, teamDark: T.dark, quality };
+  const c = lc;
+  // Brandfleck + Bretter + Steinblöcke + Stofffetzen in Teamfarbe
+  ell(c, 0, 0.1, 0.95, 0.8);
+  c.fillStyle = 'rgba(40,30,24,0.35)';
+  c.fill();
+  rrect(c, -0.55, -0.15, 0.95, 0.14, 0.03);
+  fill(P, '#8a5a32');
+  rrect(c, -0.2, 0.15, 0.8, 0.13, 0.03);
+  fill(P, '#7a4b2a');
+  for (const [x, y, w, h, col] of [
+    [-0.75, -0.55, 0.5, 0.36, '#c9c1b4'],
+    [0.2, -0.6, 0.55, 0.4, '#b8b0a4'],
+    [-0.35, -0.2, 0.6, 0.42, '#d6cfc3'],
+    [0.35, 0.05, 0.45, 0.34, '#a79f94'],
+    [-0.8, 0.15, 0.42, 0.3, '#b8b0a4'],
+    [-0.15, 0.35, 0.4, 0.28, '#c9c1b4'],
+  ]) {
+    rrect(c, x, y, w, h, 0.06);
+    fill(P, col);
+  }
+  poly(c, [0.45, -0.25, 0.85, -0.12, 0.62, 0.05]);
+  fill(P, P.team);
+  const x0 = Math.max(0, Math.floor(lc.ux0) - 2);
+  const y0 = Math.max(0, Math.floor(lc.uy0) - 2);
+  const x1 = Math.min(W, Math.ceil(lc.ux1) + 2);
+  const y1 = Math.min(W, Math.ceil(lc.uy1) + 2);
+  const out = finishSprite(cv, x0, y0, x1 - x0, y1 - y0, { outline: Math.max(1.2, Ud * 0.03), rim: 1 });
+  return { canvas: out, ox: cx - x0 + out.pad, oy: cy - y0 + out.pad };
+}
+
+function buildCannonSprite(Ud) {
+  const W = Math.ceil(Ud * 1.4 + 16);
+  const H = Math.ceil(Ud * 0.7 + 16);
+  const cx = Math.round(Ud * 0.3 + 8);
+  const cy = Math.round(H / 2);
+  const cv = scratchCanvas(0, W, H);
+  const raw = cv.getContext('2d');
+  raw.setTransform(Ud, 0, 0, Ud, cx, cy);
+  const lc = new LitCtx(raw, { gloss: true, minGlossPx: 6 });
+  lc.lineWidth = Math.max(1, Ud * 0.03) / Ud;
+  lc.lineJoin = 'round';
+  lc.strokeStyle = OUTLINE;
+  const P = { ctx: lc, hurt: 0 };
+  rrect(lc, -0.2, -0.2, 1.05, 0.4, 0.16);
+  fill(P, '#3b3f48');
+  rrect(lc, 0.72, -0.25, 0.16, 0.5, 0.06);
+  fill(P, '#2b2e35');
+  circ(lc, -0.12, 0, 0.24);
+  fill(P, '#4b4f58');
+  const out = finishSprite(cv, 0, 0, W, H, { outline: Math.max(1.2, Ud * 0.04), rim: 1 });
+  return { canvas: out, ox: cx + out.pad, oy: cy + out.pad };
+}
+
+const KING_LOOK = {
+  blue: { body: 'hum', skin: '#f2c7a5', cloth: '#2f5fb8', hat: 'crown', beard: '#f3f0e8', weapon: 'fists', cape: true, scale: 1 },
+  red: { body: 'hum', skin: '#f2c7a5', cloth: '#b8323a', hat: 'crown', beard: '#f3f0e8', weapon: 'fists', cape: true, scale: 1 },
+};
+const PRINCESS_LOOK = { body: 'hum', skin: '#f5d0b0', cloth: '#c9a13b', hat: 'ponytail', weapon: 'bow', hairColor: '#e8883a' };
+
+/**
+ * Kronenturm zeichnen. o = { x, y, U, t, king, active, team, hurt, atk, destroyed, aim, quality, mood, dpr, stage (0–2), back }
+ * Gibt die Position über der Figur zurück (für Schlaf-„z“ u. Ä.).
+ */
+export function drawTower(ctx, o) {
+  const dpr = o.dpr || ctxScale(ctx);
+  const q = o.quality ?? 2;
+  const Ud = Math.max(6, Math.round(o.U * dpr * 2) / 2);
+  const team = o.team === 'red' ? 'red' : 'blue';
+  const corr = (o.U * dpr) / Ud;
+  if (o.destroyed) {
+    const e = sprites.obtain('tr|' + team + '|' + Ud + '|' + q, () => buildRubbleSprite(team, Ud, q), true);
+    if (e) blitSprite(ctx, e, o.x, o.y, corr, corr, 1, 0, dpr);
+    return null;
+  }
+  const king = !!o.king;
+  const stage = o.stage || 0;
+  const e = sprites.obtain('tw|' + (king ? 'K' : 'P') + team + '|' + stage + '|' + Ud + '|' + q, () => buildTowerSprite(king, team, stage, Ud, q), true);
+  if (e) blitSprite(ctx, e, o.x, o.y, corr, corr, 1, o.hurt || 0, dpr);
+  const G = king ? TOWER_GEO.king : TOWER_GEO.princess;
+  const fx = o.x;
+  const fy = o.y - G.H * o.U + 0.12 * o.U;
+  const back = !!o.back;
+  const facing = o.aim == null ? 1 : Math.cos(o.aim) >= 0 ? 1 : -1;
+  if (king) {
+    if (o.active) {
+      const ce = sprites.obtain('tc|' + Math.round(Ud * 0.62 * 2) / 2, () => buildCannonSprite(Math.round(Ud * 0.62 * 2) / 2), true);
+      if (ce) {
+        const k = 1 / dpr;
+        const rec = (o.atk || 0) > 0.5 ? ((o.atk - 0.5) / 0.5) * o.U * 0.12 : 0;
+        ctx.save();
+        ctx.translate(fx + o.U * 0.32, fy - o.U * 0.18);
+        ctx.rotate(o.aim ?? -Math.PI / 2);
+        ctx.translate(-rec, 0);
+        ctx.drawImage(ce.canvas, -ce.ox * k, -ce.oy * k, ce.canvas.width * k, ce.canvas.height * k);
+        ctx.restore();
+      }
+    }
+    drawUnit(ctx, KING_LOOK[team], { x: fx - (o.active ? o.U * 0.22 : 0), y: fy, U: o.U * G.fig, t: o.t || 0, seed: 0, team, back, fx: back ? 1 : -facing, mood: o.active ? (o.atk > 0 ? 'angry' : null) : 'sleep', atk: o.active ? o.atk || 0 : 0, quality: q, dpr, force: true });
+  } else {
+    drawUnit(ctx, PRINCESS_LOOK, { x: fx, y: fy, U: o.U * G.fig, t: o.t || 0, seed: 0, team, back, fx: facing, atk: o.atk || 0, quality: q, dpr, force: true });
+  }
+  return [fx, fy - o.U * G.fig * 1.9];
 }
 
 // ───────────── Zauber-Symbole (Ursprung Mitte, Radius 1) ─────────────

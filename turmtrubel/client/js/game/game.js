@@ -1,9 +1,10 @@
 // Client-Seite eines Kampfes: Snapshot-Puffer + Interpolation, Eingaben, Effekte, Zeichenschleife.
 import { ARENA_W, ARENA_H, isPlacementValid, forwardDir, formation } from '/shared/arena.js';
 import { EF, EMOTES, C2S, REJECTS } from '/shared/protocol.js';
-import { View, Renderer, ZONE_COLORS } from './renderer.js';
+import { View, Renderer, ZONE_COLORS, projZ } from './renderer.js';
 import { Hud } from './hud.js';
-import { Particles } from './particles.js';
+import { Vfx } from '../vfx/engine.js';
+import { text as ctext } from './canvastext.js';
 import { cardArt } from '../ui/art.js';
 import { safeInsets, reducedMotion } from '../ui/tokens.js';
 import { sprites } from '../design/spritecache.js';
@@ -11,6 +12,29 @@ import { sprites } from '../design/spritecache.js';
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const QUALITY_LEVEL = { low: 0, medium: 1, high: 2 };
+// Zauber-Effektnamen (cards.json → spell.fx) → VFX-Preset, wo der Name abweicht
+const SPELL_PRESET = { barrelRoll: 'spell.log', log: 'spell.log' };
+const SPELL_SFX = { arrows: 'arrows', fire: 'boom', comet: 'bigBoom', shock: 'zap', frost: 'freeze', poison: 'poison', heal: 'heal', rage: 'rage', barrel: 'barrel', grave: 'spooky', log: 'roll', barrelRoll: 'roll', quake: 'crumble', snow: 'splat', tornado: 'whoosh', curse: 'spooky', clone: 'cast', crate: 'barrel', vines: 'splat', void: 'spooky' };
+const BLAST_PRESET = { blast: 'blast.fire', cannonball: 'blast.bomb', recoil: 'blast.bomb', rune: 'blast.gold', levelup: 'blast.gold', banner: 'blast.gold', barrelRoll: 'spell.barrel' };
+const BLAST_SFX = { shock: ['zap', 1], frost: ['freeze', 0.6], fire: ['boom', 0.8], blast: ['boom', 0.8], rock: ['crumble', 0.6], slam: ['thud', 1], heal: ['heal', 1], rage: ['rage', 1], time: ['freeze', 1], build: ['build', 1], bomb: ['boom', 0.6], cannonball: ['boom', 0.6], recoil: ['boom', 0.6], rune: ['build', 0.6], banner: ['build', 0.6], levelup: ['crown', 0.6], taunt: ['king', 0.6], spin: ['swing', 0.7], firewhirl: ['swing', 0.7], barrelRoll: ['barrel', 0.6] };
+const DASH_STAR = { count: 1, scaleCount: false, shape: 'star', colors: ['#9ff5e6', '#ffffff'], life: 0.35, size: 0.28, sizeEnd: 0.04, alpha: [1, 0], blend: 'add', prio: 0 };
+// Partikel aktiver Zonen (Gift, Heilung, Brand …): pro Frame mit Wahrscheinlichkeit p ein Partikel
+const ZONE_FX = {
+  poison: { p: 0.35, it: { count: 1, scaleCount: false, shape: 'bubble', colors: ['#c9f07a', '#9ad44f', '#7cc43a'], spread: 0.9, up: [0.5, 1.1], drag: 0.3, life: [0.6, 1], size: [0.12, 0.2], alpha: [1, 0], prio: 0 } },
+  heal: { p: 0.3, it: { count: 1, scaleCount: false, shape: 'plus', colors: ['#9dff8a', '#ffe066'], spread: 0.8, z: [0.1, 0.5], up: [0.8, 1.4], drag: 0.3, life: [0.6, 0.9], size: [0.18, 0.26], sizeEnd: 0.08, alpha: [1, 0], prio: 0 } },
+  burn: { p: 0.45, it: { count: 1, scaleCount: false, shape: 'flame', colors: ['#fff3b0', '#ffc23d', '#ff6a2b'], spread: 0.85, up: [0.8, 1.8], drag: 0.2, life: [0.3, 0.6], size: [0.3, 0.45], sizeEnd: 0.06, alpha: [1, 0], blend: 'add', prio: 0 } },
+  rage: { p: 0.3, it: { count: 1, scaleCount: false, shape: 'flame', colors: ['#ffd0ff', '#e07bff'], spread: 0.85, up: [0.8, 1.6], drag: 0.2, life: [0.4, 0.7], size: [0.24, 0.34], sizeEnd: 0.05, alpha: [0.9, 0], blend: 'add', prio: 0 } },
+  rageTrail: { p: 0.2, it: { count: 1, scaleCount: false, shape: 'flame', colors: ['#ffd0ff', '#e07bff'], spread: 0.8, up: [0.6, 1.2], life: [0.3, 0.5], size: [0.2, 0.3], sizeEnd: 0.05, alpha: [0.9, 0], blend: 'add', prio: 0 } },
+  glue: { p: 0.2, it: { count: 1, scaleCount: false, shape: 'drop', colors: ['#e8c547', '#f5dc7a'], spread: 0.85, life: [0.5, 0.8], size: [0.12, 0.18], alpha: [1, 0], prio: 0 } },
+  curse: { p: 0.25, it: { count: 1, scaleCount: false, shape: 'wisp', colors: ['#a6e05a', '#7cc36b', '#5b2d82'], spread: 0.85, up: [0.4, 1], spin: [-4, 4], life: [0.6, 1], size: [0.3, 0.45], alpha: [0.8, 0], prio: 0 } },
+  void: { p: 0.3, it: { count: 1, scaleCount: false, shape: 'wisp', colors: ['#c9a2ff', '#9a5cf0'], spread: 0.85, up: [0.3, 0.8], spin: [5, 9], life: [0.5, 0.8], size: [0.35, 0.5], alpha: [0.8, 0], blend: 'add', prio: 0 } },
+  grave: { p: 0.2, it: { count: 1, scaleCount: false, shape: 'wisp', colors: ['#c9d2e6', '#8a9ab8'], spread: 0.85, up: [0.4, 0.9], spin: [-4, 4], life: [0.6, 1], size: [0.35, 0.5], alpha: [0.6, 0], prio: 0 } },
+  storm: { p: 0.2, it: { count: 1, scaleCount: false, shape: 'smoke', colors: ['#4a5578', '#3a4466'], spread: 0.9, z: [5.5, 6.5], speed: [0.1, 0.3], life: [0.8, 1.2], size: [0.9, 1.3], sizeEnd: 1.6, alpha: [0.55, 0], prio: 0 } },
+  frost: { p: 0.15, it: { count: 1, scaleCount: false, shape: 'flake', colors: ['#ffffff', '#d4f4ff'], spread: 0.9, z: [0.8, 1.6], up: [-0.4, -0.1], spin: [-2, 2], drag: 0.5, life: [0.8, 1.2], size: [0.12, 0.2], alpha: [0.9, 0], prio: 0 } },
+};
+// Projektil-Art → Spur-Preset / Einschlag-Preset
+const PROJ_TRAIL = { fireball: 'fire', fire: 'fire', rocket: 'rocket', magic: 'magic', ice: 'ice', spit: 'spit', firework: 'firework', spark: 'spark', spirit: 'spark', cannonball: 'smoke', bomb: 'smoke', boulder: 'smoke', dynamite: 'smoke', roll: 'dust', arrow: 'streak', bolt: 'streak', dart: 'streak', spear: 'streak', snipe: 'streak' };
+const PROJ_IMPACT = { fireball: 'fire', fire: 'fire', magic: 'magic', ice: 'ice', spit: 'spit', firework: 'firework', spark: 'spark', spirit: 'spark', cannonball: 'cannon', arrow: 'small', bolt: 'small', dart: 'small', spear: 'small', bullet: 'small', pellet: 'small', snipe: 'small', axe: 'small', pebble: 'small' };
 
 export class Game {
   constructor(app, init) {
@@ -31,8 +55,10 @@ export class Game {
     this.view.flip = this.side === 1;
     this.renderer = new Renderer(this);
     this.hud = new Hud(this);
-    this.fx = new Particles();
-    this.fx.setQuality(app.settings.quality);
+    this.fx = new Vfx();
+    this.fx.setPresets(app.vfxPresets || {});
+    this.applyFxSettings();
+    this.projPrev = new Map();
     this.snaps = [];
     this.offset = null;
     this.me = null;
@@ -51,7 +77,6 @@ export class Game {
     this.emotes = [];
     this.seq = 0;
     this.clock = performance.now() / 1000;
-    this.shake = 0;
     this.crowns = [0, 0];
     this.phase = 'r';
     this.snapMult = 1;
@@ -107,11 +132,24 @@ export class Game {
   prepare() {
     this.resize();
     this.renderer.renderBackground(this.cw, this.ch, this.dpr);
+    this.fx.prewarm();
   }
 
   settingsChanged() {
-    this.fx.setQuality(this.app.settings.quality);
+    this.applyFxSettings();
     this.needResize = true;
+  }
+
+  /** Grafik-Einstellungen an die VFX-Engine weitergeben (Qualität, Wackeln, reduzierte Effekte/Bewegung). */
+  applyFxSettings() {
+    const st = this.app.settings;
+    this.fx.setQuality(st.quality);
+    this.fx.setOptions({ shake: st.shake ?? 1, reducedMotion: reducedMotion(), reduceEffects: !!st.reduceFx });
+  }
+
+  /** Werte für das Debug-Overlay und den Benchmark. */
+  debugStats() {
+    return { ...this.fx.debugStats(), sprites: sprites.info() };
   }
 
   resize() {
@@ -120,7 +158,8 @@ export class Game {
     const ch = window.innerHeight;
     const q = this.app.settings.quality;
     const maxDpr = q === 'high' ? 2 : q === 'medium' ? 1.5 : 1;
-    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
+    // Dynamische Auflösung (siehe adaptQuality) begrenzt zusätzlich
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr, this.dynDpr || 99);
     this.cw = cw;
     this.ch = ch;
     this.dpr = dpr;
@@ -191,10 +230,7 @@ export class Game {
     const win = res.winner === this.side;
     const draw = res.winner == null;
     this.hud.banner(draw ? 'Unentschieden' : win ? 'Sieg!' : 'Niederlage', draw ? '#ffffff' : win ? '#ffe066' : '#ff8a8a', res.reasonText, { kind: 'end' });
-    if (win) {
-      const [x, y] = [ARENA_W / 2, ARENA_H / 2];
-      this.fx.confetti(x, y);
-    }
+    if (win) this.fx.emit('phase.win', { x: ARENA_W / 2, y: ARENA_H / 2 });
   }
 
   elixirNow() {
@@ -343,6 +379,23 @@ export class Game {
       });
     }
     this.projList = plist;
+    // Spuren hinter Projektilen; verschwundene Projektile = Einschlag an der letzten Position
+    const seenP = new Map();
+    for (const p of plist) {
+      const z = projZ(p);
+      const tr = PROJ_TRAIL[p.kind];
+      if (tr) {
+        const it = this.fx.presets['proj.trail.' + tr];
+        if (it) this.fx.trail(p.id, p.x, p.y, z, it, { team: this.teamOf(p.owner) });
+      }
+      seenP.set(p.id, { kind: p.kind, x: p.x, y: p.y, z, owner: p.owner });
+    }
+    for (const [id, q] of this.projPrev) {
+      if (seenP.has(id)) continue;
+      const im = PROJ_IMPACT[q.kind];
+      if (im) this.fx.emit('proj.impact.' + im, { x: q.x, y: q.y, z: q.z, team: this.teamOf(q.owner) });
+    }
+    this.projPrev = seenP;
 
     // Zonen
     const zb = b ? b.zMap || (b.zMap = new Map(b.z.map((z) => [z[0], z]))) : null;
@@ -366,11 +419,8 @@ export class Game {
     });
     for (const z of this.zones) {
       if (!z.active) continue;
-      if (z.fx === 'poison' && Math.random() < 0.3) this.fx.poison(z.x, z.y, z.r);
-      if (z.fx === 'heal' && Math.random() < 0.3) this.fx.heal(z.x, z.y, z.r * 0.6);
-      if (z.fx === 'burn' && Math.random() < 0.4) this.fx.burst(z.x, z.y, 1, { spread: z.r, colors: ['#ff8a3d', '#ffcf3d'], speed: [0, 0.2], vz: [0.8, 1.6], life: [0.3, 0.6], size: [0.1, 0.18], g: -0.5 });
-      if (z.fx === 'rage' && Math.random() < 0.2) this.fx.sparkle(z.x + (Math.random() - 0.5) * z.r, z.y + (Math.random() - 0.5) * z.r, 0.2, '#e39bff');
-      if (z.fx === 'glue' && Math.random() < 0.2) this.fx.burst(z.x, z.y, 1, { spread: z.r, colors: ['#e8c547'], speed: [0, 0.1], vz: [0, 0], life: [0.5, 0.8], size: [0.12, 0.2], shape: 'drop', g: 0 });
+      const zf = ZONE_FX[z.fx];
+      if (zf && Math.random() < zf.p) this.fx.burst(zf.it, { x: z.x, y: z.y, k: z.r, team: this.teamOf(z.owner) });
     }
 
     // Ereignisse aller Snapshots bis zur Renderzeit abspielen
@@ -429,11 +479,40 @@ export class Game {
     return v;
   }
 
-  // ───────────── Ereignisse ─────────────
+  // ───────────── Ereignisse → Effekte ─────────────
+  teamOf(owner) {
+    return owner === this.side ? 'blue' : 'red';
+  }
+  /** Trefferhöhe einer Figur (Felder). */
+  hitZ(v) {
+    return v.kind === 'tower' ? v.half * 1.4 : (v.flying ? 1.1 : 0) + (v.kind === 'building' ? v.half : 0.5);
+  }
+  /** Schwungbogen beim Nahkampf: Sichel zwischen Angreifer und Ziel, zum Ziel gewölbt. */
+  swingFx(src, tgt) {
+    const [ax, ay] = this.view.toScreen(src.x, src.y);
+    const [bx, by] = this.view.toScreen(tgt.x, tgt.y);
+    const d = Math.hypot(tgt.x - src.x, tgt.y - src.y) || 1;
+    const k = Math.min(0.55, d * 0.5) / d;
+    this.fx.emit('unit.swing', { x: src.x + (tgt.x - src.x) * k, y: src.y + (tgt.y - src.y) * k, z: src.flying ? 1.1 : 0, rot: Math.atan2(by - ay, bx - ax) - Math.PI / 2 });
+  }
+  /** Blitz-/Seil-Linie zwischen zwei Punkten (Weltkoordinaten mit Höhe). */
+  line(from, to, color, width, life, jag = 0.3, segments = 8, branches = 1) {
+    this.fx.bolt({ color, width, life, segments, jag, branches }, { x: to[0], y: to[1], from, to });
+  }
+  /** Turm-Schadenstufen (> 66 %, > 33 %, darunter): beim Unterschreiten Brocken und Staub. */
+  towerStage(v) {
+    const stage = v.hp > v.maxHp * 0.66 ? 0 : v.hp > v.maxHp * 0.33 ? 1 : 2;
+    if (stage > (v.stage || 0)) this.fx.emit('tower.damage', { x: v.x, y: v.y, team: this.teamOf(v.owner) });
+    v.stage = Math.max(v.stage || 0, stage);
+  }
+
   processEvents(evs, now) {
     const fx = this.fx;
     const A = this.audio;
     const showDmg = this.app.settings.dmgNumbers;
+    // Schwärme: Treffer- und Todeseffekte pro Frame begrenzen (Lesbarkeit + Performance)
+    let hits = 0;
+    let deaths = 0;
     for (const ev of evs) {
       switch (ev[0]) {
         case 'a': {
@@ -443,51 +522,63 @@ export class Game {
           src.atk = 1;
           if (tgt && src.lightning) {
             const z0 = src.kind === 'building' ? src.half * 1.9 : (src.flying ? 1.1 : 0) + 0.8;
-            fx.bolt([[src.x, src.y, z0], [tgt.x, tgt.y, (tgt.flying ? 1.1 : 0) + 0.5]], '#bff4ff', 0.18, 0.1);
+            const z1 = (tgt.flying ? 1.1 : 0) + 0.5;
+            this.line([src.x, src.y, z0], [tgt.x, tgt.y, z1], '#9ff0ff', 0.1, 0.2, 0.3, 8, 1);
+            fx.emit('proj.impact.spark', { x: tgt.x, y: tgt.y, z: z1 });
             A.sfx('zap', 0.4);
           } else if (src.kind === 'tower') A.sfx(src.king ? 'cannon' : 'bow', 0.35);
-          else if (src.ranged && !src.beam) A.sfx('shoot', 0.35);
-          else if (!src.beam) A.sfx('swing', 0.35);
+          else if (src.ranged && !src.beam) {
+            A.sfx('shoot', 0.35);
+            if (tgt) fx.emit('unit.muzzle', { x: src.x, y: src.y, z: src.flying ? 1.1 : 0, dir: Math.atan2(tgt.y - src.y, tgt.x - src.x) });
+          } else if (!src.beam) {
+            A.sfx('swing', 0.35);
+            if (tgt && src.kind === 'unit' && hits < 14) this.swingFx(src, tgt);
+          }
           break;
         }
         case 'h': {
           const v = this.vis.get(ev[1]);
           if (!v) break;
           v.hurt = 1;
-          const z = v.kind === 'tower' ? v.half * 1.4 : (v.flying ? 1.1 : 0) + (v.kind === 'building' ? v.half : 0.5);
-          fx.hit(v.x, v.y, z);
-          if (showDmg && ev[2] >= 40) {
-            // Start über dem LP-Balken, leicht teamfarbig getönt, max. 8 gleichzeitig (siehe Particles.damage)
+          const z = this.hitZ(v);
+          const amount = ev[2] || 0;
+          if (v.kind === 'tower') {
+            fx.emit(amount >= 180 ? 'tower.hit.heavy' : 'tower.hit', { x: v.x, y: v.y, z: 0, team: this.teamOf(v.owner) });
+            this.towerStage(v);
+          } else if (hits++ < 12) {
+            fx.emit(amount >= 250 ? 'unit.hit.heavy' : 'unit.hit', { x: v.x, y: v.y, z, team: this.teamOf(v.owner) });
+          }
+          if (showDmg && amount >= 40) {
+            // Start über dem LP-Balken, leicht teamfarbig getönt, max. 8 gleichzeitig
             const zBar = v.kind === 'tower' ? v.half * 1.6 : v.kind === 'building' ? v.half * 2.1 : (v.flying ? 1.1 : 0) + (v.U * 1.9) / this.view.s + 0.25;
-            fx.damage(v.id, v.x + (Math.random() - 0.5) * 0.4, v.y, ev[2], v.owner === this.side ? '#dcebff' : '#ffe1e3', zBar + 0.35);
+            fx.damage(v.id, v.x + (Math.random() - 0.5) * 0.4, v.y, amount, v.owner === this.side ? '#dcebff' : '#ffe1e3', zBar + 0.35);
           }
           A.sfx(v.kind === 'unit' ? 'hit' : 'hitStone', 0.3);
           break;
         }
         case 'hl': {
           const v = this.vis.get(ev[1]);
-          if (v) fx.heal(v.x, v.y, 0.3);
+          if (v) fx.emit('unit.heal', { x: v.x, y: v.y, z: this.hitZ(v) - 0.3 });
           break;
         }
         case 'd': {
-          const [, , type, , x, y, flying, silent] = ev;
+          const [, , type, owner, x, y, flying, silent] = ev;
           if (silent) break;
           const info = this.typeInfo(type, false);
+          const team = this.teamOf(owner);
           if (info.kind === 'building') {
-            fx.debris(x, y, info.half);
+            fx.emit('building.death', { x, y, team });
             A.sfx('crumble', 0.6);
           } else if (info.kind === 'unit') {
-            fx.poof(x, y, Math.max(0.6, info.radius * 1.6));
-            if (flying) fx.burst(x, y, 6, { z: 1.1, colors: ['#ffffff'], speed: [0.5, 1.5], g: 4, life: [0.3, 0.5] });
+            if (flying) fx.emit('unit.death.flying', { x, y, z: 1.1, team });
+            else fx.emit(deaths++ < 6 ? 'unit.death' : 'unit.death.swarm', { x, y, team });
             A.sfx('pop', 0.45);
           }
           break;
         }
         case 'tw': {
           const [, , owner, isKing, x, y] = ev;
-          fx.explosion(x, y, isKing ? 3.5 : 2.5);
-          fx.debris(x, y, isKing ? 2.2 : 1.6);
-          this.shake = isKing ? 22 : 14;
+          fx.emit('tower.destroy', { x, y, team: this.teamOf(owner), scale: isKing ? 1.3 : 1 });
           A.sfx('towerDown');
           this.app.haptic(20);
           const [sx, sy] = this.view.toScreen(x, y);
@@ -496,7 +587,7 @@ export class Game {
         }
         case 'ka': {
           const v = this.vis.get(ev[1]);
-          if (v) fx.text(v.x, v.y, '!', '#ffe066', 1.1, 1.2, 3.5);
+          if (v) fx.emit('king.awake', { x: v.x, y: v.y, team: this.teamOf(v.owner) });
           A.sfx('king');
           break;
         }
@@ -504,72 +595,75 @@ export class Game {
           this.spellFx(ev);
           break;
         case 'bl': {
-          const [, x, y, r, , kind] = ev;
-          this.blastFx(x, y, r, kind);
+          const [, x, y, r, owner, kind] = ev;
+          this.blastFx(x, y, r, kind, owner);
           break;
         }
         case 'ch': {
           const [, , x0, y0, pts] = ev;
-          const path = [[x0, y0, 6]];
-          for (let i = 0; i < pts.length; i += 2) path.push([pts[i], pts[i + 1], 0.5]);
-          if (path.length > 1) fx.bolt(path, '#d7b5ff', 0.35, 0.14);
+          let prev = [x0, y0, 6];
+          for (let i = 0; i < pts.length; i += 2) {
+            const next = [pts[i], pts[i + 1], 0.5];
+            this.line(prev, next, '#d7b5ff', 0.13, 0.35, 0.35, 9, 1);
+            fx.emit('proj.impact.spark', { x: next[0], y: next[1], z: 0.5 });
+            prev = next;
+          }
           A.sfx('zap');
           break;
         }
         case 'st': {
           const [, x, y] = ev;
-          fx.bolt([[x + 0.5, y - 0.5, 9], [x, y, 0]], '#fff3a0', 0.3, 0.2);
-          fx.explosion(x, y, 1.2, ['#fff3a0', '#ffe14d', '#ffffff']);
-          this.shake = Math.max(this.shake, 6);
+          fx.emit('spell.strike', { x, y });
           A.sfx('thunder');
           break;
         }
         case 'ms': {
           const [, , x0, y0, pts] = ev;
           for (let i = 0; i < pts.length; i += 2) {
-            fx.bolt([[x0, y0, 1.2], [pts[i], pts[i + 1], 0.5]], '#ffe066', 0.3, 0.08);
-            fx.burst(pts[i], pts[i + 1], 4, { colors: ['#ffe066', '#ffffff'], shape: 'star', life: [0.3, 0.6] });
+            this.line([x0, y0, 1.2], [pts[i], pts[i + 1], 0.5], '#ffe066', 0.07, 0.28, 0.08, 4, 0);
+            fx.emit('blast.sparks', { x: pts[i], y: pts[i + 1], r: 0.6 });
           }
           A.sfx('shoot');
           break;
         }
         case 'ds': {
           const [, , x0, y0, x1, y1] = ev;
+          fx.emit('unit.dash', { x: x0, y: y0 });
           for (let k = 0; k <= 6; k++) {
             const t = k / 6;
-            fx.add({ x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, z: 0.5, life: 0.35, size: 0.18, color: '#9ff5e6', g: 0, drag: 1, shape: 'star' });
+            fx.burst(DASH_STAR, { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, z: 0.5, k: 1 });
           }
           A.sfx('whoosh', 0.6);
           break;
         }
         case 'el': {
           const [, owner, x, y] = ev;
-          fx.elixir(x, y);
+          fx.emit('elixir.collect', { x, y });
           if (owner === this.side) {
-            fx.text(x, y, '+1', '#ff9af0', 0.6, 1, 2);
+            fx.text(x, y, '+1', '#ff9af0', 0.6, 1, 2, 0.8);
             A.sfx('elixir', 0.5);
           }
           break;
         }
         case 'rf': {
           const v = this.vis.get(ev[1]);
-          if (v) fx.sparkle(v.x, v.y, 0.6, '#e8fbff');
+          if (v) fx.emit('unit.reflect', { x: v.x, y: v.y, z: this.hitZ(v) });
           break;
         }
         case 'sb': {
           const v = this.vis.get(ev[1]);
-          if (v) fx.burst(v.x, v.y, 8, { z: 0.6, colors: ['#e8eef4', '#b9c3cf'], shape: 'shard', spin: 8 });
+          if (v) fx.emit('unit.shieldBreak', { x: v.x, y: v.y, z: this.hitZ(v) });
           break;
         }
         case 'dp': {
           const v = this.vis.get(ev[1]);
-          if (v && v.kind === 'unit' && !v.flying) {
-            fx.deployDust(v.x, v.y, v.radius);
-            if (v.info.def?.mass >= 12) {
-              A.sfx('thud', 0.6);
-              this.shake = Math.max(this.shake, 3);
-            }
-          }
+          if (!v) break;
+          const team = this.teamOf(v.owner);
+          if (v.kind === 'unit' && !v.flying) {
+            const heavy = v.info.def?.mass >= 12;
+            fx.emit(heavy ? 'unit.deploy.heavy' : 'unit.deploy', { x: v.x, y: v.y, team, r: v.radius });
+            if (heavy) A.sfx('thud', 0.6);
+          } else if (v.kind === 'unit') fx.emit('unit.deploy.air', { x: v.x, y: v.y, team });
           break;
         }
         case 'a2': {
@@ -581,7 +675,7 @@ export class Game {
         case 'dw': {
           // Ausholen vor Sprint/Sprung/Haken
           const v = this.vis.get(ev[1]);
-          if (v) fx.text(v.x, v.y, '!', '#ffffff', 0.7, 0.5, 2.4);
+          if (v) fx.emit('unit.windup', { x: v.x, y: v.y, z: v.flying ? 1.1 : 0 });
           break;
         }
         case 'lp': {
@@ -600,71 +694,71 @@ export class Game {
         }
         case 'hk': {
           const [, , , x0, y0, x1, y1] = ev;
-          fx.bolt([[x0, y0, 0.8], [x1, y1, 0.5]], '#c9d2dc', 0.35, 0.06);
+          this.line([x0, y0, 0.8], [x1, y1, 0.5], '#c9d2dc', 0.05, 0.35, 0.02, 2, 0);
           A.sfx('whoosh', 0.5);
           break;
         }
         case 'tp': {
           const [, , x0, y0, x1, y1] = ev;
-          fx.poof(x0, y0, 0.9);
-          fx.burst(x1, y1, 12, { z: 0.6, colors: ['#d7b5ff', '#ffffff'], shape: 'star', speed: [0.5, 2] });
+          fx.emit('unit.teleport', { x: x0, y: y0 });
+          fx.emit('unit.teleport', { x: x1, y: y1 });
           A.sfx('whoosh', 0.6);
           break;
         }
         case 'pa': {
           const v = this.vis.get(ev[1]);
-          if (v) fx.burst(v.x, v.y, 10, { z: 0.8, colors: ['#ffffff', '#c9d2dc'], shape: 'spark', speed: [1, 3] });
+          if (v) fx.emit('unit.hit.heavy', { x: v.x, y: v.y, z: this.hitZ(v) });
           A.sfx('hitStone', 0.6);
           break;
         }
         case 'zb': {
           const a = this.vis.get(ev[1]);
           const b = this.vis.get(ev[2]);
-          if (a && b) fx.bolt([[a.x, a.y, 1.2], [b.x, b.y, 0.5]], '#bff4ff', 0.2, 0.1);
+          if (a && b) this.line([a.x, a.y, 1.2], [b.x, b.y, 0.5], '#9ff0ff', 0.1, 0.22, 0.3, 8, 1);
           A.sfx('zap', 0.4);
           break;
         }
         case 'su': {
           const v = this.vis.get(ev[1]);
-          if (v) fx.deployDust(v.x, v.y, v.half || 1);
+          if (v) fx.emit('blast.build', { x: v.x, y: v.y, team: this.teamOf(v.owner) });
           break;
         }
         case 'nt': {
           const a = this.vis.get(ev[1]);
           const b = this.vis.get(ev[2]);
-          if (a && b) fx.bolt([[a.x, a.y, 0.8], [b.x, b.y, 0.4]], '#e8dcc0', 0.4, 0.08);
+          if (a && b) this.line([a.x, a.y, 0.8], [b.x, b.y, 0.4], '#e8dcc0', 0.06, 0.4, 0.05, 3, 0);
           break;
         }
         case 'en': {
           const b = this.vis.get(ev[2]);
-          if (b) fx.sparkle(b.x, b.y, 0.6, '#ffd54a');
+          if (b) fx.emit('unit.enchant', { x: b.x, y: b.y });
           break;
         }
         case 'tr': {
           const v = this.vis.get(ev[1]);
-          if (v) fx.poof(v.x, v.y, 1.2);
+          if (v) fx.emit('unit.teleport', { x: v.x, y: v.y });
           A.sfx('pop', 0.5);
           break;
         }
         case 'vn': {
           const v = this.vis.get(ev[1]);
-          if (v) fx.burst(v.x, v.y, 8, { colors: ['#4f9a3a', '#7fcf5a'], shape: 'square', speed: [0.5, 1.5], vz: [1, 2] });
+          if (v) fx.emit('spell.vines', { x: v.x, y: v.y, r: 0.9 });
           break;
         }
         case 'zp': {
           const [, , x, y, r, kind] = ev;
-          fx.ring(x, y, r, ZONE_COLORS[kind] || '#ffffff', 0.35, 0.15, 0.08);
-          if (kind === 'quake') this.shake = Math.max(this.shake, 4);
+          fx.ring({ radius: [r * 0.85, r], width: [0.12, 0.01], color: ZONE_COLORS[kind] || '#ffffff', life: 0.35, alpha: 0.55 }, { x, y, k: 1 });
+          if (kind === 'quake') fx.shake(0.14);
           break;
         }
         case 'lk': {
           const [, , x0, y0, x1, y1] = ev;
-          fx.bolt([[x0, y0, 0.8], [x1, y1, 0.8]], '#7fe9ff', 0.25, 0.08);
+          this.line([x0, y0, 0.8], [x1, y1, 0.8], '#7fe9ff', 0.08, 0.25, 0.2, 6, 0);
           break;
         }
         case 'ax': {
           const v = this.vis.get(ev[1]);
-          if (v) fx.ring(v.x, v.y, 1.2, '#ffe066', 0.4, 0.2, 0.1);
+          if (v) fx.emit('blast.gold', { x: v.x, y: v.y, r: 1.2 });
           break;
         }
         case 'em':
@@ -679,7 +773,7 @@ export class Game {
           const card = this.db.card(info.cardId || info.key);
           const mine = ev[2] === this.side;
           if (card?.ability) this.hud.banner(card.ability.name + '!', '#ffffff', '', { kind: 'card', team: mine ? 'blue' : 'red', cardId: card.id });
-          if (v) fx.burst(v.x, v.y, 14, { z: 0.8, colors: ['#ffe066', '#ffffff', '#fff3a0'], shape: 'star', speed: [1, 3] });
+          if (v) fx.emit('ability.activate', { x: v.x, y: v.y, z: v.flying ? 1.1 : 0, team: this.teamOf(v.owner) });
           A.sfx('ability');
           break;
         }
@@ -691,11 +785,13 @@ export class Game {
           const card = this.db.card(key);
           if (card?.type !== 'spell') A.sfx('deploy', owner === this.side ? 0.7 : 0.4);
           else A.sfx('cast', owner === this.side ? 0.7 : 0.4);
-          if (evo) fx.burst(x, y, 20, { colors: ['#d7b5ff', '#ffffff', '#b98cff'], shape: 'star', speed: [1, 3], vz: [1, 3] });
+          if (evo) fx.emit('evo.deploy', { x, y, team: this.teamOf(owner) });
+          if (key === 'mirror') fx.emit('spell.mirror', { x, y, team: this.teamOf(owner) });
           break;
         }
         case 'ot':
           this.hud.banner('Verlängerung!', '#ff9a3d', this.rules.suddenDeath === 'firstHit' ? 'Erster Turmtreffer gewinnt' : 'Erster zerstörter Turm gewinnt', { kind: 'phase' });
+          fx.flash('#ff9a3d', 0.12, 0.35);
           A.sfx('overtime');
           A.music('overtime');
           break;
@@ -706,193 +802,26 @@ export class Game {
   }
 
   spellFx(ev) {
-    const [, type, x, y, r, owner, fxName] = ev;
+    const [, , x, y, r, owner, fxName] = ev;
     const fx = this.fx;
     const A = this.audio;
-    switch (fxName) {
-      case 'arrows':
-        fx.burst(x, y, 30, { spread: r * 0.9, colors: ['#8a5a32', '#dfe6ee'], shape: 'spark', speed: [0.5, 1.5], vz: [-6, -3], z: 3, life: [0.2, 0.35], g: 0 });
-        fx.ring(x, y, r, '#f3e0b0', 0.45, 0.15, 0.15);
-        A.sfx('arrows');
-        break;
-      case 'fire':
-        fx.explosion(x, y, r);
-        this.shake = Math.max(this.shake, 6);
-        A.sfx('boom');
-        break;
-      case 'comet':
-        fx.explosion(x, y, r * 1.4);
-        fx.debris(x, y, r * 0.6);
-        this.shake = Math.max(this.shake, 12);
-        A.sfx('bigBoom');
-        break;
-      case 'shock':
-        fx.shock(x, y, r);
-        A.sfx('zap');
-        break;
-      case 'frost':
-        fx.frost(x, y, r);
-        for (const v of this.vis.values()) {
-          if (v.owner !== owner && Math.hypot(v.x - x, v.y - y) <= r + v.radius) v.ice = true;
-        }
-        A.sfx('freeze');
-        break;
-      case 'poison':
-        fx.ring(x, y, r, '#7ccf3a', 0.6, 0.3, 0.2);
-        A.sfx('poison');
-        break;
-      case 'heal':
-        fx.ring(x, y, r, '#ffe66b', 0.6, 0.3, 0.2);
-        fx.heal(x, y, r);
-        A.sfx('heal');
-        break;
-      case 'rage':
-        fx.ring(x, y, r, '#c25bd6', 0.6, 0.3, 0.25);
-        A.sfx('rage');
-        break;
-      case 'barrel':
-        fx.poof(x, y, 1.4);
-        fx.burst(x, y, 10, { colors: ['#8b5a2b', '#6b4226'], shape: 'square', spin: 8, speed: [1, 3], vz: [2, 4], g: 10 });
-        A.sfx('barrel');
-        break;
-      case 'grave':
-        fx.ring(x, y, r, '#7d8ca3', 0.8, 0.3, 0.2);
-        A.sfx('spooky');
-        break;
-      case 'log':
-      case 'barrelRoll':
-        A.sfx('roll');
-        break;
-      case 'quake':
-        fx.ring(x, y, r, '#a0703a', 0.6, 0.3, 0.2);
-        fx.debris(x, y, r * 0.4);
-        this.shake = Math.max(this.shake, 6);
-        A.sfx('crumble');
-        break;
-      case 'snow':
-        fx.frost(x, y, r);
-        fx.burst(x, y, 14, { colors: ['#ffffff', '#e8f4ff'], speed: [1, 3], vz: [1, 3], g: 8 });
-        A.sfx('splat');
-        break;
-      case 'tornado':
-        fx.ring(x, y, r, '#9fb3c8', 0.8, 0.35, 0.15);
-        A.sfx('whoosh');
-        break;
-      case 'curse':
-        fx.ring(x, y, r, '#7cc36b', 0.6, 0.3, 0.2);
-        A.sfx('spooky', 0.7);
-        break;
-      case 'clone':
-        fx.ring(x, y, r, '#5ecbff', 0.6, 0.3, 0.25);
-        fx.burst(x, y, 16, { spread: r, colors: ['#5ecbff', '#ffffff'], shape: 'star', speed: [0, 0.5], vz: [0.5, 1.5], g: 0 });
-        A.sfx('cast');
-        break;
-      case 'crate':
-        fx.poof(x, y, 1.6);
-        fx.burst(x, y, 10, { colors: ['#b07a3e', '#8b5a2b'], shape: 'square', spin: 8, speed: [1, 3], vz: [2, 4], g: 10 });
-        this.shake = Math.max(this.shake, 5);
-        A.sfx('barrel');
-        break;
-      case 'vines':
-        fx.ring(x, y, r, '#4f9a3a', 0.6, 0.3, 0.2);
-        A.sfx('splat', 0.6);
-        break;
-      case 'void':
-        fx.ring(x, y, r, '#7a3fc0', 0.8, 0.35, 0.3);
-        A.sfx('spooky');
-        break;
-      case 'storm':
-        break;
-      default:
-        fx.ring(x, y, Math.max(1, r), '#ffffff', 0.4, 0.2, 0.1);
+    const team = this.teamOf(owner);
+    const name = SPELL_PRESET[fxName] || 'spell.' + fxName;
+    fx.emit(fx.has(name) ? name : 'spell.default', { x, y, r: Math.max(0.8, r || 1), team });
+    if (fxName === 'frost') {
+      for (const v of this.vis.values()) {
+        if (v.owner !== owner && Math.hypot(v.x - x, v.y - y) <= r + v.radius) v.ice = true;
+      }
     }
+    const sfx = SPELL_SFX[fxName];
+    if (sfx) A.sfx(sfx);
   }
 
-  blastFx(x, y, r, kind) {
-    const fx = this.fx;
-    const A = this.audio;
-    switch (kind) {
-      case 'shock':
-        fx.shock(x, y, r);
-        A.sfx('zap');
-        break;
-      case 'frost':
-        fx.frost(x, y, r);
-        A.sfx('freeze', 0.6);
-        break;
-      case 'fire':
-      case 'blast':
-        fx.explosion(x, y, r);
-        A.sfx('boom', 0.8);
-        break;
-      case 'rock':
-        fx.debris(x, y, r * 0.5);
-        A.sfx('crumble', 0.6);
-        break;
-      case 'slam':
-        fx.ring(x, y, r, '#f3e0b0', 0.5, 0.4, 0.2);
-        fx.deployDust(x, y, r);
-        this.shake = Math.max(this.shake, 7);
-        A.sfx('thud');
-        break;
-      case 'heal':
-        fx.ring(x, y, r, '#9dff8a', 0.6, 0.3, 0.2);
-        fx.heal(x, y, r);
-        A.sfx('heal');
-        break;
-      case 'rage':
-        fx.ring(x, y, r, '#c25bd6', 0.6, 0.3, 0.2);
-        A.sfx('rage');
-        break;
-      case 'pull':
-        fx.ring(x, y, r, '#a8f0ff', 0.35, 0.2, 0.1);
-        break;
-      case 'time':
-        fx.ring(x, y, r, '#d2b4ff', 0.9, 0.35, 0.3);
-        fx.burst(x, y, 16, { spread: r, colors: ['#d2b4ff', '#ffffff'], shape: 'star', speed: [0, 0.5], vz: [0.3, 1], g: 0, life: [0.8, 1.4] });
-        A.sfx('freeze');
-        break;
-      case 'build':
-        fx.deployDust(x, y, 1.2);
-        A.sfx('build');
-        break;
-      case 'bomb':
-      case 'cannonball':
-      case 'recoil':
-        fx.explosion(x, y, Math.max(0.8, r));
-        A.sfx('boom', 0.6);
-        break;
-      case 'curse':
-      case 'ghost':
-        fx.burst(x, y, 10, { colors: kind === 'curse' ? ['#7cc36b', '#5b2d82'] : ['#e8f0ff', '#d7b5ff'], shape: 'star', speed: [0.3, 1.2], vz: [0.5, 1.5], g: 0 });
-        break;
-      case 'rune':
-      case 'levelup':
-      case 'banner':
-        fx.ring(x, y, Math.max(0.8, r), '#ffd54a', 0.6, 0.25, 0.15);
-        fx.sparkle(x, y, 0.6, '#ffd54a');
-        A.sfx(kind === 'levelup' ? 'crown' : 'build', 0.6);
-        break;
-      case 'taunt':
-        fx.ring(x, y, r, '#ff7a5c', 0.6, 0.3, 0.15);
-        A.sfx('king', 0.6);
-        break;
-      case 'spin':
-      case 'firewhirl':
-        fx.ring(x, y, r, kind === 'firewhirl' ? '#ff8a3d' : '#ffffff', 0.4, 0.3, 0.1);
-        A.sfx('swing', 0.7);
-        break;
-      case 'butterfly':
-      case 'sparks':
-        fx.burst(x, y, 10, { spread: r, colors: kind === 'sparks' ? ['#ffe066', '#ffffff'] : ['#ff9af0', '#b98cff'], shape: 'star', speed: [0.3, 1], vz: [0.5, 1.5], g: 0 });
-        break;
-      case 'barrelRoll':
-        fx.poof(x, y, 1.2);
-        A.sfx('barrel', 0.6);
-        break;
-      default:
-        fx.ring(x, y, r, '#ffffff', 0.4, 0.2, 0.1);
-    }
+  blastFx(x, y, r, kind, owner) {
+    const name = BLAST_PRESET[kind] || 'blast.' + kind;
+    this.fx.emit(this.fx.has(name) ? name : 'blast.default', { x, y, r: Math.max(0.5, r || 1), team: owner == null ? 'blue' : this.teamOf(owner) });
+    const sfx = BLAST_SFX[kind];
+    if (sfx) this.audio.sfx(sfx[0], sfx[1]);
   }
 
   // ───────────── Eingabe ─────────────
@@ -1163,12 +1092,45 @@ export class Game {
     const dt = Math.min(0.05, Math.max(0, now - (this.lastFrame ?? now)));
     this.lastFrame = now;
     this.clock = now;
+    this.adaptQuality(dt);
     if (this.needResize) this.resize();
     this.checkConnection();
-    const renderT = performance.now() + (this.offset ?? 0) - INTERP_MS;
+    // Hit-Stop verzögert nur die Darstellungszeit (Simulation und Eingaben bleiben unberührt)
+    const renderT = performance.now() + (this.offset ?? 0) - INTERP_MS - this.fx.stopDebt;
     this.updateWorld(renderT, now, dt);
     this.fx.update(dt);
     this.draw(now, dt);
+  }
+
+  /**
+   * Dynamische Qualitätsstufe: geglättete Bildzeit messen; bei anhaltend langsamen Frames Renderauflösung
+   * (DPR 2 → 1,5 → 1,25 → 1) und Partikelbudget senken, bei flüssigem Lauf wieder anheben (mit Hysterese).
+   */
+  adaptQuality(dt) {
+    if (!(dt > 0) || this.app.settings.autoQuality === false) return;
+    const ms = Math.min(250, dt * 1000);
+    this.ft = this.ft == null ? 16 : this.ft * 0.92 + ms * 0.08;
+    this.slowT = this.ft > 24 ? (this.slowT || 0) + dt : 0;
+    this.fastT = this.ft < 15 ? (this.fastT || 0) + dt : 0;
+    const steps = [2, 1.5, 1.25, 1];
+    const cur = this.dynDpr || 99;
+    if (this.slowT > 1.2) {
+      this.slowT = 0;
+      const next = steps.find((v) => v < Math.min(cur, this.dpr));
+      if (next) {
+        this.dynDpr = next;
+        this.needResize = true;
+      }
+      this.fx.loadScale = Math.max(0.4, (this.fx.loadScale ?? 1) - 0.2);
+    } else if (this.fastT > 5) {
+      this.fastT = 0;
+      if (this.fx.loadScale < 1) this.fx.loadScale = Math.min(1, this.fx.loadScale + 0.2);
+      else if (this.dynDpr) {
+        const i = steps.indexOf(this.dynDpr);
+        this.dynDpr = i > 0 ? steps[i - 1] : null;
+        this.needResize = true;
+      }
+    }
   }
 
   /** Verbindung instabil (Snapshots bleiben aus oder Ping sehr hoch) → Ping rot + einmaliger Hinweis. */
@@ -1188,22 +1150,24 @@ export class Game {
     sprites.newFrame();
     const { cw, ch, dpr } = this;
     const R = this.renderer;
+    const fx = this.fx;
     const q = QUALITY_LEVEL[this.app.settings.quality] ?? 2;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    let ox = 0;
-    let oy = 0;
-    if (this.shake > 0) {
-      this.shake = Math.max(0, this.shake - dt * 40);
-      // Reduzierte Bewegung: kein Bildschirmwackeln
-      if (!reducedMotion()) {
-        ox = (Math.random() - 0.5) * this.shake;
-        oy = (Math.random() - 0.5) * this.shake;
-      }
-    }
-    ctx.save();
-    ctx.translate(ox, oy);
+    // Wackeln aus der VFX-Engine (Trauma-Modell; aus bei reduzierter Bewegung oder Regler 0)
+    const [ox, oy] = fx.shakeOffset(this.view.s);
+    const base = [dpr, ox, oy];
+    fx.setView(this.view);
     R.renderBackground(cw, ch, dpr);
-    ctx.drawImage(R.bg, 0, 0, cw, ch);
+    if (R.bgLayer) {
+      // Hintergrund liegt als eigene Ebene darunter: hier nur leeren; Wackeln per CSS-Transform (Compositor)
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      const sh = ox || oy ? `translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px)` : '';
+      if (sh !== this.bgShake) R.bgLayer.style.transform = this.bgShake = sh;
+      ctx.setTransform(dpr, 0, 0, dpr, ox * dpr, oy * dpr);
+    } else {
+      ctx.setTransform(dpr, 0, 0, dpr, ox * dpr, oy * dpr);
+      ctx.drawImage(R.bg, 0, 0, cw, ch);
+    }
     R.drawRiverAnim(ctx, now);
 
     // Auswahl & Vorschau
@@ -1235,15 +1199,25 @@ export class Game {
       }
     }
 
+    // Boden: Decals → Zauberzonen → Trümmer → Boden-Ringe und -Partikel
+    fx.drawDecals(ctx);
     R.drawZonesGround(ctx, this.zones, now);
     const list = [...this.vis.values()];
     if (this.latest) R.drawRubble(ctx, list, this.rules.towers);
-    this.fx.drawRings(ctx, this.view);
+    fx.drawRings(ctx, true);
+    fx.drawParticles(ctx, 0, base);
+    // Figuren, Strahlen, Projektile, Luftzonen
     R.drawEntities(ctx, list, now, q);
     R.drawBeams(ctx, list, now);
     R.drawProjectiles(ctx, this.projList || [], now);
     R.drawZonesAir(ctx, this.zones, now);
-    this.fx.draw(ctx, this.view);
+    // Effekte: normal geblendet (Rauch, Splitter) → additiv (Feuer, Funken, Glühen) → Blitze → Ringe in der Luft
+    fx.drawParticles(ctx, 1, base);
+    fx.drawParticles(ctx, 2, base);
+    fx.drawRings(ctx, false);
+    fx.drawBolts(ctx);
+    R.drawBars(ctx, list);
+    fx.drawTexts(ctx, (c, str, x, y, size, color) => ctext(c, str, x, y, size, color, 'center', Math.max(3, size * 0.16)));
 
     this.ghosts = this.ghosts.filter((g) => g.until > now);
     for (const g of this.ghosts) R.drawGhost(ctx, { ...g, valid: true }, now);
@@ -1252,7 +1226,8 @@ export class Game {
     R.drawPlayedMarkers(ctx, this.markers, now, (id, evo) => cardArt(this.db, id, evo));
     this.emotes = this.emotes.filter((e) => now - e.at < 2.6);
     R.drawEmotes(ctx, this.emotes, now);
-    ctx.restore();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fx.drawFlash(ctx, cw, ch);
 
     this.hud.draw(ctx, now, dt);
 

@@ -751,6 +751,8 @@ body[data-screen='s-game'] #toasts { left: var(--toast-x, 50%); top: var(--toast
 
 /* ───── Spiel ───── */
 #game-canvas { position: absolute; inset: 0; display: block; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+/* Statische Arena-Ebene unter dem Spiel-Canvas: wird nur bei Größenänderung neu gezeichnet (spart den Vollbild-Blit pro Frame) */
+#bg-canvas { position: absolute; inset: 0; display: block; pointer-events: none; will-change: transform; }
 .game-ui { position: absolute; top: max(6px, var(--safe-t)); left: max(6px, var(--safe-l)); z-index: var(--z-hud); }
 .game-menu-btn { width: 44px; height: 44px; font-size: 20px; }
 

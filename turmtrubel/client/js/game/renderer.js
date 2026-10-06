@@ -10,6 +10,19 @@ const TAU = Math.PI * 2;
 // Rollende Zauber (Baumstamm, Barbarenfass) und im Bogen fliegende Geschosse
 const ROLLING = new Set(['roll', 'log', 'barrelRoll']);
 const ARC_KINDS = new Set(['boulder', 'bomb', 'dynamite', 'rocket']);
+const EVO_SPARK = { count: 1, scaleCount: false, shape: 'star', colors: ['team', '#ffffff'], spread: 0.35, up: [0.6, 1.3], drag: 0.3, life: [0.5, 0.8], size: [0.18, 0.26], sizeEnd: 0.03, alpha: [1, 0], blend: 'add', prio: 0 };
+const FUSE_SPARK = { count: 1, scaleCount: false, shape: 'dot', colors: ['#ffcf3d', '#fff3b0'], speed: [0.3, 1], up: [0.3, 1], life: [0.15, 0.3], size: [0.12, 0.18], sizeEnd: 0.02, alpha: [1, 0], blend: 'add', prio: 0 };
+
+/** Flughöhe eines Projektils in Feldern (Bogenflug für Mörser, Bomben, Raketen …). */
+export function projZ(p) {
+  if (ARC_KINDS.has(p.kind)) {
+    const total = Math.hypot(p.tx - p.sx, p.ty - p.sy) || 1;
+    const k = 1 - Math.hypot(p.tx - p.x, p.ty - p.y) / total;
+    return 0.3 + Math.sin(Math.max(0, Math.min(1, k)) * Math.PI) * Math.min(6, total * 0.5);
+  }
+  if (p.kind === 'roll') return 0.35;
+  return p.fromAir ? 1.1 : 0.6;
+}
 
 /** Abbildung Welt (kanonisch) ↔ Bildschirm. Spieler 1 sieht gedreht; "rotated" = Querformat-Ansicht. */
 export class View {
@@ -66,7 +79,9 @@ function hash(i) {
 export class Renderer {
   constructor(game) {
     this.game = game;
-    this.bg = document.createElement('canvas');
+    // Sichtbare Hintergrund-Ebene (#bg-canvas) unter dem Spiel-Canvas; Fallback: Offscreen-Canvas
+    this.bgLayer = typeof document !== 'undefined' ? document.getElementById('bg-canvas') : null;
+    this.bg = this.bgLayer || document.createElement('canvas');
     this.overlay = document.createElement('canvas');
     this.overlayKey = '';
     this.bgKey = '';
@@ -81,6 +96,10 @@ export class Renderer {
     const bg = this.bg;
     bg.width = Math.round(cw * dpr);
     bg.height = Math.round(ch * dpr);
+    if (this.bgLayer) {
+      bg.style.width = cw + 'px';
+      bg.style.height = ch + 'px';
+    }
     const c = bg.getContext('2d');
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     const s = view.s;
@@ -512,7 +531,7 @@ export class Renderer {
       if (alive) continue;
       const size = towerRules?.[slot.key]?.size ?? (slot.key === 'king' ? 4 : 3);
       const [x, y] = view.toScreen(slot.x, slot.y);
-      drawTower(ctx, { x, y, U: (size / 2) * view.s, destroyed: true, team: slot.side === this.game.side ? 'blue' : 'red' });
+      drawTower(ctx, { x, y, U: (size / 2) * view.s, destroyed: true, team: slot.side === this.game.side ? 'blue' : 'red', dpr: this.game.dpr });
     }
   }
 
@@ -552,6 +571,10 @@ export class Renderer {
     for (const v of air) this.drawOne(ctx, v, t, quality);
     for (const v of ground) this.drawStatus(ctx, v, t);
     for (const v of air) this.drawStatus(ctx, v, t);
+  }
+
+  /** LP-Balken und Abzeichen – nach den Effekten gezeichnet, damit sie lesbar bleiben. */
+  drawBars(ctx, list) {
     for (const v of list) this.drawBar(ctx, v);
   }
 
@@ -566,7 +589,20 @@ export class Renderer {
       aim = Math.atan2(ty - v.sy, v.targetV.sx - v.sx);
     }
     if (v.kind === 'tower') {
-      drawTower(ctx, { x: v.sx, y: v.sy, U: v.half * s, t, king: v.king, active: !!(f & EF.ACTIVE), team, hurt: v.hurt, atk: v.atk, aim, quality });
+      // Schadenstufe aus den LP (≤ 66 % / ≤ 33 %), eigene Turmfiguren von hinten (nur hochkant)
+      const stage = Math.max(v.stage || 0, v.hp <= v.maxHp * 0.33 ? 2 : v.hp <= v.maxHp * 0.66 ? 1 : 0);
+      const back = v.owner === this.game.side && view.mode !== 'rotated';
+      const active = !!(f & EF.ACTIVE);
+      const top = drawTower(ctx, { x: v.sx, y: v.sy, U: v.half * s, t, king: v.king, active, team, hurt: v.hurt, atk: v.atk, aim, quality, dpr: this.game.dpr, stage, back });
+      // Schlafender König: schwebende „z“
+      if (v.king && !active && top) {
+        for (let i = 0; i < 2; i++) {
+          const k = (t * 0.6 + i * 0.5) % 1;
+          ctx.globalAlpha = Math.sin(k * Math.PI) * 0.9;
+          ctext(ctx, 'z', top[0] + s * (0.3 + k * 0.5), top[1] - k * s * 0.9, Math.round(s * (0.42 + i * 0.12)), '#ffffff', 'center', 2.5);
+        }
+        ctx.globalAlpha = 1;
+      }
       return;
     }
     // Unter der Erde (Mineur, Bohrer, Mächtiger Mineur): nur ein wandernder Erdhügel
@@ -626,8 +662,9 @@ export class Renderer {
       ctx.stroke();
       ctx.restore();
     }
-    if (f & EF.CHARGE && quality > 0 && Math.random() < 0.3) this.game.fx.deployDust(v.x, v.y, 0.2);
-    if (v.evo && quality > 1 && Math.random() < 0.06) this.game.fx.sparkle(v.x, v.y, v.flying ? 1.1 : 0.4, v.look.accent || '#d7b5ff');
+    if (f & EF.CHARGE && quality > 0 && Math.random() < 0.3) this.game.fx.emit('unit.dash', { x: v.x, y: v.y });
+    // Evo-Partikelhülle: einzelne Funken in der Akzentfarbe steigen auf
+    if (v.evo && quality > 0 && Math.random() < 0.12) this.game.fx.burst(EVO_SPARK, { x: v.x, y: v.y, z: v.flying ? 1.1 : 0.2, k: 1, teamColor: v.look.accent || '#d7b5ff' });
   }
 
   drawStatus(ctx, v, t) {
@@ -744,79 +781,173 @@ export class Renderer {
     }
   }
 
+  /** Goldenes Kronen-Schild (Turm-Abzeichen), gecacht je Pixelhöhe. */
+  crownBadge(h, dpr) {
+    const key = Math.round(h * dpr);
+    this.badges ||= new Map();
+    let cv = this.badges.get('c' + key);
+    if (cv) return cv;
+    const H = key;
+    const W = Math.round(H * 0.92);
+    cv = document.createElement('canvas');
+    cv.width = W + 4;
+    cv.height = H + 4;
+    const c = cv.getContext('2d');
+    c.translate(2, 2);
+    const path = () => {
+      c.beginPath();
+      c.moveTo(W * 0.06, H * 0.22);
+      c.lineTo(W * 0.27, H * 0.04);
+      c.lineTo(W * 0.4, H * 0.2);
+      c.lineTo(W * 0.5, H * 0.02);
+      c.lineTo(W * 0.6, H * 0.2);
+      c.lineTo(W * 0.73, H * 0.04);
+      c.lineTo(W * 0.94, H * 0.22);
+      c.lineTo(W * 0.94, H * 0.64);
+      c.quadraticCurveTo(W * 0.9, H * 0.9, W * 0.5, H * 0.98);
+      c.quadraticCurveTo(W * 0.1, H * 0.9, W * 0.06, H * 0.64);
+      c.closePath();
+    };
+    path();
+    const g = c.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, '#fff3a0');
+    g.addColorStop(0.45, '#ffcf33');
+    g.addColorStop(1, '#c8860e');
+    c.fillStyle = g;
+    c.fill();
+    c.lineWidth = Math.max(1.5, H * 0.08);
+    c.strokeStyle = OUTLINE;
+    c.lineJoin = 'round';
+    c.stroke();
+    c.fillStyle = 'rgba(255,255,255,0.5)';
+    c.beginPath();
+    c.ellipse(W * 0.36, H * 0.42, W * 0.14, H * 0.1, -0.5, 0, TAU);
+    c.fill();
+    this.badges.set('c' + key, cv);
+    return cv;
+  }
+
+  /** Level-Abzeichen einer Einheit: abgerundetes Quadrat in Teamfarbe (Farbenblind: Gegner als Schild). */
+  unitBadge(team, label, h, dpr, ring, shield) {
+    const key = [team, label, Math.round(h * dpr), ring || '', shield ? 1 : 0].join('|');
+    this.badges ||= new Map();
+    let cv = this.badges.get(key);
+    if (cv) return cv;
+    const H = Math.round(h * dpr);
+    cv = document.createElement('canvas');
+    cv.width = H + 4;
+    cv.height = H + 4;
+    const c = cv.getContext('2d');
+    c.translate(2, 2);
+    const T = team === 'red' ? TEAM.red : TEAM.blue;
+    c.beginPath();
+    if (shield) {
+      c.moveTo(H * 0.08, H * 0.08);
+      c.lineTo(H * 0.92, H * 0.08);
+      c.lineTo(H * 0.92, H * 0.55);
+      c.quadraticCurveTo(H * 0.88, H * 0.85, H * 0.5, H * 0.98);
+      c.quadraticCurveTo(H * 0.12, H * 0.85, H * 0.08, H * 0.55);
+      c.closePath();
+    } else c.roundRect ? c.roundRect(H * 0.06, H * 0.06, H * 0.88, H * 0.88, H * 0.22) : c.rect(H * 0.06, H * 0.06, H * 0.88, H * 0.88);
+    const g = c.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, T.light);
+    g.addColorStop(0.5, T.main);
+    g.addColorStop(1, T.dark);
+    c.fillStyle = g;
+    c.fill();
+    c.lineWidth = Math.max(1.5, H * 0.12);
+    c.strokeStyle = ring || '#ffffff';
+    c.stroke();
+    c.lineWidth = Math.max(1, H * 0.05);
+    c.strokeStyle = OUTLINE;
+    c.stroke();
+    const fs = Math.round(H * 0.62);
+    c.font = `${fs}px ${FONT}`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.lineJoin = 'round';
+    c.lineWidth = Math.max(2, fs * 0.22);
+    c.strokeStyle = OUTLINE;
+    c.strokeText(label, H / 2, H * 0.53);
+    c.fillStyle = '#ffffff';
+    c.fillText(label, H / 2, H * 0.53);
+    this.badges.set(key, cv);
+    return cv;
+  }
+
   drawBar(ctx, v) {
     const s = this.game.view.s;
+    const dpr = this.game.dpr;
     const damaged = v.hp < v.maxHp - 0.5;
     const special = v.cls === 'champion' || v.cls === 'hero';
-    // Einheiten: nur wenn beschädigt (Champions/Helden/Evos behalten ihren Stern)
-    if (v.kind === 'unit' && !damaged && !special && !v.evo) return;
     const mine = v.owner === this.game.side;
     const team = mine ? TEAM.blue : TEAM.red;
-    let w;
-    let h;
-    let y;
-    if (v.kind === 'tower') {
-      // Turm-LP als kontrastreiche Pill mit tabellarischer Zahl (≥ 12 px)
-      h = Math.max(16, s * 0.52);
-      w = Math.max(h * 3.4, v.half * s * 1.6);
-      y = v.sy + v.half * s * 1.02;
-    } else if (v.kind === 'building') {
-      w = Math.max(28, v.half * s * 1.4);
-      h = Math.max(6, s * 0.24);
-      y = v.sy - v.half * s * 1.9 - h;
-    } else {
-      w = Math.max(28, Math.min(60, v.U * 1.7));
-      h = Math.max(6, s * 0.22);
-      y = v.sy - (v.flying ? s * 1.1 : 0) - v.U * 1.9 - h;
-    }
-    const x = v.sx - w / 2;
     const k = Math.max(0, Math.min(1, v.hpDisp / v.maxHp));
     const kt = Math.max(k, Math.min(1, (v.trail ?? v.hp) / v.maxHp));
-    const r = h / 2;
-    ctx.fillStyle = '#1a1433';
+    if (v.kind === 'tower') {
+      // Turm: Kronen-Schild + Balken mit Glanzband, Zahl im Balken (immer sichtbar)
+      const h = Math.max(15, s * 0.5);
+      const w = Math.max(h * 4.2, v.half * s * 1.75);
+      const x = v.sx - w / 2 + h * 0.35;
+      const y = v.sy + v.half * s * 1.0;
+      this.barBody(ctx, x, y, w, h, k, kt, team, v.hurt);
+      tnum(ctx, String(Math.ceil(v.hp)), x + w / 2 + h * 0.1, y + h / 2 + 1, Math.max(12, h * 0.82), mine ? '#e3f0ff' : '#ffe3e5', 'center', 3);
+      const cb = this.crownBadge(h * 1.5, dpr);
+      ctx.drawImage(cb, x - h * 0.95, y + h / 2 - (h * 1.5) / 2 - 2 / dpr, cb.width / dpr, cb.height / dpr);
+      return;
+    }
+    // Einheiten und Gebäude: Abzeichen + Balken nur bei Schaden (Champion/Held/Evo behalten ihr Abzeichen)
+    if (!damaged && !special && !v.evo) return;
+    const h = Math.max(5, s * 0.2);
+    const bh = Math.max(13, s * 0.46);
+    const w = Math.max(24, Math.min(54, (v.kind === 'building' ? v.half * s * 1.3 : v.U * 1.6)));
+    const top = v.kind === 'building' ? v.sy - v.half * s * 1.9 : v.sy - (v.flying ? s * 1.1 : 0) - v.U * 1.95;
+    const x = v.sx - w / 2 + bh * 0.3;
+    const y = top - h;
+    if (damaged) this.barBody(ctx, x, y, w, h, k, kt, team, v.hurt);
+    // Schwärme (kleine Einheiten) nur mit Balken – Abzeichen nur für größere Einheiten und Sonderkarten
+    if (v.kind === 'unit' && v.radius < 0.42 && !special && !v.evo) return;
+    const ring = v.evo ? '#e8b8ff' : v.cls === 'hero' ? '#ffc2b0' : v.cls === 'champion' ? '#fff3a0' : null;
+    const label = String(this.game.rules.cardLevel || 11);
+    const cb = this.unitBadge(mine ? 'blue' : 'red', label, bh, dpr, ring, !mine && this.game.app.settings.colorblind);
+    ctx.drawImage(cb, x - bh * 0.7, y + h / 2 - bh / 2 - 2 / dpr, cb.width / dpr, cb.height / dpr);
+    if (v.shield > 0) {
+      ctx.fillStyle = '#e8eef4';
+      ctx.fillRect(x + 2, y - 3, (w - 4) * Math.min(1, v.shield / (v.maxShield || v.shield)), 3);
+    }
+  }
+
+  /** Balkenkörper: dunkler Track, weißer Nachzieher, Teamfarbe mit Glanzband, Kontur, Treffer-Aufhellung. */
+  barBody(ctx, x, y, w, h, k, kt, team, hurt) {
+    const r = Math.min(h / 2, 6);
+    ctx.fillStyle = '#111842';
     rrect(ctx, x, y, w, h, r);
     ctx.fill();
-    const iw = w - 4;
-    const ih = h - 4;
-    // Nachlauf-Segment (verlorene LP laufen sanft ab)
+    const ih = h - 3;
+    const iw = w - 3;
     if (kt > k) {
-      ctx.fillStyle = '#fff1c2';
-      rrect(ctx, x + 2, y + 2, Math.max(ih, iw * kt), ih, ih / 2);
+      ctx.fillStyle = '#ffffff';
+      rrect(ctx, x + 1.5, y + 1.5, Math.max(ih * 0.6, iw * kt), ih, Math.min(ih / 2, 5));
       ctx.fill();
     }
     if (k > 0) {
       ctx.fillStyle = team.main;
-      rrect(ctx, x + 2, y + 2, Math.max(ih, iw * k), ih, ih / 2);
+      rrect(ctx, x + 1.5, y + 1.5, Math.max(ih * 0.6, iw * k), ih, Math.min(ih / 2, 5));
       ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      ctx.fillRect(x + 2 + ih / 2, y + 2.5, Math.max(0, iw * k - ih), Math.max(1, ih * 0.25));
+      ctx.fillStyle = team.light;
+      ctx.globalAlpha = 0.6;
+      ctx.fillRect(x + 1.5 + r * 0.5, y + 1.5, Math.max(0, iw * k - r), Math.max(1, ih * 0.32));
+      ctx.globalAlpha = 1;
     }
-    // Treffer-Flash
-    if (v.hurt > 0) {
-      ctx.fillStyle = `rgba(255,255,255,${0.55 * v.hurt})`;
+    if (hurt > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${0.5 * hurt})`;
       rrect(ctx, x, y, w, h, r);
       ctx.fill();
     }
-    if (v.shield > 0) {
-      ctx.fillStyle = '#e8eef4';
-      ctx.fillRect(x + 2, y - 3, iw * Math.min(1, v.shield / (v.maxShield || v.shield)), 3);
-    }
-    ctx.lineWidth = 2;
+    ctx.lineWidth = Math.max(1.5, h * 0.12);
     ctx.strokeStyle = OUTLINE;
     rrect(ctx, x, y, w, h, r);
     ctx.stroke();
-    if (v.kind === 'tower') {
-      tnum(ctx, String(Math.ceil(v.hp)), v.sx, y + h / 2 + 1, Math.max(12, h * 0.8), '#ffffff', 'center', 3);
-    } else if (special || v.evo) {
-      const cx = x - h * 0.3;
-      const cy = y + h / 2;
-      ctx.fillStyle = v.evo ? '#b98cff' : v.cls === 'hero' ? '#ff7a5c' : '#ffd84d';
-      ctx.strokeStyle = OUTLINE;
-      ctx.lineWidth = 1.5;
-      starPath(ctx, cx, cy, Math.max(6, h * 1.1));
-      ctx.fill();
-      ctx.stroke();
-    }
   }
 
   // ───────────── Projektile ─────────────
@@ -825,12 +956,7 @@ export class Renderer {
     const s = view.s;
     for (const p of list) {
       const [x, y0] = view.toScreen(p.x, p.y);
-      let z = p.kind === 'roll' ? 0.35 : 0.6;
-      if (ARC_KINDS.has(p.kind)) {
-        const total = Math.hypot(p.tx - p.sx, p.ty - p.sy) || 1;
-        const k = 1 - Math.hypot(p.tx - p.x, p.ty - p.y) / total;
-        z = 0.3 + Math.sin(Math.max(0, Math.min(1, k)) * Math.PI) * Math.min(6, total * 0.5);
-      } else if (p.fromAir) z = 1.1;
+      const z = projZ(p);
       const y = y0 - z * s;
       const [tx, ty] = view.toScreen(p.tx, p.ty);
       const ang = Math.atan2(ty - y0, tx - x);
@@ -977,7 +1103,7 @@ export class Renderer {
           ctx.beginPath();
           ctx.arc(x, y, s * 0.1, 0, TAU);
           ctx.fill();
-          if (Math.random() < 0.5) this.game.fx.add({ x: p.x, y: p.y, z: z, life: 0.3, size: 0.08, color: '#ffcf3d', g: 0, drag: 1 });
+          if (Math.random() < 0.5) this.game.fx.burst(FUSE_SPARK, { x: p.x, y: p.y, z, k: 1 });
           break;
         }
         case 'magic':
