@@ -1447,3 +1447,46 @@ body.card-dragging, body.card-dragging * { cursor: grabbing !important; user-sel
 @media (hover: hover) and (pointer: fine) {
   #deck-slots .card:not(.empty), #card-grid .card { cursor: grab; }
 }
+
+/* ───── Kartendetail: Reiter (Werte · Evo · Fähigkeit) und Evo-Vorschau ───── */
+.tab-block { margin-top: 12px; }
+.tabs { display: flex; gap: 4px; align-items: flex-end; padding: 0 6px; border-bottom: 3px solid var(--ink-900); }
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  padding: 6px 14px 4px;
+  font-family: var(--font-head);
+  font-size: 16px;
+  color: var(--muted-night);
+  background: var(--night-700);
+  border: 3px solid var(--ink-900);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  box-shadow: inset 0 -3px 0 var(--night-800);
+  transform: translateY(3px);
+  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast);
+}
+.tab svg.i { width: 18px; height: 18px; }
+.tab.on {
+  color: #fff;
+  background: linear-gradient(#5d7ae0, var(--night-500));
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.4);
+  transform: none;
+  -webkit-text-stroke: 3px var(--ink-900);
+  paint-order: stroke fill;
+}
+.tab-panel { padding-top: 6px; animation: tab-in var(--dur-base) var(--ease-out); }
+.tab-panel > .box { margin-top: 6px; }
+.tab-panel > .stats-table { margin-top: 0; }
+@keyframes tab-in { from { opacity: 0; transform: translateY(6px); } }
+.evo-compare { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 2px 0 10px; }
+.evo-compare .card { width: 92px; cursor: default; }
+.evo-compare .card.evo { animation: evo-glow 1.8s ease-in-out infinite; }
+.evo-arrow svg.i { width: 30px; height: 30px; }
+@keyframes evo-glow { 50% { box-shadow: 0 4px 0 var(--ink-900), 0 0 26px rgb(220 140 255 / 0.95); } }
+@media (max-width: 600px) {
+  .evo-compare .card { width: 78px; }
+  .tab { padding: 6px 10px 4px; font-size: 15px; }
+}

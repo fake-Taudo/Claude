@@ -202,62 +202,112 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
       }),
     ),
   );
+  const head = h(
+    'div',
+    { class: 'card-detail' },
+    cardEl(db, id, { evo }),
+    h(
+      'div',
+      {},
+      h(
+        'div',
+        { class: 'detail-tags' },
+        h('span', { class: `tag r-${card.rarity}` }, rarity),
+        h('span', { class: `tag ${card.class !== 'normal' ? card.class : ''}` }, kindLabel),
+        h('span', { class: 'tag' }, card.elixirRule === 'mirror' ? 'Elixier: letzte Karte + 1' : `${card.elixir} Elixier`),
+        card.evo ? h('span', { class: 'tag evo' }, 'Evo verfügbar') : null,
+      ),
+      h('p', { class: 'detail-desc' }, card.description),
+    ),
+  );
+  // Evo-Vorschau: normale Karte → entwickelte Karte, darunter Zyklus und Beschreibung
+  const evoPanel = card.evo
+    ? h(
+        'div',
+        { class: `box evo${evoState ? ' ' + evoState : ''}` },
+        h('div', { class: 'evo-compare', 'aria-hidden': 'true' }, cardEl(db, id, { hideName: true }), h('span', { class: 'evo-arrow' }, icon('arrow-right')), cardEl(db, id, { evo: true, hideName: true })),
+        h(
+          'div',
+          { class: 'evo-head' },
+          h('h4', {}, card.evo.name || 'Evo'),
+          evoState ? h('span', { class: `evo-state ${evoState}` }, evoState === 'active' ? [icon('check'), 'Aktiv im Evo-Platz'] : 'Inaktiv – nur in Platz 1 oder 2') : null,
+        ),
+        h('p', {}, card.evo.description),
+        h(
+          'div',
+          { class: 'evo-cycle' },
+          h(
+            'span',
+            { class: 'pips', 'aria-hidden': 'true' },
+            Array.from({ length: card.evo.cycles }, () => h('i', { class: 'pip' })),
+            h('span', { class: 'arrow' }, icon('arrow-right')),
+            h('b', { class: 'pip evo' }, 'EVO'),
+          ),
+          h('span', {}, `Nach ${card.evo.cycles}× Ausspielen ist die nächste Karte entwickelt.`),
+        ),
+      )
+    : null;
+  const abilityPanel = card.ability
+    ? h(
+        'div',
+        { class: 'box ability' },
+        h('h4', {}, `${card.class === 'champion' ? 'Champion-Fähigkeit' : 'Helden-Fähigkeit'}: ${card.ability.name}`),
+        h('p', {}, card.ability.description),
+        h('p', { class: 'hint small', style: { marginTop: '4px' } }, abilityHint(db, card)),
+      )
+    : null;
+  // Tabs: Werte | Evo | Fähigkeit (nur wenn es mehr als einen Reiter gibt)
+  const tabs = [['stats', 'Werte', table]];
+  if (evoPanel) tabs.push(['evo', 'Evo', evoPanel]);
+  if (abilityPanel) tabs.push(['ability', 'Fähigkeit', abilityPanel]);
+  let tabBlock = table;
+  if (tabs.length > 1) {
+    const uid = Math.random().toString(36).slice(2, 7);
+    const bar = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Kartendetails' });
+    const panels = [];
+    const select = (k, focus) => {
+      for (const b of bar.children) {
+        const on = b.dataset.k === k;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
+        if (on && focus) b.focus();
+      }
+      for (const pnl of panels) pnl.hidden = pnl.dataset.k !== k;
+    };
+    tabs.forEach(([k, label, content], i) => {
+      bar.append(
+        h(
+          'button',
+          {
+            class: 'tab',
+            role: 'tab',
+            id: `tab-${uid}-${k}`,
+            'aria-controls': `tp-${uid}-${k}`,
+            dataset: { k },
+            onclick: () => select(k),
+            onkeydown: (e) => {
+              const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+              if (!d) return;
+              e.preventDefault();
+              select(tabs[(i + d + tabs.length) % tabs.length][0], true);
+            },
+          },
+          k === 'evo' ? icon('sparkles') : k === 'ability' ? icon('bolt') : icon('swords'),
+          label,
+        ),
+      );
+      panels.push(h('div', { class: 'tab-panel', role: 'tabpanel', id: `tp-${uid}-${k}`, 'aria-labelledby': `tab-${uid}-${k}`, dataset: { k } }, content));
+    });
+    tabBlock = h('div', { class: 'tab-block' }, bar, panels);
+    // Evo-Karte im Evo-Platz → direkt den Evo-Reiter zeigen
+    select(evo && evoPanel ? 'evo' : 'stats');
+  }
   const body = h(
     'div',
     {},
-    h(
-      'div',
-      { class: 'card-detail' },
-      cardEl(db, id, { evo }),
-      h(
-        'div',
-        {},
-        h(
-          'div',
-          { class: 'detail-tags' },
-          h('span', { class: `tag r-${card.rarity}` }, rarity),
-          h('span', { class: `tag ${card.class !== 'normal' ? card.class : ''}` }, kindLabel),
-          h('span', { class: 'tag' }, card.elixirRule === 'mirror' ? 'Elixier: letzte Karte + 1' : `${card.elixir} Elixier`),
-          card.evo ? h('span', { class: 'tag evo' }, 'Evo verfügbar') : null,
-        ),
-        h('p', { class: 'detail-desc' }, card.description),
-      ),
-    ),
-    table,
-    card.evo
-      ? h(
-          'div',
-          { class: `box evo${evoState ? ' ' + evoState : ''}` },
-          h(
-            'div',
-            { class: 'evo-head' },
-            h('h4', {}, card.evo.name || 'Evo'),
-            evoState ? h('span', { class: `evo-state ${evoState}` }, evoState === 'active' ? [icon('check'), 'Aktiv im Evo-Platz'] : 'Inaktiv – nur in Platz 1 oder 2') : null,
-          ),
-          h('p', {}, card.evo.description),
-          h(
-            'div',
-            { class: 'evo-cycle' },
-            h(
-              'span',
-              { class: 'pips', 'aria-hidden': 'true' },
-              Array.from({ length: card.evo.cycles }, () => h('i', { class: 'pip' })),
-              h('span', { class: 'arrow' }, icon('arrow-right')),
-              h('b', { class: 'pip evo' }, 'EVO'),
-            ),
-            h('span', {}, `Nach ${card.evo.cycles}× Ausspielen ist die nächste Karte entwickelt.`),
-          ),
-        )
-      : null,
-    card.ability
-      ? h(
-          'div',
-          { class: 'box ability' },
-          h('h4', {}, `${card.class === 'champion' ? 'Champion-Fähigkeit' : 'Helden-Fähigkeit'}: ${card.ability.name}`),
-          h('p', {}, card.ability.description),
-          h('p', { class: 'hint small', style: { marginTop: '4px' } }, abilityHint(db, card)),
-        )
-      : null,
+    head,
+    tabBlock,
     actions.length
       ? h(
           'div',
