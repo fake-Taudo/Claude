@@ -8,7 +8,8 @@ import { runScenarios } from '../tools/e2e/run.mjs';
 test('Zwei Test-Clients spielen komplette Kämpfe (alle Mechanik-Gruppen, Champion, Held, Evo)', { timeout: 240000 }, async () => {
   const r = await runScenarios({ timeScale: 8 });
   for (const m of r.results) {
-    assert.ok(['king', 'time', 'suddenDeath', 'draw'].includes(m.result.reason), `${m.name}: ${m.result.reason}`);
+    // Reguläre Enden laut server/sim/match.js (tiebreak: nach der Verlängerung entscheiden die Turm-Lebenspunkte)
+    assert.ok(['king', 'time', 'suddenDeath', 'tiebreak', 'draw'].includes(m.result.reason), `${m.name}: ${m.result.reason}`);
     assert.equal(m.result.reason, m.resultB.reason, 'beide Seiten sehen dasselbe Ergebnis');
     for (const s of m.sides) assert.ok(Object.keys(s.played).length >= 5, `${m.name}/${s.name} hat zu wenig gespielt`);
   }
