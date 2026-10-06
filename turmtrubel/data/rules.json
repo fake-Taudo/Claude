@@ -1,6 +1,8 @@
 {
   "_info": "Spielregeln von Turmtrubel. Alle Zeiten in Sekunden. Änderungen wirken nach einem Server-Neustart.",
   "tickRate": 20,
+  "cardLevel": 11,
+  "_cardLevelInfo": "Einheitliches Level aller Karten für beide Spieler (Turnierstandard = 11). Werte in cards.json gelten für Level 11; jedes Level mehr/weniger ändert Leben und Schaden um 10 %.",
   "regularSeconds": 180,
   "overtimeSeconds": 120,
   "doubleElixirLastSeconds": 60,

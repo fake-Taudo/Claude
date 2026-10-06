@@ -1,555 +1,179 @@
 {
-  "_info": "Kartendatenbank von Turmtrubel. Werte frei editierbar (Server neu starten). Einheiten: Leben/Schaden absolut, Zeiten in s, Reichweiten/Radien in Feldern, Tempo in Feldern/s. targets: ground | air | both | buildings.",
-  "version": 1,
-  "rarities": {
-    "common": { "name": "Gewöhnlich", "color": "#9fb3c8" },
-    "rare": { "name": "Selten", "color": "#f39c3d" },
-    "epic": { "name": "Episch", "color": "#b55cf0" },
-    "legendary": { "name": "Legendär", "color": "#2fd3c6" }
-  },
+  "_info": "Kartendatenbank von Turmtrubel – echte Clash-Royale-Karten (Quelle: Clash Royale Wiki, Snapshot data/source/wiki-cards.json). Werte auf Turnierstandard Level 11, Skalierung über rules.json → cardLevel. Einheiten: Leben/Schaden absolut, Zeiten in s, Reichweiten/Radien in Feldern, Tempo in Feldern/s (Wiki-Tempo ÷ 60). targets: ground | air | both | buildings. Namen, Beschreibungen und Aussehen lassen sich über data/skin.json ersetzen.",
+  "version": 2,
+  "level": 11,
+  "rarities": {"common": {"name": "Gewöhnlich", "color": "#9fb3c8"}, "rare": {"name": "Selten", "color": "#f39c3d"}, "epic": {"name": "Episch", "color": "#b55cf0"}, "legendary": {"name": "Legendär", "color": "#2fd3c6"}, "champion": {"name": "Champion", "color": "#ffc93c"}},
   "cards": [
-    {
-      "id": "knappe", "name": "Knappe", "type": "troop", "rarity": "common", "elixir": 3,
-      "description": "Tapferer Nahkämpfer mit Schwert und Schild. Günstiger Mini-Tank, der fast überall hilft.",
-      "unit": { "hp": 1450, "damage": 165, "hitSpeed": 1.2, "range": 0.8, "speed": 1.0, "targets": "ground", "radius": 0.5, "mass": 6,
-        "look": { "body": "hum", "skin": "#f2c7a5", "cloth": "#8f9fb4", "hat": "helmet", "weapon": "sword", "shield": true } },
-      "evo": { "cycles": 2, "name": "Evo-Knappe", "description": "Erleidet 60 % weniger Schaden, solange er läuft.",
-        "unit": { "hp": 1600, "traits": { "movingArmor": 0.6 }, "look": { "cloth": "#6a4fd8", "accent": "#c3a6ff" } } }
-    },
-    {
-      "id": "zwillingsschuetzen", "name": "Zwillingsschützinnen", "type": "troop", "rarity": "common", "elixir": 3, "count": 2,
-      "description": "Zwei flinke Schützinnen, die Boden- und Luftziele aus sicherer Entfernung beschießen.",
-      "unit": { "hp": 260, "damage": 90, "hitSpeed": 0.9, "range": 5, "speed": 1.0, "targets": "both", "radius": 0.4, "mass": 3,
-        "projectile": { "kind": "arrow", "speed": 14 },
-        "look": { "body": "hum", "skin": "#f5d0b0", "cloth": "#3f9b4f", "hat": "hood", "weapon": "bow" } },
-      "evo": { "cycles": 2, "name": "Evo-Zwillingsschützinnen", "description": "+0,5 Reichweite und 50 % Bonusschaden gegen Ziele, die mehr als 4 Felder entfernt sind.",
-        "unit": { "range": 5.5, "traits": { "longRangeBonus": { "minDist": 4, "mult": 1.5 } }, "look": { "cloth": "#1d8c7a", "accent": "#8ff5e0" } } }
-    },
-    {
-      "id": "knochenwichte", "name": "Knochenwichte", "type": "troop", "rarity": "common", "elixir": 1, "count": 3,
-      "description": "Drei klappernde Winzlinge. Perfekt zum Ablenken und für schnelle Konter.",
-      "unit": { "hp": 80, "damage": 80, "hitSpeed": 1.0, "range": 0.5, "speed": 1.5, "targets": "ground", "radius": 0.3, "mass": 1,
-        "look": { "body": "skel", "weapon": "dagger", "scale": 0.8 } },
-      "evo": { "cycles": 2, "name": "Evo-Knochenwichte", "description": "Jeder Treffer ruft einen weiteren Knochenwicht herbei (max. 2 pro Wicht).",
-        "unit": { "traits": { "onHit": { "spawn": { "unit": "knochenwichte", "count": 1, "max": 2 } } }, "look": { "accent": "#7df0ff" } } }
-    },
-    {
-      "id": "kobolde", "name": "Kobolde", "type": "troop", "rarity": "common", "elixir": 2, "count": 3,
-      "description": "Drei blitzschnelle Kobolde mit spitzen Messern. Viel Schaden, wenig Leben.",
-      "unit": { "hp": 200, "damage": 110, "hitSpeed": 1.1, "range": 0.5, "speed": 2.0, "targets": "ground", "radius": 0.35, "mass": 2,
-        "look": { "body": "imp", "skin": "#7cc36b", "cloth": "#7a4a2a", "weapon": "dagger" } }
-    },
-    {
-      "id": "schleuderwichte", "name": "Schleuderwichte", "type": "troop", "rarity": "common", "elixir": 2, "count": 3,
-      "description": "Drei Wichte mit Steinschleudern. Günstige Fernkampf-Unterstützung gegen Boden und Luft.",
-      "unit": { "hp": 120, "damage": 70, "hitSpeed": 1.3, "range": 5, "speed": 2.0, "targets": "both", "radius": 0.35, "mass": 2,
-        "projectile": { "kind": "rock", "speed": 12 },
-        "look": { "body": "imp", "skin": "#96d67f", "cloth": "#3a6ea5", "weapon": "sling" } }
-    },
-    {
-      "id": "flattermotten", "name": "Flattermotten", "type": "troop", "rarity": "common", "elixir": 2, "count": 5,
-      "description": "Ein Schwarm flinker Motten, der Boden- und Luftziele umflattert.",
-      "unit": { "hp": 80, "damage": 80, "hitSpeed": 1.1, "range": 0.8, "speed": 2.0, "flying": true, "targets": "both", "radius": 0.3, "mass": 1,
-        "look": { "body": "moth", "cloth": "#8e6cc4", "accent": "#f1e08a", "scale": 1.05 } },
-      "evo": { "cycles": 2, "name": "Evo-Flattermotten", "description": "Heilen sich um 100 % des verursachten Schadens.",
-        "unit": { "hp": 100, "traits": { "onHit": { "lifesteal": 1.0 } }, "look": { "cloth": "#d0487a", "accent": "#ffd1f0" } } }
-    },
-    {
-      "id": "rabauken", "name": "Rabauken", "type": "troop", "rarity": "common", "elixir": 5, "count": 4,
-      "description": "Vier raubeinige Raufbolde. Umzingeln Tanks und räumen die Lane frei.",
-      "unit": { "hp": 700, "damage": 170, "hitSpeed": 1.4, "range": 0.7, "speed": 1.0, "targets": "ground", "radius": 0.5, "mass": 5,
-        "look": { "body": "hum", "skin": "#e8b48c", "cloth": "#b5552f", "hat": "horns", "weapon": "club", "beard": "#c9772b" } },
-      "evo": { "cycles": 1, "name": "Evo-Rabauken", "description": "+10 % Leben. Jeder Treffer versetzt in Rage (+35 % Tempo für 3 s).",
-        "unit": { "hp": 770, "traits": { "rageOnHit": { "mult": 1.35, "duration": 3 } }, "look": { "cloth": "#7b2fb5", "beard": "#ff8a3d" } } }
-    },
-    {
-      "id": "boellerbube", "name": "Böllerbube", "type": "troop", "rarity": "common", "elixir": 2,
-      "description": "Wirft zischende Böller auf Bodentruppen. Stark gegen Schwärme.",
-      "unit": { "hp": 330, "damage": 200, "hitSpeed": 1.8, "range": 4.5, "speed": 1.0, "targets": "ground", "splash": 1.5, "radius": 0.4, "mass": 3,
-        "projectile": { "kind": "bomb", "speed": 8 },
-        "look": { "body": "hum", "skin": "#f0c08f", "cloth": "#444a6b", "hat": "bandana", "weapon": "bomb" } }
-    },
-    {
-      "id": "frostfunke", "name": "Frostfunke", "type": "troop", "rarity": "common", "elixir": 1,
-      "description": "Springt auf Gegner, friert sie 1,2 s lang ein und vergeht dabei.",
-      "unit": { "hp": 200, "damage": 90, "hitSpeed": 0.5, "firstHit": 0.1, "range": 2.5, "speed": 2.0, "targets": "both", "splash": 1.5, "radius": 0.35, "mass": 1,
-        "traits": { "kamikaze": true, "onHit": { "stun": 1.2 } },
-        "look": { "body": "spirit", "cloth": "#9fe3ff", "accent": "#ffffff" } },
-      "evo": { "cycles": 2, "name": "Evo-Frostfunke", "description": "1,5 s nach dem Aufprall folgt ein zweiter Frostimpuls (Radius 2,5).",
-        "unit": { "traits": { "deathSpell": { "delay": 1.5, "radius": 2.5, "damage": 60, "stun": 1.0, "towerDamage": 0.5, "fx": "frost" } }, "look": { "cloth": "#6fb7ff", "accent": "#e4f4ff" } } }
-    },
-    {
-      "id": "glutfunke", "name": "Glutfunke", "type": "troop", "rarity": "common", "elixir": 1,
-      "description": "Ein hitzköpfiges Flämmchen, das sich auf Gegner stürzt und in einer Feuerwolke vergeht.",
-      "unit": { "hp": 200, "damage": 210, "hitSpeed": 0.5, "firstHit": 0.1, "range": 2.5, "speed": 2.0, "targets": "both", "splash": 2, "radius": 0.35, "mass": 1,
-        "traits": { "kamikaze": true },
-        "look": { "body": "spirit", "cloth": "#ff8a3d", "accent": "#ffe066" } }
-    },
-    {
-      "id": "flugwichtel", "name": "Flugwichtel", "type": "troop", "rarity": "common", "elixir": 3, "count": 3,
-      "description": "Drei geflügelte Wichtel, die aus der Luft angreifen.",
-      "unit": { "hp": 230, "damage": 100, "hitSpeed": 1.0, "range": 1.6, "speed": 1.5, "flying": true, "targets": "both", "radius": 0.4, "mass": 2,
-        "projectile": { "kind": "spit", "speed": 10 },
-        "look": { "body": "winged", "skin": "#5d7fd6", "accent": "#c9d6ff" } }
-    },
-    {
-      "id": "pulverzwerge", "name": "Pulverzwerge", "type": "troop", "rarity": "common", "elixir": 2, "count": 2,
-      "description": "Zwei Zwerge mit Pulverfässern, die auf Gebäude zustürmen und explodieren.",
-      "unit": { "hp": 300, "damage": 320, "hitSpeed": 0.5, "firstHit": 0.1, "range": 0.5, "speed": 2.0, "targets": "buildings", "splash": 1.5, "radius": 0.4, "mass": 3,
-        "traits": { "kamikaze": true },
-        "look": { "body": "hum", "skin": "#f0c090", "cloth": "#7b5a3a", "hat": "cap", "weapon": "bomb", "beard": "#8a5a2a", "scale": 0.85 } },
-      "evo": { "cycles": 2, "name": "Evo-Pulverzwerge", "description": "Nach der Explosion rollt ein Pulverfässchen weiter zum nächsten Gebäude.",
-        "unit": { "traits": { "deathSpawn": { "unit": "pulverfass", "count": 1 } }, "look": { "cloth": "#5a3fa0" } } }
-    },
-    {
-      "id": "funkenwerferin", "name": "Funkenwerferin", "type": "troop", "rarity": "common", "elixir": 3,
-      "description": "Schießt Funkenraketen über große Distanz. Trifft Boden- und Luftgruppen.",
-      "unit": { "hp": 260, "damage": 120, "hitSpeed": 2.5, "range": 6, "speed": 1.5, "targets": "both", "splash": 1.5, "radius": 0.4, "mass": 3,
-        "projectile": { "kind": "firework", "speed": 10 },
-        "look": { "body": "hum", "skin": "#f7cda7", "cloth": "#d8425a", "hat": "ponytail", "weapon": "launcher" } },
-      "evo": { "cycles": 2, "name": "Evo-Funkenwerferin", "description": "Ihre Raketen hinterlassen brennenden Boden (50 Schaden/s, 3 s).",
-        "unit": { "traits": { "onHit": { "burn": { "dps": 50, "radius": 1.2, "duration": 3 } } }, "look": { "cloth": "#8a2be2", "accent": "#ffb3ff" } } }
-    },
-    {
-      "id": "knochenlegion", "name": "Knochenlegion", "type": "troop", "rarity": "epic", "elixir": 3, "count": 15, "unit": "knochenwichte",
-      "description": "Eine ganze Armee aus 15 Knochenwichten. Zerlegt Tanks in Sekunden – aber Vorsicht vor Flächenschaden!"
-    },
-    {
-      "id": "armbrustmaid", "name": "Armbrustmaid", "type": "troop", "rarity": "rare", "elixir": 4,
-      "description": "Präzise Schützin mit schwerer Armbrust. Zuverlässiger Schaden gegen Boden und Luft.",
-      "unit": { "hp": 720, "damage": 210, "hitSpeed": 1.1, "range": 6, "speed": 1.0, "targets": "both", "radius": 0.45, "mass": 4,
-        "projectile": { "kind": "bolt", "speed": 16 },
-        "look": { "body": "hum", "skin": "#f2c9a6", "cloth": "#2f6db5", "hat": "plume", "weapon": "crossbow" } }
-    },
-    {
-      "id": "schnetzelbot", "name": "Schnetzelbot", "type": "troop", "rarity": "rare", "elixir": 4,
-      "description": "Ein Blechkerl mit rotierenden Klingen. Enormer Einzelschaden gegen Bodenziele.",
-      "unit": { "hp": 1100, "damage": 600, "hitSpeed": 1.6, "range": 0.8, "speed": 1.5, "targets": "ground", "radius": 0.5, "mass": 6,
-        "look": { "body": "bot", "cloth": "#9aa3ad", "accent": "#ff5e3a" } }
-    },
-    {
-      "id": "wirbelschildmaid", "name": "Wirbelschildmaid", "type": "troop", "rarity": "rare", "elixir": 4,
-      "description": "Wirbelt ihre Axt im Kreis und trifft alle Bodengegner um sich herum.",
-      "unit": { "hp": 1650, "damage": 230, "hitSpeed": 1.5, "range": 0.6, "speed": 1.0, "targets": "ground", "splash": 2, "splashSelf": true, "radius": 0.5, "mass": 7,
-        "look": { "body": "hum", "skin": "#f3cfae", "cloth": "#c46a2b", "hat": "braid", "weapon": "axe" } },
-      "evo": { "cycles": 2, "name": "Evo-Wirbelschildmaid", "description": "Jeder Wirbel zieht Gegner im Umkreis von 3 Feldern zu ihr heran.",
-        "unit": { "traits": { "onHit": { "pull": { "radius": 3, "strength": 1.2 } } }, "look": { "cloth": "#5b3fd1", "accent": "#a8f0ff" } } }
-    },
-    {
-      "id": "borstenreiter", "name": "Borstenreiter", "type": "troop", "rarity": "rare", "elixir": 4,
-      "description": "Reitet auf einem wilden Borstentier direkt auf Gebäude zu und springt dabei über den Fluss.",
-      "unit": { "hp": 1450, "damage": 260, "hitSpeed": 1.6, "range": 0.8, "speed": 2.0, "targets": "buildings", "radius": 0.6, "mass": 8,
-        "traits": { "riverJump": true },
-        "look": { "body": "rider", "mount": "boar", "skin": "#e3a97d", "cloth": "#7d4b2a", "hat": "spiky", "weapon": "hammer" } }
-    },
-    {
-      "id": "steinkoloss", "name": "Steinkoloss", "type": "troop", "rarity": "rare", "elixir": 5,
-      "description": "Ein riesiger Brocken, der nur Gebäude angreift. Der klassische Tank für jeden Angriff.",
-      "unit": { "hp": 3900, "damage": 230, "hitSpeed": 1.5, "range": 1.0, "speed": 0.75, "targets": "buildings", "radius": 0.8, "mass": 18,
-        "look": { "body": "brute", "skin": "#d99a6c", "cloth": "#6b4f36", "hat": "bald", "scale": 1.25 } }
-    },
-    {
-      "id": "funkenmagier", "name": "Funkenmagier", "type": "troop", "rarity": "rare", "elixir": 5,
-      "description": "Schleudert Feuerbälle mit Flächenschaden auf Boden- und Luftgegner.",
-      "unit": { "hp": 720, "damage": 270, "hitSpeed": 1.4, "range": 5.5, "speed": 1.0, "targets": "both", "splash": 1.5, "radius": 0.45, "mass": 4,
-        "projectile": { "kind": "fireball", "speed": 10 },
-        "look": { "body": "hum", "skin": "#f2c7a5", "cloth": "#c0392b", "hat": "wizard", "weapon": "staff", "beard": "#eeeeee" } }
-    },
-    {
-      "id": "brummkaefer", "name": "Brummkäfer", "type": "troop", "rarity": "rare", "elixir": 3,
-      "description": "Ein gepanzerter Käfer mit kräftigem Biss. Robuster Flieger mit hohem Einzelschaden.",
-      "unit": { "hp": 700, "damage": 290, "hitSpeed": 1.6, "range": 1.6, "speed": 1.0, "flying": true, "targets": "both", "radius": 0.6, "mass": 6,
-        "look": { "body": "bug", "cloth": "#3d8b5f", "accent": "#b9f28a" } }
-    },
-    {
-      "id": "frostklotz", "name": "Frostklotz", "type": "troop", "rarity": "rare", "elixir": 2,
-      "description": "Ein eisiger Block, der Gebäude ansteuert. Beim Zerbrechen verlangsamt er Gegner in der Nähe.",
-      "unit": { "hp": 1100, "damage": 70, "hitSpeed": 2.5, "range": 0.8, "speed": 0.75, "targets": "buildings", "radius": 0.6, "mass": 10,
-        "traits": { "deathDamage": { "damage": 70, "radius": 2, "slow": { "amount": 0.35, "duration": 1.5 }, "fx": "frost" } },
-        "look": { "body": "golem", "cloth": "#9fdcf5", "accent": "#e8fbff", "scale": 0.85 } }
-    },
-    {
-      "id": "kraeutermoench", "name": "Kräutermönch", "type": "troop", "rarity": "rare", "elixir": 4,
-      "description": "Ein gütiger Mönch, dessen Kräuterlaterne Verbündete in der Nähe laufend heilt (55 Leben/s).",
-      "unit": { "hp": 950, "damage": 110, "hitSpeed": 1.2, "range": 0.8, "speed": 1.0, "targets": "ground", "radius": 0.45, "mass": 5,
-        "traits": { "healAura": { "amount": 55, "radius": 3.5 } },
-        "look": { "body": "hum", "skin": "#eac29b", "cloth": "#7a6a3b", "hat": "monk", "weapon": "lantern" } }
-    },
-    {
-      "id": "sturmbock", "name": "Sturmbock", "type": "troop", "rarity": "rare", "elixir": 4,
-      "description": "Zwei Rabauken rammen einen Baumstamm ins nächste Gebäude – und kämpfen danach weiter.",
-      "unit": { "hp": 900, "damage": 300, "hitSpeed": 0.5, "firstHit": 0.1, "range": 0.6, "speed": 1.0, "targets": "buildings", "radius": 0.6, "mass": 8,
-        "traits": { "kamikaze": true, "charge": { "distance": 2, "speedMult": 2, "damageMult": 2 }, "deathSpawn": { "unit": "rabauken", "count": 2 } },
-        "look": { "body": "cart", "cloth": "#8b5a2b", "accent": "#c9c9c9" } }
-    },
-    {
-      "id": "flammenflatterer", "name": "Flammenflatterer", "type": "troop", "rarity": "epic", "elixir": 4,
-      "description": "Ein kleiner Flugdrache, der Feuer speit. Flächenschaden aus der Luft.",
-      "unit": { "hp": 1000, "damage": 140, "hitSpeed": 1.5, "range": 3.5, "speed": 1.5, "flying": true, "targets": "both", "splash": 1.5, "radius": 0.6, "mass": 6,
-        "projectile": { "kind": "fire", "speed": 10 },
-        "look": { "body": "dragon", "cloth": "#5bbf6a", "accent": "#ffcc4d" } }
-    },
-    {
-      "id": "lanzengraf", "name": "Lanzengraf", "type": "troop", "rarity": "epic", "elixir": 5,
-      "description": "Ein stolzer Ritter hoch zu Ross. Nach kurzem Anlauf stürmt er los und trifft doppelt so hart.",
-      "unit": { "hp": 1650, "damage": 330, "hitSpeed": 1.4, "range": 1.6, "speed": 1.0, "targets": "ground", "radius": 0.6, "mass": 9,
-        "traits": { "charge": { "distance": 2.5, "speedMult": 2, "damageMult": 2 } },
-        "look": { "body": "rider", "mount": "horse", "skin": "#f1c6a0", "cloth": "#d6b440", "hat": "plume", "weapon": "lance" } }
-    },
-    {
-      "id": "knochenruferin", "name": "Knochenruferin", "type": "troop", "rarity": "epic", "elixir": 5,
-      "description": "Beschwört alle 7 Sekunden drei Knochenwichte und greift mit dunkler Magie an.",
-      "unit": { "hp": 750, "damage": 110, "hitSpeed": 1.1, "range": 5, "speed": 1.0, "targets": "both", "splash": 1, "radius": 0.45, "mass": 4,
-        "projectile": { "kind": "magic", "speed": 11 },
-        "traits": { "spawner": { "unit": "knochenwichte", "count": 3, "interval": 7, "firstDelay": 1 } },
-        "look": { "body": "hum", "skin": "#d9c2e8", "cloth": "#5b2d82", "hat": "witch", "weapon": "staff" } }
-    },
-    {
-      "id": "stahlgolem", "name": "Stahlgolem", "type": "troop", "rarity": "epic", "elixir": 7,
-      "description": "Eine wandelnde Festung aus Stahl. Langsam, aber jeder Hieb sitzt.",
-      "unit": { "hp": 3300, "damage": 700, "hitSpeed": 1.8, "range": 1.2, "speed": 0.75, "targets": "ground", "radius": 0.8, "mass": 20,
-        "look": { "body": "bot", "cloth": "#4a5663", "accent": "#54d0ff", "scale": 1.35 } },
-      "evo": { "cycles": 1, "name": "Evo-Stahlgolem", "description": "Heilt sich um 400 Leben, wenn er einen Gegner besiegt.",
-        "unit": { "traits": { "healOnKill": 400 }, "look": { "cloth": "#3b2a6b", "accent": "#ff5cf0" } } }
-    },
-    {
-      "id": "bombenzeppelin", "name": "Bombenzeppelin", "type": "troop", "rarity": "epic", "elixir": 5,
-      "description": "Ein Luftschiff voller Bomben, das direkt auf Gebäude zusteuert. Explodiert beim Absturz.",
-      "unit": { "hp": 1400, "damage": 600, "hitSpeed": 3.0, "firstHit": 0.4, "range": 0.5, "speed": 1.0, "flying": true, "targets": "buildings", "splash": 1.5, "radius": 0.7, "mass": 8,
-        "traits": { "deathDamage": { "damage": 200, "radius": 3, "fx": "fire" } },
-        "look": { "body": "balloon", "cloth": "#c0392b", "accent": "#f4d03f" } }
-    },
-    {
-      "id": "felsgigant", "name": "Felsgigant", "type": "troop", "rarity": "epic", "elixir": 8,
-      "description": "Ein wandelnder Berg. Zerfällt beim Tod in zwei Felsbrocken, die weiterstapfen.",
-      "unit": { "hp": 4600, "damage": 260, "hitSpeed": 2.5, "range": 0.8, "speed": 0.75, "targets": "buildings", "radius": 0.9, "mass": 25,
-        "traits": { "deathDamage": { "damage": 260, "radius": 2, "fx": "rock" }, "deathSpawn": { "unit": "felsbrocken", "count": 2 } },
-        "look": { "body": "golem", "cloth": "#8d8f94", "accent": "#6fd36b", "scale": 1.35 } }
-    },
-    {
-      "id": "glutwal", "name": "Glutwal", "type": "troop", "rarity": "legendary", "elixir": 7,
-      "description": "Ein fliegender Glutwal, der Gebäude ansteuert. Beim Tod platzt er in sechs Glutbläschen.",
-      "unit": { "hp": 3200, "damage": 45, "hitSpeed": 1.3, "range": 2, "speed": 1.0, "flying": true, "targets": "buildings", "radius": 0.9, "mass": 20,
-        "projectile": { "kind": "spit", "speed": 10 },
-        "traits": { "deathSpawn": { "unit": "glutblaeschen", "count": 6 } },
-        "look": { "body": "whale", "cloth": "#c9452c", "accent": "#ffb347", "scale": 1.2 } }
-    },
-    {
-      "id": "blitzhexer", "name": "Blitzhexer", "type": "troop", "rarity": "legendary", "elixir": 4,
-      "description": "Trifft zwei Ziele gleichzeitig mit Blitzen und betäubt sie kurz. Landet mit einem Donnerschlag.",
-      "unit": { "hp": 600, "damage": 190, "hitSpeed": 1.8, "range": 5, "speed": 1.5, "targets": "both", "radius": 0.45, "mass": 4,
-        "projectile": { "kind": "lightning", "speed": 0 },
-        "traits": { "multiTarget": 2, "onHit": { "stun": 0.5 }, "deployBlast": { "damage": 160, "radius": 2.5, "stun": 0.5, "fx": "shock" } },
-        "look": { "body": "hum", "skin": "#f0caa8", "cloth": "#2d7fd1", "hat": "spiky", "weapon": "orb" } }
-    },
-    {
-      "id": "frostmagierin", "name": "Frostmagierin", "type": "troop", "rarity": "legendary", "elixir": 3,
-      "description": "Ihre Eisgeschosse verlangsamen alle getroffenen Gegner um 35 %.",
-      "unit": { "hp": 620, "damage": 80, "hitSpeed": 1.5, "range": 5.5, "speed": 1.0, "targets": "both", "splash": 1.5, "radius": 0.45, "mass": 4,
-        "projectile": { "kind": "ice", "speed": 11 },
-        "traits": { "onHit": { "slow": { "amount": 0.35, "duration": 2.5 } } },
-        "look": { "body": "hum", "skin": "#eef4ff", "cloth": "#7ec8e3", "hat": "hood", "weapon": "staff" } }
-    },
-    {
-      "id": "tunnelgraeber", "name": "Tunnelgräber", "type": "troop", "rarity": "legendary", "elixir": 3,
-      "description": "Gräbt sich unterirdisch überallhin (außer in den Fluss). Verursacht an Kronentürmen nur 35 % Schaden.",
-      "unit": { "hp": 1000, "damage": 160, "hitSpeed": 1.2, "range": 0.8, "speed": 1.5, "targets": "ground", "radius": 0.5, "mass": 6, "towerDamage": 0.35,
-        "traits": { "deployAnywhere": true },
-        "look": { "body": "imp", "skin": "#c9a27a", "cloth": "#6e5a44", "hat": "miner", "weapon": "pick" } }
-    },
-    {
-      "id": "weitschuetzin", "name": "Weitschützin", "type": "troop", "rarity": "legendary", "elixir": 3,
-      "description": "Schießt Brandpfeil-Salven über 9 Felder weit. Ideal gegen Schwärme hinter dem Fluss.",
-      "unit": { "hp": 230, "damage": 140, "hitSpeed": 3, "range": 9, "sight": 9, "speed": 1.0, "targets": "both", "splash": 2, "radius": 0.4, "mass": 3,
-        "projectile": { "kind": "volley", "speed": 12 },
-        "look": { "body": "hum", "skin": "#f6d3b3", "cloth": "#e57fb2", "hat": "tiara", "weapon": "bow" } }
-    },
-    {
-      "id": "donnerbuechse", "name": "Donnerbüchse", "type": "building", "rarity": "common", "elixir": 3,
-      "description": "Eine schwere Kanone, die 30 Sekunden lang Bodentruppen unter Beschuss nimmt.",
-      "unit": { "hp": 820, "damage": 200, "hitSpeed": 0.9, "range": 5.5, "targets": "ground", "size": 2, "lifetime": 30,
-        "projectile": { "kind": "cannonball", "speed": 14 },
-        "look": { "body": "cannon", "cloth": "#6b6f7a", "accent": "#b07a3e" } },
-      "evo": { "cycles": 2, "name": "Evo-Donnerbüchse", "description": "Stößt beim Aufstellen Gegner im Radius 2,5 mit 250 Schaden zurück.",
-        "unit": { "traits": { "deployBlast": { "damage": 250, "radius": 2.5, "knockback": 1.5, "fx": "slam" } }, "look": { "cloth": "#4b3a8a", "accent": "#c3a6ff" } } }
-    },
-    {
-      "id": "wichtelhuette", "name": "Wichtelhütte", "type": "building", "rarity": "rare", "elixir": 5,
-      "description": "Eine windschiefe Hütte, aus der 40 Sekunden lang Schleuderwichte strömen.",
-      "unit": { "hp": 1100, "size": 2.5, "lifetime": 40,
-        "traits": { "spawner": { "unit": "schleuderwichte", "count": 1, "interval": 4.5, "firstDelay": 1 }, "deathSpawn": { "unit": "schleuderwichte", "count": 1 } },
-        "look": { "body": "hut", "cloth": "#8a5a32", "accent": "#5aa04e" } }
-    },
-    {
-      "id": "gruftstein", "name": "Gruftstein", "type": "building", "rarity": "rare", "elixir": 3,
-      "description": "Ein unheimlicher Grabstein, der Knochenwichte ausspuckt – und bei Zerstörung gleich vier.",
-      "unit": { "hp": 520, "size": 2, "lifetime": 30,
-        "traits": { "spawner": { "unit": "knochenwichte", "count": 1, "interval": 3.5, "firstDelay": 1 }, "deathSpawn": { "unit": "knochenwichte", "count": 4 } },
-        "look": { "body": "grave", "cloth": "#8e9aa6", "accent": "#6fd36b" } }
-    },
-    {
-      "id": "elixierbrunnen", "name": "Elixierbrunnen", "type": "building", "rarity": "rare", "elixir": 6,
-      "description": "Pumpt 70 Sekunden lang alle 8,5 s ein Elixier für dich (bis zu 8 Elixier).",
-      "unit": { "hp": 1000, "size": 2.5, "lifetime": 70,
-        "traits": { "elixirGen": { "amount": 1, "interval": 8.5 } },
-        "look": { "body": "pump", "cloth": "#9b59b6", "accent": "#f06bd6" } }
-    },
-    {
-      "id": "blitzmast", "name": "Blitzmast", "type": "building", "rarity": "common", "elixir": 4,
-      "description": "Ein knisternder Mast, der Boden- und Luftziele mit Stromstößen trifft.",
-      "unit": { "hp": 950, "damage": 230, "hitSpeed": 1.1, "range": 5.5, "targets": "both", "size": 2, "lifetime": 30,
-        "projectile": { "kind": "lightning", "speed": 0 },
-        "look": { "body": "tesla", "cloth": "#5f6b7a", "accent": "#7fe9ff" } },
-      "evo": { "cycles": 2, "name": "Evo-Blitzmast", "description": "Löst beim Aufstellen und bei Zerstörung eine Schockwelle aus (Radius 5, betäubt 0,5 s).",
-        "unit": { "traits": { "deployBlast": { "damage": 150, "radius": 5, "stun": 0.5, "fx": "shock" }, "deathDamage": { "damage": 150, "radius": 5, "stun": 0.5, "fx": "shock" } }, "look": { "cloth": "#3b2f6b", "accent": "#ff7cf5" } } }
-    },
-    {
-      "id": "glutschlund", "name": "Glutschlund", "type": "building", "rarity": "epic", "elixir": 5,
-      "description": "Ein Feuerturm, dessen Glutstrahl alle 2 s heißer wird. Schmilzt selbst die dicksten Tanks.",
-      "unit": { "hp": 1500, "damage": 30, "hitSpeed": 0.4, "firstHit": 0.2, "range": 6, "targets": "both", "size": 2, "lifetime": 30,
-        "projectile": { "kind": "beam", "speed": 0 },
-        "traits": { "ramp": { "stages": [30, 110, 400], "stageTime": 2 } },
-        "look": { "body": "inferno", "cloth": "#5b3a3a", "accent": "#ff6a1a" } }
-    },
-    {
-      "id": "steinschleuder", "name": "Steinschleuder", "type": "building", "rarity": "common", "elixir": 4,
-      "description": "Belagerungsgerät mit riesiger Reichweite (11,5). Trifft Türme von deiner Seite aus, hat aber einen toten Winkel.",
-      "unit": { "hp": 1000, "damage": 230, "hitSpeed": 5, "firstHit": 1.5, "range": 11.5, "minRange": 3.5, "targets": "ground", "splash": 1.5, "size": 2, "lifetime": 30, "deployTime": 3.5,
-        "projectile": { "kind": "boulder", "speed": 5, "arc": true },
-        "look": { "body": "mortar", "cloth": "#7d6e5d", "accent": "#caa472" } },
-      "evo": { "cycles": 2, "name": "Evo-Steinschleuder", "description": "Lädt 30 % schneller nach und hat fast keinen toten Winkel mehr.",
-        "unit": { "hitSpeed": 3.5, "minRange": 1, "look": { "cloth": "#4f3a7d", "accent": "#d2b4ff" } } }
-    },
-    {
-      "id": "belagerungsballiste", "name": "Belagerungsballiste", "type": "building", "rarity": "epic", "elixir": 6,
-      "description": "Eine gewaltige Balliste, die Bolzen im Sekundentakt über den Fluss bis zu den Türmen schießt.",
-      "unit": { "hp": 1350, "damage": 30, "hitSpeed": 0.3, "range": 11.5, "targets": "ground", "size": 2.5, "lifetime": 40, "deployTime": 3.5,
-        "projectile": { "kind": "bolt", "speed": 20 },
-        "look": { "body": "ballista", "cloth": "#7a5634", "accent": "#d9d9d9" } }
-    },
-    {
-      "id": "barrikade", "name": "Barrikade", "type": "building", "rarity": "common", "elixir": 2,
-      "description": "Eine massive Holz-Stahl-Sperre. Blockiert Wege und lenkt Gebäudejäger 25 Sekunden lang ab.",
-      "unit": { "hp": 1600, "size": 2.5, "lifetime": 25,
-        "look": { "body": "barricade", "cloth": "#8b5a2b", "accent": "#9aa3ad" } }
-    },
-    {
-      "id": "pfeilhagel", "name": "Pfeilhagel", "type": "spell", "rarity": "common", "elixir": 3,
-      "description": "Ein Pfeilregen über großer Fläche (Radius 4). Räumt Schwärme ab.",
-      "spell": { "radius": 4, "damage": 300, "towerDamage": 0.3, "delay": 0.8, "targets": "both", "fx": "arrows" },
-      "look": { "icon": "arrows", "color": "#d4a15a" },
-      "evo": { "cycles": 2, "name": "Evo-Pfeilhagel", "description": "Getroffene Gegner werden 3 s lang um 30 % verlangsamt.",
-        "spell": { "slow": { "amount": 0.3, "duration": 3 } } }
-    },
-    {
-      "id": "glutball", "name": "Glutball", "type": "spell", "rarity": "rare", "elixir": 4,
-      "description": "Ein lodernder Feuerball, der mittlere Truppen verbrennt und leicht zurückstößt.",
-      "spell": { "radius": 2.5, "damage": 650, "towerDamage": 0.3, "delay": 0.9, "knockback": 1, "targets": "both", "fx": "fire" },
-      "look": { "icon": "fireball", "color": "#ff7a2f" }
-    },
-    {
-      "id": "funkenschlag", "name": "Funkenschlag", "type": "spell", "rarity": "common", "elixir": 2,
-      "description": "Ein sofortiger Stromschlag, der 0,5 s betäubt und Aufladungen zurücksetzt.",
-      "spell": { "radius": 2.5, "damage": 190, "towerDamage": 0.3, "stun": 0.5, "targets": "both", "fx": "shock" },
-      "look": { "icon": "zap", "color": "#6fd3ff" },
-      "evo": { "cycles": 2, "name": "Evo-Funkenschlag", "description": "Schlägt nach 1 s ein zweites Mal ein.",
-        "spell": { "echo": { "delay": 1 } } }
-    },
-    {
-      "id": "rollstamm", "name": "Rollstamm", "type": "spell", "rarity": "legendary", "elixir": 2,
-      "description": "Ein Baumstamm rollt 11 Felder nach vorne, trifft Bodenziele und stößt sie zurück.",
-      "spell": { "roll": { "length": 11, "width": 3.5, "speed": 8 }, "damage": 240, "towerDamage": 0.2, "knockback": 1.2, "targets": "ground", "fx": "log" },
-      "look": { "icon": "log", "color": "#9b6a3a" }
-    },
-    {
-      "id": "eishauch", "name": "Eishauch", "type": "spell", "rarity": "epic", "elixir": 4,
-      "description": "Friert alle Gegner im Bereich 4 Sekunden lang ein.",
-      "spell": { "radius": 3, "damage": 100, "towerDamage": 0.3, "stun": 4, "targets": "both", "fx": "frost" },
-      "look": { "icon": "freeze", "color": "#aee9ff" }
-    },
-    {
-      "id": "sumpfnebel", "name": "Sumpfnebel", "type": "spell", "rarity": "epic", "elixir": 4,
-      "description": "Ein giftiger Nebel, der 8 Sekunden lang Schaden verursacht und Gegner leicht verlangsamt.",
-      "spell": { "radius": 3.5, "duration": 8, "pulse": 1, "damage": 75, "towerDamage": 0.3, "slow": { "amount": 0.15 }, "targets": "both", "fx": "poison" },
-      "look": { "icon": "poison", "color": "#7ccf3a" }
-    },
-    {
-      "id": "kometenschlag", "name": "Kometenschlag", "type": "spell", "rarity": "rare", "elixir": 6,
-      "description": "Ein Komet aus heiterem Himmel. Enormer Schaden auf kleiner Fläche – auch gegen Türme.",
-      "spell": { "radius": 2, "damage": 1450, "towerDamage": 0.3, "delay": 1.8, "knockback": 1.5, "targets": "both", "fx": "comet" },
-      "look": { "icon": "comet", "color": "#ff4f4f" }
-    },
-    {
-      "id": "gewitterzorn", "name": "Gewitterzorn", "type": "spell", "rarity": "epic", "elixir": 6,
-      "description": "Drei Blitze treffen die Gegner mit den meisten Lebenspunkten im Bereich und betäuben sie.",
-      "spell": { "radius": 3.5, "strikes": 3, "damage": 950, "towerDamage": 0.3, "stun": 0.5, "delay": 0.3, "targets": "both", "fx": "storm" },
-      "look": { "icon": "storm", "color": "#ffe14d" }
-    },
-    {
-      "id": "heilregen", "name": "Heilregen", "type": "spell", "rarity": "rare", "elixir": 3,
-      "description": "Ein goldener Regen, der eigene Truppen im Bereich 2,5 s lang heilt (insgesamt 700 Leben).",
-      "spell": { "radius": 3, "duration": 2.5, "pulse": 0.25, "heal": 70, "fx": "heal" },
-      "look": { "icon": "heal", "color": "#ffd966" }
-    },
-    {
-      "id": "kriegstrommel", "name": "Kriegstrommel", "type": "spell", "rarity": "epic", "elixir": 2,
-      "description": "Ein wilder Trommelwirbel: Eigene Truppen im Bereich bewegen und schlagen 7 s lang 35 % schneller.",
-      "spell": { "radius": 4.5, "duration": 7, "rage": { "mult": 1.35 }, "damage": 120, "towerDamage": 0.3, "targets": "both", "fx": "rage" },
-      "look": { "icon": "drum", "color": "#c25bd6" }
-    },
-    {
-      "id": "koboldfass", "name": "Koboldfass", "type": "spell", "rarity": "epic", "elixir": 3,
-      "description": "Wirft ein Fass mit drei Kobolden irgendwohin in die Arena – auch direkt neben Türme.",
-      "spell": { "radius": 1, "delay": 1.1, "spawn": { "unit": "kobolde", "count": 3 }, "fx": "barrel" },
-      "look": { "icon": "barrel", "color": "#8b5a2b" }
-    },
-    {
-      "id": "gruftacker", "name": "Gruftacker", "type": "spell", "rarity": "legendary", "elixir": 5,
-      "description": "Lässt 9,5 Sekunden lang überall im Bereich 15 Knochenwichte aus dem Boden kriechen.",
-      "spell": { "radius": 4, "duration": 9.5, "graveyard": { "unit": "knochenwichte", "count": 15, "firstDelay": 2 }, "fx": "grave" },
-      "look": { "icon": "grave", "color": "#7d8ca3" }
-    },
-    {
-      "id": "kettenblitz", "name": "Kettenblitz", "type": "spell", "rarity": "rare", "elixir": 3,
-      "description": "Ein Blitz, der von Gegner zu Gegner springt und bis zu sechs Ziele trifft.",
-      "spell": { "radius": 3, "chain": { "count": 6, "radius": 4 }, "damage": 210, "towerDamage": 0.3, "stun": 0.3, "targets": "both", "fx": "chain" },
-      "look": { "icon": "chain", "color": "#b28bff" }
-    },
-    {
-      "id": "leimregen", "name": "Leimregen", "type": "spell", "rarity": "common", "elixir": 2,
-      "description": "Klebriger Regen: Gegner im Bereich werden 5 Sekunden lang um 50 % verlangsamt.",
-      "spell": { "radius": 3.5, "duration": 5, "slow": { "amount": 0.5 }, "targets": "both", "fx": "glue" },
-      "look": { "icon": "glue", "color": "#e8c547" }
-    },
-    {
-      "id": "mirell", "name": "Klingentänzerin Mirell", "type": "troop", "class": "champion", "rarity": "legendary", "elixir": 4,
-      "description": "Champion. Eine unglaublich flinke Kämpferin mit zwei Klingen.",
-      "unit": { "hp": 1350, "damage": 180, "hitSpeed": 0.9, "range": 0.8, "speed": 1.5, "targets": "ground", "radius": 0.5, "mass": 6,
-        "look": { "body": "hum", "skin": "#f3d2b8", "cloth": "#1abc9c", "hat": "ponytail", "weapon": "blades", "cape": true, "accent": "#ffe066" } },
-      "ability": { "name": "Klingenwirbel", "cost": 2, "cooldown": 12,
-        "description": "Springt nacheinander zu bis zu 6 Gegnern im Umkreis von 5,5 Feldern und trifft jeden mit 280 Schaden.",
-        "dash": { "count": 6, "radius": 5.5, "damage": 280, "interval": 0.3 } }
-    },
-    {
-      "id": "oswin", "name": "Spiegelritter Oswin", "type": "troop", "class": "champion", "rarity": "legendary", "elixir": 5,
-      "description": "Champion. Ein Ritter in spiegelnder Rüstung – ein wahrer Tank.",
-      "unit": { "hp": 2600, "damage": 200, "hitSpeed": 1.3, "range": 0.8, "speed": 1.0, "targets": "ground", "radius": 0.6, "mass": 10,
-        "look": { "body": "hum", "skin": "#eac4a0", "cloth": "#c0c7d1", "hat": "helmet", "weapon": "sword", "shield": true, "cape": true, "accent": "#7fe9ff" } },
-      "ability": { "name": "Spiegelschild", "cost": 1, "cooldown": 14,
-        "description": "3 s lang unverwundbar – jeglicher Schaden wird auf die Angreifer zurückgeworfen.",
-        "reflect": 3 }
-    },
-    {
-      "id": "brannwe", "name": "Wurzelmutter Brannwe", "type": "troop", "class": "champion", "rarity": "legendary", "elixir": 4,
-      "description": "Champion. Eine uralte Waldhüterin, die mit Dornen aus der Ferne angreift.",
-      "unit": { "hp": 1150, "damage": 150, "hitSpeed": 1.3, "range": 5, "speed": 1.0, "targets": "both", "splash": 1, "radius": 0.5, "mass": 6,
-        "projectile": { "kind": "thorn", "speed": 11 },
-        "look": { "body": "hum", "skin": "#b98d5e", "cloth": "#4f8a3b", "hat": "circlet", "weapon": "staff", "accent": "#a6e05a", "cape": true } },
-      "ability": { "name": "Wurzelruf", "cost": 2, "cooldown": 15,
-        "description": "Ruft 3 Wurzelwichte herbei und heilt Verbündete im Umkreis von 4 Feldern um 300.",
-        "summon": { "unit": "wurzelwicht", "count": 3 }, "heal": 300, "radius": 4 }
-    },
-    {
-      "id": "varek", "name": "Schattenfürst Varek", "type": "troop", "class": "champion", "rarity": "legendary", "elixir": 4,
-      "description": "Champion. Ein Meuchler aus den Schatten mit tödlichem Dolch.",
-      "unit": { "hp": 1250, "damage": 260, "hitSpeed": 1.0, "range": 0.8, "speed": 1.5, "targets": "ground", "radius": 0.5, "mass": 6,
-        "look": { "body": "hum", "skin": "#b7a3c9", "cloth": "#2b2140", "hat": "mask", "weapon": "dagger", "cape": true, "accent": "#9b59ff" } },
-      "ability": { "name": "Schattenmantel", "cost": 1, "cooldown": 11,
-        "description": "Wird 3,5 s unsichtbar (nicht angreifbar), läuft schneller und verursacht 80 % mehr Schaden.",
-        "cloak": { "duration": 3.5, "damageMult": 1.8, "speedMult": 1.3 } }
-    },
-    {
-      "id": "grom", "name": "Donnerabt Grom", "type": "troop", "class": "champion", "rarity": "legendary", "elixir": 6,
-      "description": "Champion. Ein bärtiger Abt, der Blitze vom Himmel ruft.",
-      "unit": { "hp": 2100, "damage": 220, "hitSpeed": 1.5, "range": 5, "speed": 0.75, "targets": "both", "splash": 1.5, "radius": 0.6, "mass": 10,
-        "projectile": { "kind": "lightning", "speed": 0 },
-        "look": { "body": "hum", "skin": "#e0b08a", "cloth": "#3a4f8a", "hat": "monk", "weapon": "staff", "beard": "#dddddd", "accent": "#ffe14d", "cape": true } },
-      "ability": { "name": "Donnerschlag", "cost": 2, "cooldown": 16,
-        "description": "Entlädt einen Donnerschlag: 300 Schaden und 1,5 s Betäubung im Umkreis von 4 Feldern.",
-        "damage": 300, "radius": 4, "stun": 1.5, "towerDamage": 0.3, "fx": "shock" }
-    },
-    {
-      "id": "kaija", "name": "Sturmreiterin Kaija", "type": "troop", "class": "champion", "rarity": "legendary", "elixir": 5,
-      "description": "Champion. Stürmt mit ihrem Speer hoch zu Ross in die Schlacht.",
-      "unit": { "hp": 1800, "damage": 230, "hitSpeed": 1.2, "range": 1.2, "speed": 1.5, "targets": "ground", "radius": 0.6, "mass": 9,
-        "traits": { "charge": { "distance": 3, "speedMult": 1.6, "damageMult": 1.8 } },
-        "look": { "body": "rider", "mount": "horse", "skin": "#f1c6a0", "cloth": "#e67e22", "hat": "braid", "weapon": "spear", "cape": true, "accent": "#ffe066" } },
-      "ability": { "name": "Schlachtruf", "cost": 2, "cooldown": 18,
-        "description": "Verbündete im Umkreis von 5 Feldern werden 5 s lang 40 % schneller und um 200 geheilt.",
-        "radius": 5, "heal": 200, "rage": { "mult": 1.4, "duration": 5 } }
-    },
-    {
-      "id": "torvin", "name": "Torvin der Hammer", "type": "troop", "class": "hero", "rarity": "epic", "elixir": 6,
-      "description": "Held. Ein bärenstarker Zwergenkönig mit riesigem Kriegshammer.",
-      "unit": { "hp": 3000, "damage": 300, "hitSpeed": 1.6, "range": 0.9, "speed": 1.0, "targets": "ground", "splash": 1.2, "radius": 0.7, "mass": 14,
-        "look": { "body": "hum", "skin": "#e3b08a", "cloth": "#7f8c8d", "hat": "horns", "weapon": "hammer", "beard": "#b5651d", "cape": true, "scale": 1.2 } },
-      "ability": { "name": "Erdbrecher",
-        "description": "Einmalig: Ein gewaltiger Hammerschlag – 800 Schaden, 0,5 s Betäubung und Rückstoß im Umkreis von 3 Feldern.",
-        "damage": 800, "radius": 3, "stun": 0.5, "knockback": 2, "towerDamage": 0.3, "fx": "slam" }
-    },
-    {
-      "id": "aelis", "name": "Aelis Sternbogen", "type": "troop", "class": "hero", "rarity": "epic", "elixir": 5,
-      "description": "Heldin. Eine Meisterschützin, deren Pfeile wie Sterne leuchten.",
-      "unit": { "hp": 1000, "damage": 200, "hitSpeed": 1.1, "range": 6.5, "speed": 1.0, "targets": "both", "radius": 0.45, "mass": 4,
-        "projectile": { "kind": "star", "speed": 16 },
-        "look": { "body": "hum", "skin": "#f7e1c8", "cloth": "#4b6cb7", "hat": "hair", "weapon": "bow", "cape": true, "accent": "#ffe066" } },
-      "ability": { "name": "Sternenregen",
-        "description": "Einmalig: Feuert Sternenpfeile auf bis zu 6 Gegner im Umkreis von 7 Feldern (je 350 Schaden).",
-        "shots": { "count": 6, "radius": 7, "damage": 350 }, "towerDamage": 0.3 }
-    },
-    {
-      "id": "brom", "name": "Brom Braukessel", "type": "troop", "class": "hero", "rarity": "epic", "elixir": 5,
-      "description": "Held. Ein fröhlicher Braumeister, der mit seinem Kesselhammer austeilt.",
-      "unit": { "hp": 2200, "damage": 190, "hitSpeed": 1.3, "range": 0.8, "speed": 1.0, "targets": "ground", "splash": 1.2, "radius": 0.65, "mass": 12,
-        "look": { "body": "hum", "skin": "#e8b48c", "cloth": "#8e5b2e", "hat": "bald", "weapon": "mace", "beard": "#d35400", "cape": true, "scale": 1.15 } },
-      "ability": { "name": "Freibier für alle!",
-        "description": "Einmalig: Heilt alle Verbündeten im Umkreis von 5 Feldern um 600 und versetzt sie 4 s in Rage.",
-        "radius": 5, "heal": 600, "rage": { "mult": 1.35, "duration": 4 }, "fx": "heal" }
-    },
-    {
-      "id": "nyx", "name": "Nyx Nebelweberin", "type": "troop", "class": "hero", "rarity": "epic", "elixir": 5,
-      "description": "Heldin. Eine rätselhafte Magierin, die Zeit und Nebel webt.",
-      "unit": { "hp": 950, "damage": 170, "hitSpeed": 1.4, "range": 5.5, "speed": 1.0, "targets": "both", "splash": 1.2, "radius": 0.45, "mass": 4,
-        "projectile": { "kind": "magic", "speed": 11 },
-        "look": { "body": "hum", "skin": "#d7c8f0", "cloth": "#6c3483", "hat": "hood", "weapon": "orb", "cape": true, "accent": "#d2b4ff" } },
-      "ability": { "name": "Zeitblase",
-        "description": "Einmalig: Hält die Zeit an – alle Gegner im Umkreis von 3,5 Feldern erstarren 3 s lang.",
-        "radius": 3.5, "stun": 3, "fx": "time" }
-    },
-    {
-      "id": "pip", "name": "Pip der Tüftler", "type": "troop", "class": "hero", "rarity": "epic", "elixir": 4,
-      "description": "Held. Ein genialer Wichtel-Erfinder mit Schraubenschlüssel und Bolzenwerfer.",
-      "unit": { "hp": 950, "damage": 120, "hitSpeed": 0.9, "range": 5, "speed": 1.0, "targets": "both", "radius": 0.45, "mass": 4,
-        "projectile": { "kind": "bolt", "speed": 14 },
-        "look": { "body": "imp", "skin": "#f0c8a0", "cloth": "#2e86c1", "hat": "cap", "weapon": "wrench", "cape": true } },
-      "ability": { "name": "Blitzbau",
-        "description": "Einmalig: Baut an Ort und Stelle ein Tüftel-Geschütz (20 s Lebensdauer, trifft Boden & Luft).",
-        "build": "tueftelgeschuetz" }
-    },
-    {
-      "id": "grauhorn", "name": "Grauhorn", "type": "troop", "class": "hero", "rarity": "epic", "elixir": 6,
-      "description": "Held. Ein Hünen-Reiter auf einem Sturmwidder, der nur Gebäude angreift.",
-      "unit": { "hp": 3200, "damage": 340, "hitSpeed": 1.5, "range": 1.0, "speed": 1.0, "targets": "buildings", "radius": 0.8, "mass": 16,
-        "look": { "body": "rider", "mount": "ram", "skin": "#cfa27a", "cloth": "#5d6d7e", "hat": "horns", "weapon": "axe", "cape": true, "scale": 1.15 } },
-      "ability": { "name": "Ansturm",
-        "description": "Einmalig: 4 s lang doppeltes Tempo; der nächste Treffer verursacht dreifachen Schaden.",
-        "buff": { "speedMult": 2, "duration": 4, "nextHitMult": 3 } }
-    }
+    {"id": "archer-queen", "src": "Archer Queen", "name": "Bogenschützen-Königin", "type": "troop", "rarity": "champion", "class": "champion", "elixir": 5, "description": "Champion mit Armbrust. Ihre Fähigkeit macht sie kurz unsichtbar und lässt sie viel schneller schießen.", "unit": {"radius": 0.5, "mass": 6, "hp": 1000, "damage": 232, "hitSpeed": 1.2, "firstHit": 0.3, "speed": 1, "range": 5, "targets": "both", "projectile": {"kind": "bolt", "speed": 13.33}}, "ability": {"name": "Tarnumhang", "cost": 1, "castTime": 1, "description": "3,5 s unsichtbar, schießt 80 % schneller, bewegt sich aber langsam.", "cloak": {"duration": 3.5, "attackSpeed": 1.8, "speed": 0.75}}},
+    {"id": "archers", "src": "Archers", "name": "Bogenschützen", "type": "troop", "rarity": "common", "elixir": 3, "count": 2, "formation": "line", "description": "Zwei Schützinnen, die Boden- und Luftziele aus mittlerer Entfernung treffen.", "unit": {"radius": 0.4, "mass": 3, "hp": 304, "damage": 112, "hitSpeed": 0.9, "firstHit": 0.5, "speed": 1, "range": 5, "targets": "both", "projectile": {"kind": "arrow", "speed": 10}}, "evo": {"cycles": 2, "description": "+1 Reichweite. Ziele in 4–6 Feldern Entfernung treffen sie mit einem Kraftschuss (140 Schaden).", "unit": {"range": 6, "traits": {"longRangeBonus": {"minDist": 4, "maxDist": 6, "damage": 140}}}}},
+    {"id": "baby-dragon", "src": "Baby Dragon", "name": "Drachenbaby", "type": "troop", "rarity": "epic", "elixir": 4, "description": "Fliegender Drache, der Feuerbälle mit Flächenschaden spuckt.", "unit": {"radius": 0.6, "mass": 10, "hp": 1152, "damage": 168, "hitSpeed": 1.5, "firstHit": 0.3, "speed": 1.5, "range": 3.5, "targets": "both", "flying": true, "splash": 1.5, "projectile": {"kind": "fire", "speed": 8.33}}, "evo": {"cycles": 2, "description": "Erzeugt beim Angreifen einen Windstoß (8×9 Felder): Gegner 30 % langsamer, Verbündete 30 % schneller. Der Wind bleibt nach dem Tod 2 s.", "unit": {"traits": {"aura": {"halfW": 4, "halfH": 4.5, "enemySlow": 0.3, "allySpeed": 1.3, "whileAttacking": true, "linger": 2}}}}},
+    {"id": "balloon", "src": "Balloon", "name": "Ballon", "type": "troop", "rarity": "epic", "elixir": 5, "description": "Fliegt zu Gebäuden und wirft schwere Bomben. Beim Absturz fällt nach 3 s eine Bombe.", "unit": {"radius": 0.6, "mass": 10, "hp": 1679, "damage": 640, "hitSpeed": 2, "firstHit": 0.2, "speed": 1, "range": 0.1, "targets": "buildings", "flying": true, "traits": {"deathDamage": {"damage": 240, "radius": 3, "delay": 3, "fx": "fire"}}}},
+    {"id": "bandit", "src": "Bandit", "name": "Banditin", "type": "troop", "rarity": "legendary", "elixir": 3, "description": "Springt aus 3,5–6 Feldern auf ihr Ziel und ist während des Sprints unverwundbar (doppelter Schaden).", "unit": {"radius": 0.5, "mass": 6, "hp": 906, "damage": 194, "hitSpeed": 1, "firstHit": 0.4, "speed": 1.5, "range": 0.75, "targets": "ground", "traits": {"dash": {"min": 3.5, "max": 6, "damage": 389, "speed": 8.33, "windup": 0.8}}}},
+    {"id": "barbarians", "src": "Barbarians", "name": "Barbaren", "type": "troop", "rarity": "common", "elixir": 5, "count": 5, "description": "Fünf Nahkämpfer mit Schwertern.", "unit": {"radius": 0.5, "mass": 6, "hp": 716, "damage": 192, "hitSpeed": 1.4, "firstHit": 0.4, "speed": 1, "range": 0.7, "targets": "ground"}, "evo": {"cycles": 1, "description": "Jeder Treffer macht sie 5 s lang 30 % schneller (Laufen und Angreifen).", "unit": {"traits": {"rageOnHit": {"mult": 1.3, "duration": 5}}}}},
+    {"id": "bats", "src": "Bats", "name": "Fledermäuse", "type": "troop", "rarity": "common", "elixir": 2, "count": 5, "description": "Fünf sehr schnelle, zerbrechliche Flieger.", "unit": {"radius": 0.3, "mass": 1, "hp": 81, "damage": 81, "hitSpeed": 1.3, "firstHit": 0.6, "speed": 2, "range": 1.2, "targets": "both", "flying": true}, "evo": {"cycles": 2, "description": "+50 % Leben. Jeder Angriff heilt sie (2× 38) und kann über das Maximum hinaus heilen (bis 244).", "unit": {"hp": 122, "traits": {"selfHealOnHit": {"heal": 38, "pulses": 2, "interval": 0.5, "maxHp": 244}}}}},
+    {"id": "battle-healer", "src": "Battle Healer", "name": "Kampfheilerin", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Heilt beim Erscheinen und bei jedem Angriff verbündete Truppen in der Nähe (nicht sich selbst).", "unit": {"radius": 0.5, "mass": 6, "hp": 1920, "damage": 268, "hitSpeed": 2, "firstHit": 0.3, "speed": 1, "range": 1.6, "targets": "ground", "traits": {"deployHeal": {"radius": 3, "heal": 50, "pulses": 4, "interval": 0.25}, "healOnAttack": {"radius": 2.5, "heal": 25, "pulses": 4, "interval": 0.25, "excludeSelf": true, "excludeSame": true}}}},
+    {"id": "battle-ram", "src": "Battle Ram", "name": "Rammbock", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Zwei Barbaren rammen das nächste Gebäude (Ansturm nach 3 Feldern) und kämpfen danach weiter.", "unit": {"radius": 0.6, "mass": 10, "hp": 967, "damage": 286, "hitSpeed": 1, "firstHit": 0.1, "speed": 1, "range": 0.5, "sight": 6.5, "targets": "buildings", "traits": {"kamikaze": true, "charge": {"distance": 3, "speed": 2, "damage": 573}, "deathSpawn": {"unit": "barbarians", "count": 2}}}, "evo": {"cycles": 2, "description": "Trifft beim Ansturm alle Truppen auf dem Weg (212 Schaden, Rückstoß). Prallt am Gebäude ab und rammt erneut, bis er zerstört ist. Heraus kommen Evo-Barbaren.", "unit": {"traits": {"kamikaze": false, "trample": {"damage": 212, "knockback": 1}, "rebound": {"distance": 2}, "deathSpawn": {"unit": "barbarians", "count": 2, "evo": true}}}}},
+    {"id": "berserker", "src": "Berserker", "name": "Berserker", "type": "troop", "rarity": "common", "elixir": 2, "description": "Flinke Nahkämpferin, die sehr schnell zuschlägt.", "unit": {"radius": 0.5, "mass": 6, "hp": 896, "damage": 102, "hitSpeed": 0.6, "firstHit": 0.2, "speed": 1.5, "range": 0.8, "targets": "ground"}},
+    {"id": "bomber", "src": "Bomber", "name": "Bomber", "type": "troop", "rarity": "common", "elixir": 2, "description": "Wirft Bomben mit Flächenschaden auf Bodentruppen.", "unit": {"radius": 0.4, "mass": 3, "hp": 304, "damage": 212, "hitSpeed": 1.8, "firstHit": 0.2, "speed": 1, "range": 4.5, "targets": "ground", "splash": 1.5, "projectile": {"kind": "bomb", "speed": 6.67, "arc": true}}, "evo": {"cycles": 2, "description": "Die Bombe springt nach dem Aufprall noch zweimal je 3 Felder weiter und trifft jedes Mal erneut.", "unit": {"traits": {"bounce": {"count": 2, "distance": 3}}}}},
+    {"id": "boss-bandit", "src": "Boss Bandit", "name": "Boss Bandit", "type": "troop", "rarity": "champion", "class": "champion", "elixir": 6, "description": "Champion. Sprintet wie die Banditin unverwundbar auf Gegner in 3,5–6 Feldern.", "unit": {"radius": 0.5, "mass": 6, "hp": 2624, "damage": 244, "hitSpeed": 1.1, "firstHit": 0.4, "speed": 1.5, "range": 0.8, "targets": "ground", "traits": {"dash": {"min": 3.5, "max": 6, "damage": 489, "speed": 8.33, "windup": 0.8}}}, "ability": {"name": "Fluchtgranate", "cost": 1, "uses": 2, "cooldown": 3, "castTime": 1, "description": "Wird 1 s unsichtbar und springt 6 Felder zurück. Zweimal pro Einsatz.", "vanish": {"duration": 1, "back": 6}}},
+    {"id": "bowler", "src": "Bowler", "name": "Bowler", "type": "troop", "rarity": "epic", "elixir": 5, "description": "Rollt Felsbrocken, die durch alle Bodenziele in einer Linie gehen und sie zurückstoßen.", "unit": {"radius": 0.75, "mass": 18, "hp": 2081, "damage": 289, "hitSpeed": 2.5, "firstHit": 0.5, "speed": 0.75, "range": 4, "targets": "ground", "projectile": {"kind": "boulder", "speed": 2.83}, "traits": {"pierce": {"length": 7, "width": 1.8, "knockback": 1}}}},
+    {"id": "cannon-cart", "src": "Cannon Cart", "name": "Kanonenkarre", "type": "troop", "rarity": "epic", "elixir": 5, "description": "Fahrende Kanone. Unter 50 % Leben wird sie zu einer festen Kanone (15 s Lebensdauer).", "unit": {"radius": 0.6, "mass": 10, "hp": 1809, "damage": 212, "hitSpeed": 0.9, "firstHit": 0.5, "speed": 1, "range": 5.5, "targets": "ground", "projectile": {"kind": "cannonball", "speed": 16.67}, "traits": {"transform": {"at": 0.5, "into": "cannon-cart-cannon"}}}},
+    {"id": "dark-prince", "src": "Dark Prince", "name": "Dunkler Prinz", "type": "troop", "rarity": "epic", "elixir": 4, "description": "Gepanzerter Reiter mit Schild. Trifft rundherum und stürmt nach 3 Feldern mit doppeltem Schaden los.", "unit": {"radius": 0.6, "mass": 10, "hp": 1200, "damage": 266, "hitSpeed": 1.4, "firstHit": 0.6, "speed": 1, "range": 1.2, "targets": "ground", "splash": 1.1, "splashSelf": true, "traits": {"shield": 256, "charge": {"distance": 3, "speed": 2, "damage": 532}, "riverJump": true}}},
+    {"id": "dart-goblin", "src": "Dart Goblin", "name": "Blasrohrkobold", "type": "troop", "rarity": "rare", "elixir": 3, "description": "Sehr schneller Kobold mit großer Reichweite.", "unit": {"radius": 0.4, "mass": 3, "hp": 261, "damage": 156, "hitSpeed": 0.8, "firstHit": 0.35, "speed": 2, "range": 6.5, "targets": "both", "projectile": {"kind": "dart", "speed": 13.33}}, "evo": {"cycles": 2, "description": "Seine Pfeile vergiften das Ziel und die Umgebung (Radius 1,5). Je öfter er dasselbe Ziel trifft, desto stärker das Gift (Stufe 1/2/3 nach 1/4/7 Treffern).", "unit": {"traits": {"poisonDart": {"radius": 1.5, "duration": 1, "towerDamage": 0.25, "stages": [[1, 51], [4, 115], [7, 307]]}}}}},
+    {"id": "electro-dragon", "src": "Electro Dragon", "name": "Elektrodrache", "type": "troop", "rarity": "epic", "elixir": 5, "description": "Fliegender Drache, dessen Blitz auf bis zu 3 Ziele überspringt und sie kurz betäubt.", "unit": {"radius": 0.6, "mass": 10, "hp": 1049, "damage": 192, "hitSpeed": 2.3, "firstHit": 0.8, "speed": 1, "range": 3.5, "targets": "both", "flying": true, "projectile": {"kind": "lightning", "speed": 0}, "traits": {"onHit": {"stun": 0.5, "chain": {"count": 3, "radius": 4}}}}, "evo": {"cycles": 1, "description": "Nach den ersten 3 Zielen springt der Blitz immer weiter zwischen allen Truppen hin und her (33 % weniger Schaden, keine Betäubung), bis nur noch eine übrig ist.", "unit": {"traits": {"onHit": {"stun": 0.5, "chain": {"count": 3, "radius": 4, "endless": {"mult": 0.67, "interval": 0.3, "max": 20}}}}}}},
+    {"id": "electro-giant", "src": "Electro Giant", "name": "Elektroriese", "type": "troop", "rarity": "epic", "elixir": 7, "description": "Zielt auf Gebäude. Wer ihn aus bis zu 3 Feldern angreift, bekommt einen Gegenschlag mit Betäubung.", "unit": {"radius": 0.75, "mass": 18, "hp": 3952, "damage": 184, "hitSpeed": 1.8, "firstHit": 1, "speed": 0.75, "range": 1.2, "targets": "buildings", "traits": {"zapBack": {"radius": 3, "damage": 192, "stun": 0.5, "towerDamage": 0.505}}}},
+    {"id": "electro-spirit", "src": "Electro Spirit", "name": "Elektrogeist", "type": "troop", "rarity": "common", "elixir": 1, "description": "Springt auf Gegner und lässt einen Blitz auf bis zu 9 Ziele überspringen, die kurz betäubt werden.", "unit": {"radius": 0.3, "mass": 1, "hp": 215, "damage": 99, "hitSpeed": 1, "firstHit": 0.1, "speed": 2, "range": 2.5, "targets": "both", "traits": {"kamikaze": true, "onHit": {"stun": 0.5, "chain": {"count": 9, "radius": 3}}}}},
+    {"id": "electro-wizard", "src": "Electro Wizard", "name": "Elektromagier", "type": "troop", "rarity": "legendary", "elixir": 4, "description": "Trifft zwei Ziele gleichzeitig und betäubt sie. Landet mit einem Elektroschlag.", "unit": {"radius": 0.5, "mass": 6, "hp": 714, "damage": 115, "hitSpeed": 1.8, "firstHit": 0.6, "speed": 1.5, "range": 5, "targets": "both", "projectile": {"kind": "lightning", "speed": 0}, "traits": {"multiTarget": 2, "onHit": {"stun": 0.5}, "deployBlast": {"damage": 192, "radius": 3, "stun": 0.5, "fx": "shock"}}}},
+    {"id": "elite-barbarians", "src": "Elite Barbarians", "name": "Elitebarbaren", "type": "troop", "rarity": "common", "elixir": 6, "count": 2, "formation": "line", "description": "Zwei schnelle, starke Barbaren.", "unit": {"radius": 0.5, "mass": 6, "hp": 1341, "damage": 384, "hitSpeed": 1.4, "firstHit": 0.5, "speed": 1.5, "range": 1.2, "targets": "ground"}, "evo": {"cycles": 1, "description": "Werfen alle 5 s einen Wut-Speer auf Bodentruppen in 3–4,5 Feldern. Der Speer hinterlässt eine Wut-Spur (2 s).", "unit": {"traits": {"secondary": {"damage": 150, "hitSpeed": 5, "firstHit": 0.5, "range": 4.5, "minRange": 3, "targets": "ground", "projectile": {"kind": "spear", "speed": 10}, "impactZone": {"radius": 1.5, "duration": 2, "rage": {"mult": 1.3}, "fx": "rage"}}}}}},
+    {"id": "elixir-golem", "src": "Elixir Golem", "name": "Elixiergolem", "type": "troop", "rarity": "rare", "elixir": 3, "description": "Zerfällt in zwei Golemiten und diese in je zwei Kleckse. Jeder Teil gibt dem Gegner beim Tod Elixier.", "unit": {"radius": 0.75, "mass": 18, "hp": 1569, "damage": 253, "hitSpeed": 1.1, "firstHit": 0.8, "speed": 0.75, "range": 0.8, "targets": "buildings", "traits": {"deathSpawn": {"unit": "elixir-golemite", "count": 2}, "deathElixir": 1}}},
+    {"id": "executioner", "src": "Executioner", "name": "Scharfrichter", "type": "troop", "rarity": "epic", "elixir": 5, "description": "Wirft seine Axt wie einen Bumerang – sie trifft alles auf dem Hin- und Rückweg.", "unit": {"radius": 0.6, "mass": 10, "hp": 1280, "damage": 168, "hitSpeed": 2.4, "firstHit": 0.5, "speed": 1, "range": 4.5, "targets": "both", "projectile": {"kind": "axe", "speed": 9.17}, "traits": {"pierce": {"length": 7, "width": 1, "returns": true}}}, "evo": {"cycles": 1, "description": "Gegner in bis zu 2,5 Feldern trifft die Axt mit 294 statt 168 Schaden und stößt sie zurück.", "unit": {"traits": {"pierce": {"length": 7, "width": 1, "returns": true, "close": {"dist": 2.5, "damage": 294, "knockback": 1}}}}}},
+    {"id": "fire-spirit", "src": "Fire Spirit", "name": "Feuergeist", "type": "troop", "rarity": "common", "elixir": 1, "description": "Springt auf Gegner und explodiert mit Flächenschaden.", "unit": {"radius": 0.3, "mass": 1, "hp": 215, "damage": 215, "hitSpeed": 1, "firstHit": 0.1, "speed": 2, "range": 2.5, "targets": "both", "splash": 2.3, "traits": {"kamikaze": true}}},
+    {"id": "firecracker", "src": "Firecracker", "name": "Feuerwerkerin", "type": "troop", "rarity": "common", "elixir": 3, "description": "Ihr Feuerwerk zerplatzt am Ziel in Funken, die dahinter weiterfliegen. Nach jedem Schuss springt sie 1 Feld zurück.", "unit": {"radius": 0.4, "mass": 3, "hp": 304, "damage": 64, "hitSpeed": 3, "firstHit": 0.65, "speed": 1.5, "range": 6, "targets": "both", "projectile": {"kind": "firework", "speed": 8.33}, "traits": {"shrapnel": {"count": 5, "angle": 40, "length": 5, "width": 0.8}, "recoil": 1}}, "evo": {"cycles": 2, "description": "Die Funken hinterlassen Glut, die Gegner verlangsamt (15 %) und alle 0,25 s Schaden macht.", "unit": {"traits": {"sparkZones": {"big": {"radius": 2.5, "duration": 3}, "small": {"radius": 1.2, "duration": 2.5}, "damage": 48, "pulse": 0.25, "towerDamage": 0.31, "slow": 0.15}}}}},
+    {"id": "fisherman", "src": "Fisherman", "name": "Fischer", "type": "troop", "rarity": "legendary", "elixir": 3, "description": "Wirft aus 3,5–7 Feldern seinen Haken: zieht Bodentruppen zu sich oder sich selbst zu Gebäuden.", "unit": {"radius": 0.5, "mass": 6, "hp": 870, "damage": 194, "hitSpeed": 1.3, "firstHit": 0.1, "speed": 1, "range": 1.2, "targets": "ground", "traits": {"hook": {"min": 3.5, "max": 7, "windup": 1.3, "speed": 13.33}}}},
+    {"id": "flying-machine", "src": "Flying Machine", "name": "Flugmaschine", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Fliegender Geschützturm mit großer Reichweite.", "unit": {"radius": 0.5, "mass": 6, "hp": 614, "damage": 171, "hitSpeed": 1.1, "firstHit": 0.5, "speed": 1.5, "range": 6, "targets": "both", "flying": true, "projectile": {"kind": "bolt", "speed": 13.33}}},
+    {"id": "furnace", "src": "Furnace", "name": "Ofen", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Laufender Ofen, der Gegner mit Glut beschießt und alle 5 s einen Feuergeist ausspuckt.", "unit": {"radius": 0.6, "mass": 10, "hp": 727, "damage": 179, "hitSpeed": 1.7, "firstHit": 0.5, "speed": 1, "range": 6, "targets": "both", "projectile": {"kind": "fire", "speed": 10}, "traits": {"spawner": {"unit": "fire-spirit", "count": 1, "interval": 5, "firstDelay": 1}}}, "evo": {"cycles": 2, "description": "Während er angreift, kommen alle 2,4 s Feuergeister – seitlich statt nach vorn.", "unit": {"traits": {"spawner": {"unit": "fire-spirit", "count": 1, "interval": 5, "firstDelay": 1, "attackingInterval": 2.4, "side": true}}}}},
+    {"id": "giant", "src": "Giant", "name": "Riese", "type": "troop", "rarity": "rare", "elixir": 5, "description": "Langsamer, sehr zäher Tank, der nur Gebäude angreift.", "unit": {"radius": 0.75, "mass": 18, "hp": 3968, "damage": 253, "hitSpeed": 1.5, "firstHit": 0.5, "speed": 0.75, "range": 1.2, "targets": "buildings"}},
+    {"id": "giant-skeleton", "src": "Giant Skeleton", "name": "Riesenskelett", "type": "troop", "rarity": "epic", "elixir": 6, "description": "Riesiges Skelett. Beim Tod lässt es eine Bombe fallen, die nach 3 s explodiert (doppelt gegen Kronentürme).", "unit": {"radius": 0.75, "mass": 18, "hp": 3361, "damage": 276, "hitSpeed": 1.3, "firstHit": 0.3, "speed": 1, "range": 0.8, "targets": "ground", "traits": {"deathDamage": {"damage": 688, "radius": 3, "delay": 3, "towerDamage": 2, "knockback": 1.5, "fx": "fire"}}}},
+    {"id": "goblin-demolisher", "src": "Goblin Demolisher", "name": "Goblin Demolisher", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Wirft Dynamit mit Flächenschaden. Unter 50 % Leben rennt er auf das nächste Gebäude zu und explodiert.", "unit": {"radius": 0.5, "mass": 6, "hp": 1300, "damage": 186, "hitSpeed": 1.2, "firstHit": 0.5, "speed": 1, "range": 5, "targets": "ground", "splash": 1.5, "projectile": {"kind": "dynamite", "speed": 6.67, "arc": true}, "traits": {"transform": {"at": 0.5, "into": "goblin-demolisher-kamikaze"}}}},
+    {"id": "goblin-gang", "src": "Goblin Gang", "name": "Koboldgang", "type": "troop", "rarity": "common", "elixir": 3, "description": "Drei Kobolde mit Messern und drei Speerkobolde.", "groups": [{"unit": "goblins", "count": 3}, {"unit": "spear-goblins", "count": 3, "behind": 1.2}]},
+    {"id": "goblin-giant", "src": "Goblin Giant", "name": "Koboldriese", "type": "troop", "rarity": "epic", "elixir": 6, "description": "Zielt auf Gebäude. Zwei Speerkobolde auf seinem Rücken werfen unabhängig – beim Tod springen sie ab.", "unit": {"radius": 0.75, "mass": 18, "hp": 3022, "damage": 176, "hitSpeed": 1.5, "firstHit": 0.8, "speed": 1, "range": 1.2, "targets": "buildings", "traits": {"secondary": {"damage": 81, "hitSpeed": 1.6, "firstHit": 0.5, "range": 5, "targets": "both", "projectile": {"kind": "spear", "speed": 8.33}, "shots": 2}, "deathSpawn": {"unit": "spear-goblins", "count": 2}}}, "evo": {"cycles": 1, "description": "Unter 50 % Leben wirft er alle 2,2 s einen Kobold aus seinem Sack.", "unit": {"traits": {"spawner": {"unit": "goblins", "count": 1, "interval": 2.2, "firstDelay": 0, "belowHp": 0.5}}}}},
+    {"id": "goblin-machine", "src": "Goblin Machine", "name": "Goblin Machine", "type": "troop", "rarity": "legendary", "elixir": 5, "description": "Kampfmaschine mit Fäusten. Ihr Raketenwerfer feuert unabhängig auf Ziele in 2,5–5 Feldern.", "unit": {"radius": 0.75, "mass": 18, "hp": 2265, "damage": 232, "hitSpeed": 1.2, "firstHit": 0.5, "speed": 1, "range": 1.2, "targets": "ground", "traits": {"secondary": {"damage": 304, "hitSpeed": 5, "firstHit": 1.5, "range": 5, "minRange": 2.5, "targets": "both", "splash": 1.5, "towerDamage": 0.64, "projectile": {"kind": "rocket", "speed": 5.83, "arc": true}}}}},
+    {"id": "goblins", "src": "Goblins", "name": "Kobolde", "type": "troop", "rarity": "common", "elixir": 2, "count": 4, "description": "Vier flinke Kobolde mit Messern.", "unit": {"radius": 0.4, "mass": 3, "hp": 202, "damage": 125, "hitSpeed": 1.1, "firstHit": 0.6, "speed": 2, "range": 0.5, "targets": "ground"}},
+    {"id": "goblinstein", "src": "Goblinstein", "name": "Goblinstein", "type": "troop", "rarity": "champion", "class": "champion", "elixir": 5, "description": "Champion aus zwei Teilen: Der Doktor schießt Blitze, sein Monster stapft zu Gebäuden.", "unit": {"radius": 0.5, "mass": 6, "hp": 721, "damage": 135, "hitSpeed": 1.8, "firstHit": 0.5, "speed": 1, "range": 5.5, "targets": "both", "projectile": {"kind": "lightning", "speed": 0}, "traits": {"onHit": {"stun": 0.5}}}, "groups": [{"unit": "goblinstein", "count": 1, "behind": 1.5}, {"unit": "goblinstein-monster", "count": 1}], "ability": {"name": "Blitzverbindung", "cost": 2, "castTime": 1, "description": "Unter Strom: Die Verbindung zwischen Doktor und Monster trifft 3,5 s lang alle 0,5 s Gegner in 2 Feldern Abstand.", "link": {"partner": "goblinstein-monster", "radius": 2, "damage": 107, "pulse": 0.5, "duration": 3.5, "towerDamage": 0.215}}},
+    {"id": "golden-knight", "src": "Golden Knight", "name": "Goldener Ritter", "type": "troop", "rarity": "champion", "class": "champion", "elixir": 4, "description": "Champion. Seine Fähigkeit lässt ihn von Gegner zu Gegner springen.", "unit": {"radius": 0.5, "mass": 6, "hp": 1799, "damage": 161, "hitSpeed": 0.9, "firstHit": 0.2, "speed": 1, "range": 1.2, "targets": "ground"}, "ability": {"name": "Schnellsprung", "cost": 1, "castTime": 0.8, "description": "Springt bis zu 10-mal unverwundbar von Gegner zu Gegner (je 335 Schaden, 5,5 Felder Sprungweite).", "dash": {"count": 10, "radius": 5.5, "damage": 335, "interval": 0.25, "seekSpeed": 2}}},
+    {"id": "golem", "src": "Golem", "name": "Golem", "type": "troop", "rarity": "epic", "elixir": 8, "description": "Riesiger Felsgolem für Gebäude. Explodiert beim Tod und zerfällt in zwei Golemiten.", "unit": {"radius": 0.9, "mass": 22, "hp": 5120, "damage": 312, "hitSpeed": 2.5, "firstHit": 1, "speed": 0.75, "range": 0.75, "sight": 7.5, "deployTime": 3, "targets": "buildings", "traits": {"deathDamage": {"damage": 225, "radius": 2, "knockback": 1, "fx": "rock"}, "deathSpawn": {"unit": "golemite", "count": 2}}}},
+    {"id": "guards", "src": "Guards", "name": "Wächter", "type": "troop", "rarity": "epic", "elixir": 3, "count": 3, "description": "Drei Skelette mit Speer und Schild – erst der Schild, dann sie selbst.", "unit": {"radius": 0.4, "mass": 3, "hp": 81, "damage": 117, "hitSpeed": 1, "firstHit": 0.5, "speed": 1.5, "range": 1.6, "targets": "ground", "traits": {"shield": 256}}},
+    {"id": "heal-spirit", "src": "Heal Spirit", "name": "Heilungsgeist", "type": "troop", "rarity": "rare", "elixir": 1, "description": "Springt auf Gegner, macht Flächenschaden und hinterlässt ein Heilfeld für deine Truppen.", "unit": {"radius": 0.3, "mass": 1, "hp": 215, "damage": 110, "hitSpeed": 1, "firstHit": 0.1, "speed": 2, "range": 2.5, "targets": "both", "splash": 1.5, "traits": {"kamikaze": true, "deathSpell": {"radius": 2.5, "duration": 1, "pulse": 0.25, "heal": 100, "fx": "heal"}}}},
+    {"id": "hog-rider", "src": "Hog Rider", "name": "Schweinereiter", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Schneller Reiter, der nur Gebäude angreift und über den Fluss springt.", "unit": {"radius": 0.6, "mass": 10, "hp": 1697, "damage": 317, "hitSpeed": 1.6, "firstHit": 0.6, "speed": 2, "range": 0.8, "targets": "buildings", "traits": {"riverJump": true}}},
+    {"id": "hunter", "src": "Hunter", "name": "Jäger", "type": "troop", "rarity": "epic", "elixir": 4, "description": "Seine Schrotflinte feuert 10 Kugeln breit gestreut – aus der Nähe verheerend.", "unit": {"radius": 0.5, "mass": 6, "hp": 885, "damage": 84, "hitSpeed": 2.2, "firstHit": 0.7, "speed": 1, "range": 4, "targets": "both", "projectile": {"kind": "pellet", "speed": 9.17}, "traits": {"spread": {"count": 10, "angle": 30, "length": 6.5}}}, "evo": {"cycles": 2, "description": "Wirft alle 5 s ein Netz auf die nächste Truppe in 4 Feldern: hält sie 3 s fest und holt Flieger auf den Boden.", "unit": {"traits": {"net": {"interval": 5, "range": 4, "duration": 3}}}}},
+    {"id": "ice-golem", "src": "Ice Golem", "name": "Eisgolem", "type": "troop", "rarity": "rare", "elixir": 2, "description": "Zäher Gebäude-Angreifer. Explodiert beim Tod und verlangsamt alles in der Nähe.", "unit": {"radius": 0.6, "mass": 10, "hp": 1228, "damage": 84, "hitSpeed": 2.5, "firstHit": 1, "speed": 0.75, "range": 0.75, "targets": "buildings", "traits": {"deathDamage": {"damage": 84, "radius": 2, "slow": {"amount": 0.3, "duration": 2.5}, "fx": "frost"}}}},
+    {"id": "ice-spirit", "src": "Ice Spirit", "name": "Eisgeist", "type": "troop", "rarity": "common", "elixir": 1, "description": "Springt auf Gegner und friert sie 1,1 s lang ein.", "unit": {"radius": 0.3, "mass": 1, "hp": 215, "damage": 110, "hitSpeed": 1, "firstHit": 0.1, "speed": 2, "range": 2.5, "targets": "both", "splash": 1.5, "traits": {"kamikaze": true, "onHit": {"stun": 1.1, "freeze": true}}}, "evo": {"cycles": 2, "description": "+0,5 Splash-Radius. 3 s nach dem Aufprall folgt ein zweiter Frostschlag (110 Schaden, 1,1 s Einfrieren).", "unit": {"splash": 2, "traits": {"deathSpell": {"delay": 3, "radius": 2, "damage": 110, "stun": 1.1, "freeze": true, "towerDamage": 0.3, "fx": "frost"}}}}},
+    {"id": "ice-wizard", "src": "Ice Wizard", "name": "Eismagier", "type": "troop", "rarity": "legendary", "elixir": 3, "description": "Seine Eissplitter verlangsamen Gegner um 30 %. Landet mit einem Frostschlag.", "unit": {"radius": 0.5, "mass": 6, "hp": 688, "damage": 89, "hitSpeed": 1.7, "firstHit": 0.5, "speed": 1, "range": 5.5, "targets": "both", "splash": 1.5, "projectile": {"kind": "ice", "speed": 11.67}, "traits": {"onHit": {"slow": {"amount": 0.3, "duration": 2.5}}, "deployBlast": {"damage": 84, "radius": 3, "slow": {"amount": 0.3, "duration": 1}, "fx": "frost"}}}},
+    {"id": "inferno-dragon", "src": "Inferno Dragon", "name": "Infernodrache", "type": "troop", "rarity": "legendary", "elixir": 4, "description": "Fliegender Drache mit Feuerstrahl, der immer heißer wird, je länger er dasselbe Ziel trifft.", "unit": {"radius": 0.6, "mass": 10, "hp": 1295, "damage": 35, "hitSpeed": 0.4, "firstHit": 0.2, "speed": 1, "range": 3.5, "targets": "both", "flying": true, "projectile": {"kind": "beam", "speed": 0}, "traits": {"ramp": {"stages": [35, 120, 422], "stageTime": 2}}}, "evo": {"cycles": 2, "description": "Behält nach einem Sieg seine Strahlstufe bis zu 9 s. Nach 20 s Dauerfeuer erreicht er eine 4. Stufe (844 Schaden).", "unit": {"traits": {"ramp": {"stages": [35, 120, 422, 844], "stageTime": 2, "stageAt": [0, 2, 4, 20], "keep": 9}}}}},
+    {"id": "knight", "src": "Knight", "name": "Ritter", "type": "troop", "rarity": "common", "elixir": 3, "description": "Robuster Nahkämpfer – günstig und vielseitig.", "unit": {"radius": 0.5, "mass": 6, "hp": 1766, "damage": 202, "hitSpeed": 1.2, "firstHit": 0.5, "speed": 1, "range": 1.2, "targets": "ground"}, "evo": {"cycles": 2, "description": "Erleidet 60 % weniger Schaden, solange er nicht angreift.", "unit": {"traits": {"armor": {"mult": 0.4, "unlessAttacking": true}}}}},
+    {"id": "lava-hound", "src": "Lava Hound", "name": "Lavahund", "type": "troop", "rarity": "legendary", "elixir": 7, "description": "Fliegender Koloss für Gebäude. Zerplatzt beim Tod in sechs Lavawelpen.", "unit": {"radius": 0.9, "mass": 22, "hp": 3581, "damage": 53, "hitSpeed": 1.3, "firstHit": 1, "speed": 0.75, "range": 3.5, "targets": "buildings", "flying": true, "projectile": {"kind": "spit", "speed": 6.67}, "traits": {"deathSpawn": {"unit": "lava-pup", "count": 6}}}},
+    {"id": "little-prince", "src": "Little Prince", "name": "Little Prince", "type": "troop", "rarity": "champion", "class": "champion", "elixir": 3, "description": "Champion. Schießt immer schneller, solange er stehen bleibt. Seine Leibwächterin stürmt auf Befehl herbei.", "unit": {"radius": 0.4, "mass": 3, "hp": 698, "damage": 104, "hitSpeed": 1.2, "firstHit": 0.4, "speed": 1, "range": 5.5, "targets": "both", "projectile": {"kind": "bolt", "speed": 13.33}, "traits": {"attackRamp": {"hitSpeeds": [1.2, 0.6, 0.4], "shotsPerStage": 3, "keepWhileMoving": 0.3}}}, "ability": {"name": "Königliche Rettung", "cost": 3, "castTime": 0.95, "description": "Guardienne stürmt vor den Prinzen (320 Schaden, Rückstoß bis 2 Felder) und kämpft danach weiter.", "summonCharge": {"unit": "guardienne", "distance": 4, "damage": 320, "radius": 1.5, "knockback": 2}}},
+    {"id": "lumberjack", "src": "Lumberjack", "name": "Holzfäller", "type": "troop", "rarity": "legendary", "elixir": 4, "description": "Sehr schneller Axtkämpfer. Beim Tod verschüttet er einen Wut-Zauber.", "unit": {"radius": 0.5, "mass": 6, "hp": 1282, "damage": 256, "hitSpeed": 0.8, "firstHit": 0.4, "speed": 2, "range": 0.7, "targets": "ground", "traits": {"deathSpell": {"radius": 3, "duration": 5.5, "rage": {"mult": 1.3}, "damage": 179, "towerDamage": 0.3, "fx": "rage"}}}, "evo": {"cycles": 2, "description": "Nach seinem Tod kämpft sein Geist in der Wut-Pfütze weiter – unverwundbar und nicht anvisierbar.", "unit": {"traits": {"deathSpell": {"radius": 3, "duration": 5.5, "rage": {"mult": 1.3}, "damage": 179, "towerDamage": 0.3, "fx": "rage"}, "deathSpawn": {"unit": "lumberjack-ghost", "count": 1}}}}},
+    {"id": "magic-archer", "src": "Magic Archer", "name": "Magieschütze", "type": "troop", "rarity": "legendary", "elixir": 4, "description": "Sein magischer Pfeil durchschlägt alles in einer Linie bis 11 Felder weit.", "unit": {"radius": 0.5, "mass": 6, "hp": 529, "damage": 133, "hitSpeed": 1.1, "firstHit": 0.7, "speed": 1, "range": 7, "targets": "both", "projectile": {"kind": "magic", "speed": 16.67}, "traits": {"pierce": {"length": 11, "width": 0.5}}}},
+    {"id": "mega-knight", "src": "Mega Knight", "name": "Megaritter", "type": "troop", "rarity": "legendary", "elixir": 7, "description": "Landet mit einem Flächenschlag und springt auf Gegner in 3,5–5 Feldern (doppelter Schaden).", "unit": {"radius": 0.75, "mass": 18, "hp": 3993, "damage": 268, "hitSpeed": 1.7, "firstHit": 0.5, "speed": 1, "range": 1.2, "targets": "ground", "splash": 1.3, "traits": {"deployBlast": {"damage": 430, "radius": 2.2, "knockback": 1, "fx": "slam"}, "leap": {"min": 3.5, "max": 5, "damage": 537, "radius": 2.2, "windup": 0.9, "speed": 4.17, "knockback": 1}}}, "evo": {"cycles": 1, "description": "Jeder zweite Treffer ist ein Aufwärtshaken, der das Ziel 4 Felder Richtung seines Kronenturms schleudert.", "unit": {"traits": {"uppercut": {"every": 2, "distance": 4}}}}},
+    {"id": "mega-minion", "src": "Mega Minion", "name": "Megalakai", "type": "troop", "rarity": "rare", "elixir": 3, "description": "Gepanzerter Flieger mit hartem Schlag.", "unit": {"radius": 0.5, "mass": 6, "hp": 837, "damage": 312, "hitSpeed": 1.5, "firstHit": 0.4, "speed": 1, "range": 1.6, "targets": "both", "flying": true, "projectile": {"kind": "magic", "speed": 16.67}}},
+    {"id": "mighty-miner", "src": "Mighty Miner", "name": "Großer Gräber", "type": "troop", "rarity": "champion", "class": "champion", "elixir": 4, "description": "Champion mit Bohrer, dessen Schaden ansteigt. Kann die Seite wechseln und eine Bombe zurücklassen.", "unit": {"radius": 0.6, "mass": 10, "hp": 2250, "damage": 43, "hitSpeed": 0.4, "firstHit": 0.2, "speed": 1, "range": 1.6, "targets": "ground", "projectile": {"kind": "beam", "speed": 0}, "traits": {"ramp": {"stages": [43, 220, 442], "stageTime": 2}}}, "ability": {"name": "Explosive Flucht", "cost": 1, "castTime": 1, "description": "Gräbt sich zur gespiegelten Position auf der anderen Seite und lässt eine Bombe zurück (332 Schaden nach 1 s, Rückstoß 1,8).", "burrow": {"mirrorX": true}, "drop": {"delay": 1, "radius": 2.5, "damage": 332, "knockback": 1.8, "towerDamage": 0.3, "fx": "fire"}}},
+    {"id": "miner", "src": "Miner", "name": "Tunnelgräber", "type": "troop", "rarity": "legendary", "elixir": 3, "description": "Gräbt sich überall in der Arena hin. Macht weniger Schaden an Kronentürmen.", "unit": {"radius": 0.5, "mass": 6, "hp": 1210, "damage": 194, "hitSpeed": 1.3, "firstHit": 0.5, "speed": 1.5, "range": 1.2, "targets": "ground", "towerDamage": 0.247, "traits": {"deployAnywhere": true, "burrowSpeed": 6}}},
+    {"id": "mini-pekka", "src": "Mini P.E.K.K.A.", "name": "Mini-P.E.K.K.A.", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Kleiner Kampfroboter mit riesigem Schaden.", "unit": {"radius": 0.5, "mass": 6, "hp": 1390, "damage": 755, "hitSpeed": 1.6, "firstHit": 0.5, "speed": 1.5, "range": 0.8, "targets": "ground"}},
+    {"id": "minion-giant", "src": "Minion Giant", "name": "Minion Giant", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Fliegender Riese aus dem Lakaien-Labor. Greift Gebäude aus der Ferne mit Giftspucke an.", "unit": {"radius": 0.75, "mass": 18, "hp": 1817, "damage": 150, "hitSpeed": 1.5, "firstHit": 0.5, "speed": 1, "range": 4, "targets": "buildings", "flying": true, "projectile": {"kind": "spit", "speed": 8.33}}},
+    {"id": "minion-horde", "src": "Minion Horde", "name": "Lakaienhorde", "type": "troop", "rarity": "common", "elixir": 5, "count": 6, "description": "Sechs Lakaien auf einmal.", "unit": "minions", "evo": {"cycles": 1, "description": "Der erste Treffer gegen jeden Lakai macht ihn kurz unsichtbar und unverwundbar; unsichtbar greift er langsamer an.", "unit": {"traits": {"veil": {"duration": 2, "attackSpeed": 0.67}}}}},
+    {"id": "minions", "src": "Minions", "name": "Lakaien", "type": "troop", "rarity": "common", "elixir": 3, "count": 3, "description": "Drei schnelle Flieger, die Boden und Luft angreifen.", "unit": {"radius": 0.4, "mass": 3, "hp": 230, "damage": 107, "hitSpeed": 1.2, "firstHit": 0.5, "speed": 1.5, "range": 2.5, "targets": "both", "flying": true, "projectile": {"kind": "magic", "speed": 16.67}}},
+    {"id": "monk", "src": "Monk", "name": "Mönch", "type": "troop", "rarity": "champion", "class": "champion", "elixir": 5, "description": "Champion. Jeder dritte Schlag trifft hart und stößt zurück. Seine Fähigkeit wirft Geschosse zurück.", "unit": {"radius": 0.5, "mass": 6, "hp": 2214, "damage": 140, "hitSpeed": 0.8, "firstHit": 0.2, "speed": 1, "range": 1.2, "targets": "ground", "traits": {"combo": {"every": 3, "damage": 422, "knockback": 1.5}}}, "ability": {"name": "Nachdenklicher Schutz", "cost": 1, "castTime": 1, "description": "4 s lang 65 % weniger Schaden; Geschosse prallen zum Absender zurück, Zauber zum nächsten Kronenturm.", "guard": {"duration": 4, "damageTaken": 0.35, "reflectProjectiles": true, "immovable": true}}},
+    {"id": "mother-witch", "src": "Mother Witch", "name": "Hexenmutter", "type": "troop", "rarity": "legendary", "elixir": 4, "description": "Verflucht getroffene Truppen 5 s lang. Stirbt eine verfluchte Truppe, wird sie zu einem Fluch-Schwein für dich.", "unit": {"radius": 0.5, "mass": 6, "hp": 529, "damage": 133, "hitSpeed": 1, "firstHit": 0.3, "speed": 1, "range": 5.5, "targets": "both", "projectile": {"kind": "magic", "speed": 10}, "traits": {"onHit": {"curse": {"duration": 5, "unit": "cursed-hog"}}}}},
+    {"id": "musketeer", "src": "Musketeer", "name": "Musketierin", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Zuverlässige Schützin mit großer Reichweite.", "unit": {"radius": 0.5, "mass": 6, "hp": 721, "damage": 217, "hitSpeed": 1, "firstHit": 0.7, "speed": 1, "range": 6, "targets": "both", "projectile": {"kind": "bullet", "speed": 16.67}}, "evo": {"cycles": 2, "description": "Hat 3 Scharfschüsse mit unbegrenzter Reichweite nach vorn (390 Schaden, keine Kronentürme).", "unit": {"traits": {"sniper": {"ammo": 3, "damage": 390, "hitSpeed": 1, "width": 2, "speed": 44, "minRange": 6}}}}},
+    {"id": "night-witch", "src": "Night Witch", "name": "Nachthexe", "type": "troop", "rarity": "legendary", "elixir": 4, "description": "Ruft alle 5 s zwei Fledermäuse; beim Tod eine weitere.", "unit": {"radius": 0.5, "mass": 6, "hp": 906, "damage": 314, "hitSpeed": 1.3, "firstHit": 0.75, "speed": 1, "range": 1.6, "targets": "ground", "traits": {"spawner": {"unit": "bats", "count": 2, "interval": 5, "firstDelay": 1}, "deathSpawn": {"unit": "bats", "count": 1}}}},
+    {"id": "pekka", "src": "P.E.K.K.A.", "name": "P.E.K.K.A.", "type": "troop", "rarity": "epic", "elixir": 7, "description": "Schwer gepanzerter Kampfroboter mit gewaltigem Schwertschlag.", "unit": {"radius": 0.75, "mass": 18, "hp": 3760, "damage": 842, "hitSpeed": 1.8, "firstHit": 0.5, "speed": 0.75, "range": 1.2, "targets": "ground"}, "evo": {"cycles": 1, "description": "Heilt sich bei jedem besiegten Gegner (160/305/577 je nach dessen Leben) – auch über ihr Maximum hinaus (bis 5640).", "unit": {"traits": {"killHeal": {"steps": [[990, 160], [1991, 305], [1000000000.0, 577]], "maxHp": 5640}}}}},
+    {"id": "phoenix", "src": "Phoenix", "name": "Phönix", "type": "troop", "rarity": "legendary", "elixir": 4, "description": "Fliegender Feuervogel. Stirbt er, explodiert er und wird zum Ei – schlüpft es nach 3,8 s, kehrt er zurück.", "unit": {"radius": 0.5, "mass": 6, "hp": 1052, "damage": 217, "hitSpeed": 1, "firstHit": 0.5, "speed": 1, "range": 1.6, "targets": "both", "flying": true, "traits": {"deathDamage": {"damage": 163, "radius": 1.5, "knockback": 1, "fx": "fire"}, "deathSpawn": {"unit": "phoenix-egg", "count": 1}}}},
+    {"id": "prince", "src": "Prince", "name": "Prinz", "type": "troop", "rarity": "epic", "elixir": 5, "description": "Stürmt nach 2,5 Feldern los und trifft dann doppelt. Springt über den Fluss.", "unit": {"radius": 0.6, "mass": 10, "hp": 1920, "damage": 391, "hitSpeed": 1.4, "firstHit": 0.5, "speed": 1, "range": 1.6, "targets": "ground", "traits": {"charge": {"distance": 2.5, "speed": 2, "damage": 783}, "riverJump": true}}},
+    {"id": "princess", "src": "Princess", "name": "Prinzessin", "type": "troop", "rarity": "legendary", "elixir": 3, "description": "Schießt brennende Pfeile mit Flächenschaden über eine riesige Distanz (9 Felder).", "unit": {"radius": 0.4, "mass": 3, "hp": 261, "damage": 168, "hitSpeed": 3, "firstHit": 0.3, "speed": 1, "range": 9, "deployTime": 1.2, "targets": "both", "splash": 2, "projectile": {"kind": "arrow", "speed": 10}}, "evo": {"cycles": 2, "description": "Ihr erster und danach jeder zweite Schuss verlangsamt Gegner im Umkreis von 3 Feldern um 30 %. Beim Tod hinterlässt sie ein Frostfeld.", "unit": {"traits": {"slowShot": {"first": true, "every": 2, "radius": 3, "amount": 0.3, "duration": 5.5}, "deathSpell": {"radius": 3, "duration": 5.5, "slow": {"amount": 0.3}, "pulse": 1, "damage": 40, "towerDamage": 0.3, "fx": "frost"}}}}},
+    {"id": "ram-rider", "src": "Ram Rider", "name": "Widderreiterin", "type": "troop", "rarity": "legendary", "elixir": 5, "description": "Der Widder stürmt auf Gebäude, die Reiterin fesselt Truppen mit ihrer Bola (70 % langsamer).", "unit": {"radius": 0.6, "mass": 10, "hp": 1766, "damage": 250, "hitSpeed": 1.7, "firstHit": 0.6, "speed": 1, "range": 0.8, "targets": "buildings", "traits": {"charge": {"distance": 2.5, "speed": 2, "damage": 501}, "riverJump": true, "secondary": {"damage": 104, "hitSpeed": 1.1, "firstHit": 0.4, "range": 5.5, "targets": "both", "troopsOnly": true, "projectile": {"kind": "bola", "speed": 10}, "onHit": {"slow": {"amount": 0.7, "duration": 2}}}}}},
+    {"id": "rascals", "src": "Rascals", "name": "Rabauken", "type": "troop", "rarity": "common", "elixir": 5, "description": "Ein zäher Rabauke vorn, zwei Rabaukinnen mit Schleudern dahinter.", "groups": [{"unit": "rascal-boy", "count": 1}, {"unit": "rascal-girl", "count": 2, "behind": 1.3}]},
+    {"id": "ronin", "src": "Ronin", "name": "Ronin", "type": "troop", "rarity": "legendary", "elixir": 5, "description": "Wandernder Schwertkämpfer. Pariert alle 3,5 s einen Nahkampfangriff und schlägt mit doppeltem Schaden zurück.", "unit": {"radius": 0.5, "mass": 6, "hp": 1779, "damage": 371, "hitSpeed": 1.3, "firstHit": 0.4, "speed": 1.5, "range": 1.2, "targets": "ground", "traits": {"parry": {"cooldown": 3.5, "mult": 2}}}},
+    {"id": "royal-ghost", "src": "Royal Ghost", "name": "Königsgeist", "type": "troop", "rarity": "legendary", "elixir": 3, "description": "Unsichtbar, bis er angreift. Nach 2 s ohne Kampf verschwindet er wieder.", "unit": {"radius": 0.5, "mass": 6, "hp": 1210, "damage": 261, "hitSpeed": 1.8, "firstHit": 0.6, "speed": 1.5, "range": 1.2, "targets": "ground", "splash": 1, "hover": true, "traits": {"stealth": {"reveal": 2}}}, "evo": {"cycles": 2, "description": "Wird er sichtbar, ruft er zwei Seelensoldaten (Landeschaden), die nach einer Kampfpause wieder verschwinden.", "unit": {"traits": {"stealth": {"reveal": 2, "onReveal": {"unit": "souldier", "count": 2, "landing": {"damage": 81, "radius": 1}}}}}}},
+    {"id": "royal-giant", "src": "Royal Giant", "name": "Königsriese", "type": "troop", "rarity": "common", "elixir": 6, "description": "Riese mit Kanone: greift Gebäude aus 5 Feldern Entfernung an.", "unit": {"radius": 0.75, "mass": 18, "hp": 3164, "damage": 307, "hitSpeed": 1.8, "firstHit": 0.9, "speed": 0.75, "range": 5, "targets": "buildings", "projectile": {"kind": "cannonball", "speed": 16.67}}, "evo": {"cycles": 1, "description": "Jeder Schuss erzeugt einen Rückstoß um ihn herum (Radius 2,5, 81 Schaden, schiebt Bodentruppen 1 Feld weg).", "unit": {"traits": {"recoilBlast": {"radius": 2.5, "damage": 81, "knockback": 1}}}}},
+    {"id": "royal-hogs", "src": "Royal Hogs", "name": "Königsschweinchen", "type": "troop", "rarity": "rare", "elixir": 5, "count": 4, "formation": "line", "description": "Vier Schweinchen, die Gebäude angreifen und über den Fluss springen.", "unit": {"radius": 0.4, "mass": 3, "hp": 837, "damage": 74, "hitSpeed": 1.2, "firstHit": 0.4, "speed": 2, "range": 0.7, "targets": "buildings", "traits": {"riverJump": true}}, "evo": {"cycles": 2, "description": "Fliegen zu Beginn. Beim ersten Angriff oder Treffer stürzen sie ab und machen Landeschaden (115).", "unit": {"flying": true, "traits": {"glide": {"landing": {"damage": 115, "radius": 1.5}}}}}},
+    {"id": "royal-recruits", "src": "Royal Recruits", "name": "Königsrekruten", "type": "troop", "rarity": "common", "elixir": 7, "count": 6, "formation": "split", "description": "Sechs Rekruten mit Schild, verteilt über die ganze Breite.", "unit": {"radius": 0.5, "mass": 6, "hp": 547, "damage": 133, "hitSpeed": 1.3, "firstHit": 0.5, "speed": 1, "range": 1.6, "targets": "ground", "traits": {"shield": 240}}, "evo": {"cycles": 1, "description": "Ist ihr Schild zerstört, stürmen sie nach 2,5 Feldern los (doppelter Schaden).", "unit": {"traits": {"charge": {"distance": 2.5, "speed": 2, "damage": 266, "needsNoShield": true}}}}},
+    {"id": "rune-giant", "src": "Rune Giant", "name": "Rune Giant", "type": "troop", "rarity": "epic", "elixir": 4, "description": "Zielt auf Gebäude und verzaubert die zwei nächsten Truppen: jeder dritte Angriff macht 220 Bonusschaden.", "unit": {"radius": 0.75, "mass": 18, "hp": 2816, "damage": 120, "hitSpeed": 1.5, "firstHit": 0.5, "speed": 1, "range": 1.2, "targets": "buildings", "traits": {"enchant": {"range": 8.5, "count": 2, "every": 3, "bonus": 220, "linger": 5}}}},
+    {"id": "skeleton-army", "src": "Skeleton Army", "name": "Skelettarmee", "type": "troop", "rarity": "epic", "elixir": 3, "count": 15, "description": "Fünfzehn Skelette auf einen Schlag.", "unit": "skeletons", "evo": {"cycles": 2, "description": "16 Skelette und General Gerry. Fallen Skelette, kämpfen ihre Schatten unverwundbar weiter – bis Gerry fällt.", "count": 16, "groups": [{"unit": "general-gerry", "count": 1, "behind": 1.5}], "unit": {"traits": {"shadowOnDeath": {"unit": "shadow-skeleton", "leader": "general-gerry"}}}}},
+    {"id": "skeleton-barrel", "src": "Skeleton Barrel", "name": "Skelettfass", "type": "troop", "rarity": "common", "elixir": 3, "description": "Fliegendes Fass, das auf Gebäude zusteuert. Platzt es, regnet es 7 Skelette.", "unit": {"radius": 0.6, "mass": 10, "hp": 532, "damage": 0, "hitSpeed": 1, "firstHit": 0.1, "speed": 1.5, "range": 0.35, "targets": "buildings", "flying": true, "traits": {"kamikaze": true, "deathDamage": {"damage": 145, "radius": 2, "delay": 0.6, "knockback": 0.6, "fx": "barrel"}, "deathSpawn": {"unit": "skeletons", "count": 7}}}, "evo": {"cycles": 2, "description": "+25 % Leben und zwei Fässer: das erste fällt bei 75 % Leben, das zweite beim Tod (je 192 Schaden + 7 Skelette).", "unit": {"hp": 665, "traits": {"dropAt": {"at": 0.75, "damage": 192, "radius": 2, "unit": "skeletons", "count": 7}, "deathDamage": {"damage": 192, "radius": 2, "delay": 0.6, "knockback": 0.6, "fx": "barrel"}}}}},
+    {"id": "skeleton-dragons", "src": "Skeleton Dragons", "name": "Skelettdrachen", "type": "troop", "rarity": "common", "elixir": 4, "count": 2, "formation": "line", "description": "Zwei fliegende Skelettdrachen mit Flächenschaden.", "unit": {"radius": 0.5, "mass": 6, "hp": 560, "damage": 161, "hitSpeed": 2, "firstHit": 0.4, "speed": 1.5, "range": 3.5, "targets": "both", "flying": true, "splash": 1.5, "projectile": {"kind": "fire", "speed": 8.33}}},
+    {"id": "skeleton-king", "src": "Skeleton King", "name": "Skelettkönig", "type": "troop", "rarity": "champion", "class": "champion", "elixir": 4, "description": "Champion mit Flächenschlag. Sammelt die Seelen gefallener Truppen und ruft damit Skelette.", "unit": {"radius": 0.75, "mass": 18, "hp": 2298, "damage": 204, "hitSpeed": 1.6, "firstHit": 0.3, "speed": 1, "range": 1.2, "targets": "ground", "splash": 1.3, "traits": {"souls": {"max": 10}}}, "ability": {"name": "Seelenruf", "cost": 2, "castTime": 1, "description": "Ruft 6 Skelette plus eines je gesammelter Seele (max. 16) im Umkreis von 4 Feldern.", "souls": {"unit": "skeletons", "base": 6, "radius": 4, "interval": 0.25, "clone": true}}},
+    {"id": "skeletons", "src": "Skeletons", "name": "Skelette", "type": "troop", "rarity": "common", "elixir": 1, "count": 3, "description": "Drei winzige, schnelle Skelette.", "unit": {"radius": 0.3, "mass": 1, "hp": 81, "damage": 81, "hitSpeed": 1.1, "firstHit": 0.5, "speed": 1.5, "range": 0.5, "targets": "ground"}, "evo": {"cycles": 2, "description": "Bei jedem Angriff entsteht ein weiteres Evo-Skelett (bis zu 8 insgesamt).", "unit": {"traits": {"onHit": {"spawn": {"unit": "skeletons", "count": 1, "groupMax": 8, "evo": true}}}}}},
+    {"id": "sparky", "src": "Sparky", "name": "Funki", "type": "troop", "rarity": "legendary", "elixir": 6, "description": "Lädt sich langsam auf und entlädt dann einen gewaltigen Flächenschuss. Betäubung setzt die Ladung zurück.", "unit": {"radius": 0.75, "mass": 18, "hp": 1451, "damage": 1331, "hitSpeed": 4, "firstHit": 1, "speed": 0.75, "range": 5, "targets": "ground", "splash": 1.8, "projectile": {"kind": "spark", "speed": 23.33}, "traits": {"chargeUp": true}}},
+    {"id": "spear-goblins", "src": "Spear Goblins", "name": "Speerkobolde", "type": "troop", "rarity": "common", "elixir": 2, "count": 3, "description": "Drei Kobolde, die Speere auf Boden- und Luftziele werfen.", "unit": {"radius": 0.4, "mass": 3, "hp": 133, "damage": 81, "hitSpeed": 1.6, "firstHit": 0.5, "speed": 2, "range": 5, "targets": "both", "projectile": {"kind": "spear", "speed": 8.33}}},
+    {"id": "spirit-empress", "src": "Spirit Empress", "name": "Spirit Empress", "type": "troop", "rarity": "legendary", "elixir": 6, "forms": [{"minElixir": 6, "elixir": 6, "unit": "spirit-empress-air"}, {"elixir": 3, "unit": "spirit-empress-ground"}], "description": "Mit 6 Elixier oder mehr kommt sie auf ihrem fliegenden Drachen (6 Elixier), sonst zu Fuß (3 Elixier).", "unit": "spirit-empress-air"},
+    {"id": "suspicious-bush", "src": "Suspicious Bush", "name": "Suspicious Bush", "type": "troop", "rarity": "rare", "elixir": 2, "description": "Unsichtbarer Busch, der zum nächsten Gebäude schleicht. Am Ziel oder beim Zerstören springen zwei Busch-Kobolde heraus.", "unit": {"radius": 0.4, "mass": 3, "hp": 90, "damage": 0, "hitSpeed": 1, "firstHit": 0.1, "speed": 1, "range": 1.6, "targets": "buildings", "traits": {"kamikaze": true, "stealth": {"always": true}, "deathSpawn": {"unit": "bush-goblin", "count": 2}}}},
+    {"id": "three-musketeers", "src": "Three Musketeers", "name": "Drei Musketierinnen", "type": "troop", "rarity": "rare", "elixir": 9, "count": 3, "description": "Drei Musketierinnen. Kommen Gegner nah heran, kämpfen sie mit dem Bajonett.", "unit": {"radius": 0.5, "mass": 6, "hp": 883, "damage": 204, "hitSpeed": 1.3, "firstHit": 0.7, "speed": 1, "range": 6, "targets": "both", "projectile": {"kind": "bullet", "speed": 16.67}, "traits": {"melee": {"range": 1.6, "damage": 314, "switch": 2.5}}}},
+    {"id": "valkyrie", "src": "Valkyrie", "name": "Walküre", "type": "troop", "rarity": "rare", "elixir": 4, "description": "Wirbelt mit der Axt und trifft alle Bodentruppen um sich herum.", "unit": {"radius": 0.5, "mass": 6, "hp": 1907, "damage": 266, "hitSpeed": 1.5, "firstHit": 0.1, "speed": 1, "range": 1.2, "targets": "ground", "splash": 2, "splashSelf": true}, "evo": {"cycles": 2, "description": "Jeder Schlag erzeugt einen kurzen Wirbelsturm (5,5 Felder), der Gegner zu ihr zieht und 84 Schaden macht.", "unit": {"traits": {"whirl": {"radius": 5.5, "duration": 0.5, "damage": 84, "towerDamage": 0.44, "pull": 1.2}}}}},
+    {"id": "wall-breakers", "src": "Wall Breakers", "name": "Mauerbrecher", "type": "troop", "rarity": "epic", "elixir": 2, "count": 2, "formation": "line", "description": "Zwei Skelette mit Sprengfässern, die sich auf Gebäude stürzen.", "unit": {"radius": 0.4, "mass": 3, "hp": 330, "damage": 391, "hitSpeed": 1, "firstHit": 0.1, "speed": 2, "range": 0.5, "targets": "buildings", "splash": 1.5, "traits": {"kamikaze": true}}, "evo": {"cycles": 2, "description": "Wird ihr Fass zerstört, explodiert es (291 Schaden) und sie rennen zu Fuß als Läufer weiter.", "unit": {"traits": {"deathDamage": {"damage": 291, "radius": 1.5, "towerDamage": 0.66, "fx": "fire", "notOnAttack": true}, "deathSpawn": {"unit": "wall-breaker-runner", "count": 1, "notOnAttack": true}}}}},
+    {"id": "witch", "src": "Witch", "name": "Hexe", "type": "troop", "rarity": "epic", "elixir": 5, "description": "Schießt mit Flächenschaden und ruft alle 7 s vier Skelette.", "unit": {"radius": 0.5, "mass": 6, "hp": 839, "damage": 135, "hitSpeed": 1.1, "firstHit": 0.7, "speed": 1, "range": 5.5, "targets": "both", "splash": 1.5, "projectile": {"kind": "magic", "speed": 10}, "traits": {"spawner": {"unit": "skeletons", "count": 4, "interval": 7, "firstDelay": 1}}}, "evo": {"cycles": 1, "description": "Stirbt eines ihrer ersten 4 Skelette einer Welle, heilt sie sich um 76 – bis zu 1039 Leben.", "unit": {"traits": {"minionHeal": {"heal": 76, "maxHp": 1039, "perWave": 4}}}}},
+    {"id": "wizard", "src": "Wizard", "name": "Magier", "type": "troop", "rarity": "rare", "elixir": 5, "description": "Schleudert Feuerbälle mit Flächenschaden auf Boden und Luft.", "unit": {"radius": 0.5, "mass": 6, "hp": 832, "damage": 304, "hitSpeed": 1.4, "firstHit": 0.5, "speed": 1, "range": 5.5, "targets": "both", "splash": 1.5, "projectile": {"kind": "fireball", "speed": 10}}, "evo": {"cycles": 1, "description": "Startet mit einem Feuerschild (177). Zerbricht es, explodiert es (281 Schaden, 3 Felder Rückstoß).", "unit": {"traits": {"shield": 177, "shieldBreak": {"radius": 3, "damage": 281, "knockback": 3, "fx": "fire"}}}}},
+    {"id": "zappies", "src": "Zappies", "name": "Zappys", "type": "troop", "rarity": "rare", "elixir": 4, "count": 3, "description": "Drei kleine Zap-Maschinen, deren Treffer betäuben.", "unit": {"radius": 0.4, "mass": 3, "hp": 529, "damage": 117, "hitSpeed": 2.3, "firstHit": 0.8, "speed": 1, "range": 4.5, "targets": "both", "projectile": {"kind": "lightning", "speed": 0}, "traits": {"onHit": {"stun": 0.5}}}},
+    {"id": "arrows", "src": "Arrows", "name": "Pfeile", "type": "spell", "rarity": "common", "elixir": 3, "description": "Drei Pfeilsalven auf eine große Fläche. Ideal gegen Schwärme.", "spell": {"radius": 3.5, "damage": 122, "towerDamage": 0.254, "waves": 3, "waveInterval": 0.25, "travel": 18.33, "targets": "both", "fx": "arrows"}},
+    {"id": "barbarian-barrel", "src": "Barbarian Barrel", "name": "Barbarenfass", "type": "spell", "rarity": "epic", "elixir": 2, "description": "Ein Fass rollt 4,5 Felder nach vorn, trifft Bodentruppen und entlässt am Ende einen Barbaren. Nur auf der eigenen Seite.", "spell": {"roll": {"length": 4.5, "width": 2.6, "speed": 6}, "damage": 230, "towerDamage": 0.5, "knockback": 0.6, "targets": "ground", "ownSide": true, "spawnAtEnd": {"unit": "barbarians", "count": 1}, "fx": "barrelRoll"}},
+    {"id": "clone", "src": "Clone", "name": "Klonzauber", "type": "spell", "rarity": "epic", "elixir": 3, "description": "Verdoppelt alle eigenen Truppen im Bereich. Die Klone haben nur 1 Lebenspunkt, treffen aber genauso hart.", "spell": {"radius": 3, "clone": {"hp": 1, "shield": 1}, "targets": "own", "fx": "clone"}},
+    {"id": "earthquake", "src": "Earthquake", "name": "Erdbeben", "type": "spell", "rarity": "rare", "elixir": 3, "description": "Erschüttert 3 s lang den Boden: Schaden an Bodentruppen, sehr viel Schaden an Gebäuden, 50 % langsamer.", "spell": {"radius": 3.5, "duration": 3, "pulse": 1, "damage": 84, "towerDamage": 0.63, "buildingDamage": 287, "slow": {"amount": 0.5}, "targets": "ground", "fx": "quake"}},
+    {"id": "fireball", "src": "Fireball", "name": "Feuerball", "type": "spell", "rarity": "rare", "elixir": 4, "description": "Feuerball mit hohem Flächenschaden und leichtem Rückstoß.", "spell": {"radius": 2.5, "damage": 688, "towerDamage": 0.231, "knockback": 1, "travel": 10, "targets": "both", "fx": "fire"}},
+    {"id": "freeze", "src": "Freeze", "name": "Frost", "type": "spell", "rarity": "epic", "elixir": 4, "description": "Friert alle Gegner im Bereich 3,5 s lang ein.", "spell": {"radius": 3, "damage": 115, "towerDamage": 0.3, "stun": 3.5, "freeze": true, "targets": "both", "fx": "frost"}},
+    {"id": "giant-snowball", "src": "Giant Snowball", "name": "Schneeball", "type": "spell", "rarity": "common", "elixir": 2, "description": "Riesiger Schneeball: Schaden, Rückstoß und 3 s lang 30 % langsamer.", "spell": {"radius": 2.5, "damage": 179, "towerDamage": 0.3, "knockback": 1, "slow": {"amount": 0.3, "duration": 3}, "travel": 13.33, "targets": "both", "fx": "snow"}, "evo": {"cycles": 2, "description": "Sammelt getroffene Truppen ein und rollt mit ihnen 4 Felder weit; Verlangsamung 4 s.", "spell": {"slow": {"amount": 0.3, "duration": 4}, "gather": {"length": 4, "speed": 5}}}},
+    {"id": "goblin-barrel", "src": "Goblin Barrel", "name": "Koboldfass", "type": "spell", "rarity": "epic", "elixir": 3, "description": "Wirft ein Fass mit drei Kobolden irgendwohin in die Arena.", "spell": {"radius": 1.5, "travel": 10, "spawn": {"unit": "goblins", "count": 3, "deployTime": 1.1}, "fx": "barrel"}, "evo": {"cycles": 2, "description": "Ein zweites Fass mit drei Lockvogel-Kobolden landet gespiegelt auf der anderen Seite.", "spell": {"mirrorSpawn": {"unit": "decoy-goblin", "count": 3, "deployTime": 1.1}}}},
+    {"id": "goblin-curse", "src": "Goblin Curse", "name": "Goblin Curse", "type": "spell", "rarity": "epic", "elixir": 2, "description": "Verflucht Gegner 6 s lang: leichter Schaden und Verlangsamung. Wer verflucht stirbt, wird zu einem Kobold für dich.", "spell": {"radius": 3, "duration": 6, "pulse": 1, "damage": 35, "towerDamage": 0.286, "slow": {"amount": 0.15}, "curse": {"unit": "goblins"}, "targets": "both", "fx": "curse"}},
+    {"id": "graveyard", "src": "Graveyard", "name": "Friedhof", "type": "spell", "rarity": "legendary", "elixir": 5, "description": "9 s lang steigen am Rand des Bereichs Skelette aus Gräbern.", "spell": {"radius": 4, "duration": 9, "graveyard": {"unit": "skeletons", "count": 14, "firstDelay": 2.2, "interval": 0.5, "ring": true}, "fx": "grave"}},
+    {"id": "lightning", "src": "Lightning", "name": "Blitz", "type": "spell", "rarity": "epic", "elixir": 6, "description": "Drei Blitze treffen die drei Ziele mit den meisten Lebenspunkten und betäuben sie.", "spell": {"radius": 3.5, "damage": 1057, "towerDamage": 0.27, "strikes": 3, "stun": 0.5, "targets": "both", "fx": "storm"}},
+    {"id": "mirror", "src": "Mirror", "name": "Spiegel", "type": "spell", "rarity": "epic", "elixir": 1, "elixirRule": "mirror", "notInStartingHand": true, "description": "Spielt deine zuletzt gespielte Karte noch einmal – eine Stufe stärker, für 1 Elixier mehr. Nie in der Starthand.", "spell": {"mirror": true}},
+    {"id": "poison", "src": "Poison", "name": "Gift", "type": "spell", "rarity": "epic", "elixir": 4, "description": "Giftwolke: 8 s lang Schaden jede Sekunde und 15 % langsamer.", "spell": {"radius": 3.5, "duration": 8, "pulse": 1, "damage": 92, "towerDamage": 0.24, "slow": {"amount": 0.15}, "targets": "both", "fx": "poison"}},
+    {"id": "rage", "src": "Rage", "name": "Wut", "type": "spell", "rarity": "epic", "elixir": 2, "description": "Eigene Truppen und Gebäude im Bereich sind 4,5 s lang 30 % schneller. Kleiner Schaden beim Aufprall.", "spell": {"radius": 3, "duration": 4.5, "damage": 179, "towerDamage": 0.3, "rage": {"mult": 1.3}, "delay": 0.5, "targets": "both", "fx": "rage"}},
+    {"id": "rocket", "src": "Rocket", "name": "Rakete", "type": "spell", "rarity": "rare", "elixir": 6, "description": "Langsame Rakete mit enormem Schaden auf kleiner Fläche.", "spell": {"radius": 2, "damage": 1484, "towerDamage": 0.25, "knockback": 1, "travel": 5.83, "targets": "both", "fx": "comet"}},
+    {"id": "royal-delivery", "src": "Royal Delivery", "name": "Königliche Luftpost", "type": "spell", "rarity": "common", "elixir": 3, "description": "Nach 3 s landet eine Kiste mit Flächenschaden und liefert einen Königsrekruten. Nur auf der eigenen Seite.", "spell": {"radius": 3, "delay": 3, "damage": 384, "towerDamage": 0, "ownSide": true, "spawn": {"unit": "royal-recruits", "count": 1, "deployTime": 0.25}, "targets": "both", "fx": "crate"}},
+    {"id": "the-log", "src": "The Log", "name": "Kampfholz", "type": "spell", "rarity": "legendary", "elixir": 2, "description": "Ein Baumstamm rollt 10,1 Felder weit, trifft alle Bodentruppen und stößt sie zurück. Nur auf der eigenen Seite.", "spell": {"roll": {"length": 10.1, "width": 3.9, "speed": 8}, "damage": 266, "towerDamage": 0.15, "knockback": 1.2, "targets": "ground", "ownSide": true, "fx": "log"}},
+    {"id": "tornado", "src": "Tornado", "name": "Tornado", "type": "spell", "rarity": "epic", "elixir": 3, "description": "Zieht Gegner in der großen Fläche 1 s lang zu seiner Mitte und macht etwas Schaden.", "spell": {"radius": 5.5, "duration": 1.05, "pulse": 0.55, "damage": 42, "towerDamage": 0.345, "pull": {"speed": 3.5}, "targets": "both", "fx": "tornado"}},
+    {"id": "vines", "src": "Vines", "name": "Vines", "type": "spell", "rarity": "epic", "elixir": 3, "description": "Ranken packen die drei Ziele mit den meisten Lebenspunkten, halten sie 2 s fest und holen Flieger auf den Boden.", "spell": {"radius": 2.5, "delay": 0.9, "vines": {"count": 3, "duration": 2, "pulses": 2}, "damage": 153, "towerDamage": 0.255, "targets": "both", "fx": "vines"}},
+    {"id": "void", "src": "Void", "name": "Void", "type": "spell", "rarity": "epic", "elixir": 5, "description": "Dunkles Feld, das dreimal einschlägt. Je weniger Ziele darin stehen, desto mehr Schaden bekommt jedes.", "spell": {"radius": 2.5, "duration": 3, "pulse": 1, "voidTiers": [[1, 696, 97], [4, 294, 51], [999, 153, 35]], "targets": "both", "fx": "void"}},
+    {"id": "zap", "src": "Zap", "name": "Knall", "type": "spell", "rarity": "common", "elixir": 2, "description": "Kurzer Stromschlag: Schaden und 0,5 s Betäubung.", "spell": {"radius": 2.5, "damage": 192, "towerDamage": 0.3, "stun": 0.5, "targets": "both", "fx": "shock"}, "evo": {"cycles": 2, "description": "Schlägt kurz danach ein zweites Mal ein – mit 0,5 Feldern mehr Radius.", "spell": {"echo": {"delay": 1, "radius": 3}}}},
+    {"id": "barbarian-hut", "src": "Barbarian Hut", "name": "Barbarenhütte", "type": "building", "rarity": "rare", "elixir": 6, "description": "Schickt alle 15 s drei Barbaren los, beim Einsturz einen weiteren.", "unit": {"hp": 1164, "size": 2, "lifetime": 30, "traits": {"spawner": {"unit": "barbarians", "count": 3, "interval": 15, "firstDelay": 1, "stagger": 0.5}, "deathSpawn": {"unit": "barbarians", "count": 1}}}},
+    {"id": "bomb-tower", "src": "Bomb Tower", "name": "Bombenturm", "type": "building", "rarity": "rare", "elixir": 4, "description": "Verteidigungsturm mit Bombenwerfer gegen Bodentruppen. Beim Einsturz fällt eine Bombe.", "unit": {"hp": 1356, "damage": 222, "hitSpeed": 1.8, "firstHit": 0.5, "range": 6, "targets": "ground", "splash": 1.5, "size": 2, "lifetime": 30, "projectile": {"kind": "bomb", "speed": 8.33, "arc": true}, "traits": {"deathDamage": {"damage": 222, "radius": 3, "delay": 3, "fx": "fire"}}}},
+    {"id": "cannon", "src": "Cannon", "name": "Kanone", "type": "building", "rarity": "common", "elixir": 3, "description": "Günstige Kanone gegen Bodentruppen.", "unit": {"hp": 824, "damage": 202, "hitSpeed": 1, "firstHit": 1, "range": 5.5, "targets": "ground", "size": 2, "lifetime": 30, "projectile": {"kind": "cannonball", "speed": 16.67}}, "evo": {"cycles": 2, "description": "Beim Aufstellen feuert sie 9 Kanonenkugeln in zwei Reihen über die Arena (304 Schaden, Rückstoß).", "unit": {"traits": {"barrage": {"rows": [[5, 3], [4, 6]], "radius": 2, "damage": 304, "towerDamage": 0.29, "knockback": 1}}}}},
+    {"id": "elixir-collector", "src": "Elixir Collector", "name": "Elixiersammler", "type": "building", "rarity": "rare", "elixir": 6, "notInStartingHand": true, "description": "Erzeugt alle 13 s ein Elixier (93 s lang) und beim Einsturz ein weiteres. Nie in der Starthand.", "unit": {"hp": 1070, "size": 2, "lifetime": 93, "traits": {"elixirGen": {"amount": 1, "interval": 13}, "deathElixirSelf": 1}}},
+    {"id": "goblin-cage", "src": "Goblin Cage", "name": "Koboldkäfig", "type": "building", "rarity": "rare", "elixir": 4, "description": "Ein Käfig als Köder. Wird er zerstört, stürmt ein Kobold-Raufbold heraus.", "unit": {"hp": 780, "size": 2, "lifetime": 20, "traits": {"deathSpawn": {"unit": "goblin-brawler", "count": 1}}}, "evo": {"cycles": 2, "description": "Zieht Bodentruppen in 3 Feldern in den Käfig und schadet ihnen jede Sekunde, bis Ziel oder Käfig fallen.", "unit": {"traits": {"trap": {"range": 3, "damage": 337, "hitSpeed": 1}}}}},
+    {"id": "goblin-drill", "src": "Goblin Drill", "name": "Koboldbohrer", "type": "building", "rarity": "epic", "elixir": 4, "description": "Gräbt sich überall in der Arena hoch und schickt alle 3 s einen Kobold, beim Einsturz zwei weitere.", "unit": {"hp": 1313, "size": 2, "lifetime": 10, "traits": {"deployAnywhere": true, "deployBlast": {"damage": 84, "radius": 2, "knockback": 1, "towerDamage": 0, "fx": "rock"}, "spawner": {"unit": "goblins", "count": 1, "interval": 3, "firstDelay": 0.8}, "deathSpawn": {"unit": "goblins", "count": 2}}}, "evo": {"cycles": 2, "description": "Bei 66 % und 33 % Leben taucht er ab und an anderer Stelle wieder auf – jedes Mal mit einem Kobold.", "unit": {"traits": {"resurface": {"at": [0.66, 0.33], "radius": 3, "unit": "goblins"}}}}},
+    {"id": "goblin-hut", "src": "Goblin Hut", "name": "Koboldhütte", "type": "building", "rarity": "rare", "elixir": 4, "description": "Schickt alle 2,2 s einen Speerkobold los, sobald Gegner in 6 Feldern sind.", "unit": {"hp": 1228, "size": 2, "lifetime": 30, "traits": {"spawner": {"unit": "spear-goblins", "count": 1, "interval": 2.2, "firstDelay": 0.5, "enemyInRange": 6}, "deathSpawn": {"unit": "spear-goblins", "count": 1}}}},
+    {"id": "inferno-tower", "src": "Inferno Tower", "name": "Infernoturm", "type": "building", "rarity": "rare", "elixir": 5, "description": "Verteidigungsturm mit Feuerstrahl, der immer stärker wird.", "unit": {"hp": 1748, "damage": 43, "hitSpeed": 0.4, "firstHit": 0.2, "range": 6, "targets": "both", "size": 2, "lifetime": 30, "projectile": {"kind": "beam", "speed": 0}, "traits": {"ramp": {"stages": [43, 158, 847], "stageTime": 2}}}},
+    {"id": "mortar", "src": "Mortar", "name": "Minenwerfer", "type": "building", "rarity": "common", "elixir": 4, "description": "Belagerungsgeschütz mit 11,5 Feldern Reichweite und totem Winkel unter 3,5 Feldern.", "unit": {"hp": 1369, "damage": 266, "hitSpeed": 4.7, "firstHit": 1, "range": 11.5, "minRange": 3.5, "targets": "ground", "splash": 2, "size": 2, "lifetime": 30, "deployTime": 3.5, "projectile": {"kind": "boulder", "speed": 5, "arc": true}}, "evo": {"cycles": 2, "description": "Jeder Schuss bringt zusätzlich einen Kobold an den Einschlagsort.", "unit": {"traits": {"impactSpawn": {"unit": "goblins", "count": 1}}}}},
+    {"id": "tesla", "src": "Tesla", "name": "Tesla", "type": "building", "rarity": "common", "elixir": 4, "description": "Versteckt sich im Boden, bis Gegner kommen, und trifft Boden und Luft.", "unit": {"hp": 1152, "damage": 220, "hitSpeed": 1.1, "firstHit": 0.5, "range": 5.5, "targets": "both", "size": 2, "lifetime": 25, "projectile": {"kind": "lightning", "speed": 0}, "traits": {"hidden": true}}, "evo": {"cycles": 2, "description": "Jedes Mal, wenn sie auftaucht, löst sie einen Elektroimpuls aus (6 Felder, 174 Schaden, 0,5 s Betäubung).", "unit": {"traits": {"hidden": true, "surfacePulse": {"radius": 6, "damage": 174, "stun": 0.5, "towerDamage": 0.3, "fx": "shock"}}}}},
+    {"id": "tombstone", "src": "Tombstone", "name": "Grabstein", "type": "building", "rarity": "rare", "elixir": 3, "description": "Ruft alle 4 s zwei Skelette, beim Einsturz vier weitere.", "unit": {"hp": 529, "size": 2, "lifetime": 30, "traits": {"spawner": {"unit": "skeletons", "count": 2, "interval": 4, "firstDelay": 1, "stagger": 0.5}, "deathSpawn": {"unit": "skeletons", "count": 4}}}},
+    {"id": "x-bow", "src": "X-Bow", "name": "X-Bogen", "type": "building", "rarity": "epic", "elixir": 6, "description": "Belagerungs-Armbrust mit 11,5 Feldern Reichweite gegen Bodenziele.", "unit": {"hp": 1600, "damage": 58, "hitSpeed": 0.4, "firstHit": 0.4, "range": 11.5, "targets": "ground", "size": 2.5, "lifetime": 30, "deployTime": 3.5, "projectile": {"kind": "bolt", "speed": 22}}},
+    {"id": "knight-hero", "src": "Knight/Hero", "name": "Ritter (Held)", "type": "troop", "rarity": "common", "class": "hero", "heroOf": "knight", "elixir": 3, "description": "Robuster Nahkämpfer – günstig und vielseitig.", "unit": {"radius": 0.5, "mass": 6, "hp": 1766, "damage": 202, "hitSpeed": 1.2, "firstHit": 0.5, "speed": 1, "range": 1.2, "targets": "ground"}, "ability": {"name": "Triumphaler Spott", "cost": 2, "castTime": 0.93, "description": "Zwingt 5 s lang alle Gegner in 7,5 Feldern, ihn anzugreifen, und erhält einen Schild (512).", "taunt": {"radius": 7.5, "duration": 5}, "shield": 512}},
+    {"id": "giant-hero", "src": "Giant/Hero", "name": "Riese (Held)", "type": "troop", "rarity": "rare", "class": "hero", "heroOf": "giant", "elixir": 5, "description": "Langsamer, sehr zäher Tank, der nur Gebäude angreift.", "unit": {"radius": 0.75, "mass": 18, "hp": 3968, "damage": 253, "hitSpeed": 1.5, "firstHit": 0.5, "speed": 0.75, "range": 1.2, "targets": "buildings"}, "ability": {"name": "Heldenwurf", "cost": 2, "castTime": 0.93, "description": "Packt die stärkste gegnerische Truppe in seiner Nähe und schleudert sie 9 Felder quer über die Arena (135 Aufprallschaden, 2 s betäubt).", "hurl": {"grab": 2.5, "distance": 9, "damage": 135, "stun": 2}}},
+    {"id": "mini-pekka-hero", "src": "Mini P.E.K.K.A./Hero", "name": "Mini-P.E.K.K.A. (Held)", "type": "troop", "rarity": "rare", "class": "hero", "heroOf": "mini-pekka", "elixir": 4, "description": "Kleiner Kampfroboter mit riesigem Schaden.", "unit": {"radius": 0.5, "mass": 6, "hp": 1433, "damage": 755, "hitSpeed": 1.6, "firstHit": 0.5, "speed": 1.5, "range": 0.8, "targets": "ground"}, "ability": {"name": "Pfannkuchen-Power", "cost": 1, "castTime": 0.93, "description": "Isst seine Pfannkuchen: +1 bis +5 Stufen (je nach gefüllten Pfannkuchen-Leisten) und heilt 30 %.", "pancakes": {"fillTime": 22, "perHit": 10, "bars": 3, "levels": [1, 2, 3, 5], "heal": 0.3}}},
+    {"id": "musketeer-hero", "src": "Musketeer/Hero", "name": "Musketierin (Held)", "type": "troop", "rarity": "rare", "class": "hero", "heroOf": "musketeer", "elixir": 4, "description": "Zuverlässige Schützin mit großer Reichweite.", "unit": {"radius": 0.5, "mass": 6, "hp": 721, "damage": 217, "hitSpeed": 1, "firstHit": 0.5, "speed": 1, "range": 6, "targets": "both", "projectile": {"kind": "bullet", "speed": 16.67}}, "ability": {"name": "Treuer Geschützturm", "cost": 3, "castTime": 1, "description": "Stellt 3 Felder vor ihr einen Geschützturm auf (10 s, schießt schnell auf Boden und Luft, Landeschaden).", "build": {"unit": "hero-turret", "forward": 3, "landing": {"damage": 204, "radius": 1.5}}}},
+    {"id": "ice-golem-hero", "src": "Ice Golem/Hero", "name": "Eisgolem (Held)", "type": "troop", "rarity": "rare", "class": "hero", "heroOf": "ice-golem", "elixir": 2, "description": "Zäher Gebäude-Angreifer. Explodiert beim Tod und verlangsamt alles in der Nähe.", "unit": {"radius": 0.6, "mass": 10, "hp": 1228, "damage": 84, "hitSpeed": 2.5, "firstHit": 1.5, "speed": 0.75, "range": 1.2, "targets": "buildings", "traits": {"deathDamage": {"damage": 84, "radius": 2, "slow": {"amount": 0.3, "duration": 2.5}, "fx": "frost"}}}, "ability": {"name": "Schneesturm", "cost": 2, "castTime": 1, "description": "Drei Eisstöße in 4 Feldern Umkreis: je 69 Schaden und 30 % langsamer (2 s); der dritte Stoß ist stärker.", "pulses": {"radius": 4, "count": 3, "interval": 1, "damage": [69, 69, 126], "slow": {"amount": 0.3, "duration": 2}, "towerDamage": 0.3, "fx": "frost"}}},
+    {"id": "wizard-hero", "src": "Wizard/Hero", "name": "Magier (Held)", "type": "troop", "rarity": "rare", "class": "hero", "heroOf": "wizard", "elixir": 5, "description": "Schleudert Feuerbälle mit Flächenschaden auf Boden und Luft.", "unit": {"radius": 0.5, "mass": 6, "hp": 832, "damage": 304, "hitSpeed": 1.4, "firstHit": 0.5, "speed": 1, "range": 5.5, "targets": "both", "splash": 1.5, "projectile": {"kind": "fireball", "speed": 10}}, "ability": {"name": "Feuriger Flug", "cost": 1, "castTime": 1, "description": "Fliegt 3,5 s, ist 50 % schneller und seine Feuerbälle erzeugen Feuerwirbel (4 Felder), die Gegner anziehen.", "flight": {"duration": 3.5, "speedMult": 1.5, "whirl": {"radius": 4, "duration": 2, "damage": 43, "towerDamage": 0.36, "pull": 1}}}},
+    {"id": "goblins-hero", "src": "Goblins/Hero", "name": "Kobolde (Held)", "type": "troop", "rarity": "common", "class": "hero", "heroOf": "goblins", "elixir": 2, "count": 4, "description": "Vier flinke Kobolde mit Messern.", "unit": {"radius": 0.4, "mass": 3, "hp": 202, "damage": 125, "hitSpeed": 1.1, "firstHit": 0.6, "speed": 2, "range": 0.5, "targets": "ground"}, "ability": {"name": "Bannerbrigade", "cost": 1, "castTime": 0.5, "description": "Der letzte Kobold lässt ein Banner fallen, das nach 1 s zwei weitere Kobolde ruft (Banner hält 5 s).", "banner": {"unit": "goblins", "count": 2, "delay": 1, "lifetime": 5}}},
+    {"id": "mega-minion-hero", "src": "Mega Minion/Hero", "name": "Megalakai (Held)", "type": "troop", "rarity": "rare", "class": "hero", "heroOf": "mega-minion", "elixir": 3, "description": "Gepanzerter Flieger mit hartem Schlag.", "unit": {"radius": 0.5, "mass": 6, "hp": 837, "damage": 312, "hitSpeed": 1.5, "firstHit": 0.4, "speed": 1, "range": 1.6, "targets": "both", "flying": true, "projectile": {"kind": "magic", "speed": 16.67}}, "ability": {"name": "Verwundender Sprung", "cost": 2, "castTime": 0, "description": "Teleportiert zum Gegner mit den wenigsten Lebenspunkten (399 Schaden, Türme ¼) und kehrt nach dem Sieg oder 3,5 s zurück.", "warp": {"damage": 399, "towerDamage": 0.25, "returnAfter": 3.5}}},
+    {"id": "barbarian-barrel-hero", "src": "Barbarian Barrel/Hero", "name": "Barbarenfass (Held)", "type": "spell", "rarity": "epic", "class": "hero", "heroOf": "barbarian-barrel", "elixir": 2, "description": "Ein Fass rollt 4,5 Felder nach vorn, trifft Bodentruppen und entlässt am Ende einen Barbaren. Nur auf der eigenen Seite.", "spell": {"roll": {"length": 4.5, "width": 2.6, "speed": 6}, "damage": 230, "towerDamage": 0.5, "knockback": 0.6, "targets": "ground", "ownSide": true, "spawnAtEnd": {"unit": "barbarians", "count": 1, "hero": true}, "fx": "barrelRoll"}, "ability": {"name": "Zweite Runde", "cost": 1, "castTime": 0.3, "description": "Der Barbar rollt noch einmal 3 Felder weit (230 Schaden) und heilt sich dabei um 50 %.", "reroll": {"length": 3, "width": 2.6, "damage": 230, "heal": 0.5}}},
+    {"id": "magic-archer-hero", "src": "Magic Archer/Hero", "name": "Magieschütze (Held)", "type": "troop", "rarity": "legendary", "class": "hero", "heroOf": "magic-archer", "elixir": 4, "description": "Sein magischer Pfeil durchschlägt alles in einer Linie bis 11 Felder weit.", "unit": {"radius": 0.5, "mass": 6, "hp": 529, "damage": 133, "hitSpeed": 1.1, "firstHit": 0.7, "speed": 1, "range": 7, "targets": "both", "projectile": {"kind": "magic", "speed": 16.67}, "traits": {"pierce": {"length": 11, "width": 0.5}}}, "ability": {"name": "Dreifachgefahr", "cost": 2, "castTime": 0.3, "description": "Springt 3,5 Felder zurück, lässt einen Lockvogel (7 s) stehen und schießt als Nächstes drei weite Pfeile.", "decoy": {"unit": "magic-archer-decoy", "back": 3.5}, "tripleShot": {"damage": 48, "count": 3, "length": 13.5, "spread": 12}}},
+    {"id": "balloon-hero", "src": "Balloon/Hero", "name": "Ballon (Held)", "type": "troop", "rarity": "epic", "class": "hero", "heroOf": "balloon", "elixir": 5, "description": "Fliegt zu Gebäuden und wirft schwere Bomben. Beim Absturz fällt nach 3 s eine Bombe.", "unit": {"radius": 0.6, "mass": 10, "hp": 1679, "damage": 640, "hitSpeed": 2, "firstHit": 0.2, "speed": 1, "range": 0.1, "targets": "buildings", "flying": true, "traits": {"deathDamage": {"damage": 240, "radius": 3, "delay": 3, "fx": "fire"}}}, "ability": {"name": "Sargkadetten", "cost": 2, "castTime": 0.3, "description": "Ein Skelett-Fallschirmjäger springt auf die nächste Bodentruppe in 6 Feldern (Landeschaden) und kämpft weiter.", "paratrooper": {"unit": "skeletrooper", "search": 6, "landing": {"damage": 229, "radius": 1.5, "towerDamage": 0.1}}}},
+    {"id": "bowler-hero", "src": "Bowler/Hero", "name": "Bowler (Held)", "type": "troop", "rarity": "epic", "class": "hero", "heroOf": "bowler", "elixir": 5, "description": "Rollt Felsbrocken, die durch alle Bodenziele in einer Linie gehen und sie zurückstoßen.", "unit": {"radius": 0.75, "mass": 18, "hp": 2081, "damage": 289, "hitSpeed": 2.5, "firstHit": 0.5, "speed": 0.75, "range": 4, "targets": "ground", "projectile": {"kind": "boulder", "speed": 2.83}, "traits": {"pierce": {"length": 7, "width": 1.8, "knockback": 1}}}, "ability": {"name": "Steinwurf", "cost": 2, "castTime": 2.5, "description": "Stellt sich auf und wirft 7,3 s lang Felsen wie ein Mörser (11,5 Felder, 508 Schaden).", "stance": {"duration": 7.3, "range": 11.5, "hitSpeed": 1.9, "damage": 508, "towerDamage": 0.5, "splash": 1.5, "projectile": {"kind": "boulder", "speed": 6, "arc": true}}}},
+    {"id": "dark-prince-hero", "src": "Dark Prince/Hero", "name": "Dunkler Prinz (Held)", "type": "troop", "rarity": "epic", "class": "hero", "heroOf": "dark-prince", "elixir": 4, "description": "Gepanzerter Reiter mit Schild. Trifft rundherum und stürmt nach 3 Feldern mit doppeltem Schaden los.", "unit": {"radius": 0.6, "mass": 10, "hp": 1200, "damage": 266, "hitSpeed": 1.4, "firstHit": 0.6, "speed": 1, "range": 1.2, "targets": "ground", "splash": 1.1, "splashSelf": true, "traits": {"shield": 256, "charge": {"distance": 3, "speed": 2, "damage": 532}, "riverJump": true}}, "ability": {"name": "Zerstörerischer Absprung", "cost": 3, "castTime": 0.5, "description": "Springt vom Nashorn (307 Landeschaden). Das Nashorn stürmt auf Gebäude, der Prinz kämpft zu Fuß weiter.", "dismount": {"mount": "rhino", "landing": {"damage": 307, "radius": 1.5}, "rider": {"riverJump": false}}}},
+    {"id": "tombstone-hero", "src": "Tombstone/Hero", "name": "Grabstein (Held)", "type": "building", "rarity": "rare", "class": "hero", "heroOf": "tombstone", "elixir": 3, "description": "Ruft alle 4 s zwei Skelette, beim Einsturz vier weitere.", "unit": {"hp": 529, "size": 2, "lifetime": 30, "traits": {"spawner": {"unit": "skeletons", "count": 2, "interval": 4, "firstDelay": 1, "stagger": 0.5}, "deathSpawn": {"unit": "skeletons", "count": 4}}}, "ability": {"name": "Königliche Wiederkehr", "cost": 5, "castTime": 1, "description": "Die Grabkönigin steigt aus der Erde und marschiert auf Gebäude.", "summon": {"unit": "tomb-queen", "count": 1}}},
+    {"id": "berserker-hero", "src": "Berserker/Hero", "name": "Berserker (Held)", "type": "troop", "rarity": "common", "class": "hero", "heroOf": "berserker", "elixir": 2, "description": "Flinke Nahkämpferin, die sehr schnell zuschlägt.", "unit": {"radius": 0.5, "mass": 6, "hp": 896, "damage": 102, "hitSpeed": 0.6, "firstHit": 0.2, "speed": 1.5, "range": 0.8, "targets": "ground"}, "ability": {"name": "Wilde Wut", "cost": 3, "castTime": 0.3, "description": "3,5 s Bärengeist: rasend schnelle Schläge (167), sehr schnell, fällt nicht unter 1 Leben. Weniger Schaden an Kronentürmen.", "frenzy": {"duration": 3.5, "hitSpeed": 0.2, "damage": 167, "speed": 2.25, "towerDamage": 0.25, "minHp": 1}}},
+    {"id": "valkyrie-hero", "src": "Valkyrie/Hero", "name": "Walküre (Held)", "type": "troop", "rarity": "rare", "class": "hero", "heroOf": "valkyrie", "elixir": 4, "description": "Wirbelt mit der Axt und trifft alle Bodentruppen um sich herum.", "unit": {"radius": 0.5, "mass": 6, "hp": 1907, "damage": 266, "hitSpeed": 1.5, "firstHit": 0.1, "speed": 1, "range": 1.2, "targets": "ground", "splash": 2, "splashSelf": true}, "ability": {"name": "Wilder Wirbelwind", "cost": 3, "castTime": 0.3, "description": "Wirbelt 3,5 s lang: alle 0,25 s 97 Schaden im Umkreis von 2,5 Feldern, schneller und 15 % weniger Schaden.", "spin": {"duration": 3.5, "interval": 0.25, "radius": 2.5, "damage": 97, "towerDamage": 0.5, "damageTaken": 0.85, "speedMult": 1.3}}},
+    {"id": "ice-wizard-hero", "src": "Ice Wizard/Hero", "name": "Eismagier (Held)", "type": "troop", "rarity": "legendary", "class": "hero", "heroOf": "ice-wizard", "elixir": 3, "description": "Seine Eissplitter verlangsamen Gegner um 30 %. Landet mit einem Frostschlag.", "unit": {"radius": 0.5, "mass": 6, "hp": 688, "damage": 89, "hitSpeed": 1.7, "firstHit": 0.5, "speed": 1, "range": 5.5, "targets": "both", "splash": 1.5, "projectile": {"kind": "ice", "speed": 11.67}, "traits": {"onHit": {"slow": {"amount": 0.3, "duration": 2.5}}, "deployBlast": {"damage": 84, "radius": 3, "slow": {"amount": 0.3, "duration": 1}, "fx": "frost"}}}, "ability": {"name": "Frostkerl", "cost": 2, "castTime": 1, "description": "Beschwört einen Schneemann, der beim Erscheinen Schaden macht und Gegner in seiner Nähe einfriert, solange er steht.", "summon": {"unit": "snowman", "count": 1, "forward": 1.5}}}
   ],
   "tokens": {
-    "felsbrocken": { "name": "Felsbrocken", "hp": 1000, "damage": 60, "hitSpeed": 2.5, "range": 0.8, "speed": 0.75, "targets": "buildings", "radius": 0.6, "mass": 10, "deployTime": 0.4,
-      "traits": { "deathDamage": { "damage": 60, "radius": 1.5, "fx": "rock" } },
-      "look": { "body": "golem", "cloth": "#8d8f94", "accent": "#6fd36b", "scale": 0.75 } },
-    "glutblaeschen": { "name": "Glutbläschen", "hp": 180, "damage": 45, "hitSpeed": 1.7, "range": 1.6, "speed": 1.5, "flying": true, "targets": "both", "radius": 0.35, "mass": 1, "deployTime": 0.3,
-      "projectile": { "kind": "spit", "speed": 10 },
-      "look": { "body": "whale", "cloth": "#e0603a", "accent": "#ffcf6b", "scale": 0.65 } },
-    "pulverfass": { "name": "Pulverfässchen", "hp": 150, "damage": 220, "hitSpeed": 0.5, "firstHit": 0.1, "range": 0.5, "speed": 1.5, "targets": "buildings", "splash": 1.5, "radius": 0.4, "mass": 3, "deployTime": 0.3,
-      "traits": { "kamikaze": true },
-      "look": { "body": "barrel", "cloth": "#8b5a2b", "accent": "#5a3fa0" } },
-    "wurzelwicht": { "name": "Wurzelwicht", "hp": 300, "damage": 90, "hitSpeed": 1.0, "range": 0.6, "speed": 1.5, "targets": "ground", "radius": 0.35, "mass": 2, "deployTime": 0.5,
-      "look": { "body": "blob", "cloth": "#6ab04c", "accent": "#a6e05a" } },
-    "tueftelgeschuetz": { "name": "Tüftel-Geschütz", "type": "building", "hp": 700, "damage": 110, "hitSpeed": 0.6, "range": 5.5, "targets": "both", "size": 1.5, "lifetime": 20, "deployTime": 0.5,
-      "projectile": { "kind": "bolt", "speed": 16 },
-      "look": { "body": "turret", "cloth": "#2e86c1", "accent": "#f5b041" } }
+    "cannon-cart-cannon": {"name": "Kanonenkarre (fest)", "type": "building", "hp": 1809, "damage": 212, "hitSpeed": 0.9, "firstHit": 0.5, "range": 5.5, "targets": "ground", "size": 1.5, "lifetime": 15, "deployTime": 0, "projectile": {"kind": "cannonball", "speed": 16.67}, "lifetimeFromHp": true},
+    "elixir-golemite": {"name": "Elixiergolemit", "hp": 762, "damage": 128, "hitSpeed": 1.1, "firstHit": 0.8, "speed": 1, "range": 0.8, "targets": "buildings", "radius": 0.55, "mass": 8, "traits": {"deathSpawn": {"unit": "elixir-blob", "count": 2}, "deathElixir": 0.5}},
+    "elixir-blob": {"name": "Elixierklecks", "hp": 360, "damage": 64, "hitSpeed": 1.1, "firstHit": 0.8, "speed": 1.5, "range": 0.8, "targets": "buildings", "radius": 0.4, "mass": 3, "traits": {"deathElixir": 0.5}},
+    "goblin-demolisher-kamikaze": {"name": "Goblin Demolisher (Ansturm)", "hp": 1300, "damage": 404, "hitSpeed": 0.5, "firstHit": 0.1, "speed": 2, "range": 0.5, "targets": "buildings", "radius": 0.5, "mass": 6, "lifetime": 10, "deployTime": 0, "traits": {"kamikaze": true, "deathDamage": {"damage": 404, "radius": 2.5, "knockback": 1, "fx": "fire"}}},
+    "goblinstein-monster": {"name": "Monster", "hp": 2240, "damage": 128, "hitSpeed": 1.5, "firstHit": 0.8, "speed": 1, "range": 1.2, "targets": "buildings", "radius": 0.75, "mass": 18},
+    "golemite": {"name": "Golemit", "hp": 1039, "damage": 84, "hitSpeed": 2.5, "firstHit": 1, "speed": 0.75, "range": 0.25, "targets": "buildings", "radius": 0.6, "mass": 10, "traits": {"deathDamage": {"damage": 99, "radius": 2, "knockback": 1, "fx": "rock"}}},
+    "lava-pup": {"name": "Lavawelpe", "hp": 217, "damage": 81, "hitSpeed": 1.7, "firstHit": 1, "speed": 1, "range": 1.6, "targets": "both", "flying": true, "radius": 0.35, "mass": 1, "projectile": {"kind": "spit", "speed": 8.33}},
+    "guardienne": {"name": "Guardienne", "hp": 1600, "damage": 217, "hitSpeed": 1.2, "firstHit": 0.5, "speed": 1, "range": 1.2, "targets": "ground", "deployTime": 0.3, "radius": 0.5, "mass": 6},
+    "lumberjack-ghost": {"name": "Holzfäller-Geist", "hp": 1, "damage": 256, "hitSpeed": 0.8, "firstHit": 0.4, "speed": 2, "range": 0.7, "targets": "ground", "radius": 0.5, "mass": 6, "lifetime": 6, "deployTime": 0, "towerDamage": 0.5, "traits": {"untargetable": true, "invulnerable": true}},
+    "cursed-hog": {"name": "Fluch-Schwein", "hp": 629, "damage": 53, "hitSpeed": 1.2, "firstHit": 0.25, "speed": 2, "range": 0.75, "targets": "buildings", "deployTime": 0.2, "radius": 0.45, "mass": 4, "traits": {"riverJump": true}},
+    "phoenix-egg": {"name": "Phönix-Ei", "type": "building", "hp": 240, "size": 1, "lifetime": 3.8, "deployTime": 0, "traits": {"hatch": {"unit": "phoenix-reborn"}}},
+    "phoenix-reborn": {"name": "Phönix (wiedergeboren)", "hp": 1052, "damage": 217, "hitSpeed": 1, "firstHit": 0.5, "speed": 1, "range": 1.6, "targets": "both", "flying": true, "radius": 0.5, "mass": 6, "deployTime": 0.5},
+    "rascal-boy": {"name": "Rabauke", "hp": 1868, "damage": 217, "hitSpeed": 1.5, "firstHit": 0.4, "speed": 1, "range": 0.8, "targets": "ground", "radius": 0.55, "mass": 8},
+    "rascal-girl": {"name": "Rabaukin", "hp": 261, "damage": 125, "hitSpeed": 1, "firstHit": 0.5, "speed": 1, "range": 5, "targets": "both", "radius": 0.4, "mass": 3, "projectile": {"kind": "pebble", "speed": 13.33}},
+    "souldier": {"name": "Seelensoldat", "hp": 81, "damage": 81, "hitSpeed": 1.8, "firstHit": 0.6, "speed": 1.5, "range": 1.2, "targets": "ground", "splash": 1, "deployTime": 0.2, "radius": 0.4, "mass": 3, "traits": {"stealth": {"reveal": 2, "vanish": true}}},
+    "general-gerry": {"name": "General Gerry", "hp": 81, "damage": 81, "hitSpeed": 1, "firstHit": 0.5, "speed": 1.5, "range": 1.6, "targets": "ground", "radius": 0.4, "mass": 3, "traits": {"shield": 81}},
+    "shadow-skeleton": {"name": "Schattenskelett", "hp": 1, "damage": 81, "hitSpeed": 1.1, "firstHit": 0.5, "speed": 1, "range": 0.5, "targets": "ground", "radius": 0.3, "mass": 1, "deployTime": 0.2, "traits": {"untargetable": true, "invulnerable": true}},
+    "spirit-empress-air": {"name": "Spirit Empress (Drache)", "hp": 1121, "damage": 320, "hitSpeed": 1.4, "firstHit": 0.6, "speed": 1, "range": 5, "targets": "both", "flying": true, "radius": 0.75, "mass": 12, "projectile": {"kind": "spirit", "speed": 10}},
+    "spirit-empress-ground": {"name": "Spirit Empress (zu Fuß)", "hp": 1121, "damage": 320, "hitSpeed": 1.2, "firstHit": 0.3, "speed": 1.5, "range": 1.2, "targets": "ground", "radius": 0.5, "mass": 6},
+    "bush-goblin": {"name": "Busch-Kobold", "hp": 304, "damage": 256, "hitSpeed": 1.4, "firstHit": 0.4, "speed": 1, "range": 0.8, "targets": "ground", "radius": 0.4, "mass": 3},
+    "wall-breaker-runner": {"name": "Läufer", "hp": 164, "damage": 196, "hitSpeed": 1, "firstHit": 0.1, "speed": 2, "range": 0.5, "targets": "buildings", "splash": 1.5, "radius": 0.35, "mass": 2, "deployTime": 0.2, "traits": {"kamikaze": true}},
+    "decoy-goblin": {"name": "Lockvogel-Kobold", "hp": 81, "damage": 89, "hitSpeed": 1.1, "firstHit": 0.4, "speed": 2, "range": 0.5, "targets": "ground", "radius": 0.35, "mass": 2},
+    "goblin-brawler": {"name": "Kobold-Raufbold", "hp": 1123, "damage": 337, "hitSpeed": 1.1, "firstHit": 0.2, "speed": 1.5, "range": 0.8, "targets": "ground", "radius": 0.55, "mass": 8},
+    "hero-turret": {"name": "Geschützturm", "type": "building", "hp": 721, "damage": 140, "hitSpeed": 0.5, "firstHit": 0.3, "range": 4, "targets": "both", "size": 1.5, "lifetime": 10, "deployTime": 2, "projectile": {"kind": "bullet", "speed": 16.67}},
+    "magic-archer-decoy": {"name": "Lockvogel", "hp": 271, "damage": 0, "speed": 0, "range": 0, "targets": "ground", "radius": 0.45, "mass": 1000000, "lifetime": 7, "deployTime": 0},
+    "skeletrooper": {"name": "Skelett-Fallschirmjäger", "hp": 473, "damage": 204, "hitSpeed": 1.1, "firstHit": 0.4, "speed": 2, "range": 0.8, "targets": "ground", "towerDamage": 0.1, "radius": 0.4, "mass": 3, "deployTime": 0.3},
+    "rhino": {"name": "Nashorn", "hp": 1356, "damage": 179, "hitSpeed": 1.6, "firstHit": 0.5, "speed": 1, "range": 0.8, "targets": "buildings", "radius": 0.65, "mass": 12, "deployTime": 0, "traits": {"charge": {"distance": 2.5, "speed": 2, "damage": 358}}},
+    "tomb-queen": {"name": "Grabkönigin", "hp": 4224, "damage": 422, "hitSpeed": 1.5, "firstHit": 0.5, "speed": 0.75, "range": 1.2, "sight": 7, "targets": "buildings", "radius": 0.75, "mass": 18, "deployTime": 1},
+    "snowman": {"name": "Schneemann", "hp": 425, "damage": 0, "speed": 0, "range": 0, "targets": "ground", "radius": 0.6, "mass": 1000000, "lifetime": 5, "deployTime": 0, "traits": {"deployBlast": {"damage": 84, "radius": 2.5, "fx": "frost"}, "freezeAura": {"radius": 2.5}}}
   }
 }
