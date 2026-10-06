@@ -46,6 +46,8 @@ export class Vfx {
     this.stopDebt = 0;
     this.stats = { spawned: 0, dropped: 0, emitted: 0, peak: 0 };
     this.dmgSeen = new Map();
+    // Optionaler Sound-Hook: (name, lautstärke, env) → z. B. audio.sfx; Preset-Eintrag { type: 'sound', name, vol }
+    this.onSound = opts.onSound || null;
   }
 
   // ───────────── Konfiguration ─────────────
@@ -184,6 +186,9 @@ export class Vfx {
           break;
         case 'text':
           this.text(env.x, env.y, it.str || '!', it.color || '#ffffff', it.size ?? 0.6, it.life ?? 0.8, (env.z || 0) + (it.z ?? 1.2), it.rise ?? 0.6);
+          break;
+        case 'sound':
+          this.onSound?.(it.name, it.vol ?? 1, env);
           break;
         default:
           break;

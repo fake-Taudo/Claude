@@ -1,7 +1,7 @@
 // Laden und Prüfen der VFX-Presets (vfx/presets.json). Die Prüfung läuft auch in den Node-Tests.
 import { SHAPE_NAMES, DECAL_NAMES } from './textures.js';
 
-const ITEM_TYPES = new Set(['burst', 'glow', 'ring', 'decal', 'bolt', 'flash', 'shake', 'hitstop', 'emitter', 'text']);
+const ITEM_TYPES = new Set(['burst', 'glow', 'ring', 'decal', 'bolt', 'flash', 'shake', 'hitstop', 'emitter', 'text', 'sound']);
 const LAYERS = ['pre', 'core', 'post'];
 
 function checkBurst(it, where, errors) {
@@ -48,6 +48,7 @@ export function validatePresets(obj) {
           if (!it.item) errors.push(`${where}: item fehlt`);
           else checkBurst(it.item, where + '.item', errors);
         }
+        if (it.type === 'sound' && (typeof it.name !== 'string' || !it.name)) errors.push(`${where}: sound braucht einen Namen`);
         if (it.type === 'decal' && it.shape && !DECAL_NAMES.includes(it.shape)) errors.push(`${where}: unbekanntes Decal "${it.shape}"`);
         if (it.type === 'ring' && it.radius && !(Array.isArray(it.radius) && it.radius.length === 2)) errors.push(`${where}: radius muss [von, bis] sein`);
       });

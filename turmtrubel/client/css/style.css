@@ -840,8 +840,8 @@ body[data-screen='s-game'] #toasts { left: var(--toast-x, 50%); top: var(--toast
   background: repeating-linear-gradient(45deg, rgb(255 255 255 / 0.035) 0 18px, transparent 18px 36px);
   z-index: 0;
 }
-body[data-motion='full']:not([data-quality='low']) #s-name.active::before,
-body[data-motion='full']:not([data-quality='low']) #s-menu.active::before { animation: stripes 24s linear infinite; }
+body[data-motion='full']:not([data-quality='low']):not([data-fx='reduced']) #s-name.active::before,
+body[data-motion='full']:not([data-quality='low']):not([data-fx='reduced']) #s-menu.active::before { animation: stripes 24s linear infinite; }
 @keyframes stripes { to { transform: translate3d(51px, 0, 0); } }
 #s-name > *, #s-menu > * { position: relative; z-index: 1; }
 #s-name, #s-menu {

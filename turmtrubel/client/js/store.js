@@ -17,6 +17,11 @@ export const DEFAULT_SETTINGS = Object.freeze({
   // Neu (UI-Überarbeitung) – nur mit Default ergänzt, bestehende Keys unverändert
   muteEmotes: false,
   haptics: true,
+  // Visuelles Upgrade: Effekte und Barrierefreiheit
+  shake: 1, // Bildschirmwackeln 0–1 (0 = aus)
+  reduceFx: false, // weniger Partikel, gedämpfte Blitze
+  autoQuality: true, // Auflösung/Effektmenge bei Ruckeln automatisch senken
+  colorblind: false, // Gegner zusätzlich über Form (Schild-Abzeichen) und Streifen markieren
 });
 
 

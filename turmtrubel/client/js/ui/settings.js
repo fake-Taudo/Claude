@@ -1,7 +1,7 @@
 // Einstellungen, gruppiert: Audio · Grafik & Anzeige · Spiel · Konto (B-17). Änderungen wirken sofort.
 import { h, ico, modal } from './dom.js';
 import { icon } from './icons.js';
-import { applyBodyFlags } from './tokens.js';
+import { applyBodyFlags, reducedMotion } from './tokens.js';
 
 function toggle(on, label, onChange) {
   const b = h('button', { class: `toggle${on ? ' on' : ''}`, role: 'switch', 'aria-checked': on ? 'true' : 'false', 'aria-label': label });
@@ -115,6 +115,10 @@ export function openSettings(app, { allowRename = true } = {}) {
         }),
         oDesc,
       ),
+      row('Automatische Qualität', toggle(s.autoQuality !== false, 'Automatische Qualität', (v) => ((s.autoQuality = v), save())), { desc: 'Senkt bei Ruckeln kurz Auflösung und Effektmenge und hebt sie danach wieder an.' }),
+      row('Effekte reduzieren', toggle(!!s.reduceFx, 'Effekte reduzieren', (v) => ((s.reduceFx = v), save())), { desc: 'Weniger Partikel und gedämpftes Aufblitzen.' }),
+      row('Bildschirmwackeln', slider(s.shake ?? 1, 'Bildschirmwackeln', (v) => ((s.shake = v), save())), { desc: reducedMotion() ? 'Dein System wünscht reduzierte Bewegung – Wackeln und Hit-Stop sind deshalb aus.' : '0 % schaltet das Wackeln bei Explosionen ab.' }),
+      row('Farbenblind-Modus', toggle(!!s.colorblind, 'Farbenblind-Modus', (v) => ((s.colorblind = v), save())), { desc: 'Gegner zusätzlich mit Schild-Abzeichen und gestreiften Lebensbalken.' }),
       row('Schadenszahlen', toggle(s.dmgNumbers, 'Schadenszahlen', (v) => ((s.dmgNumbers = v), save()))),
       row('Ping anzeigen', toggle(s.showPing, 'Ping anzeigen', (v) => ((s.showPing = v), save()))),
     ),

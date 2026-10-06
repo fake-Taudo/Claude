@@ -857,7 +857,7 @@ export class Renderer {
       const w = Math.max(h * 4.2, v.half * s * 1.75);
       const x = v.sx - w / 2 + h * 0.35;
       const y = v.sy + v.half * s * 1.0;
-      this.barBody(ctx, x, y, w, h, k, kt, team, v.hurt);
+      this.barBody(ctx, x, y, w, h, k, kt, team, v.hurt, !mine && this.game.app.settings.colorblind);
       tnum(ctx, String(Math.ceil(v.hp)), x + w / 2 + h * 0.1, y + h / 2 + 1, Math.max(12, h * 0.82), mine ? '#e3f0ff' : '#ffe3e5', 'center', 3);
       const cb = this.crownBadge(h * 1.5, dpr);
       ctx.drawImage(cb, x - h * 0.95, y + h / 2 - (h * 1.5) / 2 - 2 / dpr, cb.width / dpr, cb.height / dpr);
@@ -871,7 +871,7 @@ export class Renderer {
     const top = v.kind === 'building' ? v.sy - v.half * s * 1.9 : v.sy - (v.flying ? s * 1.1 : 0) - v.U * 1.95;
     const x = v.sx - w / 2 + bh * 0.3;
     const y = top - h;
-    if (damaged) this.barBody(ctx, x, y, w, h, k, kt, team, v.hurt);
+    if (damaged) this.barBody(ctx, x, y, w, h, k, kt, team, v.hurt, !mine && this.game.app.settings.colorblind);
     // Schwärme (kleine Einheiten) nur mit Balken – Abzeichen nur für größere Einheiten und Sonderkarten
     if (v.kind === 'unit' && v.radius < 0.42 && !special && !v.evo) return;
     const ring = v.evo ? '#e8b8ff' : v.cls === 'hero' ? '#ffc2b0' : v.cls === 'champion' ? '#fff3a0' : null;
@@ -885,7 +885,7 @@ export class Renderer {
   }
 
   /** Balkenkörper: dunkler Track, weißer Nachzieher, Teamfarbe mit Glanzband, Kontur, Treffer-Aufhellung. */
-  barBody(ctx, x, y, w, h, k, kt, team, hurt) {
+  barBody(ctx, x, y, w, h, k, kt, team, hurt, hatch) {
     const r = Math.min(h / 2, 6);
     ctx.fillStyle = '#111842';
     rrect(ctx, x, y, w, h, r);
@@ -901,6 +901,12 @@ export class Renderer {
       ctx.fillStyle = team.main;
       rrect(ctx, x + 1.5, y + 1.5, Math.max(ih * 0.6, iw * k), ih, Math.min(ih / 2, 5));
       ctx.fill();
+      if (hatch) {
+        // Farbenblind-Modus: Gegner-Füllung zusätzlich schräg gestreift
+        ctx.fillStyle = this.hatchPattern(ctx);
+        rrect(ctx, x + 1.5, y + 1.5, Math.max(ih * 0.6, iw * k), ih, Math.min(ih / 2, 5));
+        ctx.fill();
+      }
       ctx.fillStyle = team.light;
       ctx.globalAlpha = 0.6;
       ctx.fillRect(x + 1.5 + r * 0.5, y + 1.5, Math.max(0, iw * k - r), Math.max(1, ih * 0.32));
@@ -915,6 +921,24 @@ export class Renderer {
     ctx.strokeStyle = OUTLINE;
     rrect(ctx, x, y, w, h, r);
     ctx.stroke();
+  }
+
+  hatchPattern(ctx) {
+    if (!this._hatch) {
+      const c = document.createElement('canvas');
+      c.width = c.height = 8;
+      const g = c.getContext('2d');
+      g.strokeStyle = 'rgba(20,10,30,0.42)';
+      g.lineWidth = 2.2;
+      g.beginPath();
+      for (const o of [-8, 0, 8]) {
+        g.moveTo(o, 8);
+        g.lineTo(o + 8, 0);
+      }
+      g.stroke();
+      this._hatch = ctx.createPattern(c, 'repeat');
+    }
+    return this._hatch;
   }
 
   // ───────────── Projektile ─────────────

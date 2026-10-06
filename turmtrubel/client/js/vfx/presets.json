@@ -797,7 +797,8 @@
         {"type": "burst", "count": 22, "shape": "smoke", "colors": ["#3a302a", "#5a4e44", "#7d7064", "#a39686"], "spread": 1.0, "radial": true, "speed": [0.4, 1.4], "up": [1, 2.6], "gravity": -0.4, "drag": 0.1, "life": [1.2, 2.0], "size": [1.0, 1.4], "sizeEnd": 2.8, "alpha": [0.9, 0], "prio": 1},
         {"type": "burst", "count": 18, "shape": "dot", "colors": ["#ffc23d", "#ff6a2b"], "spread": 1.2, "up": [1.5, 3.5], "gravity": -0.5, "drag": 0.2, "life": [1, 1.8], "size": [0.14, 0.22], "sizeEnd": 0.02, "blend": "add", "prio": 0},
         {"type": "decal", "shape": "scorch", "color": "#1a120c", "size": 2.4, "life": 9, "alpha": 0.65},
-        {"type": "emitter", "duration": 4, "rate": 5, "item": {"shape": "smoke", "colors": ["#5a4e44", "#7d7064"], "spread": 0.8, "z": [0.5, 1], "up": [0.8, 1.4], "gravity": -0.3, "drag": 0.2, "life": [1.2, 1.8], "size": [0.6, 0.8], "sizeEnd": 1.8, "alpha": [0.6, 0], "prio": 0}}
+        {"type": "emitter", "duration": 4, "rate": 5, "item": {"shape": "smoke", "colors": ["#5a4e44", "#7d7064"], "spread": 0.8, "z": [0.5, 1], "up": [0.8, 1.4], "gravity": -0.3, "drag": 0.2, "life": [1.2, 1.8], "size": [0.6, 0.8], "sizeEnd": 1.8, "alpha": [0.6, 0], "prio": 0}},
+        {"type": "sound", "name": "crumble", "vol": 0.55, "delay": 0.15}
       ]
     }
   },

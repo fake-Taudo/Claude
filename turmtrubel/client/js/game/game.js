@@ -59,6 +59,8 @@ export class Game {
     this.fx = new Vfx();
     this.fx.setPresets(app.vfxPresets || {});
     this.applyFxSettings();
+    // Sound-Hook der VFX-Presets (z. B. Geröll im Nachhall des Turm-Einsturzes)
+    this.fx.onSound = (name, vol) => this.audio.sfx(name, vol);
     this.projPrev = new Map();
     this.snaps = [];
     this.offset = null;
@@ -157,6 +159,11 @@ export class Game {
 
   settingsChanged() {
     this.applyFxSettings();
+    // Automatik aus → abgesenkte Auflösung und Effektmenge sofort zurücknehmen
+    if (this.app.settings.autoQuality === false) {
+      this.dynDpr = null;
+      this.fx.loadScale = 1;
+    }
     this.needResize = true;
   }
 

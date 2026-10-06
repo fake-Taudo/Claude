@@ -122,3 +122,16 @@ test('Effekte reduzieren: Deko-Elemente entfallen, weniger Partikel', () => {
   run(b, 0.3);
   assert.ok(b.stats.spawned < a.stats.spawned * 0.7, `${b.stats.spawned} < ${a.stats.spawned}`);
 });
+
+test('Sound-Hook: Preset-Einträge vom Typ sound laufen mit der Zeitstaffelung', () => {
+  const heard = [];
+  const fx = new Vfx({ tex: stub, decalTex: stub, onSound: (name, vol) => heard.push([name, vol, fx.time]) });
+  fx.setPresets(presets);
+  fx.emit('tower.destroy', { x: 5, y: 5, team: 'red' });
+  assert.equal(heard.length, 0, 'Geröll kommt erst im Nachhall');
+  run(fx, 1);
+  assert.equal(heard.length, 1);
+  assert.equal(heard[0][0], 'crumble');
+  assert.ok(heard[0][2] >= presets['tower.destroy'].delays.post, 'nach dem Start des Nachhalls');
+  assert.deepEqual(validatePresets({ x: { layers: { core: [{ type: 'sound' }] } } }).length, 1, 'Sound ohne Namen ist ungültig');
+});

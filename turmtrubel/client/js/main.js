@@ -267,6 +267,7 @@ class App {
             h('li', {}, key('Leertaste'), ' Fähigkeit'),
             h('li', {}, key('E'), ' Emotes'),
             h('li', {}, key('Esc'), ' Auswahl abbrechen'),
+            h('li', {}, key('F3'), ' Leistungsanzeige'),
           )
         : null,
     );
@@ -838,7 +839,7 @@ class App {
     $('#res-rematch-status').textContent = m.rematchAvailable ? (m.training ? 'Der Bot ist jederzeit bereit.' : 'Beide müssen zustimmen.') : 'Dein Gegner hat den Raum verlassen.';
     showScreen('s-result');
     // Konfetti nur bei Sieg, ab Qualität „Mittel“ und ohne reduzierte Bewegung
-    if (win && this.settings.quality !== 'low' && !reducedMotion()) this.confetti();
+    if (win && this.settings.quality !== 'low' && !this.settings.reduceFx && !reducedMotion()) this.confetti();
   }
 
   /** Zahlen von 0 hochzählen (tabellarische Ziffern, 600 ms). */

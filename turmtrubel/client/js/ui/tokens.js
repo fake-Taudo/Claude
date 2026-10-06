@@ -75,6 +75,7 @@ export function applyBodyFlags(settings) {
   const b = document.body;
   b.dataset.quality = settings.quality;
   b.dataset.motion = reducedMotion() ? 'reduced' : 'full';
+  b.dataset.fx = settings.reduceFx ? 'reduced' : 'full';
 }
 rm?.addEventListener?.('change', () => (document.body.dataset.motion = reducedMotion() ? 'reduced' : 'full'));
 
