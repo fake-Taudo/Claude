@@ -235,10 +235,23 @@ export class Game {
     this.me = s.me;
     this.crowns = s.cr;
     this.phase = s.ph;
+    // Kampfbeginn: „Kampf!“-Banner (nur am Anfang, nicht beim Wiederverbinden mitten im Kampf)
+    if (!this.startShown) {
+      this.startShown = true;
+      if (s.t < 3) this.hud.banner('Kampf!', '#ffffff', '', { kind: 'phase', base: '#f5a623', onShow: () => this.phaseFx('phase.start') });
+    }
     if (s.em !== this.snapMult) {
-      if (s.em === 2 && this.snapMult === 1) {
-        this.hud.banner('Doppeltes Elixier!', '#ffd0fb', 'Letzte Minute', { kind: 'phase' });
-        this.audio.sfx('double');
+      if (this.snapMult != null && s.em > this.snapMult && s.em >= 2) {
+        const triple = s.em >= 3;
+        this.hud.banner(triple ? 'Dreifaches Elixier!' : 'Doppeltes Elixier!', '#ffe9fd', triple ? 'Elixier fließt 3× so schnell' : 'Letzte Minute', {
+          kind: 'phase',
+          base: '#c43cf0',
+          drop: triple ? '×3' : '×2',
+          onShow: () => {
+            this.audio.sfx('double');
+            this.phaseFx('phase.elixir');
+          },
+        });
       }
       this.snapMult = s.em;
     }
@@ -260,8 +273,17 @@ export class Game {
     this.drag = null;
     const win = res.winner === this.side;
     const draw = res.winner == null;
-    this.hud.banner(draw ? 'Unentschieden' : win ? 'Sieg!' : 'Niederlage', draw ? '#ffffff' : win ? '#ffe066' : '#ff8a8a', res.reasonText, { kind: 'end' });
+    this.hud.banner(draw ? 'Unentschieden' : win ? 'Sieg!' : 'Niederlage', '#ffffff', res.reasonText, { kind: 'end', base: draw ? '#3652b3' : win ? '#f5a623' : '#e5484d' });
     if (win) this.fx.emit('phase.win', { x: ARENA_W / 2, y: ARENA_H / 2 });
+  }
+
+  /** Phasen-Effekt auf Höhe des Banners (Bildschirmmitte der Arena → Weltkoordinaten). */
+  phaseFx(name) {
+    const A = this.hud.L?.arena;
+    if (!A) return;
+    // Die Presets fliegen in ~5 Feldern Höhe (z) → Bodenpunkt entsprechend tiefer wählen
+    const [x, y] = this.view.toWorld(A.x + A.w / 2, A.y + A.h * 0.4 + 5 * this.view.s);
+    this.fx.emit(name, { x, y, team: 'blue' });
   }
 
   elixirNow() {
@@ -821,9 +843,14 @@ export class Game {
           break;
         }
         case 'ot':
-          this.hud.banner('Verlängerung!', '#ff9a3d', this.rules.suddenDeath === 'firstHit' ? 'Erster Turmtreffer gewinnt' : 'Erster zerstörter Turm gewinnt', { kind: 'phase' });
-          fx.flash('#ff9a3d', 0.12, 0.35);
-          A.sfx('overtime');
+          this.hud.banner('Verlängerung!', '#ffffff', this.rules.suddenDeath === 'firstHit' ? 'Erster Turmtreffer gewinnt' : 'Erster zerstörter Turm gewinnt', {
+            kind: 'phase',
+            base: '#ff7a1a',
+            onShow: () => {
+              this.phaseFx('phase.overtime');
+              A.sfx('overtime');
+            },
+          });
           A.music('overtime');
           break;
         default:

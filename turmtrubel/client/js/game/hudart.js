@@ -493,3 +493,86 @@ export function emoteSlot(r, hot, dpr) {
     c.stroke();
   });
 }
+
+// ───────────── Phasen-Banner ─────────────
+/**
+ * Band-Schleife für Phasen-Banner (Kampf!, Doppel-Elixier, Verlängerung, Ergebnis): Körper mit Verlauf
+ * Licht→Grund→Schatten, Glanzband, Lichtkante, dunklere gefaltete Enden mit Kerbe. B = Körperhöhe.
+ * Rückgabe { cv, w, h, ox } – ox = Abstand vom Sprite-Rand bis zur Körperkante.
+ */
+export function ribbon(w, B, base, dpr) {
+  const D = B * 0.26;
+  const tail = B * 0.62;
+  const pad = 4;
+  const W = w + tail * 2;
+  const e = cached('rib|' + Math.round(w) + '|' + Math.round(B) + '|' + base + '|' + dpr, W + pad * 2, B + D + pad * 2 + 3, dpr, (c) => {
+    c.translate(pad, pad);
+    c.lineJoin = 'round';
+    const dark = mixHex(base, INK, 0.45);
+    const deep = mixHex(base, INK, 0.65);
+    // Enden (hinter dem Körper, nach unten versetzt, mit V-Kerbe)
+    for (const side of [0, 1]) {
+      c.save();
+      if (side) {
+        c.translate(W, 0);
+        c.scale(-1, 1);
+      }
+      c.beginPath();
+      c.moveTo(tail + B * 0.2, D);
+      c.lineTo(0, D);
+      c.lineTo(tail * 0.42, D + B / 2);
+      c.lineTo(0, D + B);
+      c.lineTo(tail + B * 0.2, D + B);
+      c.closePath();
+      c.fillStyle = dark;
+      c.fill();
+      c.lineWidth = 3;
+      c.strokeStyle = INK;
+      c.stroke();
+      // Faltung
+      c.beginPath();
+      c.moveTo(tail, B);
+      c.lineTo(tail + B * 0.2, B);
+      c.lineTo(tail + B * 0.2, D + B);
+      c.closePath();
+      c.fillStyle = deep;
+      c.fill();
+      c.stroke();
+      c.restore();
+    }
+    // Körper
+    rr(c, tail, 0, w, B, B * 0.16);
+    const g = c.createLinearGradient(0, 0, 0, B);
+    g.addColorStop(0, mixHex(base, '#ffffff', 0.38));
+    g.addColorStop(0.5, base);
+    g.addColorStop(1, mixHex(base, INK, 0.28));
+    c.fillStyle = g;
+    c.fill();
+    c.save();
+    rr(c, tail, 0, w, B, B * 0.16);
+    c.clip();
+    rr(c, tail + 6, 3, w - 12, B * 0.4, B * 0.12);
+    const gl = c.createLinearGradient(0, 0, 0, B * 0.42);
+    gl.addColorStop(0, 'rgba(255,255,255,0.45)');
+    gl.addColorStop(1, 'rgba(255,255,255,0.04)');
+    c.fillStyle = gl;
+    c.fill();
+    // Ziernähte oben und unten
+    c.setLineDash([5, 5]);
+    c.strokeStyle = 'rgba(255,255,255,0.35)';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(tail + 8, 5.5);
+    c.lineTo(tail + w - 8, 5.5);
+    c.moveTo(tail + 8, B - 5.5);
+    c.lineTo(tail + w - 8, B - 5.5);
+    c.stroke();
+    c.restore();
+    rr(c, tail, 0, w, B, B * 0.16);
+    c.lineWidth = 3;
+    c.strokeStyle = INK;
+    c.stroke();
+  });
+  e.ox = pad + tail;
+  return e;
+}

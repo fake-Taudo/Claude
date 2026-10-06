@@ -10,7 +10,7 @@ import { drawEmoteFace } from './sprites.js';
 import { starPath } from './renderer.js';
 import { T, reducedMotion } from '../ui/tokens.js';
 import { OUTLINE, text, tnum, ellipsize, setFont, rr } from './canvastext.js';
-import { paintPanel, paintWell, cardSprite, selectGlow, elixirOverlay, timerBox, crownSprite, emoteButton, teamPill, emotePanel, emoteSlot } from './hudart.js';
+import { paintPanel, paintWell, cardSprite, selectGlow, elixirOverlay, timerBox, crownSprite, emoteButton, teamPill, emotePanel, emoteSlot, ribbon } from './hudart.js';
 import { backOut, outCubic, clamp01 } from '../design/easing.js';
 import { softGlow } from '../design/light.js';
 
@@ -419,12 +419,21 @@ export class Hud {
     this.flash = { at: this.game.clock, slot };
   }
 
-  /** opts: { kind: 'card' | 'phase' | 'end', team: 'blue' | 'red', cardId } */
+  /**
+   * opts: { kind: 'card' | 'phase' | 'end', team: 'blue' | 'red', cardId, base (Bandfarbe), drop ('×2'), onShow }
+   * Phasen-Banner laufen nacheinander (z. B. Verlängerung → Dreifaches Elixier); onShow startet Ton/Effekt
+   * erst, wenn das Banner wirklich erscheint.
+   */
   banner(textStr, color = '#ffffff', sub = '', opts = {}) {
     const kind = opts.kind || 'phase';
-    const dur = kind === 'card' ? 1.2 : kind === 'end' ? 2.6 : 2.2;
+    const dur = kind === 'card' ? 1.2 : kind === 'end' ? 2.6 : 2.0;
     this.banners = this.banners.filter((b) => !(b.kind === kind && b.text === textStr));
-    this.banners.push({ text: textStr, color, sub, at: this.game.clock, kind, team: opts.team, cardId: opts.cardId, dur });
+    let at = this.game.clock;
+    if (kind === 'phase') {
+      // Hinter ein noch laufendes Phasen-Banner einreihen
+      for (const b of this.banners) if (b.kind === 'phase') at = Math.max(at, b.at + b.dur - 0.2);
+    } else if (kind === 'end') this.banners = this.banners.filter((b) => b.kind !== 'phase');
+    this.banners.push({ text: textStr, color, sub, at, kind, team: opts.team, cardId: opts.cardId, dur, base: opts.base, drop: opts.drop, onShow: opts.onShow, shown: false });
   }
 
   flyCrown(fromX, fromY, mine) {
@@ -1127,7 +1136,7 @@ export class Hud {
     ctx.restore();
   }
 
-  /** Ankündigungen: Karten/Phasen als Banner am oberen Arenarand, Kampfende in der Mitte (B-03). */
+  /** Ankündigungen: Karten als Pille am oberen Arenarand, Phasen und Kampfende als Band-Schleife in der Mitte. */
   drawBanners(ctx, now) {
     const A = this.L.arena;
     const g = this.game;
@@ -1135,48 +1144,29 @@ export class Hud {
     let yTop = A.y + 8;
     for (const b of this.banners) {
       const age = now - b.at;
+      if (age < 0) continue;
+      if (!b.shown) {
+        b.shown = true;
+        b.onShow?.();
+      }
+      if (b.kind !== 'card') {
+        this.drawRibbonBanner(ctx, b, age, now);
+        continue;
+      }
       const kIn = this.rm ? 1 : easeOut(age / 0.18);
       const fade = age > b.dur - 0.25 ? (b.dur - age) / 0.25 : 1;
       ctx.save();
       ctx.globalAlpha = Math.max(0, Math.min(this.rm ? Math.min(1, age / 0.15) : 1, fade));
-      if (b.kind === 'end') {
-        const size = clamp(A.w * 0.09, 26, 54);
-        const cx = A.x + A.w / 2;
-        const cy = A.y + A.h * 0.45;
-        const sc = this.rm ? 1 : 0.7 + 0.3 * easeBack(age / 0.35);
-        ctx.translate(cx, cy);
-        ctx.scale(sc, sc);
-        setFont(ctx, size);
-        const w = Math.max(ctx.measureText(b.text).width + size * 1.4, size * 5);
-        const hgt = size * (b.sub ? 2.3 : 1.6);
-        rr(ctx, -w / 2, -size * 0.85, w, hgt, 18);
-        ctx.fillStyle = 'rgba(26,20,51,0.94)';
-        ctx.fill();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = OUTLINE;
-        ctx.stroke();
-        text(ctx, b.text, 0, 0, size, b.color, 'center', Math.max(4, size * 0.14));
-        if (b.sub) text(ctx, b.sub, 0, size * 0.95, Math.max(13, size * 0.38), '#ffffff', 'center', 3);
-        ctx.restore();
-        continue;
-      }
-      const card = b.kind === 'card';
-      const size = card ? clamp(A.w * 0.04, 14, 22) : clamp(A.w * 0.05, 16, 28);
-      const subSize = Math.max(12, size * 0.55);
+      const size = clamp(A.w * 0.04, 14, 22);
       setFont(ctx, size);
-      const icon = card && b.cardId ? size * 1.6 : 0;
-      let tw = ctx.measureText(b.text).width;
-      if (b.sub) {
-        setFont(ctx, subSize);
-        tw = Math.max(tw, ctx.measureText(b.sub).width);
-      }
-      const hgt = card ? Math.max(icon * 1.25 + 8, size * 1.7) : size * (b.sub ? 2.4 : 1.7);
+      const icon = b.cardId ? size * 1.6 : 0;
+      const tw = ctx.measureText(b.text).width;
+      const hgt = Math.max(icon * 1.25 + 8, size * 1.7);
       const w = Math.min(A.w - 12, tw + size * 1.4 + (icon ? icon + 8 : 0));
       const x = A.x + A.w / 2 - w / 2;
       const y = yTop - (1 - kIn) * 10;
-      const fill = card ? (b.team === 'red' ? T.red.dark : T.blue.dark) : b.color === '#ff9a3d' ? '#b4521a' : '#8a1fb5';
       rr(ctx, x, y, w, hgt, Math.min(hgt / 2, 18));
-      ctx.fillStyle = fill;
+      ctx.fillStyle = b.team === 'red' ? T.red.dark : T.blue.dark;
       ctx.fill();
       ctx.lineWidth = 3;
       ctx.strokeStyle = OUTLINE;
@@ -1192,13 +1182,97 @@ export class Hud {
         ctx.restore();
         tx += (icon + 8) / 2;
       }
-      if (b.sub) {
-        text(ctx, b.text, tx, y + hgt * 0.36, size, b.color, 'center', Math.max(3, size * 0.16));
-        text(ctx, b.sub, tx, y + hgt * 0.74, subSize, '#ffffff', 'center', 3);
-      } else text(ctx, b.text, tx, y + hgt / 2 + 1, size, card ? '#ffffff' : b.color, 'center', Math.max(3, size * 0.16));
+      text(ctx, b.text, tx, y + hgt / 2 + 1, size, '#ffffff', 'center', Math.max(3, size * 0.16));
       ctx.restore();
       yTop += hgt + 6;
     }
+  }
+
+  /**
+   * Band-Schleife mit Zeitstaffelung: Vorlauf (0–160 ms) Band wischt von der Mitte auf + Aufblitzen,
+   * Kern (80–360 ms) Text springt mit Überschwingen ein, Nachhall Halten und nach oben Ausblenden.
+   */
+  drawRibbonBanner(ctx, b, age, now) {
+    const A = this.L.arena;
+    const end = b.kind === 'end';
+    const size = end ? clamp(A.w * 0.1, 30, 60) : clamp(A.w * 0.075, 22, 44);
+    const subSize = Math.max(12, size * (end ? 0.34 : 0.4));
+    setFont(ctx, size);
+    let tw = ctx.measureText(b.text).width;
+    const dropR = b.drop ? size * 0.62 : 0;
+    if (b.sub) {
+      setFont(ctx, subSize);
+      tw = Math.max(tw, ctx.measureText(b.sub).width);
+    }
+    const B = Math.round(size * (b.sub ? 2.05 : 1.45));
+    const w = Math.round(Math.min(A.w * 0.86, tw + size * 1.2 + (dropR ? dropR * 2.6 : 0)));
+    const cx = A.x + A.w / 2;
+    const cy = A.y + A.h * (end ? 0.44 : 0.4);
+    const out = b.dur - age < 0.35 ? 1 - (b.dur - age) / 0.35 : 0;
+    const rm = this.rm;
+    const wipe = rm ? 1 : outCubic(clamp01(age / 0.16));
+    const pop = rm ? 1 : backOut(clamp01((age - 0.08) / 0.28), 2.2);
+    const lift = rm ? 0 : outCubic(out) * 22;
+    const alpha = rm ? Math.min(1, age / 0.15) * (1 - out) : 1 - outCubic(out);
+    if (alpha <= 0.01) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    // Lichtstrahlen hinter dem Band (nur Qualität ≥ Mittel und volle Bewegung)
+    if (this.hi && !rm) {
+      const R = w * 0.62;
+      ctx.save();
+      ctx.translate(cx, cy - lift);
+      ctx.rotate(now * 0.35);
+      ctx.globalAlpha = alpha * 0.16 * wipe;
+      ctx.fillStyle = end && b.base === '#e5484d' ? '#ffb0b5' : '#fff3c4';
+      ctx.beginPath();
+      for (let i = 0; i < 12; i++) {
+        const a0 = (i / 12) * TAU;
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, R, a0, a0 + TAU / 30);
+      }
+      ctx.fill();
+      ctx.restore();
+    }
+    const base = b.base || '#c43cf0';
+    const rb = ribbon(w, B, base, this.game.spriteDpr);
+    const bx = cx - w / 2 - rb.ox;
+    const by = cy - B / 2 - 4 - lift;
+    ctx.save();
+    if (wipe < 1) {
+      ctx.beginPath();
+      const half = (rb.w / 2) * wipe;
+      ctx.rect(cx - half, by - 10, half * 2, rb.h + 20);
+      ctx.clip();
+    }
+    ctx.drawImage(rb.cv, bx, by, rb.w, rb.h);
+    // Aufblitzen beim Erscheinen
+    if (!rm && age < 0.3) {
+      ctx.globalAlpha = alpha * 0.55 * (1 - age / 0.3);
+      rr(ctx, cx - w / 2, cy - B / 2 - lift, w, B, B * 0.16);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+    }
+    ctx.restore();
+    if (pop <= 0) {
+      ctx.restore();
+      return;
+    }
+    ctx.save();
+    ctx.translate(cx, cy - lift);
+    ctx.scale(0.35 + 0.65 * pop, 0.35 + 0.65 * pop);
+    let tx = 0;
+    if (dropR) {
+      // Elixier-Tropfen mit Multiplikator links vom Text
+      const dx = -w / 2 + dropR * 1.5;
+      paintDrop(ctx, dx, size * 0.08 - (b.sub ? size * 0.05 : 0), dropR, b.drop);
+      tx = dropR * 1.3;
+    }
+    const ty = b.sub ? -B * 0.16 : 1;
+    text(ctx, b.text, tx, ty, size, b.color, 'center', Math.max(4, size * 0.15));
+    if (b.sub) text(ctx, b.sub, tx, B * 0.27, subSize, '#ffffff', 'center', 3);
+    ctx.restore();
+    ctx.restore();
   }
 
   drawCrownFlights(ctx, now) {

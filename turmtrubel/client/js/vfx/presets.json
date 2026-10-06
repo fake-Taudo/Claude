@@ -850,5 +850,52 @@
         {"type": "burst", "count": 70, "shape": "confetti", "colors": ["#ffd84d", "#3d8bff", "#ff4d57", "#5ad16a", "#d13cf0", "#ffffff"], "spread": 6, "spreadAbs": true, "z": [6, 10], "up": [-1, 1], "speed": [0.2, 1], "gravity": 3, "drag": 0.5, "spin": [-12, 12], "life": [1.8, 2.8], "size": [0.24, 0.32], "alpha": [1, 0], "alphaEase": "inExpo", "prio": 0}
       ]
     }
+  },
+  "phase.start": {
+    "delays": {"core": 0.08, "post": 0.3},
+    "layers": {
+      "pre": [
+        {"type": "glow", "radius": 2.4, "color": "#ffd84d", "life": 0.35, "alpha": [0.5, 0], "z": 5, "grow": 1.3}
+      ],
+      "core": [
+        {"type": "burst", "count": 30, "shape": "star", "colors": ["#ffd84d", "#fff3a0", "#ffffff"], "spread": 2.6, "spreadAbs": true, "z": [4, 6], "up": [-0.5, 1.5], "speed": [2, 5], "drag": 0.35, "life": [0.5, 0.9], "size": [0.4, 0.62], "sizeEnd": 0.05, "blend": "add", "prio": 0},
+        {"type": "ring", "radius": [0.8, 4.2], "width": [0.3, 0.02], "color": "#ffe680", "life": 0.5, "ease": "outExpo", "blend": "add", "z": 5, "alpha": 0.6}
+      ],
+      "post": [
+        {"type": "burst", "count": 16, "shape": "spark", "colors": ["#ffffff", "#ffe680"], "spread": 3.4, "spreadAbs": true, "z": [4, 6], "up": [-1, 0.5], "speed": [0.2, 0.8], "gravity": 2, "drag": 0.4, "life": [0.6, 1.0], "size": [0.2, 0.32], "alpha": [1, 0], "prio": 0}
+      ]
+    }
+  },
+  "phase.elixir": {
+    "delays": {"core": 0.08, "post": 0.35},
+    "layers": {
+      "pre": [
+        {"type": "glow", "radius": 2.2, "color": "#ff9af0", "life": 0.35, "alpha": [0.55, 0], "z": 5, "grow": 1.3}
+      ],
+      "core": [
+        {"type": "burst", "count": 26, "shape": "drop", "colors": ["#ff9af0", "#d13cf0", "#ffd0fb"], "spread": 2.4, "spreadAbs": true, "z": [4.5, 6], "up": [1, 3], "speed": [1.5, 4], "gravity": 7, "drag": 0.2, "life": [0.6, 1.0], "size": [0.26, 0.38], "alpha": [1, 0], "prio": 0},
+        {"type": "burst", "count": 18, "shape": "star", "colors": ["#ffd0fb", "#ffffff"], "spread": 2.8, "spreadAbs": true, "z": [4, 6], "speed": [1.5, 3.5], "drag": 0.35, "life": [0.4, 0.8], "size": [0.3, 0.5], "sizeEnd": 0.05, "blend": "add", "prio": 0}
+      ],
+      "post": [
+        {"type": "burst", "count": 14, "shape": "dot", "colors": ["#ff9af0", "#ffffff"], "spread": 3.6, "spreadAbs": true, "z": [3.5, 6], "up": [-0.6, 0.2], "speed": [0.1, 0.5], "drag": 0.4, "life": [0.6, 1.0], "size": [0.12, 0.2], "alpha": [1, 0], "prio": 0}
+      ]
+    }
+  },
+  "phase.overtime": {
+    "delays": {"core": 0.1, "post": 0.35},
+    "layers": {
+      "pre": [
+        {"type": "flash", "color": "#ff9a3d", "alpha": 0.12, "life": 0.3},
+        {"type": "glow", "radius": 2.6, "color": "#ff7a1a", "life": 0.4, "alpha": [0.55, 0], "z": 5, "grow": 1.3}
+      ],
+      "core": [
+        {"type": "burst", "count": 28, "shape": "flame", "colors": ["#ffd84d", "#ff9a3d", "#ff5a1a"], "spread": 2.6, "spreadAbs": true, "z": [4, 5.5], "up": [1, 3], "speed": [1.5, 4], "drag": 0.3, "life": [0.5, 0.9], "size": [0.42, 0.62], "sizeEnd": 0.08, "prio": 0},
+        {"type": "ring", "radius": [0.8, 4.4], "width": [0.32, 0.02], "color": "#ffb35c", "life": 0.55, "ease": "outExpo", "blend": "add", "z": 5, "alpha": 0.6},
+        {"type": "shake", "strength": 0.35}
+      ],
+      "post": [
+        {"type": "burst", "count": 18, "shape": "spark", "colors": ["#ffd84d", "#ff9a3d"], "spread": 3.4, "spreadAbs": true, "z": [3, 5.5], "up": [0.5, 1.5], "speed": [0.2, 0.8], "drag": 0.3, "life": [0.7, 1.0], "size": [0.14, 0.22], "alpha": [1, 0], "blend": "add", "prio": 0}
+      ]
+    }
   }
 }
