@@ -115,7 +115,11 @@ function makeLimiter(rate = 30, burst = 60) {
   };
 }
 
-export function startServer({ port = Number(process.env.PORT) || 3000, host = process.env.HOST || '0.0.0.0', quiet = false } = {}) {
+/**
+ * timeScale > 1 lässt die Tick-Schleife schneller als Echtzeit laufen (nur für automatisierte
+ * Ende-zu-Ende-Tests mit Test-Clients; Regeln und Protokoll bleiben gleich).
+ */
+export function startServer({ port = Number(process.env.PORT) || 3000, host = process.env.HOST || '0.0.0.0', quiet = false, timeScale = 1 } = {}) {
   const data = loadData();
   const mgr = new RoomManager({ db: data.db, rules: data.rules });
   const server = http.createServer(makeStaticHandler(data));
@@ -231,7 +235,7 @@ export function startServer({ port = Number(process.env.PORT) || 3000, host = pr
   });
 
   // Feste Tick-Schleife mit Drift-Ausgleich
-  const stepMs = 1000 / data.rules.tickRate;
+  const stepMs = 1000 / data.rules.tickRate / Math.max(1, timeScale);
   let last = performance.now();
   let acc = 0;
   const loop = setInterval(() => {
