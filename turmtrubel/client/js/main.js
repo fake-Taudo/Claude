@@ -68,8 +68,11 @@ class App {
     const bar = $('#boot-bar');
     const txt = $('#boot-text');
     try {
-      const [cards, rules] = await Promise.all([fetch('/data/cards.json').then((r) => r.json()), fetch('/data/rules.json').then((r) => r.json())]);
-      this.db = createDb(cards);
+      const [cards, rules, skin] = await Promise.all(
+        ['/data/cards.json', '/data/rules.json', '/data/skin.json'].map((u) => fetch(u).then((r) => (r.ok ? r.json() : null))),
+      );
+      // Gleiche Datenbank wie der Server: Level aus rules.json, Namen/Grafik aus skin.json
+      this.db = createDb(cards, { level: rules.cardLevel, skin, skinName: rules.skin });
       this.rules = rules;
     } catch (e) {
       txt.textContent = 'Die Spieldaten konnten nicht geladen werden. Läuft der Server?';
@@ -78,6 +81,11 @@ class App {
     }
     bar.style.transform = 'scaleX(0.15)';
     this.store = new Store(this.db);
+    if (this.store.resetDecks) {
+      // Gespeicherte Decks mit Karten, die es nicht mehr gibt → Startdecks (einmalig speichern)
+      this.store.save();
+      this.deckResetNotice = this.store.resetDecks;
+    }
     this.settings = this.store.settings;
     applyBodyFlags(this.settings);
     this.audio = new AudioSys(this.settings);
@@ -382,6 +390,16 @@ class App {
       cs.className = 'conn-state online';
     }
     this.updateRoomBanner();
+    if (this.deckResetNotice) {
+      toast(
+        this.deckResetNotice > 1
+          ? `${this.deckResetNotice} gespeicherte Decks enthielten Karten, die es nicht mehr gibt – sie wurden auf Startdecks zurückgesetzt.`
+          : 'Ein gespeichertes Deck enthielt Karten, die es nicht mehr gibt – es wurde auf ein Startdeck zurückgesetzt.',
+        'info',
+        5000,
+      );
+      this.deckResetNotice = 0;
+    }
     if (this.pendingJoin && this.net?.welcomed) {
       const code = this.pendingJoin;
       this.pendingJoin = null;

@@ -32,11 +32,17 @@ export class Store {
     this.name = typeof data.name === 'string' ? data.name : '';
     this.settings = { ...DEFAULT_SETTINGS, ...(data.settings || {}) };
     this.decks = [];
+    this.resetDecks = 0;
     for (let i = 0; i < DECK_SLOTS; i++) {
       const saved = data.decks?.[i];
       const starter = STARTER_DECKS[i % STARTER_DECKS.length];
-      let slots = Array.isArray(saved?.slots) && saved.slots.length === 8 ? saved.slots.map((id) => (db.card(id) ? id : null)) : starter.slots.slice();
-      this.decks.push({ name: typeof saved?.name === 'string' ? saved.name.slice(0, 20) : starter.name, slots });
+      const valid = Array.isArray(saved?.slots) && saved.slots.length === 8;
+      // Decks mit Karten, die es nicht (mehr) gibt (z. B. die früheren erfundenen Karten), komplett auf das Startdeck zurücksetzen
+      const stale = valid && saved.slots.some((id) => id && !db.card(id));
+      if (stale) this.resetDecks++;
+      const slots = valid && !stale ? saved.slots.slice() : starter.slots.slice();
+      const name = !stale && typeof saved?.name === 'string' ? saved.name.slice(0, 20) : starter.name;
+      this.decks.push({ name, slots });
     }
     this.active = Number.isInteger(data.active) && data.active >= 0 && data.active < DECK_SLOTS ? data.active : 0;
   }
