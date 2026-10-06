@@ -269,6 +269,48 @@ export class Renderer {
     });
   }
 
+  /**
+   * Ambiente (nur Qualität Hoch): zwei weiche Wolkenschatten ziehen langsam diagonal über die Arena.
+   * Ein gecachtes Sprite je Maßstab, pro Frame nur zwei drawImage-Aufrufe.
+   */
+  drawClouds(ctx, t) {
+    const view = this.game.view;
+    const s = view.s;
+    const key = Math.round(s * 4);
+    if (this._cloudKey !== key) {
+      this._cloudKey = key;
+      const w = Math.ceil(7 * s);
+      const h = Math.ceil(4.2 * s);
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      const g = c.getContext('2d');
+      // Wolke aus überlappenden weichen Kreisen (Licht von oben links → Schatten fällt nach unten rechts)
+      for (const [x, y, r] of [[0.32, 0.55, 0.3], [0.55, 0.42, 0.34], [0.74, 0.58, 0.26], [0.45, 0.66, 0.28]]) {
+        const gr = g.createRadialGradient(x * w, y * h, 0, x * w, y * h, r * w);
+        gr.addColorStop(0, 'rgba(12,24,48,0.62)');
+        gr.addColorStop(0.6, 'rgba(12,24,48,0.4)');
+        gr.addColorStop(1, 'rgba(12,24,48,0)');
+        g.fillStyle = gr;
+        g.fillRect(0, 0, w, h);
+      }
+      this._cloud = c;
+    }
+    const c = this._cloud;
+    const m = 6;
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    for (const [off, v, yo] of [[0, 0.32, 0], [13, 0.24, 15]]) {
+      const span = ARENA_W + ARENA_H + m * 2;
+      const k = (((t * v + off) % span) + span) % span;
+      const wx = -m + k * 0.55;
+      const wy = (yo + k * 0.9) % (ARENA_H + m) - m / 2;
+      const [sx, sy] = view.toScreen(wx, wy);
+      ctx.drawImage(c, sx - c.width / 2, sy - c.height / 2);
+    }
+    ctx.restore();
+  }
+
   drawZonesGround(ctx, zones, t) {
     const view = this.game.view;
     const s = view.s;

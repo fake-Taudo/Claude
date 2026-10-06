@@ -1,5 +1,5 @@
 // Client-Seite eines Kampfes: Snapshot-Puffer + Interpolation, Eingaben, Effekte, Zeichenschleife.
-import { ARENA_W, ARENA_H, isPlacementValid, forwardDir, formation } from '/shared/arena.js';
+import { ARENA_W, ARENA_H, RIVER_Y0, RIVER_Y1, isPlacementValid, forwardDir, formation } from '/shared/arena.js';
 import { EF, EMOTES, C2S, REJECTS } from '/shared/protocol.js';
 import { View, Renderer, ZONE_COLORS, projZ } from './renderer.js';
 import { Hud } from './hud.js';
@@ -275,6 +275,27 @@ export class Game {
     const draw = res.winner == null;
     this.hud.banner(draw ? 'Unentschieden' : win ? 'Sieg!' : 'Niederlage', '#ffffff', res.reasonText, { kind: 'end', base: draw ? '#3652b3' : win ? '#f5a623' : '#e5484d' });
     if (win) this.fx.emit('phase.win', { x: ARENA_W / 2, y: ARENA_H / 2 });
+  }
+
+  /** Ambiente nur bei Qualität Hoch, ohne „Effekte reduzieren“ und ohne reduzierte Bewegung. */
+  ambientOn() {
+    const st = this.app.settings;
+    return st.quality === 'high' && !st.reduceFx && !reducedMotion() && (this.fx.loadScale ?? 1) >= 1;
+  }
+
+  /** Glitzern auf dem Fluss und vereinzelt treibende Blätter (Deko-Partikel, Priorität 0). */
+  ambientFx(dt) {
+    if (!this.ambientOn() || !(dt > 0)) return;
+    this.glintT = (this.glintT ?? 0) - dt;
+    this.leafT = (this.leafT ?? 1.5) - dt;
+    if (this.glintT <= 0) {
+      this.glintT = 0.12 + Math.random() * 0.2;
+      this.fx.emit('ambient.glint', { x: Math.random() * ARENA_W, y: RIVER_Y0 + 0.25 + Math.random() * (RIVER_Y1 - RIVER_Y0 - 0.5) });
+    }
+    if (this.leafT <= 0) {
+      this.leafT = 2.2 + Math.random() * 2.5;
+      this.fx.emit('ambient.leaf', { x: -0.5 + Math.random() * ARENA_W * 0.5, y: Math.random() * ARENA_H * 0.8 });
+    }
   }
 
   /** Phasen-Effekt auf Höhe des Banners (Bildschirmmitte der Arena → Weltkoordinaten). */
@@ -1167,6 +1188,7 @@ export class Game {
     const renderT = t0 + (this.offset ?? 0) - INTERP_MS - this.fx.stopDebt;
     this.updateWorld(renderT, now, dt);
     const t1 = performance.now();
+    if (!this.ended) this.ambientFx(dt);
     this.fx.update(dt);
     const t2 = performance.now();
     this.draw(now, dt);
@@ -1318,6 +1340,7 @@ export class Game {
     const tB = performance.now();
     // Figuren, Strahlen, Projektile, Luftzonen
     R.drawEntities(ctx, list, now, q);
+    if (this.ambientOn()) R.drawClouds(ctx, now);
     R.drawBeams(ctx, list, now);
     R.drawProjectiles(ctx, this.projList || [], now);
     R.drawZonesAir(ctx, this.zones, now);

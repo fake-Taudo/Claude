@@ -897,5 +897,19 @@
         {"type": "burst", "count": 18, "shape": "spark", "colors": ["#ffd84d", "#ff9a3d"], "spread": 3.4, "spreadAbs": true, "z": [3, 5.5], "up": [0.5, 1.5], "speed": [0.2, 0.8], "drag": 0.3, "life": [0.7, 1.0], "size": [0.14, 0.22], "alpha": [1, 0], "blend": "add", "prio": 0}
       ]
     }
+  },
+  "ambient.glint": {
+    "layers": {
+      "core": [
+        {"type": "burst", "count": 1, "scaleCount": false, "shape": "star", "colors": ["#ffffff", "#e6f7ff"], "layer": "ground", "z": 0.05, "size": [0.3, 0.46], "sizeEnd": 0.02, "sizeEase": "inQuad", "life": [0.4, 0.7], "alpha": [0.95, 0], "alphaEase": "inQuad", "spin": [-1.5, 1.5], "prio": 0}
+      ]
+    }
+  },
+  "ambient.leaf": {
+    "layers": {
+      "core": [
+        {"type": "burst", "count": 1, "scaleCount": false, "shape": "leaf", "colors": ["#7fc24a", "#5aa83a", "#a8d860", "#c9a94a"], "z": [3.5, 5], "up": [-0.2, 0], "gravity": 0.5, "drag": 0.9, "wind": [0.7, 0.35], "spin": [-2.4, 2.4], "life": [5, 7], "size": [0.32, 0.42], "alpha": [1, 0], "alphaEase": "inExpo", "prio": 0}
+      ]
+    }
   }
 }
