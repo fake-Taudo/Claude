@@ -23,7 +23,7 @@ export class Bot {
     const p = m.players[side];
     this.tryAbility();
 
-    // Kosten wie beim Menschen über den Server (Spiegel, Geisterkaiserin); der Spiegel spielt wie seine Vorlage
+    // Kosten wie beim Menschen über den Server (Spiegel, Spirit Empress); der Spiegel spielt wie seine Vorlage
     const hand = p.hand
       .map((id, i) => {
         const card = m.db.card(id);

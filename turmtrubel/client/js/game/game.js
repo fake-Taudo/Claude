@@ -991,7 +991,7 @@ export class Game {
     return { obstacles, enemyDown };
   }
 
-  /** Aktuelle Kosten einer Handkarte laut Server (Spiegel, Geisterkaiserin); null = gerade nicht spielbar. */
+  /** Aktuelle Kosten einer Handkarte laut Server (Spiegel, Spirit Empress); null = gerade nicht spielbar. */
   handCost(slot, card) {
     const hc = this.me?.hc?.[slot];
     if (card?.elixirRule === 'mirror') return hc ?? null;
@@ -1122,7 +1122,7 @@ export class Game {
       g.dir = forwardDir(this.side);
       return g;
     }
-    // Geisterkaiserin: Form nach den aktuellen Kosten
+    // Spirit Empress: Form nach den aktuellen Kosten
     let ref = this.db.unitRefOf(eff);
     if (eff.forms) {
       const c = cost ?? this.handCost(this.sel, card);

@@ -538,7 +538,7 @@ export class Hud {
     const selected = g.sel === i && !g.ended;
     const dragging = g.drag?.active && selected;
     const ready = !(me.hr[i] > 0.01) && !g.pendingSlot.has(i);
-    // Kosten laut Server (Spiegel: letzte Karte + 1, Geisterkaiserin: je nach Elixier)
+    // Kosten laut Server (Spiegel: letzte Karte + 1, Spirit Empress: je nach Elixier)
     const cost = g.handCost(i, card);
     const afford = cost != null && elixir + 1e-6 >= cost;
     const evoInfo = me.ev?.[i];

@@ -338,7 +338,7 @@ test('Spiegel: letzte Karte eine Stufe stärker für +1 Elixier', () => {
   near(ks[1].maxHp / ks[0].maxHp, 1.1, 0.01);
 });
 
-test('Geisterkaiserin: Form hängt vom Elixier ab', () => {
+test('Spirit Empress: Form hängt vom Elixier ab', () => {
   const m = newMatch();
   const c = db.card('spirit-empress');
   m.players[0].elixir = 10;

@@ -2,8 +2,7 @@
 # Eigene Gestaltung aus Körper/Hut/Waffe/Farben – keine Original-Grafiken.
 # body: hum | imp | skel | brute | golem | bot | moth | bug | winged | dragon | balloon | whale | spirit
 #       | rider | blob | barrel | cart | ghost | hog | bush | machine | wagon
-# Gebäude-body: cannon | turret | tesla | hut | grave | pump | inferno | mortar | ballista | barricade
-#       | cage | drill | bombtower
+# Gebäude-body: cannon | turret | tesla | hut | grave | pump | inferno | mortar | ballista | cage | drill | bombtower
 # Zauber: icon + color. Fehlt ein Look, zeichnet der Client einen Platzhalter mit dem Kartennamen.
 
 GOLD = '#ffd54a'

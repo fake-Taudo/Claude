@@ -92,7 +92,7 @@ export function statsRows(db, card, evo = false) {
     if (s.delay) add('Verzögerung', `${fmt(s.delay)} s`, '⏳');
     return rows;
   }
-  // Geisterkaiserin: Werte der aktuell gewählten (Luft-)Form, die zweite Form als Hinweis
+  // Spirit Empress: Werte der aktuell gewählten (Luft-)Form, die zweite Form als Hinweis
   const u = db.unit(card.forms ? card.forms[0].unit : card.id, evo);
   const count = card.forms ? 1 : db.groupsOf(card, evo).reduce((sum, g) => sum + (g.count || 1), 0);
   add('Leben', fmt(u.hp) + (count > 1 ? ` (×${count})` : ''), '❤', 'hp', u.hp);
