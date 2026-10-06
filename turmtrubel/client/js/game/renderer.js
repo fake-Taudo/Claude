@@ -3,6 +3,8 @@ import { ARENA_W, ARENA_H, RIVER_Y0, RIVER_Y1, BRIDGES, TOWER_SLOTS, placementRe
 import { EF, EMOTES } from '/shared/protocol.js';
 import { drawUnit, drawBuilding, drawTower, drawEmoteFace, drawSpellIcon, TEAM, OUTLINE, shade } from './sprites.js';
 import { FONT, text as ctext, tnum, rr as rrect } from './canvastext.js';
+import { softShadow } from '../design/light.js';
+import { LIGHT } from '../design/tokens.js';
 
 const TAU = Math.PI * 2;
 // Rollende Zauber (Baumstamm, Barbarenfass) und im Bogen fliegende Geschosse
@@ -519,26 +521,22 @@ export class Renderer {
     const view = this.game.view;
     const s = view.s;
     const mySide = this.game.side;
-    // Schatten
-    ctx.fillStyle = 'rgba(20, 30, 20, 0.28)';
+    const dpr = this.game.dpr;
+    // Weiche Bodenschatten (gecacht je Größe), nach unten rechts versetzt (Licht von oben links);
+    // Bodeneinheiten tragen darin einen feinen Fußring in Teamfarbe.
+    const [ox, oy] = LIGHT.shadowOffset;
     for (const v of list) {
       if (v.kind === 'tower') continue;
       const [x, y] = view.toScreen(v.x, v.y);
-      const r = v.kind === 'building' ? v.half * s * 0.95 : v.radius * s * (v.flying ? 0.8 : 1.05);
-      ctx.beginPath();
-      ctx.ellipse(x, y + (v.kind === 'building' ? 0 : s * 0.05), r, r * 0.45, 0, 0, TAU);
-      ctx.fill();
-    }
-    // Teamring
-    for (const v of list) {
-      if (v.kind !== 'unit' || v.flying) continue;
-      const [x, y] = view.toScreen(v.x, v.y);
-      const r = v.radius * s * 0.9;
-      ctx.strokeStyle = v.owner === mySide ? 'rgba(61,139,255,0.8)' : 'rgba(255,77,87,0.8)';
-      ctx.lineWidth = Math.max(1.5, s * 0.07);
-      ctx.beginPath();
-      ctx.ellipse(x, y, r, r * 0.45, 0, 0, TAU);
-      ctx.stroke();
+      const r = v.kind === 'building' ? v.half * s * 1.05 : v.radius * s * (v.flying ? 0.8 : 1.1);
+      const ring = v.kind === 'unit' && !v.flying && !(v.flags & EF.UNDER) ? (v.owner === mySide ? TEAM.blue.main : TEAM.red.main) : null;
+      const img = softShadow(r * dpr, ring);
+      const w = img.width / dpr;
+      const h = img.height / dpr;
+      const fy = v.kind === 'building' ? v.half * s * 0.3 : s * 0.05;
+      if (v.flying) ctx.globalAlpha = 0.6;
+      ctx.drawImage(img, x - w / 2 + r * ox, y + fy - h / 2 + r * oy, w, h);
+      if (v.flying) ctx.globalAlpha = 1;
     }
     const ground = [];
     const air = [];
@@ -583,7 +581,7 @@ export class Renderer {
     const label = v.info?.label;
     if (v.kind === 'building') {
       const squash = spawnK < 1 ? 1 - spawnK : 0;
-      drawBuilding(ctx, v.look, { x: v.sx, y: v.sy + v.half * s * 0.35, U: v.half * s * 0.95, t, atk: v.atk, hurt: v.hurt, team, aim, aux: v.aux, alpha, evo: v.evo, quality, squash, label });
+      drawBuilding(ctx, v.look, { x: v.sx, y: v.sy + v.half * s * 0.35, U: v.half * s * 0.95, t, atk: v.atk, hurt: v.hurt, team, aim, aux: v.aux, alpha, evo: v.evo, quality, squash, label, dpr: this.game.dpr });
       return;
     }
     // Sprung/Wurf: Bogenflug aus dem lp-/th-Ereignis, sonst kleines Hüpfen
@@ -615,6 +613,8 @@ export class Renderer {
       quality,
       squash,
       label,
+      back: !!v.back,
+      dpr: this.game.dpr,
     });
     if (f & EF.CLONE && quality > 0) {
       ctx.save();

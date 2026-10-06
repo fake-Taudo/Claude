@@ -1,6 +1,10 @@
 // Prozedural gezeichnete Cartoon-Figuren: Einheiten, Gebäude, Türme, Zauber-Symbole.
 // Konvention: Ursprung = Fußpunkt (Boden), y nach oben negativ. Einheit "U" = Pixelgröße.
+// Einheiten und Gebäude werden je Pose/Richtung/Größe einmal mit dem Licht-Modell (design/light.js) in den
+// Sprite-Cache gerendert und danach nur noch kopiert (siehe drawUnit/drawBuilding).
 import { T } from '../ui/tokens.js';
+import { LitCtx, finishSprite, silhouette, scratchCanvas, softGlow } from '../design/light.js';
+import { sprites } from '../design/spritecache.js';
 
 const TAU = Math.PI * 2;
 export const OUTLINE = T.ink;
@@ -100,7 +104,10 @@ function poly(c, pts) {
 }
 function fill(P, color, stroke = true) {
   const c = P.ctx;
-  c.fillStyle = P.hurt > 0 ? mix(color, '#ffffff', P.hurt * 0.8) : color;
+  const col = P.hurt > 0 && typeof color === 'string' && color[0] === '#' ? mix(color, '#ffffff', P.hurt * 0.8) : color;
+  // Licht-Modell (Verlauf + Glanz), wenn über einen LitCtx gezeichnet wird
+  if (c.lit) return c.litFill(col, stroke);
+  c.fillStyle = col;
   c.fill();
   if (stroke) c.stroke();
 }
@@ -114,6 +121,8 @@ function swingAngle(a) {
 
 // ───────────── Augen & Gesichter ─────────────
 function eyes(P, x, y, s = 1, mood = null) {
+  // Rückansicht (Figur läuft vom Betrachter weg): kein Gesicht
+  if (P.back) return;
   const c = P.ctx;
   mood = mood || P.mood;
   if (mood === 'stun') {
@@ -158,6 +167,7 @@ function eyes(P, x, y, s = 1, mood = null) {
 }
 
 function glowEyes(P, x, y, s, color) {
+  if (P.back) return;
   const c = P.ctx;
   c.save();
   c.shadowColor = color;
@@ -593,9 +603,23 @@ function humanoid(P, L, variant = 'hum') {
   const headR = imp ? 0.4 : 0.35;
   const headY = imp ? -1.02 : -1.1;
   const lp = P.walk ? Math.sin(P.phase) * 0.13 : 0;
+  const back = !!P.back;
+  const weapon = WEAPONS[L.weapon || 'fists'] || WEAPONS.fists;
+  const ranged = L.weapon === 'bow' || L.weapon === 'crossbow' || L.weapon === 'sling' || L.weapon === 'launcher' || L.weapon === 'orb' || L.weapon === 'staff' || L.weapon === 'lantern';
+  const weaponArm = () => {
+    c.save();
+    c.translate(0.36, -0.52);
+    c.rotate(swingAngle(P.atk) * (ranged ? 0.25 : 1) + (L.weapon === 'crossbow' ? Math.PI / 2 : 0));
+    weapon(P);
+    c.restore();
+    circ(c, 0.36, -0.52, 0.1);
+    fill(P, variant === 'skel' ? '#f4f1e6' : skin);
+  };
+  // Rückansicht: Waffe und Hand liegen hinter dem Körper
+  if (back) weaponArm();
 
-  // Umhang
-  if (L.cape) {
+  // Umhang (Vorderansicht: hinter dem Körper)
+  if (L.cape && !back) {
     const w = Math.sin(P.t * 4 + P.seed) * 0.06;
     c.beginPath();
     c.moveTo(-0.22, -0.85);
@@ -639,8 +663,21 @@ function humanoid(P, L, variant = 'hum') {
     c.stroke();
   }
 
+  // Rückansicht: Umhang bedeckt den Rücken
+  if (L.cape && back) {
+    const w = Math.sin(P.t * 4 + P.seed) * 0.05;
+    c.beginPath();
+    c.moveTo(-0.3, -0.86);
+    c.quadraticCurveTo(0, -0.95, 0.3, -0.86);
+    c.quadraticCurveTo(0.5, -0.4, 0.44 + w, -0.06);
+    c.quadraticCurveTo(0, 0.02 + w, -0.44 + w, -0.06);
+    c.quadraticCurveTo(-0.5, -0.4, -0.3, -0.86);
+    c.closePath();
+    fill(P, P.team);
+  }
+
   // Kapuze hinten
-  if (L.hat === 'hood') HATS.hood(P, 0.03, headY, headR, true);
+  if (L.hat === 'hood' && !back) HATS.hood(P, 0.03, headY, headR, true);
 
   // Kopf
   if (imp) {
@@ -651,6 +688,33 @@ function humanoid(P, L, variant = 'hum') {
   }
   circ(c, 0.03, headY, headR);
   fill(P, skin);
+  if (back) {
+    // Hinterkopf: Haare bzw. Kapuze bedecken den Kopf, kein Gesicht
+    if (L.hat === 'hood') HATS.hood(P, 0.03, headY, headR, true);
+    else if (HAIR_HATS.has(L.hat)) {
+      c.beginPath();
+      c.arc(0.03, headY - headR * 0.05, headR * 1.04, Math.PI * 0.82, Math.PI * 2.18);
+      c.quadraticCurveTo(0.03, headY + headR * 0.75, 0.03 - headR * 0.86, headY + headR * 0.53);
+      c.closePath();
+      fill(P, L.hairColor || HAIR_DEFAULT[L.hat] || '#f2d16b');
+    } else if (variant !== 'skel' && !L.hat) {
+      ell(c, 0.03, headY + headR * 0.55, headR * 0.6, headR * 0.22);
+      fill(P, shade(skin, -0.15), false);
+    }
+    if (L.hat && HATS[L.hat] && L.hat !== 'hood' && !HAIR_HATS.has(L.hat)) {
+      P.hairColor = L.hairColor;
+      HATS[L.hat](P, 0.03, headY, headR, true);
+    } else if (L.hat && HAIR_HATS.has(L.hat) && L.hat !== 'hair' && L.hat !== 'spiky') {
+      // Zöpfe, Pferdeschwanz, Tiara und Reif: Zubehör auch von hinten sichtbar
+      P.hairColor = L.hairColor;
+      HATS[L.hat](P, 0.03, headY, headR, true);
+    }
+    if (L.shield) {
+      ell(c, -0.3, -0.52, 0.24, 0.3);
+      fill(P, P.metal || '#b9c3cf');
+    }
+    return;
+  }
   if (variant === 'skel') {
     for (const ex of [-0.05, 0.14]) {
       ell(c, ex, headY - 0.02, 0.075, 0.09);
@@ -692,16 +756,10 @@ function humanoid(P, L, variant = 'hum') {
   }
 
   // Waffe + vordere Hand
-  const weapon = WEAPONS[L.weapon || 'fists'] || WEAPONS.fists;
-  const ranged = L.weapon === 'bow' || L.weapon === 'crossbow' || L.weapon === 'sling' || L.weapon === 'launcher' || L.weapon === 'orb' || L.weapon === 'staff' || L.weapon === 'lantern';
-  c.save();
-  c.translate(0.36, -0.52);
-  c.rotate(swingAngle(P.atk) * (ranged ? 0.25 : 1) + (L.weapon === 'crossbow' ? Math.PI / 2 : 0));
-  weapon(P);
-  c.restore();
-  circ(c, 0.36, -0.52, 0.1);
-  fill(P, variant === 'skel' ? '#f4f1e6' : skin);
+  weaponArm();
 }
+const HAIR_HATS = new Set(['hair', 'braid', 'ponytail', 'spiky', 'tiara', 'circlet']);
+const HAIR_DEFAULT = { braid: '#e8883a', ponytail: '#8a3b2a', circlet: '#5b3a1e', spiky: '#ffe066' };
 
 function brute(P, L) {
   const c = P.ctx;
@@ -1342,6 +1400,117 @@ export function drawPlaceholder(ctx, label, x, y, R, team = 'blue') {
  * Einheit zeichnen.
  * o = { x, y, U, fx, t, walk, atk, hurt, team:'blue'|'red', evo, lift, alpha, mood, seed, quality }
  */
+// ───────────── Sprite-Cache für Figuren ─────────────
+const lookIds = new WeakMap();
+let lookSeq = 0;
+/** Stabiler Schlüssel je Look-Objekt (Looks sind pro Kartentyp dieselben Objekte). */
+function lookKey(L) {
+  let k = lookIds.get(L);
+  if (!k) {
+    k = 'L' + ++lookSeq;
+    lookIds.set(L, k);
+  }
+  return k;
+}
+const HALF_PI = Math.PI / 2;
+/**
+ * Feste Animations-Frames je Figur (Pose-Parameter beim Rendern in den Cache). t = 0; seed legt die Phase von
+ * Flügelschlag/Wippen fest (sin(seed) = ±1), phase die Beinstellung. Zwischen den Frames sorgen Squash, Stretch
+ * und Wippen beim Kopieren für Bewegung (siehe blitSprite).
+ */
+export const UNIT_FRAMES = {
+  idle: { walk: false, phase: 0, seed: HALF_PI, atk: 0, mood: null },
+  walk1: { walk: true, phase: HALF_PI, seed: HALF_PI, atk: 0, mood: null },
+  walk2: { walk: true, phase: -HALF_PI, seed: -HALF_PI, atk: 0, mood: null },
+  atk1: { walk: false, phase: 0, seed: HALF_PI, atk: 0.8, mood: 'angry' },
+  atk2: { walk: false, phase: 0, seed: -HALF_PI, atk: 0.32, mood: 'angry' },
+  stun: { walk: false, phase: 0, seed: HALF_PI, atk: 0, mood: 'stun' },
+};
+const FLAPPERS = new Set(['moth', 'bug', 'winged', 'dragon']);
+
+/** Welcher Frame passt zum aktuellen Zustand? */
+export function unitFrameOf(L, o) {
+  if (o.mood === 'stun') return 'stun';
+  if (o.atk > 0) return o.atk >= 0.6 ? 'atk1' : 'atk2';
+  const ph = (o.t || 0) * 11 + (o.seed || 0);
+  if (o.walk) return Math.sin(ph) >= 0 ? 'walk1' : 'walk2';
+  if (FLAPPERS.has(L.body)) return Math.sin((o.t || 0) * 14 + (o.seed || 0)) >= 0 ? 'walk1' : 'idle';
+  return 'idle';
+}
+
+function ctxScale(ctx) {
+  const m = ctx.getTransform();
+  return Math.hypot(m.a, m.b) || 1;
+}
+
+/** Figur einmal mit Licht-Modell rendern und als Sprite fertigen. Ud = Gerätepixel pro Einheit U. */
+function buildUnitSprite(L, team, evo, back, flip, frame, Ud, quality) {
+  const F = UNIT_FRAMES[frame] || UNIT_FRAMES.idle;
+  const big = BIG_BODIES.has(L.body);
+  const hx = big ? 2.6 : 2.2;
+  const W = Math.ceil(Ud * hx * 2 + 24);
+  const H = Math.ceil(Ud * (big ? 4.0 : 3.7) + 24);
+  const cx = Math.round(W / 2);
+  const cy = Math.ceil(Ud * (big ? 3.2 : 3.0) + 12);
+  const cv = scratchCanvas(0, W, H);
+  const raw = cv.getContext('2d');
+  raw.setTransform(Ud * flip, 0, 0, Ud, cx, cy);
+  const lc = new LitCtx(raw, { gloss: quality > 0 });
+  lc.lineWidth = Math.max(0.9, Ud * 0.045) / Ud;
+  lc.lineJoin = 'round';
+  lc.lineCap = 'round';
+  lc.strokeStyle = OUTLINE;
+  const T = TEAM[team] || TEAM.blue;
+  const P = { ctx: lc, t: 0, walk: F.walk, phase: F.phase, atk: F.atk, hurt: 0, team: T.main, teamDark: T.dark, evo, mood: F.mood, seed: F.seed, quality, metal: evo ? '#c9b8ff' : null, back };
+  (BODIES[L.body] || BODIES.hum)(P, L);
+  if (L.hero && quality > 0) star(P, 0, -1.75, 0.16, '#ffd54a');
+  const x0 = Math.max(0, Math.floor(lc.ux0) - 2);
+  const y0 = Math.max(0, Math.floor(lc.uy0) - 2);
+  const x1 = Math.min(W, Math.ceil(lc.ux1) + 2);
+  const y1 = Math.min(H, Math.ceil(lc.uy1) + 2);
+  if (!(x1 > x0 && y1 > y0)) return null;
+  const out = finishSprite(cv, x0, y0, x1 - x0, y1 - y0, { outline: Math.max(1.2, Math.min(3.4, Ud * 0.075)), rim: Math.max(1, Ud * 0.05) });
+  return { canvas: out, ox: cx - x0 + out.pad, oy: cy - y0 + out.pad };
+}
+
+/**
+ * Gecachtes Sprite an (x, y) kopieren. sx/sy: Squash/Stretch, dpr: Gerätepixel je CSS-Pixel des Ziels.
+ * hurt > 0 legt die weiße Silhouette darüber (Treffer-Flash).
+ */
+export function blitSprite(ctx, e, x, y, sx, sy, alpha, hurt, dpr) {
+  const k = 1 / dpr;
+  const w = e.canvas.width * k;
+  const h = e.canvas.height * k;
+  ctx.save();
+  ctx.translate(x, y);
+  if (sx !== 1 || sy !== 1) ctx.scale(sx, sy);
+  if (alpha < 1) ctx.globalAlpha *= alpha;
+  ctx.drawImage(e.canvas, -e.ox * k, -e.oy * k, w, h);
+  if (hurt > 0.02) {
+    if (!e.white) {
+      e.white = silhouette(e.canvas);
+      sprites.grow(e, e.canvas.width * e.canvas.height * 4);
+    }
+    ctx.globalAlpha *= Math.min(1, hurt) * 0.85;
+    ctx.drawImage(e.white, -e.ox * k, -e.oy * k, w, h);
+  }
+  ctx.restore();
+}
+
+/** Evo-Aura: pulsierender, weicher Schein hinter der Figur. */
+function evoAura(ctx, L, x, y, U, t, dpr) {
+  const R = U * 0.95;
+  const g = softGlow(L.accent || '#b98cff', R * dpr, 0.2);
+  ctx.save();
+  ctx.globalAlpha *= 0.42 + Math.sin(t * 5) * 0.16;
+  ctx.drawImage(g, x - R, y - U * 0.62 - R * 1.08, R * 2, R * 2.16);
+  ctx.restore();
+}
+
+/**
+ * Einheit zeichnen. o = { x, y (Fußpunkt), U (px), t, seed, walk, atk, hurt, team, evo, lift, alpha, fx (±1 Blickrichtung),
+ * back (Rückansicht), mood, quality, squash, dpr, cache (false = direkt zeichnen), force (Cache auch über Frame-Limit) }
+ */
 export function drawUnit(ctx, look, o) {
   const L = look || {};
   if (L.image && drawSkinImage(ctx, L.image, o.x, o.y - (o.lift || 0), o.U * 2.1, o.alpha ?? 1)) return;
@@ -1349,10 +1518,6 @@ export function drawUnit(ctx, look, o) {
     drawPlaceholder(ctx, o.label, o.x, o.y - (o.lift || 0), o.U * 0.6, o.team);
     return;
   }
-  const T = TEAM[o.team] || TEAM.blue;
-  ctx.save();
-  ctx.translate(o.x, o.y - (o.lift || 0));
-  if (o.alpha != null && o.alpha < 1) ctx.globalAlpha *= o.alpha;
   let sx = 1;
   let sy = 1;
   const seed = o.seed || 0;
@@ -1377,6 +1542,29 @@ export function drawUnit(ctx, look, o) {
     sy *= 1 - o.squash * 0.3;
     sx *= 1 + o.squash * 0.25;
   }
+  const q = o.quality ?? 2;
+  if (o.cache !== false && typeof document !== 'undefined') {
+    const dpr = o.dpr || ctxScale(ctx);
+    const Ud = Math.max(4, Math.round(o.U * dpr * 2) / 2);
+    const flip = (o.fx || 1) < 0 ? -1 : 1;
+    const frame = unitFrameOf(L, o);
+    const team = o.team === 'red' ? 'red' : 'blue';
+    const back = !!o.back;
+    const key = 'u|' + lookKey(L) + '|' + team + (o.evo ? 'E' : '') + (back ? 'B' : 'F') + (flip < 0 ? 'L' : 'R') + '|' + frame + '|' + Ud + '|' + q;
+    const e = sprites.obtain(key, () => buildUnitSprite(L, team, !!o.evo, back, flip, frame, Ud, q), !!o.force);
+    if (e) {
+      const yy = o.y - (o.lift || 0);
+      if (o.evo && q > 0) evoAura(ctx, L, o.x, yy, o.U, o.t || 0, dpr);
+      const corr = (o.U * dpr) / Ud;
+      blitSprite(ctx, e, o.x, yy, sx * corr, sy * corr, o.alpha ?? 1, o.hurt || 0, dpr);
+      return;
+    }
+  }
+  // Direktes Zeichnen (Fallback, solange das Sprite noch nicht im Cache ist)
+  const T = TEAM[o.team] || TEAM.blue;
+  ctx.save();
+  ctx.translate(o.x, o.y - (o.lift || 0));
+  if (o.alpha != null && o.alpha < 1) ctx.globalAlpha *= o.alpha;
   ctx.scale(o.U * sx * (o.fx || 1), o.U * sy);
   ctx.lineWidth = Math.max(1.3 / o.U, 0.075);
   ctx.lineJoin = 'round';
@@ -1394,8 +1582,9 @@ export function drawUnit(ctx, look, o) {
     evo: !!o.evo,
     mood: o.mood || (o.atk > 0 ? 'angry' : null),
     seed,
-    quality: o.quality ?? 2,
+    quality: q,
     metal: o.evo ? '#c9b8ff' : null,
+    back: !!o.back,
   };
   if (o.evo && P.quality > 0) {
     ctx.save();
@@ -1673,7 +1862,35 @@ const BUILDINGS = {
   },
 };
 
-/** Gebäude zeichnen. o = { x, y, U (halbe Kante px), t, atk, hurt, team, aim, aux, alpha, evo, quality } */
+const AIM_BUILDINGS = new Set(['cannon', 'turret', 'mortar', 'ballista']);
+const AIM_STEPS = 32;
+
+function buildBuildingSprite(L, team, evo, frame, aim, heat, tt, Ud, quality) {
+  const W = Math.ceil(Ud * 5.2 + 24);
+  const H = Math.ceil(Ud * 5.2 + 24);
+  const cx = Math.round(W / 2);
+  const cy = Math.ceil(Ud * 3.4 + 12);
+  const cv = scratchCanvas(0, W, H);
+  const raw = cv.getContext('2d');
+  raw.setTransform(Ud, 0, 0, Ud, cx, cy);
+  const lc = new LitCtx(raw, { gloss: quality > 0 });
+  lc.lineWidth = Math.max(0.9, Ud * 0.04) / Ud;
+  lc.lineJoin = 'round';
+  lc.lineCap = 'round';
+  lc.strokeStyle = OUTLINE;
+  const T = TEAM[team] || TEAM.blue;
+  const P = { ctx: lc, t: tt, atk: frame === 'r' ? 0.85 : 0, hurt: 0, team: T.main, teamDark: T.dark, quality, evo };
+  (BUILDINGS[L.body] || BUILDINGS.cannon)(P, L, { aim, aux: heat * 2 });
+  const x0 = Math.max(0, Math.floor(lc.ux0) - 2);
+  const y0 = Math.max(0, Math.floor(lc.uy0) - 2);
+  const x1 = Math.min(W, Math.ceil(lc.ux1) + 2);
+  const y1 = Math.min(H, Math.ceil(lc.uy1) + 2);
+  if (!(x1 > x0 && y1 > y0)) return null;
+  const out = finishSprite(cv, x0, y0, x1 - x0, y1 - y0, { outline: Math.max(1.4, Math.min(3.6, Ud * 0.06)), rim: Math.max(1, Ud * 0.04) });
+  return { canvas: out, ox: cx - x0 + out.pad, oy: cy - y0 + out.pad };
+}
+
+/** Gebäude zeichnen. o = { x, y, U (halbe Kante px), t, atk, hurt, team, aim, aux, alpha, evo, quality, squash, dpr, cache } */
 export function drawBuilding(ctx, look, o) {
   const L = look || {};
   if (L.image && drawSkinImage(ctx, L.image, o.x, o.y + o.U * 0.4, o.U * 2.4, o.alpha ?? 1)) return;
@@ -1681,17 +1898,47 @@ export function drawBuilding(ctx, look, o) {
     drawPlaceholder(ctx, o.label, o.x, o.y, o.U * 0.8, o.team);
     return;
   }
+  const q = o.quality ?? 2;
+  const sq = o.squash || 0;
+  if (o.cache !== false && typeof document !== 'undefined') {
+    const dpr = o.dpr || ctxScale(ctx);
+    const Ud = Math.max(4, Math.round(o.U * dpr * 2) / 2);
+    const team = o.team === 'red' ? 'red' : 'blue';
+    const frame = (o.atk || 0) > 0.5 ? 'r' : 'i';
+    let aimB = 0;
+    let aim = -Math.PI / 2;
+    if (AIM_BUILDINGS.has(L.body) && o.aim != null) {
+      aimB = ((Math.round((o.aim / TAU) * AIM_STEPS) % AIM_STEPS) + AIM_STEPS) % AIM_STEPS;
+      aim = (aimB / AIM_STEPS) * TAU;
+    }
+    const heat = L.body === 'inferno' ? Math.min(3, Math.floor((o.aux || 0) * 1.5)) / 3 : 0;
+    const tt = L.body === 'drill' ? (Math.floor((o.t || 0) * 8) % 3) * 0.05 : 0;
+    const key = 'b|' + lookKey(L) + '|' + team + (o.evo ? 'E' : '') + '|' + frame + aimB + '|' + heat + '|' + tt + '|' + Ud + '|' + q;
+    const e = sprites.obtain(key, () => buildBuildingSprite(L, team, !!o.evo, frame, aim, heat, tt, Ud, q), !!o.force);
+    if (e) {
+      if (o.evo && q > 0) {
+        const R = o.U * 1.25;
+        const g = softGlow(L.accent || '#b98cff', R * dpr, 0.25);
+        ctx.save();
+        ctx.globalAlpha *= 0.34 + Math.sin((o.t || 0) * 5) * 0.12;
+        ctx.drawImage(g, o.x - R, o.y - o.U * 0.5 - R, R * 2, R * 2);
+        ctx.restore();
+      }
+      const corr = (o.U * dpr) / Ud;
+      blitSprite(ctx, e, o.x, o.y, (1 + sq * 0.2) * corr, (1 - sq * 0.25) * corr, o.alpha ?? 1, o.hurt || 0, dpr);
+      return;
+    }
+  }
   const T = TEAM[o.team] || TEAM.blue;
   ctx.save();
   ctx.translate(o.x, o.y);
   if (o.alpha != null && o.alpha < 1) ctx.globalAlpha *= o.alpha;
-  const sq = o.squash || 0;
   ctx.scale(o.U * (1 + sq * 0.2), o.U * (1 - sq * 0.25));
   ctx.lineWidth = Math.max(1.4 / o.U, 0.05);
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   ctx.strokeStyle = OUTLINE;
-  const P = { ctx, t: o.t || 0, atk: o.atk || 0, hurt: o.hurt || 0, team: T.main, teamDark: T.dark, quality: o.quality ?? 2, evo: !!o.evo };
+  const P = { ctx, t: o.t || 0, atk: o.atk || 0, hurt: o.hurt || 0, team: T.main, teamDark: T.dark, quality: q, evo: !!o.evo };
   if (o.evo && P.quality > 0) {
     ctx.save();
     ctx.globalAlpha *= 0.3 + Math.sin(P.t * 5) * 0.12;

@@ -6,6 +6,7 @@ import { Hud } from './hud.js';
 import { Particles } from './particles.js';
 import { cardArt } from '../ui/art.js';
 import { safeInsets, reducedMotion } from '../ui/tokens.js';
+import { sprites } from '../design/spritecache.js';
 
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -279,11 +280,17 @@ export class Game {
       const eb = bMap && bMap.get(id);
       const x = eb ? e[3] + (eb[3] - e[3]) * alpha : e[3];
       const y = eb ? e[4] + (eb[4] - e[4]) * alpha : e[4];
-      const [px] = view.toScreen(v.x, v.y);
-      const [nx] = view.toScreen(x, y);
+      const [px, py] = view.toScreen(v.x, v.y);
+      const [nx, ny] = view.toScreen(x, y);
       const moved = Math.hypot(x - v.x, y - v.y);
       v.moving = dt > 0 && moved / dt > 0.25;
-      if (Math.abs(nx - px) > 0.05 && v.moving) v.face = nx > px ? 1 : -1;
+      if (v.moving) {
+        if (Math.abs(nx - px) > 0.05) v.face = nx > px ? 1 : -1;
+        // Rückansicht, solange die Figur deutlich nach oben (vom Betrachter weg) läuft
+        const ddx = nx - px;
+        const ddy = ny - py;
+        if (Math.abs(ddx) + Math.abs(ddy) > 0.05) v.back = ddy < 0 && Math.abs(ddy) > Math.abs(ddx) * 0.4;
+      }
       v.x = x;
       v.y = y;
       v.hp = e[5];
@@ -310,9 +317,10 @@ export class Game {
     for (const v of this.vis.values()) {
       v.targetV = v.target ? this.vis.get(v.target) || null : null;
       if (v.targetV && v.flags & EF.ATTACK && v.kind === 'unit') {
-        const [tx] = view.toScreen(v.targetV.x, v.targetV.y);
-        const [sx] = view.toScreen(v.x, v.y);
+        const [tx, ty] = view.toScreen(v.targetV.x, v.targetV.y);
+        const [sx, sy] = view.toScreen(v.x, v.y);
         if (Math.abs(tx - sx) > 1) v.face = tx > sx ? 1 : -1;
+        v.back = ty < sy && Math.abs(ty - sy) > Math.abs(tx - sx) * 0.4;
       }
     }
     this.firstSnap = false;
@@ -412,6 +420,8 @@ export class Game {
       atk: 0,
       hurt: 0,
       face: e[2] === this.side ? 1 : -1,
+      // Eigene Einheiten laufen anfangs nach oben (Rücken zum Betrachter), gegnerische auf ihn zu
+      back: e[2] === this.side && this.view.mode !== 'rotated',
       moving: false,
       U: this.view.s * (info.uf || 1),
     };
@@ -1175,6 +1185,7 @@ export class Game {
 
   draw(now, dt) {
     const ctx = this.ctx;
+    sprites.newFrame();
     const { cw, ch, dpr } = this;
     const R = this.renderer;
     const q = QUALITY_LEVEL[this.app.settings.quality] ?? 2;
