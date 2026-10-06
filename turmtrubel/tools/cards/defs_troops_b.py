@@ -249,7 +249,7 @@ card(id='skeleton-army', src='Skeleton Army', name='Skelettarmee', type='troop',
      evo=dict(cycles=2, description='16 Skelette und General Gerry. Fallen Skelette, kämpfen ihre Schatten unverwundbar weiter – bis Gerry fällt.',
               count=16, groups=[dict(unit='general-gerry', count=1, behind=1.5)], unit=dict(traits=dict(shadowOnDeath=dict(unit='shadow-skeleton', leader='general-gerry')))))
 token('general-gerry', name='General Gerry', hp=81, damage=81, hitSpeed=1.0, firstHit=0.5, speed=FAST, range=1.6, targets='ground', radius=0.4, mass=3,
-      traits=dict(shield=81))
+      traits=dict(shield=81, leader=dict(dismiss='shadow-skeleton')))
 token('shadow-skeleton', name='Schattenskelett', hp=1, damage=81, hitSpeed=1.1, firstHit=0.5, speed=MED, range=0.5, targets='ground', radius=0.3, mass=1,
       deployTime=0.2, traits=dict(untargetable=True, invulnerable=True))
 

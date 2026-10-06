@@ -350,8 +350,9 @@ export const Traits = {
       const leader = this.entities.find((o) => !o.dead && o.groupId === e.groupId && o.def.key === tr.shadowOnDeath.leader);
       if (leader) this.spawnAround(tr.shadowOnDeath.unit, 1, e.owner, e.x, e.y, 0.2, { groupId: e.groupId });
     }
-    if (e.def.key === 'general-gerry' && e.groupId) {
-      for (const o of this.entities) if (!o.dead && o.groupId === e.groupId && o.def.key === 'shadow-skeleton') o.dead = true;
+    // Anführer (General Gerry): stirbt er, verschwinden die an seine Gruppe gebundenen Einheiten
+    if (tr.leader?.dismiss && e.groupId) {
+      for (const o of this.entities) if (!o.dead && o.groupId === e.groupId && o.def.key === tr.leader.dismiss) o.dead = true;
     }
     // Evo-Hexe: Tod eigener Skelette heilt sie (nur die ersten n je Welle)
     if (e.spawnedBy) {

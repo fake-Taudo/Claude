@@ -9,7 +9,7 @@
 // Der Snapshot enthält je Seite: Revision, Infobox, deutschen Namen (Sprachlink)
 // und die gerenderten Werte-Tabellen (Attribute + Statistik auf Turnierstandard Level 11).
 // data/cards.json wird NICHT automatisch überschrieben – die Mechaniken sind von Hand
-// gepflegt; test/carddata.test.js gleicht die Grundwerte mit dem Snapshot ab.
+// gepflegt (tools/cards/); test/carddata.test.js gleicht die Grundwerte mit dem Snapshot ab.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
