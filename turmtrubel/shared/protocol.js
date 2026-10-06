@@ -55,6 +55,14 @@ export const EF = Object.freeze({
   DASH: 1024,
   JUMP: 2048,
   BUFF: 4096,
+  UNDER: 8192, // unter der Erde (Tunnelgräber, Großer Gräber, versenkte Tesla)
+  CURSE: 16384, // verflucht (Hexenmutter, Goblin Curse)
+  FREEZE: 32768, // eingefroren (Frost, Eisgeist)
+  ROOT: 65536, // festgehalten (Ranken, Netz, Käfig)
+  ENCHANT: 131072, // verzaubert (Rune Giant)
+  GHOST: 262144, // Geist/Schatten (nicht anvisierbar)
+  CLONE: 524288, // Klon (1 Leben)
+  FLY: 1048576, // fliegt gerade (z. B. Held Magier, Evo-Königsschweinchen)
 });
 
 // Aufbau eines Entitäts-Eintrags im Snapshot (Array statt Objekt → kleinere Pakete)
@@ -94,6 +102,7 @@ export const REJECTS = Object.freeze({
   DEPLOYING: 'Die Einheit landet noch.',
   EMOTE_COOLDOWN: 'Emote noch nicht bereit.',
   LIMIT: 'Zu viele Einheiten auf dem Feld.',
+  MIRROR_EMPTY: 'Der Spiegel braucht eine zuvor gespielte Karte.',
 });
 
 // Sechs Emotes – die Gesichter werden im Client prozedural gezeichnet.

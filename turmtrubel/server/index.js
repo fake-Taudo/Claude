@@ -14,10 +14,16 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export function loadData(root = ROOT) {
   const cardsText = fs.readFileSync(path.join(root, 'data/cards.json'), 'utf8');
   const rulesText = fs.readFileSync(path.join(root, 'data/rules.json'), 'utf8');
-  const db = createDb(JSON.parse(cardsText));
+  const skinPath = path.join(root, 'data/skin.json');
+  const skinText = fs.existsSync(skinPath) ? fs.readFileSync(skinPath, 'utf8') : '{}';
   const rules = JSON.parse(rulesText);
-  const version = crypto.createHash('sha1').update(cardsText).update(rulesText).digest('hex').slice(0, 10);
-  return { db, rules, cardsText, rulesText, version };
+  const skin = JSON.parse(skinText);
+  // Umgebungsvariable SKIN (z. B. SKIN=custom) hat Vorrang vor rules.json → skin und skin.json → active
+  if (process.env.SKIN) rules.skin = process.env.SKIN;
+  const db = createDb(JSON.parse(cardsText), { level: rules.cardLevel, skin, skinName: rules.skin });
+  const rulesOut = process.env.SKIN ? JSON.stringify(rules) : rulesText;
+  const version = crypto.createHash('sha1').update(cardsText).update(rulesOut).update(skinText).digest('hex').slice(0, 10);
+  return { db, rules, cardsText, rulesText: rulesOut, skinText, version };
 }
 
 const MIME = {
@@ -56,9 +62,9 @@ function makeStaticHandler(data) {
     const p = decodeURIComponent(url.pathname);
     const headers = { 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-cache' };
     // Daten immer aus dem Speicher → identisch mit dem, was der Server simuliert
-    if (p === '/data/cards.json' || p === '/data/rules.json') {
+    if (p === '/data/cards.json' || p === '/data/rules.json' || p === '/data/skin.json') {
       res.writeHead(200, { ...headers, 'Content-Type': MIME['.json'], ETag: data.version });
-      res.end(p === '/data/cards.json' ? data.cardsText : data.rulesText);
+      res.end(p === '/data/cards.json' ? data.cardsText : p === '/data/rules.json' ? data.rulesText : data.skinText);
       return;
     }
     if (p === '/healthz') {

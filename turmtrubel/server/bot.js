@@ -23,9 +23,14 @@ export class Bot {
     const p = m.players[side];
     this.tryAbility();
 
+    // Kosten wie beim Menschen über den Server (Spiegel, Geisterkaiserin); der Spiegel spielt wie seine Vorlage
     const hand = p.hand
-      .map((id, i) => ({ id, i, card: m.db.card(id) }))
-      .filter((h) => h.card && h.card.elixir <= p.elixir && m.time >= p.handReady[h.i]);
+      .map((id, i) => {
+        const card = m.db.card(id);
+        const cost = card ? m.costOf(side, card) : null;
+        return { id, i, card: card ? m.effectiveCard(side, card) : null, raw: card, cost };
+      })
+      .filter((h) => h.card && h.cost != null && h.cost <= p.elixir && m.time >= p.handReady[h.i]);
     if (!hand.length) return;
 
     const threats = m.entities.filter(
@@ -64,6 +69,17 @@ export class Bot {
     return card.type === 'spell' ? null : this.m.db.unit(this.m.db.unitRefOf(card));
   }
 
+  /** Grobe Zauber-Einordnung für die Bot-Entscheidungen. */
+  spellKind(card) {
+    const s = card.spell;
+    if (!s) return null;
+    if (s.ownSide) return 'own'; // Baumstamm, Fässer, Königliche Lieferung
+    if (s.spawn || s.graveyard) return 'push'; // Koboldfass, Friedhof
+    if (s.clone || (s.rage && !s.damage)) return 'support';
+    if (s.damage || s.pulse || s.voidTiers || s.vines) return 'damage';
+    return 'support';
+  }
+
   defend(threats, hand) {
     const m = this.m;
     // gefährlichste Bedrohung = am tiefsten eingedrungen
@@ -74,7 +90,7 @@ export class Bot {
 
     // Schwarm → Flächenzauber
     if (near.length >= 3) {
-      const spell = hand.find((h) => h.card.type === 'spell' && h.card.spell.damage && (h.card.spell.radius || 0) >= 2.5);
+      const spell = hand.find((h) => this.spellKind(h.card) === 'damage' && (h.card.spell.radius || 0) >= 2.5);
       if (spell) {
         const cx = near.reduce((s, o) => s + o.x, 0) / near.length;
         const cy = near.reduce((s, o) => s + o.y, 0) / near.length;
@@ -83,9 +99,15 @@ export class Bot {
     }
     if (this.depth(t.y) < 1 && hpSum < 600) return false; // noch zu weit weg / harmlos
 
+    // Rollende Zauber und Lieferungen landen auf der eigenen Seite direkt vor der Bedrohung
+    if (!t.flying && this.depth(t.y) > 0.5) {
+      const own = hand.find((h) => this.spellKind(h.card) === 'own');
+      if (own && this.tryPlay(own, t.x, t.y + (this.side === 0 ? 2 : -2))) return true;
+    }
+
     const flying = t.flying;
     const troops = hand.filter((h) => {
-      if (h.card.type === 'spell') return false;
+      if (h.card.type === 'spell' || h.card.forms) return false;
       const u = this.unitOf(h.card);
       if (u.targets === 'buildings' || !u.damage) return h.card.type === 'building' && !flying && !u.damage && this.rng() < 0.3;
       if (flying) return u.targets === 'both' || u.targets === 'air';
@@ -104,10 +126,26 @@ export class Bot {
     // Tower-Finisher mit Zauber
     const enemyTowers = m.towers.filter((t) => !t.dead && t.owner !== this.side);
     for (const h of hand) {
-      if (h.card.type !== 'spell' || !h.card.spell.damage || h.card.spell.pulse) continue;
+      if (this.spellKind(h.card) !== 'damage' || !h.card.spell.damage || h.card.spell.pulse) continue;
       const dmg = h.card.spell.damage * (h.card.spell.towerDamage ?? 1);
       const tw = enemyTowers.find((t) => t.hp <= dmg);
       if (tw && this.tryPlay(h, tw.x, tw.y)) return true;
+    }
+    // Koboldfass/Friedhof direkt auf den nächsten Gegnerturm
+    const push = hand.find((h) => this.spellKind(h.card) === 'push');
+    if (push && enemyTowers.length && this.rng() < 0.5) {
+      const tw = enemyTowers.filter((t) => t.towerKey === 'princess')[this.lane] || enemyTowers[0];
+      if (this.tryPlay(push, tw.x, tw.y + (this.side === 0 ? 2 : -2))) return true;
+    }
+    // Wut/Klon nur, wenn eigene Truppen vorne stehen
+    const support = hand.find((h) => this.spellKind(h.card) === 'support');
+    if (support) {
+      const mine = m.entities.filter((e) => !e.dead && e.owner === this.side && e.kind === 'unit' && this.depth(e.y) < -2);
+      if (mine.length >= 2) {
+        const cx = mine.reduce((s, o) => s + o.x, 0) / mine.length;
+        const cy = mine.reduce((s, o) => s + o.y, 0) / mine.length;
+        if (this.tryPlay(support, cx, cy)) return true;
+      }
     }
     const troops = hand.filter((h) => h.card.type === 'troop');
     if (!troops.length) {
@@ -125,7 +163,7 @@ export class Bot {
     const pick = troops[0];
     if (this.rng() < 0.3) this.lane = 1 - this.lane;
     const bx = BRIDGES[this.lane].cx;
-    if (pick.card.elixir >= 5) return this.tryPlay(pick, this.lane ? 12 : 6, this.ownY(13));
+    if (pick.cost >= 5) return this.tryPlay(pick, this.lane ? 12 : 6, this.ownY(13));
     return this.tryPlay(pick, bx, this.ownY(1.5));
   }
 
@@ -133,8 +171,8 @@ export class Bot {
     const m = this.m;
     const e = m.abilityEntity(this.side);
     if (!e || e.deployT > 0) return;
-    const ab = e.def.ability;
-    if (e.def.class === 'champion' && (e.abilityCd > 0 || m.players[this.side].elixir < (ab.cost || 0) + 1)) return;
+    const ab = e.ability;
+    if (e.abilityCd > 0 || e.abilityUses <= 0 || m.players[this.side].elixir < (ab.cost || 0) + 1) return;
     const R = ab.radius || ab.dash?.radius || ab.shots?.radius || 4;
     const foes = m.entities.filter((o) => !o.dead && o.owner !== this.side && Math.hypot(o.x - e.x, o.y - e.y) <= R);
     const hurt = e.hp < e.maxHp * 0.5;
