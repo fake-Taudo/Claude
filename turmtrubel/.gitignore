@@ -4,3 +4,9 @@ npm-debug.log*
 docs/ui-referenz/*.png
 docs/ui-nachher/*.png
 docs/ui-nachher/checks.json
+
+# Referenz-Screenshots (Fremdmaterial, nur lokal zur Analyse – nicht ins Repo)
+reference/
+
+# Benchmark-Szene (wird von tools/bench/replay.mjs erzeugt)
+tools/bench/replay.json

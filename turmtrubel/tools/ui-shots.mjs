@@ -40,7 +40,12 @@ export const VIEWPORTS = [
   { name: 'phone-360x640', width: 360, height: 640, touch: true },
   { name: 'tab-768x1024', width: 768, height: 1024, touch: true },
   { name: 'tab-1024x768', width: 1024, height: 768, touch: true },
+  // Vorher/Nachher-Serie des visuellen Upgrades (docs/before_after/)
+  { name: 'phone-390x844', width: 390, height: 844, touch: true, set: 'ba' },
+  { name: 'desk-1440x900', width: 1440, height: 900, set: 'ba' },
 ];
+// --set=ba → nur die drei Vorher/Nachher-Formate (Hochformat, Querformat, Desktop)
+const SETS = { ba: ['phone-390x844', 'phone-844x390', 'desk-1440x900'] };
 
 // ───────────── Playwright finden ─────────────
 async function loadPlaywright() {
@@ -476,7 +481,7 @@ if (!url) {
 }
 const exe = process.env.CHROMIUM_PATH;
 const browser = await pw.chromium.launch({ executablePath: exe || undefined, args: ['--autoplay-policy=no-user-gesture-required', '--mute-audio'] });
-const only = args.only ? String(args.only).split(',') : null;
+const only = args.only ? String(args.only).split(',') : args.set ? SETS[args.set] : null;
 const report = {};
 if (args.perf) {
   const perf = {};
@@ -496,7 +501,7 @@ if (args.perf) {
 }
 try {
   for (const vp of VIEWPORTS) {
-    if (only && !only.includes(vp.name)) continue;
+    if (only ? !only.includes(vp.name) : vp.set) continue;
     const t0 = Date.now();
     await runViewport(browser, url, vp, report);
     const r = report[vp.name];

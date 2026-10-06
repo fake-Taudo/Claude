@@ -1,0 +1,26 @@
+{
+ "phone-844x390": {
+  "frames": 102,
+  "fps": 10,
+  "p95ms": 133,
+  "worstMs": 150,
+  "longTasks": 105,
+  "longMaxMs": 170
+ },
+ "phone-390x844": {
+  "frames": 99,
+  "fps": 10,
+  "p95ms": 133,
+  "worstMs": 167,
+  "longTasks": 101,
+  "longMaxMs": 175
+ },
+ "desk-1440x900": {
+  "frames": 105,
+  "fps": 10,
+  "p95ms": 133,
+  "worstMs": 183,
+  "longTasks": 107,
+  "longMaxMs": 172
+ }
+}

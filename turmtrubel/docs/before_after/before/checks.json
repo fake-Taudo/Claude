@@ -1,0 +1,492 @@
+{
+ "phone-844x390": {
+  "states": [
+   {
+    "state": "name",
+    "file": "phone-844x390-01-name.jpg",
+    "issues": []
+   },
+   {
+    "state": "menu",
+    "file": "phone-844x390-02-menu.jpg",
+    "issues": [
+     {
+      "t": "truncated-titled",
+      "text": "Evo-Skelette"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Evo-Eisgeist"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Musketierin (Held)"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Schweine­reiter"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Kampf­holz"
+     }
+    ]
+   },
+   {
+    "state": "einstellungen",
+    "file": "phone-844x390-03-einstellungen.jpg",
+    "issues": []
+   },
+   {
+    "state": "beitreten-fehler",
+    "file": "phone-844x390-04-beitreten-fehler.jpg",
+    "issues": []
+   },
+   {
+    "state": "deck-bauer",
+    "file": "phone-844x390-05-deck-bauer.jpg",
+    "issues": [
+     {
+      "t": "truncated-titled",
+      "text": "Schweine-Zyklus"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Bogen­schützen-Königin"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Drei Musketier­innen"
+     }
+    ]
+   },
+   {
+    "state": "deck-sammlung",
+    "file": "phone-844x390-06-deck-sammlung.jpg",
+    "issues": [
+     {
+      "t": "truncated-titled",
+      "text": "Schweine-Zyklus"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Bogen­schützen-Königin"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Drei Musketier­innen"
+     }
+    ]
+   },
+   {
+    "state": "kartendetail",
+    "file": "phone-844x390-07-kartendetail.jpg",
+    "issues": []
+   },
+   {
+    "state": "lobby-countdown",
+    "file": "phone-844x390-08-lobby-countdown.jpg",
+    "issues": []
+   },
+   {
+    "state": "laden",
+    "file": "phone-844x390-09-laden.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-start",
+    "file": "phone-844x390-10-kampf-start.jpg",
+    "issues": []
+   },
+   {
+    "state": "karte-gewaehlt",
+    "file": "phone-844x390-11-karte-gewaehlt.jpg",
+    "issues": []
+   },
+   {
+    "state": "ziehen",
+    "file": "phone-844x390-12-ziehen.jpg",
+    "issues": []
+   },
+   {
+    "state": "ausgespielt",
+    "file": "phone-844x390-13-ausgespielt.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf",
+    "file": "phone-844x390-14-kampf.jpg",
+    "issues": []
+   },
+   {
+    "state": "toast-elixier",
+    "file": "phone-844x390-15-toast-elixier.jpg",
+    "issues": []
+   },
+   {
+    "state": "emote-auswahl",
+    "file": "phone-844x390-16-emote-auswahl.jpg",
+    "issues": []
+   },
+   {
+    "state": "pause",
+    "file": "phone-844x390-17-pause.jpg",
+    "issues": []
+   },
+   {
+    "state": "einstellungen-kampf",
+    "file": "phone-844x390-18-einstellungen-kampf.jpg",
+    "issues": []
+   },
+   {
+    "state": "letzte-10s",
+    "file": "phone-844x390-19-letzte-10s.jpg",
+    "issues": []
+   },
+   {
+    "state": "turm-zerstoert",
+    "file": "phone-844x390-20-turm-zerstoert.jpg",
+    "issues": []
+   },
+   {
+    "state": "aufgeben-bestaetigen",
+    "file": "phone-844x390-21-aufgeben-bestaetigen.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-niederlage",
+    "file": "phone-844x390-22-ergebnis-niederlage.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-sieg",
+    "file": "phone-844x390-23-ergebnis-sieg.jpg",
+    "issues": []
+   },
+   {
+    "state": "mp-lobby-warten",
+    "file": "phone-844x390-24-mp-lobby-warten.jpg",
+    "issues": []
+   },
+   {
+    "state": "mp-lobby",
+    "file": "phone-844x390-25-mp-lobby.jpg",
+    "issues": []
+   }
+  ],
+  "log": []
+ },
+ "phone-390x844": {
+  "states": [
+   {
+    "state": "name",
+    "file": "phone-390x844-01-name.jpg",
+    "issues": []
+   },
+   {
+    "state": "menu",
+    "file": "phone-390x844-02-menu.jpg",
+    "issues": [
+     {
+      "t": "truncated-titled",
+      "text": "Musketierin (Held)"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Schweine­reiter"
+     }
+    ]
+   },
+   {
+    "state": "einstellungen",
+    "file": "phone-390x844-03-einstellungen.jpg",
+    "issues": []
+   },
+   {
+    "state": "beitreten-fehler",
+    "file": "phone-390x844-04-beitreten-fehler.jpg",
+    "issues": []
+   },
+   {
+    "state": "deck-bauer",
+    "file": "phone-390x844-05-deck-bauer.jpg",
+    "issues": [
+     {
+      "t": "truncated-titled",
+      "text": "Schweine-Zyklus"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Mini-P.E.K.K.A. (Held)"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Bogen­schützen-Königin"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Drei Musketier­innen"
+     }
+    ]
+   },
+   {
+    "state": "deck-sammlung",
+    "file": "phone-390x844-06-deck-sammlung.jpg",
+    "issues": [
+     {
+      "t": "truncated-titled",
+      "text": "Schweine-Zyklus"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Mini-P.E.K.K.A. (Held)"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Bogen­schützen-Königin"
+     },
+     {
+      "t": "truncated-titled",
+      "text": "Drei Musketier­innen"
+     }
+    ]
+   },
+   {
+    "state": "kartendetail",
+    "file": "phone-390x844-07-kartendetail.jpg",
+    "issues": []
+   },
+   {
+    "state": "lobby-countdown",
+    "file": "phone-390x844-08-lobby-countdown.jpg",
+    "issues": []
+   },
+   {
+    "state": "laden",
+    "file": "phone-390x844-09-laden.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-start",
+    "file": "phone-390x844-10-kampf-start.jpg",
+    "issues": []
+   },
+   {
+    "state": "karte-gewaehlt",
+    "file": "phone-390x844-11-karte-gewaehlt.jpg",
+    "issues": []
+   },
+   {
+    "state": "ziehen",
+    "file": "phone-390x844-12-ziehen.jpg",
+    "issues": []
+   },
+   {
+    "state": "ausgespielt",
+    "file": "phone-390x844-13-ausgespielt.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf",
+    "file": "phone-390x844-14-kampf.jpg",
+    "issues": []
+   },
+   {
+    "state": "toast-elixier",
+    "file": "phone-390x844-15-toast-elixier.jpg",
+    "issues": []
+   },
+   {
+    "state": "emote-auswahl",
+    "file": "phone-390x844-16-emote-auswahl.jpg",
+    "issues": []
+   },
+   {
+    "state": "pause",
+    "file": "phone-390x844-17-pause.jpg",
+    "issues": []
+   },
+   {
+    "state": "einstellungen-kampf",
+    "file": "phone-390x844-18-einstellungen-kampf.jpg",
+    "issues": []
+   },
+   {
+    "state": "letzte-10s",
+    "file": "phone-390x844-19-letzte-10s.jpg",
+    "issues": []
+   },
+   {
+    "state": "turm-zerstoert",
+    "file": "phone-390x844-20-turm-zerstoert.jpg",
+    "issues": []
+   },
+   {
+    "state": "aufgeben-bestaetigen",
+    "file": "phone-390x844-21-aufgeben-bestaetigen.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-niederlage",
+    "file": "phone-390x844-22-ergebnis-niederlage.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-sieg",
+    "file": "phone-390x844-23-ergebnis-sieg.jpg",
+    "issues": []
+   },
+   {
+    "state": "mp-lobby-warten",
+    "file": "phone-390x844-24-mp-lobby-warten.jpg",
+    "issues": []
+   },
+   {
+    "state": "mp-lobby",
+    "file": "phone-390x844-25-mp-lobby.jpg",
+    "issues": []
+   }
+  ],
+  "log": []
+ },
+ "desk-1440x900": {
+  "states": [
+   {
+    "state": "name",
+    "file": "desk-1440x900-01-name.jpg",
+    "issues": []
+   },
+   {
+    "state": "menu",
+    "file": "desk-1440x900-02-menu.jpg",
+    "issues": []
+   },
+   {
+    "state": "einstellungen",
+    "file": "desk-1440x900-03-einstellungen.jpg",
+    "issues": []
+   },
+   {
+    "state": "beitreten-fehler",
+    "file": "desk-1440x900-04-beitreten-fehler.jpg",
+    "issues": []
+   },
+   {
+    "state": "deck-bauer",
+    "file": "desk-1440x900-05-deck-bauer.jpg",
+    "issues": [
+     {
+      "t": "truncated-titled",
+      "text": "Schweine-Zyklus"
+     }
+    ]
+   },
+   {
+    "state": "deck-sammlung",
+    "file": "desk-1440x900-06-deck-sammlung.jpg",
+    "issues": [
+     {
+      "t": "truncated-titled",
+      "text": "Schweine-Zyklus"
+     }
+    ]
+   },
+   {
+    "state": "kartendetail",
+    "file": "desk-1440x900-07-kartendetail.jpg",
+    "issues": []
+   },
+   {
+    "state": "lobby-countdown",
+    "file": "desk-1440x900-08-lobby-countdown.jpg",
+    "issues": []
+   },
+   {
+    "state": "laden",
+    "file": "desk-1440x900-09-laden.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-start",
+    "file": "desk-1440x900-10-kampf-start.jpg",
+    "issues": []
+   },
+   {
+    "state": "karte-gewaehlt",
+    "file": "desk-1440x900-11-karte-gewaehlt.jpg",
+    "issues": []
+   },
+   {
+    "state": "ziehen",
+    "file": "desk-1440x900-12-ziehen.jpg",
+    "issues": []
+   },
+   {
+    "state": "ausgespielt",
+    "file": "desk-1440x900-13-ausgespielt.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf",
+    "file": "desk-1440x900-14-kampf.jpg",
+    "issues": []
+   },
+   {
+    "state": "toast-elixier",
+    "file": "desk-1440x900-15-toast-elixier.jpg",
+    "issues": []
+   },
+   {
+    "state": "emote-auswahl",
+    "file": "desk-1440x900-16-emote-auswahl.jpg",
+    "issues": []
+   },
+   {
+    "state": "pause",
+    "file": "desk-1440x900-17-pause.jpg",
+    "issues": []
+   },
+   {
+    "state": "einstellungen-kampf",
+    "file": "desk-1440x900-18-einstellungen-kampf.jpg",
+    "issues": []
+   },
+   {
+    "state": "letzte-10s",
+    "file": "desk-1440x900-19-letzte-10s.jpg",
+    "issues": []
+   },
+   {
+    "state": "turm-zerstoert",
+    "file": "desk-1440x900-20-turm-zerstoert.jpg",
+    "issues": []
+   },
+   {
+    "state": "aufgeben-bestaetigen",
+    "file": "desk-1440x900-21-aufgeben-bestaetigen.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-niederlage",
+    "file": "desk-1440x900-22-ergebnis-niederlage.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-sieg",
+    "file": "desk-1440x900-23-ergebnis-sieg.jpg",
+    "issues": []
+   },
+   {
+    "state": "mp-lobby-warten",
+    "file": "desk-1440x900-24-mp-lobby-warten.jpg",
+    "issues": []
+   },
+   {
+    "state": "mp-lobby",
+    "file": "desk-1440x900-25-mp-lobby.jpg",
+    "issues": []
+   }
+  ],
+  "log": []
+ }
+}

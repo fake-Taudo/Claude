@@ -1,0 +1,43 @@
+{
+ "date": "2026-10-06T18:14:17.918Z",
+ "maxEntities": 222,
+ "profiles": {
+  "desktop-1440x900": {
+   "frames": 610,
+   "fps": 27,
+   "p95ms": 67,
+   "worstMs": 617,
+   "longTasks": 128,
+   "longMaxMs": 93,
+   "heapMB": 23.2,
+   "peakParticles": 700,
+   "errors": [],
+   "replaySeconds": 22.9,
+   "drawCallsPerFrame": 4422
+  },
+  "phone-390x844": {
+   "frames": 731,
+   "fps": 6,
+   "p95ms": 350,
+   "worstMs": 2633,
+   "longTasks": 487,
+   "longMaxMs": 466,
+   "heapMB": 24.1,
+   "peakParticles": 700,
+   "errors": [],
+   "replaySeconds": 131.4
+  },
+  "phone-844x390": {
+   "frames": 703,
+   "fps": 5,
+   "p95ms": 350,
+   "worstMs": 2483,
+   "longTasks": 494,
+   "longMaxMs": 508,
+   "heapMB": 21.1,
+   "peakParticles": 700,
+   "errors": [],
+   "replaySeconds": 136.7
+  }
+ }
+}
