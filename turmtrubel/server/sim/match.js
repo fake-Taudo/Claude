@@ -598,7 +598,7 @@ export class Match {
     if (e.slowT > 0) f |= EF.SLOW;
     if (e.rageT > 0) f |= EF.RAGE;
     if (e.evo) f |= EF.EVO;
-    if (e.cloakT > 0 || e.hidden) f |= EF.CLOAK;
+    if (e.underT <= 0 && this.isHidden(e)) f |= EF.CLOAK; // getarnt/unsichtbar/versteckt (Tesla)
     if (this.hasBuff(e, 'reflect')) f |= EF.REFLECT;
     if (e.charging) f |= EF.CHARGE;
     if (e.active) f |= EF.ACTIVE;

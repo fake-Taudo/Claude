@@ -520,6 +520,7 @@ body[data-screen='s-game'] #toasts { left: var(--toast-x, 50%); top: var(--toast
 .card.r-rare { --frame: var(--rare); }
 .card.r-epic { --frame: var(--epic); }
 .card.r-legendary { --frame: linear-gradient(135deg, #7ff5ea, #2fd3c6 40%, #ffe07a); }
+.card.r-champion { --frame: linear-gradient(135deg, #fff2a8, #ffd84d 45%, #f09a1c); }
 .card.c-champion { --frame: linear-gradient(135deg, #fff2a8, #ffd84d 45%, #f09a1c); }
 .card.c-hero { --frame: linear-gradient(135deg, #ffc4b3, #ff7a5c 50%, #c0394b); }
 .card.evo { --frame: linear-gradient(135deg, #f2d4ff, #b55cf0 50%, #5b2bb3); box-shadow: 0 4px 0 var(--ink-900), 0 0 16px rgb(200 120 255 / 0.8); }
@@ -680,6 +681,7 @@ body[data-screen='s-game'] #toasts { left: var(--toast-x, 50%); top: var(--toast
 .tag.r-rare { background: var(--rare); }
 .tag.r-epic { background: var(--epic); color: #fff; }
 .tag.r-legendary { background: var(--legendary); }
+.tag.r-champion { background: var(--champion); }
 .tag.champion { background: var(--champion); }
 .tag.hero { background: var(--hero); color: #fff; }
 .tag.evo { background: var(--purple-500); color: #fff; }

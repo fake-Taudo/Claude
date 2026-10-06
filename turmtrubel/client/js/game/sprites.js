@@ -1101,6 +1101,152 @@ function rider(P, L) {
   c.restore();
 }
 
+// Schwebender Geist mit Krone/Schwert (Königsgeist, Seelensoldat, Holzfäller-Geist)
+function ghost(P, L) {
+  const c = P.ctx;
+  const col = L.cloth || '#e8f0ff';
+  const bob = Math.sin(P.t * 3 + P.seed) * 0.06;
+  c.save();
+  c.globalAlpha *= 0.88;
+  c.beginPath();
+  c.moveTo(-0.4, -0.15 + bob);
+  c.quadraticCurveTo(-0.5, -1.0 + bob, 0, -1.25 + bob);
+  c.quadraticCurveTo(0.5, -1.0 + bob, 0.4, -0.15 + bob);
+  for (let i = 0; i < 4; i++) {
+    const x0 = 0.4 - i * 0.2;
+    c.quadraticCurveTo(x0 - 0.05, -0.02 + bob + (i % 2 ? 0.06 : -0.04), x0 - 0.2, -0.15 + bob);
+  }
+  c.closePath();
+  fill(P, col);
+  c.restore();
+  rrect(c, -0.32, -0.62 + bob, 0.64, 0.1, 0.04);
+  fill(P, P.team);
+  eyes(P, 0.06, -0.88 + bob, 0.85, 'angry');
+  if (L.accent) {
+    poly(c, [-0.2, -1.18 + bob, -0.22, -1.42 + bob, -0.1, -1.3 + bob, 0, -1.46 + bob, 0.1, -1.3 + bob, 0.22, -1.42 + bob, 0.2, -1.18 + bob]);
+    fill(P, L.accent);
+  }
+  c.save();
+  c.translate(0.42, -0.6 + bob);
+  c.rotate(swingAngle(P.atk));
+  WEAPONS.sword(P);
+  c.restore();
+}
+
+// Reittier ohne Reiter (Königliche Schweine, Fluch-Schwein, Nashorn)
+function hog(P, L) {
+  const c = P.ctx;
+  const col = L.cloth || '#f0a0a8';
+  const lp = P.walk ? Math.sin(P.phase * 1.3) * 0.12 : 0;
+  for (const lx of [-0.35, -0.15, 0.2, 0.38]) {
+    rrect(c, lx - 0.06 + (lx < 0 ? lp : -lp) * 0.3, -0.3, 0.12, 0.3, 0.05);
+    fill(P, shade(col, -0.3));
+  }
+  ell(c, 0, -0.48, 0.55, 0.3);
+  fill(P, col);
+  rrect(c, -0.25, -0.72, 0.4, 0.22, 0.06);
+  fill(P, P.team);
+  ell(c, 0.55, -0.55, 0.26, 0.22);
+  fill(P, col);
+  ell(c, 0.78, -0.5, 0.09, 0.08);
+  fill(P, shade(col, -0.15));
+  if (L.scale > 1.1) {
+    // Horn (Nashorn)
+    poly(c, [0.7, -0.62, 0.9, -0.95, 0.8, -0.58]);
+    fill(P, L.accent || '#d9d9d9');
+  } else if (L.accent) {
+    // Krönchen
+    poly(c, [0.42, -0.74, 0.44, -0.9, 0.52, -0.8, 0.58, -0.93, 0.64, -0.8, 0.72, -0.9, 0.7, -0.74]);
+    fill(P, L.accent);
+  }
+  eyes(P, 0.58, -0.62, 0.55, 'angry');
+}
+
+// Busch mit Augen, in dem sich ein Kobold versteckt
+function bush(P, L) {
+  const c = P.ctx;
+  const col = L.cloth || '#4f9a3a';
+  const sq = P.walk ? Math.abs(Math.sin(P.phase)) * 0.05 : 0;
+  for (const [x, y, r] of [[-0.35, -0.35, 0.32], [0.35, -0.35, 0.32], [0, -0.6, 0.42], [-0.2, -0.82, 0.25], [0.22, -0.8, 0.25]]) {
+    ell(c, x, y - sq, r + sq, r - sq * 0.5);
+    fill(P, x === 0 ? col : shade(col, -0.12));
+  }
+  for (const [x, y] of [[-0.3, -0.7], [0.32, -0.45], [0.05, -0.95]]) {
+    circ(c, x, y, 0.06);
+    fill(P, L.accent || '#7fcf5a');
+  }
+  rrect(c, -0.4, -0.18, 0.8, 0.08, 0.04);
+  fill(P, P.team);
+  eyes(P, 0.05, -0.55, 0.75, 'angry');
+}
+
+// Fliegende Maschine: Holzgestell mit Propeller und Kanone
+function machine(P, L) {
+  const c = P.ctx;
+  const wood = L.cloth || '#a0703a';
+  rrect(c, -0.6, -0.75, 1.2, 0.35, 0.1);
+  fill(P, wood);
+  rrect(c, -0.6, -0.62, 1.2, 0.08, 0.03);
+  fill(P, P.team);
+  // Kanone nach vorne
+  rrect(c, 0.35, -0.68, 0.55, 0.2, 0.06);
+  fill(P, '#4b4f58');
+  // Propeller oben
+  rrect(c, -0.04, -1.15, 0.08, 0.4, 0.03);
+  fill(P, shade(wood, -0.3));
+  const w = Math.cos(P.t * 30) * 0.55;
+  ell(c, 0, -1.15, Math.abs(w) + 0.05, 0.06);
+  fill(P, L.accent || '#d9d9d9');
+  // Pilot
+  circ(c, -0.2, -0.88, 0.17);
+  fill(P, '#7cc36b');
+  eyes(P, -0.16, -0.9, 0.55);
+}
+
+// Fahrzeug auf Rädern (Kanonenkarre, Sparky)
+function wagon(P, L) {
+  const c = P.ctx;
+  const body = L.cloth || '#6b6f7a';
+  const spin = P.walk ? P.t * 8 : 0;
+  rrect(c, -0.6, -0.65, 1.2, 0.4, 0.1);
+  fill(P, shade(body, 0.1));
+  rrect(c, -0.6, -0.4, 1.2, 0.08, 0.03);
+  fill(P, P.team);
+  for (const wx of [-0.38, 0.38]) {
+    circ(c, wx, -0.18, 0.2);
+    fill(P, '#6b4e36');
+    c.beginPath();
+    c.moveTo(wx + Math.cos(spin) * 0.18, -0.18 + Math.sin(spin) * 0.18);
+    c.lineTo(wx - Math.cos(spin) * 0.18, -0.18 - Math.sin(spin) * 0.18);
+    c.stroke();
+  }
+  if (L.accent === '#7fe9ff') {
+    // Sparky: Spule mit Ladeleuchten
+    rrect(c, -0.25, -1.25, 0.5, 0.65, 0.1);
+    fill(P, body);
+    for (let i = 0; i < 3; i++) {
+      ell(c, 0, -0.75 - i * 0.18, 0.32, 0.06);
+      fill(P, '#c98a3a');
+    }
+    c.save();
+    c.shadowColor = L.accent;
+    c.shadowBlur = P.quality > 1 ? 12 : 0;
+    circ(c, 0, -1.35, 0.16 + (P.atk > 0 ? 0.08 : Math.sin(P.t * 8) * 0.02));
+    fill(P, L.accent);
+    c.restore();
+  } else {
+    // Kanonenrohr nach vorne
+    c.save();
+    c.translate(0.05, -0.8);
+    const rec = P.atk > 0.5 ? (P.atk - 0.5) * 0.3 : 0;
+    rrect(c, -0.2 - rec, -0.15, 0.85, 0.3, 0.12);
+    fill(P, L.accent || '#3b3b3b');
+    c.restore();
+    circ(c, -0.1, -0.8, 0.18);
+    fill(P, P.team);
+  }
+}
+
 const BODIES = {
   hum: (P, L) => humanoid(P, L, 'hum'),
   imp: (P, L) => humanoid(P, L, 'imp'),
@@ -1119,7 +1265,45 @@ const BODIES = {
   blob,
   barrel,
   cart,
+  ghost,
+  hog,
+  bush,
+  machine,
+  wagon,
 };
+
+/**
+ * Platzhalter, solange eine Karte noch keine eigene Grafik hat: gestrichelter Kreis mit „?“ und dem Kartennamen.
+ * Ursprung = Fußpunkt, R = Radius in px.
+ */
+export function drawPlaceholder(ctx, label, x, y, R, team = 'blue') {
+  const T = TEAM[team] || TEAM.blue;
+  ctx.save();
+  ctx.translate(x, y - R);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.strokeStyle = T.main;
+  ctx.lineWidth = Math.max(1.5, R * 0.12);
+  ctx.setLineDash([R * 0.35, R * 0.22]);
+  ctx.beginPath();
+  ctx.arc(0, 0, R, 0, TAU);
+  ctx.fill();
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = T.main;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `800 ${Math.max(8, R * 1.1)}px system-ui, sans-serif`;
+  ctx.fillText('?', 0, -R * 0.05);
+  if (label) {
+    ctx.font = `700 ${Math.max(7, R * 0.42)}px system-ui, sans-serif`;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText(label, 0, R * 1.45);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(label, 0, R * 1.45);
+  }
+  ctx.restore();
+}
 
 /**
  * Einheit zeichnen.
@@ -1127,6 +1311,10 @@ const BODIES = {
  */
 export function drawUnit(ctx, look, o) {
   const L = look || {};
+  if (!L.body) {
+    drawPlaceholder(ctx, o.label, o.x, o.y - (o.lift || 0), o.U * 0.6, o.team);
+    return;
+  }
   const T = TEAM[o.team] || TEAM.blue;
   ctx.save();
   ctx.translate(o.x, o.y - (o.lift || 0));
@@ -1184,6 +1372,8 @@ export function drawUnit(ctx, look, o) {
     ctx.restore();
   }
   (BODIES[L.body] || BODIES.hum)(P, L);
+  // Helden tragen einen kleinen goldenen Stern über dem Kopf
+  if (L.hero && P.quality > 0) star(P, 0, -1.75, 0.16, '#ffd54a');
   ctx.restore();
 }
 
@@ -1377,24 +1567,85 @@ const BUILDINGS = {
     circ(c, 0, -0.6, 0.2);
     fill(P, P.team);
   },
-  barricade(P, L) {
+  // Koboldkäfig: Holzkäfig mit Gitterstäben, darin ein Raufbold
+  cage(P, L) {
     const c = P.ctx;
+    stoneBase(P, 0.8);
+    rrect(c, -0.7, -1.5, 1.4, 1.35, 0.12);
+    fill(P, 'rgba(40,30,30,0.55)');
+    circ(c, 0.05, -0.85, 0.32);
+    fill(P, L.accent || '#7cc36b');
+    eyes(P, 0.1, -0.9, 0.7, 'angry');
     for (let i = -2; i <= 2; i++) {
-      rrect(c, i * 0.38 - 0.16, -1.1 + Math.abs(i) * 0.08, 0.32, 1.4 - Math.abs(i) * 0.08, 0.06);
+      rrect(c, i * 0.3 - 0.05, -1.5, 0.1, 1.35, 0.04);
       fill(P, L.cloth || '#8b5a2b');
-      poly(c, [i * 0.38 - 0.16, -1.1 + Math.abs(i) * 0.08, i * 0.38, -1.35 + Math.abs(i) * 0.08, i * 0.38 + 0.16, -1.1 + Math.abs(i) * 0.08]);
-      fill(P, L.accent || '#9aa3ad');
     }
-    rrect(c, -1.0, -0.65, 2.0, 0.2, 0.06);
-    fill(P, '#6b6f7a');
-    rrect(c, -1.0, -0.25, 2.0, 0.18, 0.06);
+    rrect(c, -0.8, -1.6, 1.6, 0.2, 0.06);
+    fill(P, L.cloth || '#8b5a2b');
+    rrect(c, -0.8, -0.3, 1.6, 0.15, 0.05);
     fill(P, P.team);
+  },
+  // Koboldbohrer: Bohrkopf, der aus einem Erdhügel ragt
+  drill(P, L) {
+    const c = P.ctx;
+    ell(c, 0, 0.1, 0.95, 0.45);
+    fill(P, '#7a5236');
+    const metal = L.cloth || '#8a8f99';
+    poly(c, [-0.5, -0.1, 0, -1.6, 0.5, -0.1]);
+    fill(P, metal);
+    c.save();
+    c.lineWidth *= 0.8;
+    const off = (P.t * 2) % 0.3;
+    for (let i = 0; i < 4; i++) {
+      const y = -0.25 - i * 0.3 - off;
+      const w = 0.45 * (1 + (y + 0.1) / 1.5);
+      if (w <= 0.05) continue;
+      c.beginPath();
+      c.moveTo(-w, y);
+      c.lineTo(w, y - 0.12);
+      c.stroke();
+    }
+    c.restore();
+    rrect(c, -0.55, -0.2, 1.1, 0.16, 0.05);
+    fill(P, P.team);
+    circ(c, 0.55, -0.35, 0.16);
+    fill(P, L.accent || '#7cc36b');
+  },
+  // Bombenturm: runder Steinturm, auf dem ein Bomber Bomben wirft
+  bombtower(P, L) {
+    const c = P.ctx;
+    rrect(c, -0.75, -1.2, 1.5, 1.6, 0.2);
+    fill(P, L.cloth || '#7d6e5d');
+    c.save();
+    c.lineWidth *= 0.6;
+    c.strokeStyle = 'rgba(40,30,50,0.35)';
+    for (let i = 1; i < 4; i++) {
+      c.beginPath();
+      c.moveTo(-0.75, -1.2 + i * 0.4);
+      c.lineTo(0.75, -1.2 + i * 0.4);
+      c.stroke();
+    }
+    c.restore();
+    rrect(c, -0.85, -1.35, 1.7, 0.25, 0.08);
+    fill(P, shade(L.cloth || '#7d6e5d', -0.25));
+    rrect(c, -0.85, -0.2, 1.7, 0.16, 0.05);
+    fill(P, P.team);
+    const lift = P.atk > 0.5 ? (P.atk - 0.5) * 0.6 : 0;
+    circ(c, 0.1, -1.55 - lift, 0.28);
+    fill(P, L.accent || '#3b3b3b');
+    circ(c, 0.28, -1.82 - lift, 0.06 + Math.abs(Math.sin(P.t * 20)) * 0.04);
+    c.fillStyle = '#ffcf3d';
+    c.fill();
   },
 };
 
 /** Gebäude zeichnen. o = { x, y, U (halbe Kante px), t, atk, hurt, team, aim, aux, alpha, evo, quality } */
 export function drawBuilding(ctx, look, o) {
   const L = look || {};
+  if (!L.body) {
+    drawPlaceholder(ctx, o.label, o.x, o.y, o.U * 0.8, o.team);
+    return;
+  }
   const T = TEAM[o.team] || TEAM.blue;
   ctx.save();
   ctx.translate(o.x, o.y);
@@ -1641,31 +1892,6 @@ const ICONS = {
     poly(c, [0.1, -0.1, -0.3, 0.45, -0.05, 0.45, -0.25, 0.95, 0.35, 0.3, 0.1, 0.3, 0.3, -0.1]);
     fill(P, col);
   },
-  heal(P, col) {
-    const c = P.ctx;
-    rrect(c, -0.2, -0.7, 0.4, 1.4, 0.1);
-    fill(P, col);
-    rrect(c, -0.7, -0.2, 1.4, 0.4, 0.1);
-    fill(P, col);
-    star(P, 0.6, -0.6, 0.18, '#ffffff');
-  },
-  drum(P, col) {
-    const c = P.ctx;
-    rrect(c, -0.6, -0.35, 1.2, 0.8, 0.12);
-    fill(P, col);
-    ell(c, 0, -0.35, 0.6, 0.2);
-    fill(P, '#f3ead3');
-    for (const x of [-0.4, 0.4]) {
-      c.save();
-      c.translate(x, -0.6);
-      c.rotate(x > 0 ? 0.6 : -0.6);
-      rrect(c, -0.04, -0.4, 0.08, 0.5, 0.03);
-      fill(P, '#8a5a32');
-      circ(c, 0, -0.42, 0.08);
-      fill(P, '#f3ead3');
-      c.restore();
-    }
-  },
   barrel(P, col) {
     const c = P.ctx;
     for (const sgn of [-1, 1]) {
@@ -1695,42 +1921,165 @@ const ICONS = {
     rrect(c, -0.8, 0.5, 1.6, 0.3, 0.12);
     fill(P, '#6b4e36');
   },
-  chain(P, col) {
+  tornado(P, col) {
     const c = P.ctx;
-    c.beginPath();
-    c.moveTo(-0.85, -0.6);
-    c.lineTo(-0.3, -0.1);
-    c.lineTo(-0.45, 0.2);
-    c.lineTo(0.2, 0.0);
-    c.lineTo(0.05, 0.35);
-    c.lineTo(0.85, 0.6);
-    c.lineWidth *= 4;
-    c.stroke();
-    c.lineWidth /= 4;
-    c.save();
-    c.lineWidth *= 2.2;
-    c.strokeStyle = col;
-    c.stroke();
-    c.restore();
-    for (const [x, y] of [[-0.3, -0.1], [0.2, 0.0], [0.85, 0.6]]) {
-      circ(c, x, y, 0.14);
-      fill(P, '#ffffff');
+    for (let i = 0; i < 5; i++) {
+      const w = 0.85 - i * 0.15;
+      ell(c, (i % 2 ? 0.08 : -0.08), -0.6 + i * 0.32, w, 0.13);
+      fill(P, i % 2 ? shade(col, -0.15) : col);
     }
   },
-  glue(P, col) {
+  quake(P, col) {
     const c = P.ctx;
-    for (const [x, y, r] of [[-0.4, -0.3, 0.3], [0.35, -0.15, 0.38], [-0.05, 0.4, 0.35]]) {
-      c.beginPath();
-      c.moveTo(x, y - r * 1.6);
-      c.quadraticCurveTo(x + r, y, x, y + r);
-      c.quadraticCurveTo(x - r, y, x, y - r * 1.6);
+    rrect(c, -0.9, 0.05, 1.8, 0.55, 0.15);
+    fill(P, col);
+    poly(c, [-0.5, 0.05, -0.2, 0.35, 0.05, 0.1, 0.3, 0.45, 0.55, 0.05]);
+    c.fillStyle = OUTLINE;
+    c.fill();
+    for (const [x, y] of [[-0.5, -0.35], [0.1, -0.55], [0.55, -0.3]]) {
+      rrect(c, x - 0.14, y - 0.14, 0.28, 0.28, 0.06);
+      fill(P, shade(col, 0.2));
+    }
+  },
+  clone(P, col) {
+    const c = P.ctx;
+    for (const [x, a] of [[-0.25, 0.55], [0.2, 1]]) {
+      c.save();
+      c.globalAlpha *= a;
+      circ(c, x, -0.35, 0.3);
       fill(P, col);
+      ell(c, x, 0.3, 0.42, 0.42);
+      fill(P, col);
+      c.restore();
+    }
+    star(P, 0.6, -0.65, 0.16, '#ffffff');
+  },
+  mirror(P, col) {
+    const c = P.ctx;
+    rrect(c, -0.1, 0.45, 0.2, 0.45, 0.06);
+    fill(P, '#c9a227');
+    ell(c, 0, -0.15, 0.55, 0.7);
+    fill(P, '#c9a227');
+    ell(c, 0, -0.15, 0.42, 0.56);
+    fill(P, col);
+    c.save();
+    c.globalAlpha *= 0.8;
+    c.beginPath();
+    c.moveTo(-0.2, -0.5);
+    c.lineTo(0.05, -0.55);
+    c.lineTo(-0.25, 0.15);
+    c.closePath();
+    c.fillStyle = '#ffffff';
+    c.fill();
+    c.restore();
+  },
+  snowball(P, col) {
+    const c = P.ctx;
+    circ(c, 0.05, 0.05, 0.62);
+    fill(P, col);
+    for (const [x, y, r] of [[-0.2, -0.2, 0.1], [0.25, 0.15, 0.08], [0.0, 0.35, 0.07]]) {
+      circ(c, x, y, r);
+      fill(P, '#cfe3f5', false);
+    }
+    for (const sx of [-0.85, -0.7]) {
+      c.beginPath();
+      c.moveTo(sx, -0.4);
+      c.lineTo(sx + 0.25, -0.2);
+      c.stroke();
+    }
+  },
+  curse(P, col) {
+    const c = P.ctx;
+    circ(c, 0, -0.1, 0.55);
+    fill(P, col);
+    for (const ex of [-0.2, 0.2]) {
+      ell(c, ex, -0.2, 0.12, 0.15);
+      c.fillStyle = OUTLINE;
+      c.fill();
+    }
+    rrect(c, -0.25, 0.15, 0.5, 0.18, 0.05);
+    c.fillStyle = OUTLINE;
+    c.fill();
+    for (const [x, y] of [[-0.75, -0.6], [0.75, -0.5], [0.65, 0.55]]) {
+      circ(c, x, y, 0.1);
+      fill(P, '#b98cff');
+    }
+  },
+  rage(P, col) {
+    const c = P.ctx;
+    rrect(c, -0.18, -0.8, 0.36, 0.35, 0.06);
+    fill(P, '#8a5a32');
+    c.beginPath();
+    c.moveTo(-0.18, -0.48);
+    c.lineTo(-0.6, 0.45);
+    c.quadraticCurveTo(0, 0.85, 0.6, 0.45);
+    c.lineTo(0.18, -0.48);
+    c.closePath();
+    fill(P, col);
+    for (const [x, y, r] of [[-0.15, 0.2, 0.09], [0.15, -0.05, 0.07], [0.05, 0.4, 0.06]]) {
+      circ(c, x, y, r);
+      fill(P, '#f3c6ff', false);
+    }
+  },
+  crate(P, col) {
+    const c = P.ctx;
+    for (const sgn of [-1, 1]) {
+      c.beginPath();
+      c.moveTo(sgn * 0.4, -0.45);
+      c.quadraticCurveTo(sgn * 0.6, -0.9, 0, -1.0);
+      c.stroke();
+    }
+    rrect(c, -0.6, -0.45, 1.2, 1.05, 0.08);
+    fill(P, '#b07a3e');
+    c.beginPath();
+    c.moveTo(-0.6, -0.45);
+    c.lineTo(0.6, 0.6);
+    c.moveTo(0.6, -0.45);
+    c.lineTo(-0.6, 0.6);
+    c.stroke();
+    rrect(c, -0.6, -0.05, 1.2, 0.2, 0.04);
+    fill(P, col);
+  },
+  vines(P, col) {
+    const c = P.ctx;
+    for (const [x0, bend] of [[-0.45, 0.4], [0.0, -0.35], [0.45, 0.3]]) {
+      c.beginPath();
+      c.moveTo(x0, 0.75);
+      c.quadraticCurveTo(x0 + bend, 0, x0 - bend * 0.5, -0.75);
+      c.lineWidth *= 3.2;
+      c.stroke();
+      c.lineWidth /= 3.2;
+      c.save();
+      c.lineWidth *= 2;
+      c.strokeStyle = col;
+      c.stroke();
+      c.restore();
+      ell(c, x0 + bend * 0.45, -0.1, 0.14, 0.08, 0.6);
+      fill(P, shade(col, 0.25));
+    }
+  },
+  void(P, col) {
+    const c = P.ctx;
+    circ(c, 0, 0, 0.7);
+    fill(P, col);
+    circ(c, 0, 0, 0.45);
+    fill(P, shade(col, -0.45));
+    circ(c, 0, 0, 0.18);
+    fill(P, '#000000');
+    for (let i = 0; i < 3; i++) {
+      const a = i * 2.1;
+      circ(c, Math.cos(a) * 0.82, Math.sin(a) * 0.82, 0.09);
+      fill(P, '#d7b5ff');
     }
   },
 };
 
-export function drawSpellIcon(ctx, look, x, y, R, hurt = 0) {
+export function drawSpellIcon(ctx, look, x, y, R, hurt = 0, label = '') {
   const L = look || {};
+  if (!L.icon) {
+    drawPlaceholder(ctx, label, x, y + R * 0.7, R * 0.7);
+    return;
+  }
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(R, R);
@@ -1879,6 +2228,8 @@ const TYPE_BG = {
 };
 
 /** Zeichnet das Motiv einer Karte (ohne Rahmen) in ein Rechteck. */
+const BIG_BODIES = new Set(['golem', 'brute', 'whale', 'balloon', 'rider', 'cart', 'bot', 'dragon', 'hog', 'machine', 'wagon']);
+
 export function drawCardArt(ctx, db, card, x, y, w, h, opts = {}) {
   const evo = !!opts.evo && !!card.evo;
   const kind = card.class === 'champion' ? 'champion' : card.class === 'hero' ? 'hero' : card.type;
@@ -1906,25 +2257,40 @@ export function drawCardArt(ctx, db, card, x, y, w, h, opts = {}) {
     ctx.fill();
   }
   ctx.globalAlpha = 1;
-  const base = { t: 0.3, team: 'blue', fx: 1, quality: 2, evo };
+  const base = { t: 0.3, team: 'blue', fx: 1, quality: 2, evo, label: card.name };
   if (card.type === 'spell') {
-    drawSpellIcon(ctx, card.look, cx, cy - h * 0.04, Math.min(w, h) * 0.34);
+    drawSpellIcon(ctx, card.look, cx, cy - h * 0.04, Math.min(w, h) * 0.34, 0, card.name);
   } else {
-    const ref = typeof card.unit === 'string' ? card.unit : card.id;
-    const def = db.unit(ref, evo);
-    const look = def.look;
+    // Eigene Einheit der Karte (mit Evo) bzw. gemischte Gruppen (Koboldbande, Rabauken, Goblinstein)
+    const own = db.unitRefOf(card);
+    const groups = db.groupsOf(card, evo);
+    const defs = [];
+    for (const g of groups) {
+      const def = g.unit === own || g.unit === card.id ? db.unit(card.id, evo) : db.unit(g.unit);
+      defs.push({ def, n: g.count || 1 });
+    }
+    const picks = [];
+    if (defs.length > 1) {
+      for (const d of defs) picks.push(d.def);
+      if (picks.length < 3 && defs[0].n > 1) picks.push(defs[0].def);
+    } else {
+      for (let i = 0; i < Math.min(defs[0].n, 3); i++) picks.push(defs[0].def);
+    }
+    const n = Math.min(picks.length, 3);
+    const look = picks[0].look || {};
     if (card.type === 'building') {
       drawBuilding(ctx, look, { ...base, x: cx, y: y + h * 0.78, U: Math.min(w, h) * 0.3, aim: -0.4 });
     } else {
-      const big = ['golem', 'brute', 'whale', 'balloon', 'rider', 'cart', 'bot', 'dragon'].includes(look.body);
-      const U = Math.min(w, h) * (big ? 0.34 : 0.4) / Math.max(0.8, look.scale || 1);
-      const groundY = y + h * (look.body === 'balloon' ? 0.98 : 0.88);
-      const n = Math.min(card.count || 1, 3);
       const offs = n === 1 ? [0] : n === 2 ? [-0.2, 0.2] : [-0.26, 0, 0.26];
       const order = n === 3 ? [0, 2, 1] : offs.map((_, i) => i);
       for (const i of order) {
+        const L = picks[i].look || {};
+        const big = BIG_BODIES.has(L.body);
+        // Kartenbild füllt den Rahmen unabhängig von der Größe im Spiel; nur sehr kleine Einheiten etwas kleiner
+        const U = Math.min(w, h) * (big ? 0.36 : 0.4) * Math.min(1, Math.max(0.85, L.scale || 1));
+        const groundY = y + h * (L.body === 'balloon' ? 0.98 : 0.88);
         const k = n === 3 && i === 1 ? 1 : n > 1 ? 0.8 : 1;
-        drawUnit(ctx, look, { ...base, x: cx + offs[i] * w, y: groundY - (n === 3 && i !== 1 ? h * 0.06 : 0), U: U * k, seed: i });
+        drawUnit(ctx, L, { ...base, x: cx + offs[i] * w, y: groundY - (n === 3 && i !== 1 ? h * 0.06 : 0), U: U * k, seed: i });
       }
     }
   }

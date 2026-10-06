@@ -137,3 +137,43 @@ export function toView(side, x, y) {
   return side === 1 ? { x: ARENA_W - x, y: ARENA_H - y } : { x, y };
 }
 export const fromView = toView;
+
+/**
+ * Aufstellung von n Einheiten einer Karte relativ zum Platzierpunkt (Sicht von Spieler 0).
+ * kind: 'line' (nebeneinander), 'split' (über beide Lanes verteilt) oder null (kompakte Gruppe).
+ */
+export function formation(n, r, kind = null) {
+  if (n <= 1) return [[0, 0]];
+  const s = Math.max(0.65, r * 2 + 0.15);
+  if (kind === 'line') {
+    const out = [];
+    for (let i = 0; i < n; i++) out.push([(i - (n - 1) / 2) * s * 1.1, 0]);
+    return out;
+  }
+  if (kind === 'split') {
+    // über die ganze Breite verteilt (Königsrekruten): je Hälfte n/2 Einheiten
+    const half = Math.ceil(n / 2);
+    const out = [];
+    for (let i = 0; i < half; i++) out.push([-(1.25 + i * 2.5), 0], [1.25 + i * 2.5, 0]);
+    return out.slice(0, n);
+  }
+  if (n === 2) return [[-s / 2, 0], [s / 2, 0]];
+  if (n === 3) return [[0, -s * 0.55], [-s * 0.6, s * 0.45], [s * 0.6, s * 0.45]];
+  const out = [];
+  if (n <= 6) {
+    const R = s * (n <= 4 ? 0.75 : 0.95);
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + (Math.PI * 2 * i) / n + (n === 4 ? Math.PI / 4 : 0);
+      out.push([Math.cos(a) * R, Math.sin(a) * R]);
+    }
+    return out;
+  }
+  const cols = Math.ceil(Math.sqrt(n));
+  const rows = Math.ceil(n / cols);
+  for (let i = 0; i < n; i++) {
+    const c = i % cols;
+    const rr = Math.floor(i / cols);
+    out.push([(c - (cols - 1) / 2) * s, (rr - (rows - 1) / 2) * s]);
+  }
+  return out;
+}

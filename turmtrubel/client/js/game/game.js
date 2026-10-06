@@ -1,7 +1,7 @@
 // Client-Seite eines Kampfes: Snapshot-Puffer + Interpolation, Eingaben, Effekte, Zeichenschleife.
-import { ARENA_W, ARENA_H, isPlacementValid, forwardDir } from '/shared/arena.js';
-import { EF, EMOTES, C2S } from '/shared/protocol.js';
-import { View, Renderer } from './renderer.js';
+import { ARENA_W, ARENA_H, isPlacementValid, forwardDir, formation } from '/shared/arena.js';
+import { EF, EMOTES, C2S, REJECTS } from '/shared/protocol.js';
+import { View, Renderer, ZONE_COLORS } from './renderer.js';
 import { Hud } from './hud.js';
 import { Particles } from './particles.js';
 import { cardArt } from '../ui/art.js';
@@ -228,7 +228,8 @@ export class Game {
         def = null;
       }
       if (!def) {
-        info = { key, kind: 'spell', card: this.db.card(key), half: 0.5, radius: 0.5, look: this.db.card(key)?.look || {} };
+        const card = this.db.card(key);
+        info = { key, kind: 'spell', card, half: 0.5, radius: 0.5, look: card?.look || {}, label: card?.name || key };
       } else {
         const radius = def.radius;
         info = {
@@ -245,6 +246,7 @@ export class Game {
           ranged: !!def.projectile,
           uf: (0.42 + radius * 0.8) * (def.look?.scale || 1),
           cardId: def.cardId || key,
+          label: def.name || this.db.card(key)?.name || key,
         };
       }
     }
@@ -287,6 +289,8 @@ export class Game {
       v.hp = e[5];
       v.maxHp = e[6];
       v.flags = e[7];
+      if (v.kind === 'unit') v.flying = !!(e[7] & EF.FLY);
+      v.ice = !!(e[7] & EF.FREEZE);
       v.shield = e[8];
       if (e[8] > (v.maxShield || 0)) v.maxShield = e[8];
       v.target = e[9];
@@ -300,7 +304,6 @@ export class Game {
       } else if (now - v.trailT > 0.4) v.trail = Math.max(v.hp, v.trail - v.maxHp * 0.8 * dt);
       v.atk = Math.max(0, v.atk - dt / 0.35);
       v.hurt = Math.max(0, v.hurt - dt / 0.16);
-      if (v.ice && !(v.flags & EF.STUN)) v.ice = false;
       v.U = view.s * v.uf;
     }
     for (const id of this.vis.keys()) if (!seen.has(id)) this.vis.delete(id);
@@ -457,7 +460,8 @@ export class Game {
           break;
         }
         case 'd': {
-          const [, , type, , x, y, flying] = ev;
+          const [, , type, , x, y, flying, silent] = ev;
+          if (silent) break;
           const info = this.typeInfo(type, false);
           if (info.kind === 'building') {
             fx.debris(x, y, info.half);
@@ -558,6 +562,101 @@ export class Game {
           }
           break;
         }
+        case 'a2': {
+          // Zweitangriff (Speer der Koboldriesen, Bola des Widderreiters …)
+          const src = this.vis.get(ev[1]);
+          if (src) A.sfx('shoot', 0.3);
+          break;
+        }
+        case 'dw': {
+          // Ausholen vor Sprint/Sprung/Haken
+          const v = this.vis.get(ev[1]);
+          if (v) fx.text(v.x, v.y, '!', '#ffffff', 0.7, 0.5, 2.4);
+          break;
+        }
+        case 'lp': {
+          const [, id, , , , , dur] = ev;
+          const v = this.vis.get(id);
+          if (v) v.arc = { t0: performance.now() / 1000, dur: Math.max(0.2, dur), h: 2.2 };
+          A.sfx('whoosh', 0.6);
+          break;
+        }
+        case 'th': {
+          const [, id, , , , , dur] = ev;
+          const v = this.vis.get(id);
+          if (v) v.arc = { t0: performance.now() / 1000, dur: Math.max(0.2, dur), h: 2.6 };
+          A.sfx('whoosh', 0.5);
+          break;
+        }
+        case 'hk': {
+          const [, , , x0, y0, x1, y1] = ev;
+          fx.bolt([[x0, y0, 0.8], [x1, y1, 0.5]], '#c9d2dc', 0.35, 0.06);
+          A.sfx('whoosh', 0.5);
+          break;
+        }
+        case 'tp': {
+          const [, , x0, y0, x1, y1] = ev;
+          fx.poof(x0, y0, 0.9);
+          fx.burst(x1, y1, 12, { z: 0.6, colors: ['#d7b5ff', '#ffffff'], shape: 'star', speed: [0.5, 2] });
+          A.sfx('whoosh', 0.6);
+          break;
+        }
+        case 'pa': {
+          const v = this.vis.get(ev[1]);
+          if (v) fx.burst(v.x, v.y, 10, { z: 0.8, colors: ['#ffffff', '#c9d2dc'], shape: 'spark', speed: [1, 3] });
+          A.sfx('hitStone', 0.6);
+          break;
+        }
+        case 'zb': {
+          const a = this.vis.get(ev[1]);
+          const b = this.vis.get(ev[2]);
+          if (a && b) fx.bolt([[a.x, a.y, 1.2], [b.x, b.y, 0.5]], '#bff4ff', 0.2, 0.1);
+          A.sfx('zap', 0.4);
+          break;
+        }
+        case 'su': {
+          const v = this.vis.get(ev[1]);
+          if (v) fx.deployDust(v.x, v.y, v.half || 1);
+          break;
+        }
+        case 'nt': {
+          const a = this.vis.get(ev[1]);
+          const b = this.vis.get(ev[2]);
+          if (a && b) fx.bolt([[a.x, a.y, 0.8], [b.x, b.y, 0.4]], '#e8dcc0', 0.4, 0.08);
+          break;
+        }
+        case 'en': {
+          const b = this.vis.get(ev[2]);
+          if (b) fx.sparkle(b.x, b.y, 0.6, '#ffd54a');
+          break;
+        }
+        case 'tr': {
+          const v = this.vis.get(ev[1]);
+          if (v) fx.poof(v.x, v.y, 1.2);
+          A.sfx('pop', 0.5);
+          break;
+        }
+        case 'vn': {
+          const v = this.vis.get(ev[1]);
+          if (v) fx.burst(v.x, v.y, 8, { colors: ['#4f9a3a', '#7fcf5a'], shape: 'square', speed: [0.5, 1.5], vz: [1, 2] });
+          break;
+        }
+        case 'zp': {
+          const [, , x, y, r, kind] = ev;
+          fx.ring(x, y, r, ZONE_COLORS[kind] || '#ffffff', 0.35, 0.15, 0.08);
+          if (kind === 'quake') this.shake = Math.max(this.shake, 4);
+          break;
+        }
+        case 'lk': {
+          const [, , x0, y0, x1, y1] = ev;
+          fx.bolt([[x0, y0, 0.8], [x1, y1, 0.8]], '#7fe9ff', 0.25, 0.08);
+          break;
+        }
+        case 'ax': {
+          const v = this.vis.get(ev[1]);
+          if (v) fx.ring(v.x, v.y, 1.2, '#ffe066', 0.4, 0.2, 0.1);
+          break;
+        }
         case 'em':
           if (ev[1] !== this.side && this.app.settings.muteEmotes) break;
           this.emotes = this.emotes.filter((e) => e.owner !== ev[1]);
@@ -650,14 +749,48 @@ export class Game {
         fx.ring(x, y, r, '#7d8ca3', 0.8, 0.3, 0.2);
         A.sfx('spooky');
         break;
-      case 'glue':
-        fx.ring(x, y, r, '#e8c547', 0.6, 0.3, 0.3);
-        A.sfx('splat');
-        break;
       case 'log':
+      case 'barrelRoll':
         A.sfx('roll');
         break;
-      case 'chain':
+      case 'quake':
+        fx.ring(x, y, r, '#a0703a', 0.6, 0.3, 0.2);
+        fx.debris(x, y, r * 0.4);
+        this.shake = Math.max(this.shake, 6);
+        A.sfx('crumble');
+        break;
+      case 'snow':
+        fx.frost(x, y, r);
+        fx.burst(x, y, 14, { colors: ['#ffffff', '#e8f4ff'], speed: [1, 3], vz: [1, 3], g: 8 });
+        A.sfx('splat');
+        break;
+      case 'tornado':
+        fx.ring(x, y, r, '#9fb3c8', 0.8, 0.35, 0.15);
+        A.sfx('whoosh');
+        break;
+      case 'curse':
+        fx.ring(x, y, r, '#7cc36b', 0.6, 0.3, 0.2);
+        A.sfx('spooky', 0.7);
+        break;
+      case 'clone':
+        fx.ring(x, y, r, '#5ecbff', 0.6, 0.3, 0.25);
+        fx.burst(x, y, 16, { spread: r, colors: ['#5ecbff', '#ffffff'], shape: 'star', speed: [0, 0.5], vz: [0.5, 1.5], g: 0 });
+        A.sfx('cast');
+        break;
+      case 'crate':
+        fx.poof(x, y, 1.6);
+        fx.burst(x, y, 10, { colors: ['#b07a3e', '#8b5a2b'], shape: 'square', spin: 8, speed: [1, 3], vz: [2, 4], g: 10 });
+        this.shake = Math.max(this.shake, 5);
+        A.sfx('barrel');
+        break;
+      case 'vines':
+        fx.ring(x, y, r, '#4f9a3a', 0.6, 0.3, 0.2);
+        A.sfx('splat', 0.6);
+        break;
+      case 'void':
+        fx.ring(x, y, r, '#7a3fc0', 0.8, 0.35, 0.3);
+        A.sfx('spooky');
+        break;
       case 'storm':
         break;
       default:
@@ -712,6 +845,40 @@ export class Game {
       case 'build':
         fx.deployDust(x, y, 1.2);
         A.sfx('build');
+        break;
+      case 'bomb':
+      case 'cannonball':
+      case 'recoil':
+        fx.explosion(x, y, Math.max(0.8, r));
+        A.sfx('boom', 0.6);
+        break;
+      case 'curse':
+      case 'ghost':
+        fx.burst(x, y, 10, { colors: kind === 'curse' ? ['#7cc36b', '#5b2d82'] : ['#e8f0ff', '#d7b5ff'], shape: 'star', speed: [0.3, 1.2], vz: [0.5, 1.5], g: 0 });
+        break;
+      case 'rune':
+      case 'levelup':
+      case 'banner':
+        fx.ring(x, y, Math.max(0.8, r), '#ffd54a', 0.6, 0.25, 0.15);
+        fx.sparkle(x, y, 0.6, '#ffd54a');
+        A.sfx(kind === 'levelup' ? 'crown' : 'build', 0.6);
+        break;
+      case 'taunt':
+        fx.ring(x, y, r, '#ff7a5c', 0.6, 0.3, 0.15);
+        A.sfx('king', 0.6);
+        break;
+      case 'spin':
+      case 'firewhirl':
+        fx.ring(x, y, r, kind === 'firewhirl' ? '#ff8a3d' : '#ffffff', 0.4, 0.3, 0.1);
+        A.sfx('swing', 0.7);
+        break;
+      case 'butterfly':
+      case 'sparks':
+        fx.burst(x, y, 10, { spread: r, colors: kind === 'sparks' ? ['#ffe066', '#ffffff'] : ['#ff9af0', '#b98cff'], shape: 'star', speed: [0.3, 1], vz: [0.5, 1.5], g: 0 });
+        break;
+      case 'barrelRoll':
+        fx.poof(x, y, 1.2);
+        A.sfx('barrel', 0.6);
         break;
       default:
         fx.ring(x, y, r, '#ffffff', 0.4, 0.2, 0.1);
@@ -824,21 +991,49 @@ export class Game {
     return { obstacles, enemyDown };
   }
 
-  placementFor(card, wx, wy) {
-    if (card.type === 'spell') {
-      return { x: clamp(wx, 0, ARENA_W), y: clamp(wy, 0, ARENA_H), valid: true, kind: 'spell' };
-    }
+  /** Aktuelle Kosten einer Handkarte laut Server (Spiegel, Geisterkaiserin); null = gerade nicht spielbar. */
+  handCost(slot, card) {
+    const hc = this.me?.hc?.[slot];
+    if (card?.elixirRule === 'mirror') return hc ?? null;
+    return hc ?? card?.elixir ?? 0;
+  }
+
+  /** Karte, deren Platzierungsregeln gelten (Spiegel → zuletzt gespielte Karte). */
+  effectiveCard(card) {
+    if (card?.elixirRule === 'mirror') return this.me?.lp ? this.db.card(this.me.lp) : null;
+    return card;
+  }
+
+  /** Platzier-Art: Zauber überall, „eigene Seite“-Zauber wie Truppen, Bohrer/Mineur überall außer im Fluss. */
+  placeKind(card) {
+    if (card.type === 'spell') return card.spell?.ownSide ? 'troop' : 'spell';
     const def = this.db.unit(this.db.unitRefOf(card));
-    const kind = card.type === 'building' ? 'building' : 'troop';
-    const anywhere = !!def.traits.deployAnywhere;
+    if (def.traits.deployAnywhere) return 'anywhere';
+    return card.type === 'building' ? 'building' : 'troop';
+  }
+
+  placementFor(card, wx, wy) {
+    const eff = this.effectiveCard(card);
+    if (!eff) return { x: wx, y: wy, valid: false, kind: 'spell' };
+    const pk = this.placeKind(eff);
+    if (pk === 'spell') {
+      return { x: clamp(wx, 0, ARENA_W), y: clamp(wy, 0, ARENA_H), valid: true, kind: 'spell', card: eff };
+    }
+    const def = eff.type === 'spell' ? null : this.db.unit(this.db.unitRefOf(eff));
+    const kind = eff.type === 'building' ? 'building' : eff.type === 'spell' ? 'spell' : 'troop';
+    const anywhere = pk === 'anywhere';
     const half = kind === 'building' ? def.size / 2 : 0;
     const snapEven = kind === 'building' && Number.isInteger(def.size) && def.size % 2 === 0;
     const snap = (v) => (snapEven ? Math.round(v) : Math.floor(v) + 0.5);
     const { obstacles, enemyDown } = this.placementContext();
-    const test = (x, y) => isPlacementValid({ side: this.side, x, y, kind, anywhere, half, obstacles, enemyPrincessDown: enemyDown });
+    // Wie auf dem Server: Gebäude „überall“ (Koboldbohrer) prüfen wie Truppen, Hindernisse um die halbe Kante vergrößert
+    const anyBuilding = anywhere && kind === 'building';
+    const obst = anyBuilding ? obstacles.map((o) => ({ ...o, half: o.half + half })) : obstacles;
+    const testKind = anyBuilding || kind === 'spell' ? 'troop' : kind;
+    const test = (x, y) => isPlacementValid({ side: this.side, x, y, kind: testKind, anywhere, half: testKind === 'building' ? half : 0, obstacles: obst, enemyPrincessDown: enemyDown });
     let x = snap(clamp(wx, 0.01, ARENA_W - 0.01));
     let y = snap(clamp(wy, 0.01, ARENA_H - 0.01));
-    if (test(x, y)) return { x, y, valid: true, kind, def, anywhere };
+    if (test(x, y)) return { x, y, valid: true, kind, def, anywhere, card: eff };
     if (!anywhere) {
       const m = kind === 'building' ? half : 0.5;
       const y0 = this.side === 0 ? (kind === 'building' ? 17 + half : 17.5) : m;
@@ -848,9 +1043,9 @@ export class Game {
       cy = snap(cy);
       if (cy < y0) cy += 1;
       if (cy > y1) cy -= 1;
-      if (test(cx, cy)) return { x: cx, y: cy, valid: true, kind, def, clamped: true, anywhere };
+      if (test(cx, cy)) return { x: cx, y: cy, valid: true, kind, def, clamped: true, anywhere, card: eff };
     }
-    return { x, y, valid: false, kind, def, anywhere };
+    return { x, y, valid: false, kind, def, anywhere, card: eff };
   }
 
   tryPlay(wx, wy) {
@@ -861,6 +1056,12 @@ export class Game {
     const card = this.db.card(id);
     if (!card) return false;
     if (me.hr[slot] > 0.01 || this.pendingSlot.has(slot)) return false;
+    const cost = this.handCost(slot, card);
+    if (cost == null) {
+      this.app.toast(REJECTS.MIRROR_EMPTY, 'warn', 1600);
+      this.audio.sfx('error');
+      return false;
+    }
     const pos = this.placementFor(card, wx, wy);
     if (!pos.valid) {
       this.app.toast('Hier nicht möglich!', 'warn', 1400);
@@ -868,7 +1069,7 @@ export class Game {
       this.app.haptic(15);
       return false;
     }
-    if (this.elixirNow() + 1e-6 < card.elixir) {
+    if (this.elixirNow() + 1e-6 < cost) {
       this.hud.flashElixir(slot);
       this.app.toast('Nicht genug Elixier!', 'warn', 1400);
       this.audio.sfx('error');
@@ -878,8 +1079,8 @@ export class Game {
     const seq = ++this.seq;
     this.net.send(C2S.PLAY, { slot, card: id, x: pos.x, y: pos.y, seq });
     this.app.haptic(10);
-    this.pendingSlot.set(slot, { card: id, cost: card.elixir, seq, until: performance.now() + 1500 });
-    this.ghosts.push({ ...this.ghostFor(card, pos), seq, card: id, until: this.clock + 1.2 });
+    this.pendingSlot.set(slot, { card: id, cost, seq, until: performance.now() + 1500 });
+    this.ghosts.push({ ...this.ghostFor(card, pos, cost), seq, card: id, until: this.clock + 1.2 });
     return true;
   }
 
@@ -887,16 +1088,18 @@ export class Game {
     const ab = this.me?.ab;
     if (!ab || this.ended) return;
     if (ab.dep) return this.app.toast('Die Einheit landet noch.', 'warn', 1400);
-    if (ab.cls === 'champion') {
-      if (ab.cd > 0) {
-        this.audio.sfx('error');
-        return this.app.toast('Die Fähigkeit lädt noch.', 'warn', 1400);
-      }
-      if (this.elixirNow() < ab.cost) {
-        this.hud.flashElixir();
-        this.audio.sfx('error');
-        return this.app.toast('Nicht genug Elixier!', 'warn', 1400);
-      }
+    if (!(ab.u > 0)) {
+      this.audio.sfx('error');
+      return this.app.toast('Die Fähigkeit wurde bereits eingesetzt.', 'warn', 1400);
+    }
+    if (ab.cd > 0) {
+      this.audio.sfx('error');
+      return this.app.toast('Die Fähigkeit lädt noch.', 'warn', 1400);
+    }
+    if (this.elixirNow() < ab.cost) {
+      this.hud.flashElixir();
+      this.audio.sfx('error');
+      return this.app.toast('Nicht genug Elixier!', 'warn', 1400);
     }
     this.net.send(C2S.ABILITY, { seq: ++this.seq });
   }
@@ -907,19 +1110,28 @@ export class Game {
     this.net.send(C2S.EMOTE, { id: i });
   }
 
-  ghostFor(card, pos) {
+  ghostFor(card, pos, cost = null) {
     const g = { x: pos.x, y: pos.y, valid: pos.valid, kind: pos.kind };
-    if (card.type === 'spell') {
+    const eff = pos.card || this.effectiveCard(card) || card;
+    if (eff.type === 'spell') {
       g.kind = 'spell';
-      g.look = card.look;
-      g.radius = card.spell.radius || 1;
-      g.roll = card.spell.roll || null;
+      g.look = eff.look;
+      g.label = eff.name;
+      g.radius = eff.spell?.radius || 1;
+      g.roll = eff.spell?.roll || null;
       g.dir = forwardDir(this.side);
       return g;
     }
-    const def = pos.def || this.db.unit(this.db.unitRefOf(card));
+    // Geisterkaiserin: Form nach den aktuellen Kosten
+    let ref = this.db.unitRefOf(eff);
+    if (eff.forms) {
+      const c = cost ?? this.handCost(this.sel, card);
+      ref = (eff.forms.find((f) => f.elixir === c) || eff.forms[0]).unit;
+    }
+    const def = eff.forms ? this.db.unit(ref) : pos.def || this.db.unit(ref);
     g.look = def.look;
-    if (card.type === 'building') {
+    g.label = eff.name;
+    if (eff.type === 'building') {
       g.kind = 'building';
       g.half = def.size / 2;
       return g;
@@ -928,8 +1140,8 @@ export class Game {
     g.flying = def.flying;
     g.U = this.view.s * (0.42 + def.radius * 0.8) * (def.look?.scale || 1);
     g.range = def.range >= 2 ? def.range + def.radius : 0;
-    const n = card.count || 1;
-    g.offsets = formationOffsets(n, def.radius, this.side);
+    const n = eff.forms ? 1 : this.db.groupsOf(eff).reduce((sum, gr) => sum + (gr.count || 1), 0);
+    g.offsets = formationOffsets(n, def.radius, this.side, eff.formation || null);
     return g;
   }
 
@@ -988,10 +1200,11 @@ export class Game {
     const selCard = this.sel >= 0 && this.me ? this.db.card(this.me.h[this.sel]) : null;
     // Platzierungs-Overlay blendet in 150 ms ein und aus
     let ov = null;
-    if (selCard && !this.ended && selCard.type !== 'spell') {
-      const def = this.db.unit(this.db.unitRefOf(selCard));
+    const selEff = selCard ? this.effectiveCard(selCard) : null;
+    const selKind = selEff ? this.placeKind(selEff) : 'spell';
+    if (selEff && !this.ended && selKind !== 'spell') {
       const { obstacles, enemyDown } = this.placementContext();
-      ov = { kind: def.traits.deployAnywhere ? 'anywhere' : selCard.type === 'building' ? 'building' : 'troop', enemyDown, obstacles };
+      ov = { kind: selKind, enemyDown, obstacles };
       this.lastOverlay = ov;
     }
     this.ovAlpha = Math.max(0, Math.min(1, (this.ovAlpha || 0) + (ov ? dt : -dt) / 0.15));
@@ -1038,28 +1251,7 @@ export class Game {
 }
 
 /** Gleiche Formation wie auf dem Server (server/sim/match.js → formation). */
-export function formationOffsets(n, r, side) {
-  const TAU = Math.PI * 2;
+export function formationOffsets(n, r, side, kind = null) {
   const flip = side === 0 ? 1 : -1;
-  let out;
-  if (n <= 1) out = [[0, 0]];
-  else {
-    const s = Math.max(0.65, r * 2 + 0.15);
-    if (n === 2) out = [[-s / 2, 0], [s / 2, 0]];
-    else if (n === 3) out = [[0, -s * 0.55], [-s * 0.6, s * 0.45], [s * 0.6, s * 0.45]];
-    else if (n <= 6) {
-      const R = s * (n <= 4 ? 0.75 : 0.95);
-      out = [];
-      for (let i = 0; i < n; i++) {
-        const a = -Math.PI / 2 + (TAU * i) / n + (n === 4 ? Math.PI / 4 : 0);
-        out.push([Math.cos(a) * R, Math.sin(a) * R]);
-      }
-    } else {
-      const cols = Math.ceil(Math.sqrt(n));
-      const rows = Math.ceil(n / cols);
-      out = [];
-      for (let i = 0; i < n; i++) out.push([((i % cols) - (cols - 1) / 2) * s, (Math.floor(i / cols) - (rows - 1) / 2) * s]);
-    }
-  }
-  return out.map(([x, y]) => [x * flip, y * flip]);
+  return formation(n, r, kind).map(([x, y]) => [x * flip, y * flip]);
 }

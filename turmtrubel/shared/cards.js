@@ -221,6 +221,8 @@ export function resolveUnit(db, ref, evo = false, extraFactor = 1) {
         m.traits = deepMerge(d.traits, card.evo.unit.traits || {});
         m.evo = true;
         m.cardId = card.id;
+        m.key = card.id; // damit der Client den Evo-Look über die Karte findet
+        m.name = card.evo.name || 'Evo-' + card.name;
         return m;
       }
       return d;

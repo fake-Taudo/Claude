@@ -18,6 +18,7 @@ const RARITY_FILTERS = [
   ['rare', 'Selten'],
   ['epic', 'Episch'],
   ['legendary', 'Legendär'],
+  ['champion', 'Champion'],
 ];
 
 export class DeckBuilder {
@@ -342,6 +343,7 @@ export class DeckBuilder {
       slots[this.selSlot] = id;
       this.selSlot = -1;
       this.fixSpecials(id);
+      this.fixHeroBase(id);
       this.changed();
       return;
     }
@@ -367,10 +369,23 @@ export class DeckBuilder {
     });
   }
 
+  /** Held und seine Basiskarte schließen sich aus: die jeweils andere Karte fliegt raus. */
+  fixHeroBase(keepId) {
+    const slots = this.deck().slots;
+    const card = this.db.card(keepId);
+    const clash = card?.heroOf || slots.find((s) => s && this.db.card(s)?.heroOf === keepId);
+    const i = clash ? slots.indexOf(clash) : -1;
+    if (i >= 0 && slots[i] !== keepId) {
+      toast(`${this.db.card(clash).name} wurde entfernt – Held und Basiskarte passen nicht zusammen.`, 'info', 3000);
+      slots[i] = null;
+    }
+  }
+
   addCard(id, preferEvo = false) {
     const slots = this.deck().slots;
     const card = this.db.card(id);
     if (slots.includes(id)) return;
+    this.fixHeroBase(id);
     if (isSpecial(card)) {
       const cur = slots[SPECIAL_SLOT];
       if (cur && !isSpecial(this.db.card(cur))) {

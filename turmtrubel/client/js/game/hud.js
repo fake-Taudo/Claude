@@ -4,6 +4,7 @@
 // Grundregel (B-01): Kein HUD-Element liegt über der Arena (L.arena). Zeichnen und Hit-Test lesen dieselben
 // Rechtecke aus this.L – wer das Layout ändert, ändert automatisch beides.
 import { EMOTES } from '/shared/protocol.js';
+import { costLabel } from '/shared/cards.js';
 import { cardArt, cardArtGray } from '../ui/art.js';
 import { drawEmoteFace } from './sprites.js';
 import { starPath } from './renderer.js';
@@ -14,7 +15,7 @@ const TAU = Math.PI * 2;
 const GAP = 6;
 const PAD = 8;
 const TAP = 44; // Mindest-Touchziel
-export const RARITY_COLORS = { common: '#9fb3c8', rare: '#f39c3d', epic: '#b55cf0', legendary: '#2fd3c6' };
+export const RARITY_COLORS = { common: '#9fb3c8', rare: '#f39c3d', epic: '#b55cf0', legendary: '#2fd3c6', champion: '#ffd84d' };
 export const CLASS_COLORS = { champion: '#ffd84d', hero: '#ff7a5c' };
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -486,7 +487,8 @@ export class Hud {
     for (let i = 0; i < 4; i++) {
       const id = me.h[i];
       const card = g.db.card(id);
-      const ok = !!card && elixir + 1e-6 >= card.elixir && !(me.hr[i] > 0.01) && !g.pendingSlot.has(i);
+      const cost = card ? g.handCost(i, card) : null;
+      const ok = cost != null && elixir + 1e-6 >= cost && !(me.hr[i] > 0.01) && !g.pendingSlot.has(i);
       if (this.slotCards[i] !== id) {
         if (this.slotCards[i] != null) this.cycle[i] = { at: now };
         this.slotCards[i] = id;
@@ -536,7 +538,9 @@ export class Hud {
     const selected = g.sel === i && !g.ended;
     const dragging = g.drag?.active && selected;
     const ready = !(me.hr[i] > 0.01) && !g.pendingSlot.has(i);
-    const afford = elixir + 1e-6 >= card.elixir;
+    // Kosten laut Server (Spiegel: letzte Karte + 1, Geisterkaiserin: je nach Elixier)
+    const cost = g.handCost(i, card);
+    const afford = cost != null && elixir + 1e-6 >= cost;
     const evoInfo = me.ev?.[i];
     const evoReady = Array.isArray(evoInfo) && evoInfo[0] >= evoInfo[1];
     if (dragging) {
@@ -652,7 +656,7 @@ export class Hud {
       ctx.stroke();
     }
     const dr = Math.max(9, w * 0.17);
-    drawElixirDrop(ctx, x + dr * 0.95, y + dr * 1.2, dr, card.elixir, ready && !afford ? 'red' : null);
+    drawElixirDrop(ctx, x + dr * 0.95, y + dr * 1.2, dr, cost ?? '?', ready && !afford ? 'red' : null);
     if (card.class !== 'normal') {
       ctx.fillStyle = CLASS_COLORS[card.class];
       ctx.strokeStyle = OUTLINE;
@@ -677,7 +681,7 @@ export class Hud {
     ctx.save();
     ctx.globalAlpha = k;
     this.drawCardFace(ctx, me.n, r.x, r.y, r.w, r.h, { evo: evoReady, radius: 7 });
-    if (card) drawElixirDrop(ctx, r.x + r.w * 0.22, r.y + r.w * 0.26, Math.max(8, r.w * 0.17), card.elixir);
+    if (card) drawElixirDrop(ctx, r.x + r.w * 0.22, r.y + r.w * 0.26, Math.max(8, r.w * 0.17), costLabel(card));
     ctx.restore();
   }
 
@@ -724,9 +728,10 @@ export class Hud {
     }
     // Kostenmarker der gewählten Karte: fehlender Bereich schraffiert
     const selCard = g.sel >= 0 && g.me && !g.ended ? g.db.card(g.me.h[g.sel]) : null;
-    if (selCard && selCard.elixir > elixir) {
+    const selCost = selCard ? g.handCost(g.sel, selCard) : null;
+    if (selCost != null && selCost > elixir) {
       const x0 = xAt(elixir);
-      const x1 = xAt(selCard.elixir);
+      const x1 = xAt(selCost);
       ctx.fillStyle = 'rgba(10,6,30,0.45)';
       ctx.fillRect(x0, r.y, x1 - x0, r.h);
       ctx.fillStyle = hatchPattern(ctx);
@@ -760,8 +765,8 @@ export class Hud {
       ctx.stroke();
       ctx.restore();
     }
-    if (selCard) {
-      const mx = xAt(selCard.elixir);
+    if (selCost != null) {
+      const mx = xAt(selCost);
       ctx.fillStyle = '#ffffff';
       ctx.strokeStyle = OUTLINE;
       ctx.lineWidth = 1.5;
@@ -1032,9 +1037,10 @@ export class Hud {
     const g = this.game;
     const b = this.L.abilityBtn;
     const champ = ab.cls === 'champion';
-    const cdK = champ && ab.max ? ab.cd / ab.max : 0;
-    const afford = !champ || g.elixirNow() >= ab.cost;
-    const ready = cdK <= 0 && afford && !ab.dep;
+    // Seit 08/2026: Fähigkeiten pro Einsatz einmalig (Boss-Banditin zweimal mit Abklingzeit)
+    const cdK = ab.max ? ab.cd / ab.max : 0;
+    const afford = g.elixirNow() >= ab.cost;
+    const ready = cdK <= 0 && afford && !ab.dep && ab.u > 0;
     ctx.save();
     if (ready) {
       ctx.globalAlpha = this.rm ? 0.6 : 0.45 + Math.sin(now * 6) * 0.25;
@@ -1072,8 +1078,20 @@ export class Hud {
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.r + 1.5, 0, TAU);
     ctx.stroke();
-    if (champ) drawElixirDrop(ctx, b.x - b.r * 0.72, b.y - b.r * 0.62, Math.max(8, b.r * 0.3), ab.cost, afford ? null : 'red');
+    if (ab.cost > 0) drawElixirDrop(ctx, b.x - b.r * 0.72, b.y - b.r * 0.62, Math.max(8, b.r * 0.3), ab.cost, afford ? null : 'red');
     if (cdK > 0) tnum(ctx, String(Math.ceil(ab.cd)), b.x, b.y + 2, Math.max(14, b.r * 0.7), '#ffffff');
+    // Verbleibende Einsätze als Punkte unter dem Knopf (nur bei mehr als einem)
+    if (ab.u > 1) {
+      for (let i = 0; i < ab.u; i++) {
+        ctx.beginPath();
+        ctx.arc(b.x + (i - (ab.u - 1) / 2) * b.r * 0.32, b.y + b.r * 1.12, Math.max(3, b.r * 0.1), 0, TAU);
+        ctx.fillStyle = champ ? T.gold.main : '#ff9a7a';
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = OUTLINE;
+        ctx.stroke();
+      }
+    }
     if (this.fineInput) keycap(ctx, b.x + b.r * 0.55, b.y + b.r * 0.8, '␣');
     ctx.restore();
   }
@@ -1192,7 +1210,7 @@ export class Hud {
     ctx.save();
     ctx.globalAlpha = inA ? 0.8 : 0.95;
     this.drawCardFace(ctx, id, x, y, w, h, { radius: 8 });
-    if (card) drawElixirDrop(ctx, x + w * 0.17, y + w * 0.2, Math.max(8, w * 0.15), card.elixir);
+    if (card) drawElixirDrop(ctx, x + w * 0.17, y + w * 0.2, Math.max(8, w * 0.15), g.handCost(g.sel, card) ?? '?');
     ctx.restore();
   }
 }
