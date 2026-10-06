@@ -31,6 +31,7 @@ export class DeckBuilder {
     this.selSlot = -1;
     this.f = { q: '', type: 'all', elixir: new Set(), rarity: 'all', sort: 'elixir' };
     this.bind();
+    this.initDrag();
   }
 
   bind() {
@@ -284,6 +285,185 @@ export class DeckBuilder {
       return;
     }
     $('#card-grid').replaceChildren(...list.map((c) => cardEl(this.db, c.id, { inDeck: inDeck.has(c.id), showEvoHint: true, onClick: () => this.clickCard(c.id) })));
+  }
+
+  // ───── Drag-and-Drop ─────
+  // Maus: ziehen ab 6 px. Touch: kurz halten (260 ms), dann ziehen – so bleibt normales Scrollen möglich.
+  // Ziele: Deck-Platz (einsetzen/tauschen, rastet mit Animation ein) oder Sammlung (Karte aus dem Deck nehmen).
+  // Antippen-und-Tauschen bleibt unverändert (auch per Tastatur).
+  initDrag() {
+    const root = $('#s-deck');
+    const HOLD_MS = 260;
+    const end = () => {
+      if (this.pend) clearTimeout(this.pend.timer);
+      this.pend = null;
+    };
+    root.addEventListener('pointerdown', (e) => {
+      if (this.drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      const el = e.target.closest('.card');
+      if (!el || el.classList.contains('empty') || !el.dataset.id || !el.closest('#deck-slots, #card-grid')) return;
+      const slot = el.closest('.slot');
+      const from = slot ? [...slot.parentNode.children].indexOf(slot) : this.deck().slots.indexOf(el.dataset.id);
+      this.pend = { id: el.dataset.id, from, fromGrid: !slot, el, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, touch: e.pointerType !== 'mouse', pid: e.pointerId };
+      if (this.pend.touch) this.pend.timer = setTimeout(() => this.pend && this.startDrag(), HOLD_MS);
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (this.drag) {
+        if (e.pointerId === this.drag.pid) this.moveDrag(e.clientX, e.clientY);
+        return;
+      }
+      const p = this.pend;
+      if (!p || e.pointerId !== p.pid) return;
+      p.x = e.clientX;
+      p.y = e.clientY;
+      const d = Math.hypot(p.x - p.x0, p.y - p.y0);
+      if (p.touch && d > 10) end(); // Finger bewegt sich vor Ablauf der Haltezeit → Scrollen
+      else if (!p.touch && d > 6) this.startDrag();
+    });
+    const up = (e) => {
+      if (this.drag && e.pointerId === this.drag.pid) this.dropDrag(e.type === 'pointercancel');
+      end();
+    };
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    // Während des Ziehens nicht scrollen (Touch) und kein Kontextmenü beim Halten
+    window.addEventListener('touchmove', (e) => this.drag && e.cancelable && e.preventDefault(), { passive: false });
+    root.addEventListener('contextmenu', (e) => (this.pend || this.drag) && e.preventDefault());
+  }
+
+  startDrag() {
+    const p = this.pend;
+    if (!p || !p.el.isConnected) return;
+    clearTimeout(p.timer);
+    this.pend = null;
+    const r = p.el.getBoundingClientRect();
+    const ghost = p.el.cloneNode(true);
+    ghost.classList.add('drag-ghost');
+    ghost.removeAttribute('tabindex');
+    ghost.removeAttribute('role');
+    ghost.style.width = `${r.width}px`;
+    ghost.style.height = `${r.height}px`;
+    document.body.append(ghost);
+    p.el.classList.add('drag-src');
+    document.body.classList.add('card-dragging');
+    this.drag = { ...p, ghost, ox: p.x0 - r.left, oy: p.y0 - r.top, rect: r, vx: 0, lx: p.x, target: null };
+    if (this.selSlot >= 0) {
+      this.selSlot = -1;
+      $('#deck-sel-hint').hidden = true;
+    }
+    this.markTargets();
+    this.moveDrag(p.x, p.y);
+    this.app.haptic(10);
+    this.app.audio.sfx('whoosh', 0.5);
+  }
+
+  /** Alle Plätze als gültiges/ungültiges Ziel einfärben (Champion/Held nur in Platz 3). */
+  markTargets() {
+    const d = this.drag;
+    const slots = this.deck().slots;
+    document.querySelectorAll('#deck-slots .slot').forEach((el, i) => {
+      const ok = i !== d.from && this.canPlaceIn(d.id, i) && (d.from < 0 || !slots[i] || this.canPlaceIn(slots[i], d.from));
+      el.classList.toggle('can-drop', ok);
+      el.classList.toggle('no-drop', !ok && i !== d.from);
+    });
+    $('#card-grid').classList.toggle('can-drop', d.from >= 0);
+  }
+
+  moveDrag(x, y) {
+    const d = this.drag;
+    // Neigung folgt der Bewegung (gedämpft), wie beim Ziehen im Kampf
+    d.vx = d.vx * 0.7 + (x - d.lx) * 0.3;
+    d.lx = x;
+    const tilt = Math.max(-14, Math.min(14, d.vx * 1.6));
+    d.ghost.style.transform = `translate(${x - d.ox}px, ${y - d.oy}px) rotate(${tilt}deg) scale(1.1)`;
+    const hit = document.elementFromPoint(x, y);
+    const slot = hit?.closest('#deck-slots .slot');
+    let target = null;
+    if (slot) target = { slot: [...slot.parentNode.children].indexOf(slot), el: slot };
+    else if (d.from >= 0 && hit?.closest('.collection')) target = { grid: true };
+    if (d.target?.el !== target?.el || !!d.target?.grid !== !!target?.grid) {
+      d.target?.el?.classList.remove('hover');
+      target?.el?.classList.add('hover');
+      d.ghost.classList.toggle('to-remove', !!target?.grid);
+      d.target = target;
+    }
+  }
+
+  dropDrag(cancelled) {
+    const d = this.drag;
+    this.drag = null;
+    document.body.classList.remove('card-dragging');
+    document.querySelectorAll('#deck-slots .slot').forEach((el) => el.classList.remove('can-drop', 'no-drop', 'hover'));
+    $('#card-grid').classList.remove('can-drop');
+    // Der Klick nach dem Loslassen soll kein Detail öffnen
+    const swallow = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    };
+    window.addEventListener('click', swallow, { capture: true, once: true });
+    setTimeout(() => window.removeEventListener('click', swallow, { capture: true }), 350);
+    const t = cancelled ? null : d.target;
+    let placed = -1;
+    if (t?.grid && d.from >= 0) {
+      this.removeSlot(d.from);
+      this.app.audio.sfx('pop', 0.6);
+      return this.poofGhost(d.ghost);
+    }
+    if (t && t.slot != null && t.slot !== d.from) placed = this.dropInSlot(d.id, d.from, t.slot);
+    if (placed < 0) {
+      // Zurückfliegen an den Ursprung
+      d.ghost.classList.add('returning');
+      d.ghost.style.transform = `translate(${d.rect.left}px, ${d.rect.top}px)`;
+      setTimeout(() => {
+        d.ghost.remove();
+        d.el.classList.remove('drag-src');
+      }, 200);
+      return;
+    }
+    d.ghost.remove();
+    this.snapSlot(placed);
+    if (d.from >= 0 && d.from !== placed) this.snapSlot(d.from);
+  }
+
+  poofGhost(ghost) {
+    ghost.classList.add('poof');
+    setTimeout(() => ghost.remove(), 240);
+  }
+
+  /** Karte auf Platz i legen (aus der Sammlung: from = -1, sonst Tausch). Gibt den Platz zurück oder -1. */
+  dropInSlot(id, from, i) {
+    const slots = this.deck().slots;
+    if (from >= 0) {
+      if (!this.canPlaceIn(slots[from], i) || !this.canPlaceIn(slots[i], from)) {
+        toast('Champions und Helden gehören in Platz 3 (Champion/Held).', 'warn');
+        return -1;
+      }
+      [slots[from], slots[i]] = [slots[i], slots[from]];
+    } else {
+      if (!this.canPlaceIn(id, i)) {
+        toast('Champions und Helden gehören in Platz 3 (Champion/Held).', 'warn');
+        return -1;
+      }
+      const out = slots[i];
+      slots[i] = id;
+      this.fixSpecials(id);
+      this.fixHeroBase(id);
+      if (out) toast(`${this.db.card(out).name} raus, ${this.db.card(id).name} rein.`, 'info', 1600);
+    }
+    this.changed();
+    this.app.audio.sfx('select');
+    this.app.haptic(14);
+    return i;
+  }
+
+  /** Einrast-Animation auf einem Deck-Platz (nach dem Neuzeichnen). */
+  snapSlot(i) {
+    const el = document.querySelectorAll('#deck-slots .slot')[i];
+    if (!el) return;
+    el.classList.remove('snap');
+    void el.offsetWidth;
+    el.classList.add('snap');
+    setTimeout(() => el.classList.remove('snap'), 520);
   }
 
   // ───── Interaktion ─────

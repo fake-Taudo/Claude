@@ -1393,3 +1393,57 @@ input[type='range']::-moz-range-track { background: var(--night-900); }
   .modal { animation: sheet-in var(--dur-base) var(--ease-out); box-shadow: inset 0 2px 0 var(--panel-edge), var(--shadow-soft); }
 }
 .res-crown.on { filter: none; }
+
+/* ───── Deck-Bauer: Drag-and-Drop ───── */
+.drag-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--z-overlay);
+  margin: 0;
+  pointer-events: none;
+  will-change: transform;
+  transition: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 4px 0 var(--ink-900), 0 18px 30px rgb(5 4 20 / 0.55);
+}
+.drag-ghost.to-remove { filter: saturate(0.35) brightness(0.85); opacity: 0.8; }
+.drag-ghost.returning { transition: transform 0.2s var(--ease-out); }
+.drag-ghost.poof { animation: card-poof 0.24s ease-in forwards; }
+@keyframes card-poof { to { opacity: 0; scale: 0.35; filter: blur(2px); } }
+.card.drag-src { opacity: 0.32; filter: saturate(0.2); }
+body.card-dragging, body.card-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+.slot::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 15px;
+  border: 3px dashed transparent;
+  pointer-events: none;
+  transition: border-color var(--dur-fast), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
+}
+.slot.can-drop::after { border-color: rgb(147 169 242 / 0.75); animation: drop-pulse 1s ease-in-out infinite; }
+.slot.can-drop.hover::after { border-style: solid; border-color: var(--gold-300); box-shadow: 0 0 18px rgb(255 216 77 / 0.6), inset 0 0 12px rgb(255 216 77 / 0.35); transform: scale(1.05); animation: none; }
+.slot.no-drop > .card { opacity: 0.45; }
+.slot.no-drop.hover::after { border-color: #ff6b75; }
+@keyframes drop-pulse { 50% { border-color: rgb(147 169 242 / 0.35); } }
+#card-grid.can-drop { border-radius: 14px; background: rgb(229 72 77 / 0.08); box-shadow: inset 0 0 0 3px rgb(255 120 130 / 0.45); }
+.slot.snap > .card { animation: slot-snap 0.5s var(--ease-pop); }
+.slot.snap::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  width: 90%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid var(--gold-300);
+  pointer-events: none;
+  translate: -50% -50%;
+  animation: snap-ring 0.45s ease-out forwards;
+}
+@keyframes slot-snap { 0% { transform: scale(1.2); } 45% { transform: scale(0.94); } 100% { transform: none; } }
+@keyframes snap-ring { from { scale: 0.4; opacity: 1; } to { scale: 1.5; opacity: 0; border-width: 1px; } }
+@media (hover: hover) and (pointer: fine) {
+  #deck-slots .card:not(.empty), #card-grid .card { cursor: grab; }
+}
