@@ -48,25 +48,25 @@ test('Verlängerung: dreifache Regeneration', () => {
 
 test('Ausspielen kostet Elixier, zu wenig Elixier wird abgelehnt', () => {
   const m = newMatch();
-  forceHand(m, 0, 0, 'steinkoloss', 4);
-  const r1 = m.play(0, 0, 'steinkoloss', 9, 24);
+  forceHand(m, 0, 0, 'pekka', 4);
+  const r1 = m.play(0, 0, 'pekka', 9, 24);
   assert.equal(r1.ok, false);
   assert.equal(r1.code, 'ELIXIR');
-  m.players[0].elixir = 7;
-  const r2 = m.play(0, 0, 'steinkoloss', 9, 24);
+  m.players[0].elixir = 9;
+  const r2 = m.play(0, 0, 'pekka', 9, 24);
   assert.equal(r2.ok, true);
   close(m.players[0].elixir, 2, 1e-9);
 });
 
-test('Elixierbrunnen erzeugt Elixier für seinen Besitzer', () => {
+test('Elixiersammler erzeugt Elixier für seinen Besitzer', () => {
   const m = newMatch();
-  forceHand(m, 0, 0, 'elixierbrunnen', 10);
-  assert.ok(m.play(0, 0, 'elixierbrunnen', 9, 22).ok);
+  forceHand(m, 0, 0, 'elixir-collector', 10);
+  assert.ok(m.play(0, 0, 'elixir-collector', 9, 22).ok);
   runSeconds(m, 1); // Aufbau
   m.players[0].elixir = 0;
   m.players[1].elixir = 0;
-  runSeconds(m, 9);
-  // 9 s Regeneration ≈ 3,2 + 1 vom Brunnen
+  runSeconds(m, 13.5);
+  // 13,5 s Regeneration ≈ 4,8 + 1 vom Sammler (alle 13 s)
   assert.ok(m.players[0].elixir > m.players[1].elixir + 0.9, `${m.players[0].elixir} vs ${m.players[1].elixir}`);
   assert.ok(tower(m, 0, 'king'));
 });

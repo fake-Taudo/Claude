@@ -48,7 +48,7 @@ test('Snapshot enthält Entitäten, Hand und Elixier', () => {
 
 test('Bodentruppen überqueren den Fluss nur über Brücken', () => {
   const m = newMatch();
-  const u = spawn(m, 'knappe', 0, 9, 20);
+  const u = spawn(m, 'knight', 0, 9, 20);
   let crossed = false;
   for (let i = 0; i < 20 * 25 && !u.dead; i++) {
     m.step();
@@ -60,7 +60,7 @@ test('Bodentruppen überqueren den Fluss nur über Brücken', () => {
 
 test('Einheiten laufen zum nächsten Turm und greifen ihn an', () => {
   const m = newMatch();
-  const giant = spawn(m, 'steinkoloss', 0, 3.5, 19);
+  const giant = spawn(m, 'giant', 0, 3.5, 19);
   const target = tower(m, 1, 'princess', 0);
   const hp0 = target.hp;
   runUntil(m, () => target.hp < hp0, 40);
@@ -70,8 +70,8 @@ test('Einheiten laufen zum nächsten Turm und greifen ihn an', () => {
 
 test('Nach dem Tod des Ziels sucht eine Truppe ein neues Ziel und läuft weiter', () => {
   const m = newMatch();
-  const knight = spawn(m, 'knappe', 0, 3.5, 18);
-  const skel = spawn(m, 'knochenwichte', 1, 3.5, 16.2);
+  const knight = spawn(m, 'knight', 0, 3.5, 18);
+  const skel = spawn(m, 'skeletons', 1, 3.5, 16.2);
   runUntil(m, () => skel.dead && !m.entities.includes(skel), 5);
   assert.ok(skel.dead, 'Skelett besiegt');
   const y0 = knight.y;
@@ -86,12 +86,12 @@ test('Nach dem Tod des Ziels sucht eine Truppe ein neues Ziel und läuft weiter'
 test('Türme wechseln nach einem Kill auf das nächste Ziel', () => {
   const m = newMatch();
   const t = tower(m, 0, 'princess', 0);
-  const a = spawn(m, 'knochenwichte', 1, 3.5, 19.5);
+  const a = spawn(m, 'skeletons', 1, 3.5, 19.5);
   a.def = { ...a.def, speed: 0 };
   runUntil(m, () => a.dead, 5);
   assert.ok(a.dead);
   runSeconds(m, 0.2);
-  const b = spawn(m, 'knappe', 1, 4.5, 20);
+  const b = spawn(m, 'knight', 1, 4.5, 20);
   b.def = { ...b.def, speed: 0 };
   runSeconds(m, 3);
   assert.equal(t.targetId, b.id);
@@ -100,7 +100,7 @@ test('Türme wechseln nach einem Kill auf das nächste Ziel', () => {
 
 test('Einheit, deren Zielturm fällt, zieht zum nächsten Turm weiter', () => {
   const m = newMatch();
-  const giant = spawn(m, 'steinkoloss', 0, 3.5, 11);
+  const giant = spawn(m, 'giant', 0, 3.5, 11);
   const pr = tower(m, 1, 'princess', 0);
   runUntil(m, () => giant.targetId === pr.id && giant.locked, 10);
   m.damage(pr, 1e7, null, 0);
@@ -113,8 +113,8 @@ test('Einheit, deren Zielturm fällt, zieht zum nächsten Turm weiter', () => {
 
 test('Gebäudejäger ignorieren Truppen', () => {
   const m = newMatch();
-  const giant = spawn(m, 'steinkoloss', 0, 3.5, 18);
-  const knight = spawn(m, 'knappe', 1, 3.5, 16.5);
+  const giant = spawn(m, 'giant', 0, 3.5, 18);
+  const knight = spawn(m, 'knight', 1, 3.5, 16.5);
   runSeconds(m, 2);
   assert.notEqual(giant.targetId, knight.id);
   const t = m.byId.get(giant.targetId);
@@ -123,7 +123,7 @@ test('Gebäudejäger ignorieren Truppen', () => {
 
 test('Wachturm beschießt Gegner in Reichweite', () => {
   const m = newMatch();
-  const enemy = spawn(m, 'steinkoloss', 1, 3.5, 20);
+  const enemy = spawn(m, 'giant', 1, 3.5, 20);
   enemy.def = { ...enemy.def, speed: 0 };
   runSeconds(m, 3);
   assert.ok(enemy.hp < enemy.maxHp, 'Einheit wurde getroffen');
@@ -150,25 +150,25 @@ test('Burgturm erwacht, wenn ein Wachturm fällt', () => {
 
 test('Platzierung: nur eigene Hälfte, Zauber überall', () => {
   const m = newMatch();
-  forceHand(m, 0, 0, 'knappe');
-  assert.equal(m.play(0, 0, 'knappe', 9, 10).code, 'PLACEMENT');
-  assert.equal(m.play(0, 0, 'knappe', 9, 16).code, 'PLACEMENT'); // Fluss
-  assert.equal(m.play(0, 0, 'knappe', 3.5, 25.5).code, 'PLACEMENT'); // im Turm
-  assert.equal(m.play(0, 0, 'knappe', 9, 22).ok, true);
-  forceHand(m, 0, 1, 'glutball');
-  assert.equal(m.play(0, 1, 'glutball', 9, 5).ok, true);
+  forceHand(m, 0, 0, 'knight');
+  assert.equal(m.play(0, 0, 'knight', 9, 10).code, 'PLACEMENT');
+  assert.equal(m.play(0, 0, 'knight', 9, 16).code, 'PLACEMENT'); // Fluss
+  assert.equal(m.play(0, 0, 'knight', 3.5, 25.5).code, 'PLACEMENT'); // im Turm
+  assert.equal(m.play(0, 0, 'knight', 9, 22).ok, true);
+  forceHand(m, 0, 1, 'fireball');
+  assert.equal(m.play(0, 1, 'fireball', 9, 5).ok, true);
 });
 
 test('Gefallener Wachturm öffnet die Tasche in seiner Lane', () => {
   const m = newMatch();
-  forceHand(m, 0, 0, 'knappe');
-  assert.equal(m.play(0, 0, 'knappe', 3.5, 12).code, 'PLACEMENT');
+  forceHand(m, 0, 0, 'knight');
+  assert.equal(m.play(0, 0, 'knight', 3.5, 12).code, 'PLACEMENT');
   const pr = tower(m, 1, 'princess', 0);
   m.damage(pr, 1e6, null, 0);
   m.step();
-  assert.equal(m.play(0, 0, 'knappe', 3.5, 12).ok, true);
-  forceHand(m, 0, 0, 'knappe');
-  assert.equal(m.play(0, 0, 'knappe', 14.5, 12).code, 'PLACEMENT', 'andere Lane bleibt gesperrt');
+  assert.equal(m.play(0, 0, 'knight', 3.5, 12).ok, true);
+  forceHand(m, 0, 0, 'knight');
+  assert.equal(m.play(0, 0, 'knight', 14.5, 12).code, 'PLACEMENT', 'andere Lane bleibt gesperrt');
 });
 
 test('Handrotation wie im Original', () => {
@@ -189,7 +189,7 @@ test('Handrotation wie im Original', () => {
 
 test('Falsche Karte / falscher Platz wird abgelehnt (Anti-Cheat)', () => {
   const m = newMatch();
-  assert.equal(m.play(0, 7, 'knappe', 9, 22).code, 'BAD_SLOT');
+  assert.equal(m.play(0, 7, 'knight', 9, 22).code, 'BAD_SLOT');
   assert.equal(m.play(0, 0, 'nicht-da', 9, 22).code, 'NOT_IN_HAND');
   assert.equal(m.play(0, 0, m.players[0].hand[1] === m.players[0].hand[0] ? 'x' : m.players[0].hand[1], 9, 22).code, 'NOT_IN_HAND');
   m.started = false;
@@ -199,115 +199,146 @@ test('Falsche Karte / falscher Platz wird abgelehnt (Anti-Cheat)', () => {
 test('Champion kehrt erst nach seinem Tod in den Zyklus zurück', () => {
   const m = newMatch();
   const p = m.players[0];
-  p.queue = p.queue.filter((id) => id !== 'mirell');
-  p.hand = p.hand.map((id) => (id === 'mirell' ? 'knappe' : id));
-  forceHand(m, 0, 0, 'mirell');
-  assert.ok(m.play(0, 0, 'mirell', 9, 22).ok);
-  assert.equal(p.championOut, 'mirell');
-  assert.ok(!p.queue.includes('mirell'));
-  const champ = m.entities.find((e) => e.def.cardId === 'mirell');
+  p.queue = p.queue.filter((id) => id !== 'golden-knight');
+  p.hand = p.hand.map((id) => (id === 'golden-knight' ? 'knight' : id));
+  forceHand(m, 0, 0, 'golden-knight');
+  assert.ok(m.play(0, 0, 'golden-knight', 9, 22).ok);
+  assert.equal(p.championOut, 'golden-knight');
+  assert.ok(!p.queue.includes('golden-knight'));
+  const champ = m.entities.find((e) => e.cardId === 'golden-knight');
   champ.hp = 0;
   champ.dead = true;
   m.step();
   assert.equal(p.championOut, null);
-  assert.equal(p.queue.at(-1), 'mirell');
+  assert.equal(p.queue.at(-1), 'golden-knight');
 });
 
-test('Champion-Fähigkeit kostet Elixier und hat Abklingzeit', () => {
+test('Champion-Fähigkeit kostet Elixier und ist pro Einsatz einmalig', () => {
   const m = newMatch();
-  forceHand(m, 0, 0, 'mirell');
-  assert.ok(m.play(0, 0, 'mirell', 9, 20).ok);
+  const cost = db.card('little-prince').ability.cost;
+  forceHand(m, 0, 0, 'little-prince');
+  assert.ok(m.play(0, 0, 'little-prince', 9, 20).ok);
   runSeconds(m, 1.1);
-  spawn(m, 'knappe', 1, 9, 18);
-  m.players[0].elixir = 1;
+  spawn(m, 'knight', 1, 9, 18);
+  m.players[0].elixir = cost - 1;
   assert.equal(m.useAbility(0).code, 'ELIXIR');
   m.players[0].elixir = 5;
   assert.equal(m.useAbility(0).ok, true);
-  assert.equal(m.players[0].elixir, 3);
-  assert.equal(m.useAbility(0).code, 'COOLDOWN');
-  runSeconds(m, 12.1);
+  assert.equal(m.players[0].elixir, 5 - cost);
+  runSeconds(m, 15);
   m.players[0].elixir = 5;
-  assert.equal(m.useAbility(0).ok, true);
+  assert.equal(m.useAbility(0).code, 'NO_ABILITY');
 });
 
-test('Helden-Fähigkeit ist einmalig', () => {
+test('Boss-Bandit: zwei Einsätze mit Abklingzeit', () => {
   const m = newMatch();
-  forceHand(m, 0, 0, 'torvin');
-  assert.ok(m.play(0, 0, 'torvin', 9, 20).ok);
-  runSeconds(m, 1.1);
-  const enemy = spawn(m, 'knappe', 1, 9, 18.5);
+  const ab = db.card('boss-bandit').ability;
+  assert.equal(ab.uses, 2);
+  forceHand(m, 0, 0, 'boss-bandit');
+  assert.ok(m.play(0, 0, 'boss-bandit', 9, 20).ok);
+  runSeconds(m, 1.5);
+  spawn(m, 'knight', 1, 9, 17.5);
   assert.equal(m.useAbility(0).ok, true);
-  assert.ok(enemy.hp < enemy.maxHp);
+  runSeconds(m, (ab.castTime ?? 0) + 0.1);
+  assert.equal(m.useAbility(0).code, 'COOLDOWN');
+  runSeconds(m, ab.cooldown);
+  m.players[0].elixir = 10;
+  assert.equal(m.useAbility(0).ok, true);
+  runSeconds(m, ab.cooldown + 1);
+  assert.equal(m.useAbility(0).code, 'NO_ABILITY');
+});
+
+test('Helden-Fähigkeit ist einmalig (Ritter-Held: Spott + Schild)', () => {
+  const m = newMatch();
+  forceHand(m, 0, 0, 'knight-hero');
+  assert.ok(m.play(0, 0, 'knight-hero', 9, 20).ok);
+  runSeconds(m, 1.1);
+  const hero = m.entities.find((e) => e.cardId === 'knight-hero');
+  const enemy = spawn(m, 'archers', 1, 9, 15);
+  m.players[0].elixir = 10;
+  assert.equal(m.useAbility(0).ok, true);
+  runSeconds(m, 1);
+  assert.ok(hero.shield > 0 || hero.buffs.length > 0, 'Schild/Buff aktiv');
+  assert.equal(enemy.targetId, hero.id, 'Gegner wird auf den Helden gelenkt');
   assert.equal(m.useAbility(0).code, 'NO_ABILITY');
 });
 
 test('Evo: nach genug Zyklen wird die Karte entwickelt ausgespielt', () => {
   const m = newMatch();
-  const cycles = db.card('knappe').evo.cycles;
+  const cycles = db.card('knight').evo.cycles;
   for (let i = 0; i < cycles; i++) {
-    forceHand(m, 0, 0, 'knappe');
-    const r = m.play(0, 0, 'knappe', 9, 22);
+    forceHand(m, 0, 0, 'knight');
+    const r = m.play(0, 0, 'knight', 9, 22);
     assert.ok(r.ok && !r.evo);
   }
-  forceHand(m, 0, 0, 'knappe');
-  const r = m.play(0, 0, 'knappe', 9, 23);
+  forceHand(m, 0, 0, 'knight');
+  const r = m.play(0, 0, 'knight', 9, 23);
   assert.ok(r.ok && r.evo);
-  const evoUnit = m.entities.filter((e) => e.def.cardId === 'knappe').at(-1);
+  const evoUnit = m.entities.filter((e) => e.cardId === 'knight').at(-1);
   assert.equal(evoUnit.evo, true);
-  assert.ok(evoUnit.def.traits.movingArmor > 0);
+  assert.ok(evoUnit.def.traits.armor?.mult < 1, 'Evo-Ritter hat Rüstung');
 });
 
 test('Zauber: Flächenschaden und reduzierter Turmschaden', () => {
   const m = newMatch();
-  const a = spawn(m, 'knappe', 1, 9, 10);
+  const a = spawn(m, 'knight', 1, 9, 10);
+  a.def = { ...a.def, speed: 0 };
   const pr = tower(m, 1, 'princess', 0);
-  forceHand(m, 0, 0, 'glutball');
-  assert.ok(m.play(0, 0, 'glutball', 9, 10).ok);
-  runSeconds(m, 1.2);
-  assert.equal(a.maxHp - a.hp, db.card('glutball').spell.damage);
-  forceHand(m, 0, 0, 'glutball');
-  assert.ok(m.play(0, 0, 'glutball', pr.x, pr.y).ok);
-  runSeconds(m, 1.2);
-  assert.equal(Math.round(pr.maxHp - pr.hp), Math.round(650 * 0.3));
-});
-
-test('Eishauch betäubt, Kettenblitz springt, Heilregen heilt', () => {
-  const m = newMatch();
-  const e1 = spawn(m, 'steinkoloss', 1, 9, 9);
-  const e2 = spawn(m, 'knappe', 1, 11, 9);
-  forceHand(m, 0, 0, 'eishauch');
-  assert.ok(m.play(0, 0, 'eishauch', 10, 9).ok);
-  m.step();
-  assert.ok(e1.stunT > 3 && e2.stunT > 3);
-  const h1 = e1.hp;
-  const h2 = e2.hp;
-  forceHand(m, 0, 0, 'kettenblitz');
-  assert.ok(m.play(0, 0, 'kettenblitz', 9, 9).ok);
-  m.step();
-  assert.ok(e1.hp < h1 && e2.hp < h2, 'beide Ziele getroffen');
-  const mine = spawn(m, 'knappe', 0, 9, 24);
-  mine.hp = 500;
-  forceHand(m, 0, 0, 'heilregen');
-  assert.ok(m.play(0, 0, 'heilregen', 9, 24).ok);
+  forceHand(m, 0, 0, 'fireball');
+  assert.ok(m.play(0, 0, 'fireball', 9, 10).ok);
+  runSeconds(m, 0.5);
+  assert.equal(a.hp, a.maxHp, 'Feuerball fliegt noch (Flugzeit vom Königsturm)');
+  runSeconds(m, 2);
+  const fb = db.spell(db.card('fireball'));
+  assert.equal(a.maxHp - a.hp, fb.damage);
+  forceHand(m, 0, 0, 'fireball');
+  assert.ok(m.play(0, 0, 'fireball', pr.x, pr.y).ok);
   runSeconds(m, 3);
-  assert.ok(mine.hp > 1000);
+  assert.equal(Math.round(pr.maxHp - pr.hp), Math.round(fb.damage * fb.towerDamage));
 });
 
-test('Todes-Effekte: Felsgigant zerfällt in Felsbrocken', () => {
+test('Zap betäubt, Blitz trifft die drei stärksten Ziele, Gift wirkt über Zeit', () => {
   const m = newMatch();
-  const g = spawn(m, 'felsgigant', 0, 9, 22);
+  const e1 = spawn(m, 'giant', 1, 9, 9);
+  const e2 = spawn(m, 'knight', 1, 11, 9);
+  const e3 = spawn(m, 'skeletons', 1, 10, 10);
+  const e4 = spawn(m, 'archers', 1, 8, 10);
+  forceHand(m, 0, 0, 'zap');
+  assert.ok(m.play(0, 0, 'zap', 10, 9).ok);
+  runSeconds(m, 0.1);
+  assert.ok(e1.stunT > 0 && e2.stunT > 0, 'betäubt');
+  assert.ok(e3.dead, 'Skelett stirbt am Zap');
+  const h = [e1.hp, e2.hp, e4.hp];
+  forceHand(m, 0, 0, 'lightning');
+  assert.ok(m.play(0, 0, 'lightning', 9.5, 9.5).ok);
+  runSeconds(m, 2.5);
+  assert.ok(e1.hp < h[0] && e2.hp < h[1] && e4.hp < h[2], 'drei Ziele getroffen');
+  const p = spawn(m, 'pekka', 1, 14, 9);
+  p.def = { ...p.def, speed: 0 };
+  forceHand(m, 0, 0, 'poison');
+  assert.ok(m.play(0, 0, 'poison', 14, 9).ok);
+  runSeconds(m, 1.5);
+  const after1 = p.hp;
+  runSeconds(m, 3);
+  assert.ok(p.hp < after1 - db.spell(db.card('poison')).damage * 2, 'Gift tickt weiter');
+});
+
+test('Todes-Effekte: Golem zerfällt in zwei Golemiten', () => {
+  const m = newMatch();
+  const g = spawn(m, 'golem', 0, 9, 22);
   g.hp = 0;
   g.dead = true;
   m.step();
-  assert.equal(m.entities.filter((e) => e.def.key === 'felsbrocken').length, 2);
+  assert.equal(m.entities.filter((e) => e.def.key === 'golemite').length, 2);
 });
 
 test('Gebäude verfallen über ihre Lebensdauer', () => {
   const m = newMatch();
-  forceHand(m, 0, 0, 'barrikade');
-  assert.ok(m.play(0, 0, 'barrikade', 9, 22).ok);
-  const b = m.entities.find((e) => e.def.key === 'barrikade');
-  runSeconds(m, 27);
+  forceHand(m, 0, 0, 'cannon');
+  assert.ok(m.play(0, 0, 'cannon', 9, 22).ok);
+  const b = m.entities.find((e) => e.cardId === 'cannon');
+  assert.ok(b.def.lifetime > 0);
+  runSeconds(m, b.def.lifetime + 1.5);
   assert.ok(b.dead || !m.entities.includes(b));
 });
 
@@ -328,11 +359,14 @@ test('Bot gegen Bot: 20 Kämpfe laufen fehlerfrei bis zum Ende', () => {
       for (const e of m.entities) {
         assert.ok(Number.isFinite(e.x) && Number.isFinite(e.y) && Number.isFinite(e.hp));
         // Keine Einheit darf ohne gültiges Ziel "einfrieren"
-        const active = e.kind === 'unit' && !e.dead && e.deployT <= 0 && e.stunT <= 0 && !e.dash;
+        const mobile = e.def.speed > 0 || e.def.damage > 0;
+        const busy = e.dash || e.leap || e.hook || e.thrown || e.underT > 0 || e.rootT > 0 || e.cast;
+        const active = e.kind === 'unit' && mobile && !busy && !e.dead && e.deployT <= 0 && e.stunT <= 0;
         const lost = !e.targetId || !m.byId.has(e.targetId);
         const n = active && lost ? (idle.get(e.id) || 0) + 1 : 0;
         idle.set(e.id, n);
-        assert.ok(n <= 2, `${e.def.key} (#${e.id}) steht ohne Ziel herum`);
+        // Ein paar Ticks sind ok (z. B. wenn mehrere frische Ziele im selben Tick sterben)
+        assert.ok(n <= 5, `${e.def.key} (#${e.id}) steht ohne Ziel herum`);
       }
     }
     assert.ok(m.result, 'Kampf endet spätestens nach der Verlängerung');

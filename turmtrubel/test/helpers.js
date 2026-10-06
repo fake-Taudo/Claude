@@ -11,7 +11,7 @@ export const rawCards = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/cards.j
 export const baseRules = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/rules.json'), 'utf8'));
 export const db = createDb(rawCards);
 
-export const DECK = ['knappe', 'zwillingsschuetzen', 'mirell', 'steinkoloss', 'funkenmagier', 'brummkaefer', 'glutball', 'funkenschlag'];
+export const DECK = ['knight', 'archers', 'golden-knight', 'giant', 'electro-wizard', 'minions', 'fireball', 'zap'];
 
 export function rules(overrides = {}) {
   return { ...structuredClone(baseRules), ...overrides };

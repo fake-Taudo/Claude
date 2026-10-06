@@ -86,7 +86,7 @@ test('Kompletter Ablauf über WebSocket', async () => {
   const troopSlot = s0.me.h.findIndex((id) => db.card(id).type === 'troop' && db.card(id).elixir <= 5);
   a.send({ type: 'play', slot: troopSlot, card: s0.me.h[troopSlot], x: 9, y: 8, seq: 1 });
   assert.equal((await a.wait((m) => m.type === 'reject' && m.seq === 1)).code, 'PLACEMENT');
-  a.send({ type: 'play', slot: 0, card: 'kometenschlag', x: 9, y: 8, seq: 2 });
+  a.send({ type: 'play', slot: 0, card: 'rocket', x: 9, y: 8, seq: 2 });
   assert.equal((await a.wait((m) => m.type === 'reject' && m.seq === 2)).code, 'NOT_IN_HAND');
 
   // Gültiger Zug
