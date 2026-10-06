@@ -98,6 +98,23 @@ function paintDrop(ctx, x, y, r, label, tint) {
   if (label != null) tnum(ctx, String(label), x, y + r * 0.15, Math.max(12, r * 1.25), '#ffffff', 'center', Math.max(2.5, r * 0.3));
 }
 
+/** Warndreieck (Gold, Ink-Kontur, „!“) statt Text-Glyphe. */
+function warnIcon(ctx, x, y, size) {
+  const h = size * 0.95;
+  ctx.beginPath();
+  ctx.moveTo(x, y - h * 0.55);
+  ctx.lineTo(x + h * 0.6, y + h * 0.45);
+  ctx.lineTo(x - h * 0.6, y + h * 0.45);
+  ctx.closePath();
+  ctx.fillStyle = T.gold.main;
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = OUTLINE;
+  ctx.stroke();
+  text(ctx, '!', x, y + h * 0.08, h * 0.62, T.ink, 'center', 0);
+}
+
 /** Kleine Tastenkappe (nur bei Maus + Tastatur). */
 function keycap(ctx, x, y, label) {
   setFont(ctx, 12);
@@ -956,7 +973,7 @@ export class Hud {
     if (label && tMax > 14) {
       let dx = 0;
       if (isOpp && g.oppDisconnected) {
-        text(ctx, '⚠', tx + 7, ty, size, T.gold.main, 'center', 2.5);
+        warnIcon(ctx, tx + 7, ty, size);
         dx = 16;
       }
       const e = ellipsize(ctx, label, size, tMax - dx);
@@ -1132,7 +1149,7 @@ export class Hud {
         ctx.stroke();
       }
     }
-    if (this.fineInput) keycap(ctx, b.x + b.r * 0.55, b.y + b.r * 0.8, '␣');
+    if (this.fineInput) keycap(ctx, b.x + b.r * 0.55, b.y + b.r * 0.8, 'Leer');
     ctx.restore();
   }
 

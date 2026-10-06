@@ -1528,3 +1528,5 @@ body.card-dragging, body.card-dragging * { cursor: grabbing !important; user-sel
   .deck-head .panel-title { font-size: 21px; }
   .deck-head .select { max-width: 52%; }
 }
+.toast-ico svg.i { width: 18px; height: 18px; }
+.toast.ok .toast-ico { background: #fff; }

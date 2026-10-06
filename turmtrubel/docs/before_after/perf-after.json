@@ -1,0 +1,64 @@
+{
+ "date": "2026-10-06T21:57:03.704Z",
+ "maxEntities": 222,
+ "profiles": {
+  "desktop-1440x900": {
+   "frames": 773,
+   "fps": 39,
+   "p95ms": 50,
+   "worstMs": 483,
+   "longTasks": 9,
+   "longMaxMs": 135,
+   "heapMB": 16.5,
+   "peakParticles": 900,
+   "prepareMs": 134,
+   "battle": {
+    "worstMs": 67,
+    "p99ms": 50,
+    "longTasks": 8,
+    "longMaxMs": 74
+   },
+   "errors": [],
+   "replaySeconds": 20,
+   "drawCallsPerFrame": 841
+  },
+  "phone-390x844": {
+   "frames": 733,
+   "fps": 14,
+   "p95ms": 167,
+   "worstMs": 2333,
+   "longTasks": 496,
+   "longMaxMs": 791,
+   "heapMB": 40.8,
+   "peakParticles": 897,
+   "prepareMs": 784,
+   "battle": {
+    "worstMs": 333,
+    "p99ms": 267,
+    "longTasks": 495,
+    "longMaxMs": 330
+   },
+   "errors": [],
+   "replaySeconds": 54.2
+  },
+  "phone-844x390": {
+   "frames": 727,
+   "fps": 13,
+   "p95ms": 167,
+   "worstMs": 2383,
+   "longTasks": 496,
+   "longMaxMs": 1026,
+   "heapMB": 46.6,
+   "peakParticles": 896,
+   "prepareMs": 1018,
+   "battle": {
+    "worstMs": 333,
+    "p99ms": 267,
+    "longTasks": 495,
+    "longMaxMs": 599
+   },
+   "errors": [],
+   "replaySeconds": 55.5
+  }
+ }
+}

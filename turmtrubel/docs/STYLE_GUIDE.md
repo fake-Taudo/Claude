@@ -286,13 +286,13 @@ Alle Figuren werden einmal je Look, Team, Evo, Richtung, Frame und Pixelgröße 
 
 ## 11. Schnittstellen
 
-Sie werden vor der Umsetzung festgelegt.
+Vor der Umsetzung festgelegt und nach der Umsetzung auf den tatsächlichen Stand gebracht (Abweichungen vom ersten Entwurf sind vermerkt).
 
 ### Design-Tokens
 
-**Modul:** `client/js/design/tokens.js`. Es exportiert `C` (Farben aus §3), `STROKE`, `RADIUS`, `SPACE`, `Z`, `DUR`, `LIGHT` (Licht-Regel als Parameter) und `RARITY` (Rahmenfarben).
-- CSS-Werte kommen über `ui/tokens.js`.
-- Canvas-spezifische Werte stehen im Modul.
+**Modul:** `client/js/design/tokens.js`. Es exportiert `C` (Farben aus §3), `teamColors`, `RARITY`, `FX` (Effekt-Paletten), `STROKE`, `RADIUS`, `SPACE`, `Z`, `LIGHT` (Licht-Regel als Parameter) und `QUALITY` (Stufen niedrig/mittel/hoch).
+- CSS-Werte (Night-Palette, Knopf-Rollen, Lippen) stehen als Custom Properties in `client/css/style.css` (`:root`) und kommen über `client/js/ui/tokens.js` ins Canvas.
+- Easing und Dauern: `client/js/design/easing.js` (`EASE`, `ease(name, t)`, `DUR`).
 
 ### VFX-Ereignisse
 
@@ -300,56 +300,62 @@ Semantische Namen, die `game.js` aus Server-Ereignissen ableitet. Das Protokoll 
 
 | Gruppe | Ereignisse |
 |---|---|
-| Einheiten | `unit.deploy`, `unit.deploy.heavy`, `unit.swing`, `unit.muzzle`, `unit.hit`, `unit.hit.heavy`, `unit.death`, `unit.death.flying` |
+| Einheiten | `unit.deploy`, `unit.deploy.heavy`, `unit.deploy.air`, `unit.swing`, `unit.muzzle`, `unit.windup`, `unit.hit`, `unit.hit.heavy`, `unit.heal`, `unit.shieldBreak`, `unit.reflect`, `unit.dash`, `unit.teleport`, `unit.enchant`, `unit.death`, `unit.death.swarm`, `unit.death.flying` |
 | Gebäude | `building.death` |
-| Projektile | `proj.impact.<art>` (clientseitig erkannt: Projektil-ID verschwindet) |
-| Zauber | `spell.<fx>` für arrows, fire, comet, shock, storm, frost, poison, heal, rage, clone, mirror, tornado, quake, curse, void, vines, log, barrelRoll, barrel, crate, snow, grave |
-| Explosionen | `blast.<art>` |
-| Türme | `tower.hit`, `tower.hit.heavy`, `tower.damage.<stufe>`, `tower.destroy`, `king.awake` |
+| Projektile | `proj.trail.<art>` (Spur-Partikel), `proj.impact.<art>` (clientseitig erkannt: Projektil-ID verschwindet) |
+| Zauber | `spell.<fx>` für arrows, fire, comet, shock, storm (+ `spell.strike` je Blitz), frost, poison, heal, rage, clone, mirror, tornado, quake, curse, void, vines, log (auch barrelRoll), barrel, crate, snow, grave; Rückfall `spell.default` |
+| Explosionen | `blast.<art>`, Rückfall `blast.default` |
+| Türme | `tower.hit`, `tower.hit.heavy`, `tower.damage` (je neuer Schadenstufe), `tower.destroy`, `king.awake` |
 | Fähigkeiten, Evo | `ability.activate`, `evo.deploy` |
-| Elixier und Phasen | `elixir.collect`, `phase.battle`, `phase.double`, `phase.triple`, `phase.overtime`, `phase.win`, `phase.lose` |
+| Elixier und Phasen | `elixir.collect`, `phase.start` (Kampf!), `phase.elixir` (Doppel-/Dreifach-Elixier), `phase.overtime`, `phase.win` |
+| Ambiente | `ambient.glint`, `ambient.leaf` (nur Qualität Hoch) |
 
 ### Preset-Format
 
-`client/data/vfx-presets.json`, per `fetch` geladen und beim Laden validiert.
+`client/js/vfx/presets.json` (Entwurf: `client/data/vfx-presets.json`), beim Start per `fetch` geladen und mit `validatePresets` (`client/js/vfx/presets.js`) geprüft; dieselbe Prüfung läuft in `test/vfx.test.js`. Beispiel (vereinfacht, nicht 1:1 das ausgelieferte Preset):
 
 ```json
 {
   "spell.fire": {
+    "scaleWith": "radius",
+    "baseRadius": 2.5,
+    "delays": { "core": 0.08, "post": 0.2 },
     "layers": {
-      "pre":  [{ "type": "decal", "shape": "target", "color": "team", "life": 0.18 }],
-      "core": [{ "type": "flash", "radius": 1.2, "color": "#fff6c8", "life": 0.12, "blend": "add" },
-               { "type": "burst", "count": 28, "shape": "fire", "speed": [2, 6], "life": [0.25, 0.5],
-                 "size": { "from": 0.35, "to": 0.05, "ease": "outCubic" }, "colors": ["#fff6c8", "#ffc23d", "#ff6a2b"], "blend": "add" },
-               { "type": "ring", "radius": 1.0, "width": 0.25, "color": "#ffd29a", "life": 0.35, "ease": "outExpo" },
+      "pre":  [{ "type": "decal", "shape": "target", "color": "team", "size": 1.0, "life": 0.25 }],
+      "core": [{ "type": "flash", "color": "#fff6c8", "alpha": 0.12, "life": 0.12 },
+               { "type": "burst", "count": 28, "shape": "flame", "speed": [2, 6], "life": [0.25, 0.5],
+                 "size": [0.35, 0.5], "sizeEnd": 0.05, "colors": ["#fff6c8", "#ffc23d", "#ff6a2b"] },
+               { "type": "ring", "radius": [0.2, 1.0], "width": [0.25, 0.02], "color": "#ffd29a", "life": 0.35, "ease": "outExpo" },
                { "type": "shake", "strength": "medium" }],
       "post": [{ "type": "burst", "count": 10, "shape": "smoke", "life": [0.6, 1.0], "colors": ["#4a3a33", "#7d6d63"] },
-               { "type": "decal", "shape": "scorch", "life": 2.0 }]
-    },
-    "delays": { "pre": 0, "core": 0.1, "post": 0.18 },
-    "scaleWith": "radius"
+               { "type": "decal", "shape": "scorch", "life": 2.0 },
+               { "type": "sound", "name": "crumble", "vol": 0.5, "delay": 0.1 }]
+    }
   }
 }
 ```
 
-- **Schicht-Typen:** `burst` (Partikel), `emitter` (Dauer-Emitter), `ring` (Shockwave), `flash`, `glow`, `decal`, `bolt` (Zickzack-Blitz), `trail`, `shake`, `hitstop`, `text`.
-- **Größen** in Feldern, **Zeiten** in Sekunden.
-- **Farben:** `"team"` steht für die Teamfarbe des Auslösers, `"enemy"` für die Gegnerfarbe.
+- **Eintrags-Typen:** `burst` (Partikel), `emitter` (Dauer-Emitter), `ring` (Shockwave), `flash`, `glow`, `decal`, `bolt` (Zickzack-Blitz), `shake`, `hitstop`, `text`, `sound` (optionaler Sound-Hook). Spuren sind eigene Presets `proj.trail.*` (eine Partikel-Spezifikation mit `rate`).
+- **Größen** in Feldern, **Zeiten** in Sekunden; `[a, b]` = Zufall im Bereich. `delay` verschiebt einen einzelnen Eintrag.
+- **Skalierung:** `scaleWith: "radius"` streckt Strecken mit dem Wirkradius r; Anzahl wächst mit √(r / baseRadius).
+- **Farben:** `"team"`, `"teamLight"` = Teamfarbe des Auslösers, `"enemy"` = Gegnerfarbe (per `skin.json → fx.tint` ersetzbar).
+- **Priorität:** `prio` 0 = Deko (fällt bei „Effekte reduzieren“ weg, wird bei vollem Budget verdrängt), 1 = normal, 2 = wichtig.
 
 ### Sprite-Cache
 
-- **API:** `spriteCache.get(kind, look, { team, evo, dir, frame, px, dpr })` liefert `{ canvas, ox, oy }`.
-- **Schlüssel:** `kind|lookKey|team|evo|dir|frame|round(px·dpr)`.
-- **Speicher:** LRU mit Budget in Megapixeln je Qualitätsstufe; Erzeugung lazy, höchstens N neue pro Frame (Rest im nächsten Frame, bis dahin direktes Zeichnen).
+- **Modul:** `client/js/design/spritecache.js`, gemeinsame Instanz `sprites`.
+- **API:** `sprites.obtain(key, builder, force)` liefert `{ canvas, ox, oy }` oder `null`, wenn das Bau-Budget des Frames erschöpft ist (der Aufrufer zeichnet dann direkt). `force` baut trotzdem (Ladescreen). `newFrame()` zu Beginn jedes Frames. (Entwurf: `spriteCache.get(kind, look, …)`.)
+- **Schlüssel:** z. B. Figuren `u|lookKey|team[E](B|F)(L|R)|frame|Gerätepixel-pro-U|Qualität`.
+- **Speicher:** LRU mit Budget in MB (40 MB), höchstens 8 Neubauten und 6 ms pro Frame.
 
 ### Asset-Manifest
 
-`client/js/design/manifest.js` listet Archetypen, Körper, Waffen, Hüte, Gebäude, Turm-Teile und Icons mit ihren Zeichenfunktionen und Standardgrößen. Es dient dem Vorrendern im Ladescreen und dem Bericht.
+`client/js/design/manifest.js` listet Archetypen (Körper), Waffen, Hüte, Gebäude, Zauber-Icons, Turmteile, Animations-Frames, UI-Icons, Partikelformen, Decals und VFX-Presets mit Standardgrößen (`manifest()`, `manifestCounts()`, `isArchetype()`). Es dient dem Vorrendern im Ladescreen (`Game.prewarmUnits`), dem Bericht und `test/manifest.test.js`.
 
 ### skin.json (Erweiterung, abwärtskompatibel)
 
 Pro Karte zusätzlich optional:
-- `fx: { "preset": "<name>", "tint": "#rrggbb" }`: eigenes oder umgefärbtes VFX-Preset
-- `archetype`: Archetyp-Override für Animationen
+- `fx: { "preset": "<name>", "tint": "#rrggbb" }`: eigenes VFX-Preset für Ausspielen bzw. Zauber, `tint` ersetzt die Teamfarbe im Effekt
+- `archetype`: anderer Figuren-Körper (Name aus dem Manifest, z. B. `"dragon"`)
 
-Fehlende Felder fallen wie bisher auf das Original zurück.
+Beides ist rein optisch; Werte und Simulation bleiben unverändert. Fehlende Felder fallen wie bisher auf das Original zurück.

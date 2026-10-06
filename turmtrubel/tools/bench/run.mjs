@@ -103,7 +103,13 @@ async function startReplay(page, replay, quality = 'high') {
       app.settings.quality = quality;
       const g = new Game(app, rep.init);
       app.game = g;
+      // Vorbereitung (im echten Spiel im Ladescreen) getrennt messen, Kampfphase beginnt danach
+      const tp = performance.now();
       g.prepare();
+      if (window.__perf) {
+        window.__perf.prepMs = performance.now() - tp;
+        window.__perf.battleT0 = performance.now();
+      }
       showScreen('s-game');
       g.start();
       const R = (window.__replay = { i: 0, done: false, peakParticles: 0 });
@@ -129,11 +135,11 @@ async function measure(browser, url, prof, replay, cdpRate) {
   await page.evaluate(() => {
     const P = (window.__perf = { frames: [], long: [] });
     try {
-      new PerformanceObserver((l) => l.getEntries().forEach((e) => P.long.push(e.duration))).observe({ entryTypes: ['longtask'] });
+      new PerformanceObserver((l) => l.getEntries().forEach((e) => P.long.push([e.startTime, e.duration]))).observe({ entryTypes: ['longtask'] });
     } catch {}
     let last = performance.now();
     const f = (t) => {
-      P.frames.push(t - last);
+      P.frames.push([t, t - last]);
       last = t;
       if (!P.stop) requestAnimationFrame(f);
     };
@@ -146,18 +152,27 @@ async function measure(browser, url, prof, replay, cdpRate) {
   const r = await page.evaluate(() => {
     const P = window.__perf;
     P.stop = true;
-    const f = P.frames.slice(5).sort((a, b) => a - b);
+    const f = P.frames.slice(5).map((x) => x[1]).sort((a, b) => a - b);
     const avg = f.reduce((a, b) => a + b, 0) / Math.max(1, f.length);
     const heap = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e5) / 10 : null;
+    const long = P.long.map((x) => x[1]);
+    // Nur Kampfphase: Frames und Long Tasks nach dem Ende von g.prepare() (der erste Frame danach enthält es noch)
+    const t0 = P.battleT0 ?? 0;
+    const bf = P.frames.filter((x) => x[0] - x[1] >= t0).map((x) => x[1]).sort((a, b) => a - b);
+    const bl = P.long.filter((x) => x[0] >= t0).map((x) => x[1]);
     return {
       frames: f.length,
       fps: Math.round(1000 / avg),
       p95ms: Math.round(f[Math.floor(f.length * 0.95)] || 0),
       worstMs: Math.round(f.at(-1) || 0),
-      longTasks: P.long.length,
-      longMaxMs: Math.round(Math.max(0, ...P.long)),
+      longTasks: long.length,
+      longMaxMs: Math.round(Math.max(0, ...long)),
       heapMB: heap,
       peakParticles: window.__replay.peakParticles,
+      prepareMs: P.prepMs != null ? Math.round(P.prepMs) : null,
+      // Spielinterne Aufteilung der langsamsten Frames (JS-Anteil; Rasterung kommt danach)
+      slowFrames: (window.turmtrubel.game?.prof?.slow || []).slice(0, 5).map((c) => Object.fromEntries(Object.entries(c).map(([k, v]) => [k, typeof v === 'number' ? Math.round(v * 10) / 10 : v]))),
+      battle: { worstMs: Math.round(bf.at(-1) || 0), p99ms: Math.round(bf[Math.floor(bf.length * 0.99)] || 0), longTasks: bl.length, longMaxMs: Math.round(Math.max(0, ...bl)) },
     };
   });
   r.errors = errors.slice(0, 5);
@@ -223,6 +238,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
           `${prof.name.padEnd(17)} CPU ${prof.cpu}× · ${String(r.fps).padStart(3)} fps · p95 ${r.p95ms} ms · schlechtester ${r.worstMs} ms · Long Tasks ${r.longTasks} (max ${r.longMaxMs} ms) · Heap ${r.heapMB} MB · Partikel max ${r.peakParticles}` +
             (r.drawCallsPerFrame != null ? ` · ${r.drawCallsPerFrame} Zeichenaufrufe/Frame` : '') +
             ` · Wiedergabe ${r.replaySeconds} s (Soll ${(replay.snaps.length / 20).toFixed(0)} s)` +
+            (r.battle ? ` · Vorbereitung ${r.prepareMs} ms · nur Kampf: schlechtester ${r.battle.worstMs} ms, p99 ${r.battle.p99ms} ms, Long Tasks ${r.battle.longTasks} (max ${r.battle.longMaxMs} ms)` : '') +
             (r.errors.length ? ` · Fehler: ${r.errors.join(' | ')}` : ''),
         );
       }

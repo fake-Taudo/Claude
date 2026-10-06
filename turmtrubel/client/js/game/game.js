@@ -1222,7 +1222,10 @@ export class Game {
     this.lastFrame = now;
     this.clock = now;
     this.adaptQuality(dt);
+    const tr = performance.now();
     if (this.needResize) this.resize();
+    const resizeMs = performance.now() - tr;
+    const built0 = sprites.stats.built;
     this.checkConnection();
     // Hit-Stop verzögert nur die Darstellungszeit (Simulation und Eingaben bleiben unberührt)
     const t0 = performance.now();
@@ -1236,7 +1239,7 @@ export class Game {
     const t3 = performance.now();
     // Zeitmessung für das Debug-Overlay (F3) und Benchmarks: langsamster Frame mit Aufteilung
     const P = (this.prof ||= { n: 0, worst: null, sum: { world: 0, fx: 0, draw: 0 } });
-    const cur = { world: t1 - t0, fx: t2 - t1, draw: t3 - t2, total: t3 - t0, sprites: sprites.stats.built, parts: this.fx.count, dpr: this.dpr, at: now, ...this.drawParts };
+    const cur = { world: t1 - t0, fx: t2 - t1, draw: t3 - t2, resize: resizeMs, total: t3 - t0 + resizeMs, built: sprites.stats.built - built0, parts: this.fx.count, dpr: this.dpr, at: now, ...this.drawParts };
     P.n++;
     P.acc ||= {};
     for (const k of ['world', 'fx', 'draw', 'ground', 'units', 'hud', 'pre']) P.acc[k] = (P.acc[k] || 0) + (cur[k] || 0);
@@ -1244,6 +1247,12 @@ export class Game {
     P.sum.fx += cur.fx;
     P.sum.draw += cur.draw;
     if (!P.worst || cur.total > P.worst.total) P.worst = cur;
+    // Die langsamsten Frames mit Aufteilung merken (Benchmark, F3)
+    if (cur.total > 40) {
+      (P.slow ||= []).push(cur);
+      P.slow.sort((a, b) => b.total - a.total);
+      if (P.slow.length > 8) P.slow.length = 8;
+    }
     P.last = cur;
     this.fps = this.fps == null ? 60 : this.fps * 0.95 + (dt > 0 ? 1 / dt : 60) * 0.05;
     if (this.debug) this.drawDebug();

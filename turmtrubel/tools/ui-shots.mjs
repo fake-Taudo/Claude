@@ -465,7 +465,7 @@ async function runPerf(browser, url, vp) {
     const f = P.frames.slice(3).sort((a, b) => a - b);
     const avg = f.reduce((a, b) => a + b, 0) / Math.max(1, f.length);
     const w = window.turmtrubel.game?.prof?.worst;
-    const worst = w && { world: Math.round(w.world), fx: Math.round(w.fx), draw: Math.round(w.draw), at: Math.round(w.at * 10) / 10 };
+    const worst = w && { world: Math.round(w.world), fx: Math.round(w.fx), draw: Math.round(w.draw), resize: Math.round(w.resize || 0), built: w.built ?? 0, at: Math.round(w.at * 10) / 10 };
     const pr = window.turmtrubel.game?.prof;
     if (pr?.acc) worst.avg = Object.fromEntries(Object.entries(pr.acc).map(([k, v]) => [k, Math.round((v / pr.n) * 10) / 10]));
     return { frames: f.length, fps: Math.round(1000 / avg), p95ms: Math.round(f[Math.floor(f.length * 0.95)] || 0), worstMs: Math.round(f.at(-1) || 0), longTasks: P.long.length, longMaxMs: Math.round(Math.max(0, ...P.long)), worstFrame: worst, dpr: window.turmtrubel.game?.dpr };

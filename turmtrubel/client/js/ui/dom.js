@@ -45,7 +45,7 @@ export function currentScreen() {
 }
 
 // ───── Toast: genau einer sichtbar, ein neuer ersetzt den alten ─────
-const TOAST_ICONS = { info: 'i', ok: '✓', warn: '!', error: '✕' };
+const TOAST_ICONS = { info: 'i', ok: 'check', warn: '!', error: 'close' };
 let toastEl = null;
 let toastTimer = 0;
 
@@ -62,7 +62,7 @@ export function toast(msg, kind = 'info', ms = 1400) {
     toastEl.classList.add('bump');
   } else {
     root.replaceChildren();
-    toastEl = h('div', { class: `toast ${kind}`, role: base === 'error' ? 'alert' : 'status', dataset: { msg } }, h('span', { class: 'toast-ico', 'aria-hidden': 'true' }, TOAST_ICONS[base] || 'i'), h('span', {}, msg));
+    toastEl = h('div', { class: `toast ${kind}`, role: base === 'error' ? 'alert' : 'status', dataset: { msg } }, h('span', { class: 'toast-ico', 'aria-hidden': 'true' }, hasIcon(TOAST_ICONS[base]) ? icon(TOAST_ICONS[base]) : TOAST_ICONS[base] || 'i'), h('span', {}, msg));
     root.append(toastEl);
   }
   const el = toastEl;
