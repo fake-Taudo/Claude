@@ -2760,3 +2760,16 @@ export function drawCardArt(ctx, db, card, x, y, w, h, opts = {}) {
   }
   ctx.restore();
 }
+
+/** Baukasten-Katalog für das Asset-Manifest (design/manifest.js): Namen aller Zeichenfunktionen. */
+export function assetCatalog() {
+  return {
+    archetypes: Object.keys(BODIES),
+    weapons: Object.keys(WEAPONS),
+    hats: Object.keys(HATS),
+    buildings: Object.keys(BUILDINGS),
+    spellIcons: Object.keys(ICONS),
+    towers: ['king', 'princess', 'rubble', 'cannon'],
+    frames: Object.keys(UNIT_FRAMES),
+  };
+}

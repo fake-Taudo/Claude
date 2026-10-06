@@ -726,6 +726,12 @@ class App {
       if (this.db.card(id)?.evo) jobs.push(['Karten', () => (cardArt(this.db, id, true), cardArtGray(this.db, id, true))]);
     }
     jobs.push(['Arena', () => game.prepare()]);
+    // Figuren des eigenen Decks vorrendern (Evo-Variante nur in den Evo-Plätzen)
+    (m.deck || []).forEach((id, i) => {
+      if (!id) return;
+      jobs.push(['Figuren', () => game.prewarmUnits(id, false)]);
+      if (i < 2 && this.db.card(id)?.evo) jobs.push(['Figuren', () => game.prewarmUnits(id, true)]);
+    });
     for (let i = 0; i < jobs.length; i++) {
       if (this.game !== game) return;
       status.textContent = `Lade ${jobs[i][0]} …`;

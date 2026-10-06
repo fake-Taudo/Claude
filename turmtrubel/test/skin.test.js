@@ -49,3 +49,16 @@ test('Server: SKIN=custom wählt den Skin, ohne Variable gilt rules.json/skin.js
     delete process.env.SKIN;
   }
 });
+
+test('Skin-Erweiterung: archetype setzt nur den Figuren-Körper, fx nur Darstellungsdaten', () => {
+  const s = structuredClone(skin);
+  s.skins.custom.cards.knight = { archetype: 'dragon', fx: { preset: 'spell.fire', tint: '#22cc88' } };
+  s.skins.custom.cards.fireball = { fx: { tint: '#22cc88' } };
+  const db = createDb(rawCards, { skin: s, skinName: 'custom' });
+  const base = createDb(rawCards);
+  assert.equal(db.unit('knight').look.body, 'dragon');
+  assert.deepEqual(db.card('knight').skinFx, { preset: 'spell.fire', tint: '#22cc88' });
+  assert.deepEqual(db.card('fireball').skinFx, { tint: '#22cc88' });
+  for (const k of ['hp', 'damage', 'speed', 'range', 'radius']) assert.equal(db.unit('knight')[k], base.unit('knight')[k], `${k} unverändert`);
+  assert.equal(base.card('knight').skinFx, undefined, 'ohne Skin keine Zusatzfelder');
+});

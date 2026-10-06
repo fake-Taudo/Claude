@@ -90,7 +90,8 @@ export function scaleStats(obj, f, parentKey = '') {
 
 /**
  * Wendet ein Namens-/Grafik-Mapping an (data/skin.json). Fehlende Einträge fallen auf das Original zurück.
- * Pro Karte: name, description, look, image, evo: {name, description}, ability: {name, description}.
+ * Pro Karte: name, description, look, image, evo: {name, description}, ability: {name, description},
+ * optional archetype (Figuren-Körper) und fx: {preset, tint} (nur Darstellung).
  */
 export function applySkin(raw, skin, which) {
   const name = which || skin?.active || 'original';
@@ -110,6 +111,10 @@ export function applySkin(raw, skin, which) {
     }
     if (o.evo && n.evo) n.evo = { ...n.evo, ...pick(o.evo, ['name', 'description']) };
     if (o.ability && n.ability) n.ability = { ...n.ability, ...pick(o.ability, ['name', 'description']) };
+    // Visuelles Upgrade (rein optisch, Simulation liest es nicht):
+    // archetype = anderer Figuren-Körper (look.body), fx = { preset, tint } für Ausspiel-/Zauber-Effekt
+    if (typeof o.archetype === 'string' && o.archetype && isObj(n.unit)) n.unit = { ...n.unit, look: { ...(n.unit.look || {}), body: o.archetype } };
+    if (isObj(o.fx) && (o.fx.preset || o.fx.tint)) n.skinFx = pick(o.fx, ['preset', 'tint']);
     return n;
   });
   const tokOv = s.tokens || {};

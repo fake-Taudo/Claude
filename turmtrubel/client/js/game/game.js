@@ -8,7 +8,8 @@ import { text as ctext } from './canvastext.js';
 import { cardArt } from '../ui/art.js';
 import { safeInsets, reducedMotion } from '../ui/tokens.js';
 import { sprites } from '../design/spritecache.js';
-import { drawTower } from './sprites.js';
+import { drawTower, drawUnit } from './sprites.js';
+import { mixHex } from '../design/light.js';
 
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -137,6 +138,29 @@ export class Game {
     this.renderer.renderBackground(this.cw, this.ch, this.renderer.bgLayer ? this.bgDpr : this.dpr);
     this.fx.prewarm();
     this.prewarmTowers();
+  }
+
+  /**
+   * Figuren einer eigenen Deckkarte im Ladescreen vorrendern (Ruhe, Lauf, Angriff; Vorder-/Rückansicht,
+   * beide Blickrichtungen), damit das erste Ausspielen keinen Sprite-Bau-Ruckler kostet.
+   */
+  prewarmUnits(id, evo = false) {
+    if (typeof document === 'undefined') return;
+    let def = null;
+    try {
+      def = this.db.unit(id, evo);
+    } catch {
+      def = null;
+    }
+    if (!def || def.isBuilding) return;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 4;
+    const ctx = cv.getContext('2d');
+    const U = this.view.s * (0.42 + def.radius * 0.8) * (def.look?.scale || 1);
+    const quality = QUALITY_LEVEL[this.app.settings.quality] ?? 2;
+    const poses = [{}, { walk: true, t: 0.02 }, { walk: true, t: 0.32 }, { atk: 0.9 }, { atk: 0.4 }];
+    const backs = this.view.mode !== 'rotated' ? [false, true] : [false];
+    for (const p of poses) for (const back of backs) for (const fx of [1, -1]) drawUnit(ctx, def.look || {}, { x: 0, y: 0, U, fx, team: 'blue', evo, quality, back, dpr: this.spriteDpr, force: true, seed: 0, ...p });
   }
 
   /** Türme samt Figuren im Ladescreen vorrendern (sonst kostet der erste Kampf-Frame mehrere hundert ms). */
@@ -735,9 +759,13 @@ export class Game {
           const team = this.teamOf(v.owner);
           if (v.kind === 'unit' && !v.flying) {
             const heavy = v.info.def?.mass >= 12;
-            fx.emit(heavy ? 'unit.deploy.heavy' : 'unit.deploy', { x: v.x, y: v.y, team, r: v.radius });
+            const env = { x: v.x, y: v.y, team, r: v.radius };
+            fx.emit(this.skinFx(v.info.key, heavy ? 'unit.deploy.heavy' : 'unit.deploy', env), env);
             if (heavy) A.sfx('thud', 0.6);
-          } else if (v.kind === 'unit') fx.emit('unit.deploy.air', { x: v.x, y: v.y, team });
+          } else if (v.kind === 'unit') {
+            const env = { x: v.x, y: v.y, team };
+            fx.emit(this.skinFx(v.info.key, 'unit.deploy.air', env), env);
+          }
           break;
         }
         case 'a2': {
@@ -880,13 +908,26 @@ export class Game {
     }
   }
 
+  /** skin.json → fx: { preset, tint } einer Karte auf Effektname und Umgebung anwenden (nur Darstellung). */
+  skinFx(key, name, env) {
+    const sk = key != null ? this.db.card(key)?.skinFx : null;
+    if (!sk) return name;
+    if (sk.tint) {
+      env.teamColor = sk.tint;
+      env.teamLight = mixHex(sk.tint, '#ffffff', 0.5);
+    }
+    return sk.preset && this.fx.has(sk.preset) ? sk.preset : name;
+  }
+
   spellFx(ev) {
-    const [, , x, y, r, owner, fxName] = ev;
+    const [, typeIdx, x, y, r, owner, fxName] = ev;
     const fx = this.fx;
     const A = this.audio;
     const team = this.teamOf(owner);
-    const name = SPELL_PRESET[fxName] || 'spell.' + fxName;
-    fx.emit(fx.has(name) ? name : 'spell.default', { x, y, r: Math.max(0.8, r || 1), team });
+    const base = SPELL_PRESET[fxName] || 'spell.' + fxName;
+    const env = { x, y, r: Math.max(0.8, r || 1), team };
+    const name = this.skinFx(this.types[typeIdx], base, env);
+    fx.emit(fx.has(name) ? name : 'spell.default', env);
     if (fxName === 'frost') {
       for (const v of this.vis.values()) {
         if (v.owner !== owner && Math.hypot(v.x - x, v.y - y) <= r + v.radius) v.ice = true;

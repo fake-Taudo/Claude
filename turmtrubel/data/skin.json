@@ -1,5 +1,5 @@
 {
-  "_info": "Namens- und Grafik-Mapping. 'active' wählt den Skin: 'original' = Namen/Beschreibungen/Aussehen aus cards.json (echte Clash-Royale-Karten), 'custom' = eigene Inhalte. Leere Felder fallen auf das Original zurück. Pro Karte: name, description, look (Sprite-Baukasten, z. B. {\"cloth\": \"#2e86c1\"}), image (Pfad zu einem eigenen Bild unter client/, z. B. \"/img/skin/knight.png\"), evo{name, description}, ability{name, description}. Umschalten: active ändern oder Server mit SKIN=custom starten.",
+  "_info": "Namens- und Grafik-Mapping. 'active' wählt den Skin: 'original' = Namen/Beschreibungen/Aussehen aus cards.json (echte Clash-Royale-Karten), 'custom' = eigene Inhalte. Leere Felder fallen auf das Original zurück. Pro Karte: name, description, look (Sprite-Baukasten, z. B. {\"cloth\": \"#2e86c1\"}), image (Pfad zu einem eigenen Bild unter client/, z. B. \"/img/skin/knight.png\"), evo{name, description}, ability{name, description}, archetype (anderer Figuren-Körper, z. B. \"knight\"; Liste in client/js/design/manifest.js), fx{preset, tint} (eigenes VFX-Preset aus client/js/vfx/presets.json bzw. Farbe statt der Teamfarbe). Umschalten: active ändern oder Server mit SKIN=custom starten.",
   "active": "original",
   "skins": {
     "original": {"label": "Original (Clash Royale)", "cards": {}, "tokens": {}},
