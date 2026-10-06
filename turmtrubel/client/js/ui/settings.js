@@ -1,5 +1,6 @@
 // Einstellungen, gruppiert: Audio · Grafik & Anzeige · Spiel · Konto (B-17). Änderungen wirken sofort.
 import { h, ico, modal } from './dom.js';
+import { icon } from './icons.js';
 import { applyBodyFlags } from './tokens.js';
 
 function toggle(on, label, onChange) {
@@ -82,10 +83,10 @@ export function openSettings(app, { allowRename = true } = {}) {
     { class: 'settings' },
     group(
       'Audio',
-      row('🎵 Musik', toggle(s.music, 'Musik', (v) => ((s.music = v), save()))),
+      row([icon('music'), 'Musik'], toggle(s.music, 'Musik', (v) => ((s.music = v), save()))),
       row('Musik-Lautstärke', slider(s.musicVol, 'Musik-Lautstärke', (v) => ((s.musicVol = v), save()))),
       row(
-        '🔊 Soundeffekte',
+        [icon('sound'), 'Soundeffekte'],
         toggle(s.sfx, 'Soundeffekte', (v) => {
           s.sfx = v;
           save();
@@ -97,7 +98,7 @@ export function openSettings(app, { allowRename = true } = {}) {
     group(
       'Grafik & Anzeige',
       withDesc(
-        '✨ Grafikqualität',
+        [icon('sparkles'), 'Grafikqualität'],
         seg([['low', 'Niedrig'], ['medium', 'Mittel'], ['high', 'Hoch']], s.quality, 'Grafikqualität', (v) => {
           s.quality = v;
           qDesc.textContent = QUALITY_DESC[v];
@@ -106,7 +107,7 @@ export function openSettings(app, { allowRename = true } = {}) {
         qDesc,
       ),
       withDesc(
-        '📱 Arena-Ausrichtung',
+        [icon('phone'), 'Arena-Ausrichtung'],
         seg([['auto', 'Auto'], ['portrait', 'Hochkant'], ['rotated', 'Quer']], s.orientation, 'Arena-Ausrichtung', (v) => {
           s.orientation = v;
           oDesc.textContent = ORIENT_DESC[v];
@@ -120,15 +121,15 @@ export function openSettings(app, { allowRename = true } = {}) {
     group(
       'Spiel',
       row('Gegner-Emotes stummschalten', toggle(s.muteEmotes, 'Gegner-Emotes stummschalten', (v) => ((s.muteEmotes = v), save()))),
-      row('📳 Vibration', toggle(s.haptics, 'Vibration', (v) => ((s.haptics = v), save())), { desc: 'Kurzes Feedback beim Ausspielen, bei Fehlern und Kronen (falls vom Gerät unterstützt).' }),
+      row([icon('vibrate'), 'Vibration'], toggle(s.haptics, 'Vibration', (v) => ((s.haptics = v), save())), { desc: 'Kurzes Feedback beim Ausspielen, bei Fehlern und Kronen (falls vom Gerät unterstützt).' }),
     ),
     group(
       'Konto',
       h(
         'div',
         { class: 'row wrap set-actions' },
-        allowRename ? h('button', { class: 'btn btn-small btn-secondary', onclick: () => (m.close(), app.openRename()) }, ico('✎'), 'Namen ändern') : null,
-        h('button', { class: 'btn btn-small btn-danger', id: 'settings-leave', onclick: () => (m.close(), app.confirmLeave()) }, ico('🚪'), 'Raum verlassen'),
+        allowRename ? h('button', { class: 'btn btn-small btn-secondary', onclick: () => (m.close(), app.openRename()) }, ico('edit'), 'Namen ändern') : null,
+        h('button', { class: 'btn btn-small btn-danger', id: 'settings-leave', onclick: () => (m.close(), app.confirmLeave()) }, ico('door'), 'Raum verlassen'),
       ),
       h('p', { class: 'hint small set-hint' }, inMatch ? 'Achtung: Im laufenden Kampf zählt Verlassen als Aufgabe.' : app.inRoom() ? 'Du bist gerade in einem Raum.' : 'Hilft auch, wenn du in einem alten Raum festhängst.'),
     ),

@@ -1,6 +1,7 @@
 // Deck-Bauer: 5 Deck-Slots (localStorage), Filter, Suche, Evo- und Champion/Held-Plätze, Zufallsdeck.
 import { validateDeck, averageElixir, cycleCost, randomDeck, isSpecial, EVO_SLOTS, SPECIAL_SLOT, DECK_SIZE, RARITY_ORDER } from '/shared/cards.js';
 import { $, h, ico, modal, showScreen, toast } from './dom.js';
+import { icon } from './icons.js';
 import { cardEl, openCardDetail } from './cardview.js';
 
 const TYPE_FILTERS = [
@@ -87,7 +88,7 @@ export class DeckBuilder {
               this.renderGrid();
             },
           },
-          `💧${i}`,
+          [icon('drop'), String(i)],
         ),
       );
     }
@@ -129,7 +130,7 @@ export class DeckBuilder {
     const active = this.store.active === this.idx;
     const use = $('#deck-use');
     use.disabled = active;
-    use.replaceChildren(ico(active ? '★' : '☆'), active ? 'Aktiv' : 'Aktivieren');
+    use.replaceChildren(ico(active ? 'star' : 'star-o'), active ? 'Aktiv' : 'Aktivieren');
     use.title = active ? 'Das ist dein aktives Deck' : 'Als aktives Deck verwenden';
   }
 
@@ -161,7 +162,7 @@ export class DeckBuilder {
 
   renderFilterCount() {
     const n = this.activeFilterCount();
-    $('#flt-toggle').replaceChildren(ico(this.filtersOpen ? '▴' : '▾'), n ? `Filter (${n})` : 'Filter');
+    $('#flt-toggle').replaceChildren(ico(this.filtersOpen ? 'caret-up' : 'caret-down'), n ? `Filter (${n})` : 'Filter');
     $('#flt-toggle').classList.toggle('has-filters', n > 0);
     $('#flt-reset').disabled = n === 0;
   }
@@ -190,7 +191,8 @@ export class DeckBuilder {
               this.render();
             },
           },
-          `${i + 1}${i === this.store.active ? ' ★' : ''}`,
+          String(i + 1),
+          i === this.store.active ? icon('star') : null,
         ),
       ),
     );
@@ -211,7 +213,7 @@ export class DeckBuilder {
         return h(
           'div',
           { class: `slot${this.selSlot === i ? ' selected' : ''}${isEvo ? ' is-evo' : ''}${isSpecialSlot ? ' is-special' : ''}` },
-          isEvo ? h('span', { class: 'slot-label evo' }, `EVO ${i + 1}`) : isSpecialSlot ? h('span', { class: 'slot-label special' }, '★ CHAMP/HELD') : null,
+          isEvo ? h('span', { class: 'slot-label evo' }, `EVO ${i + 1}`) : isSpecialSlot ? h('span', { class: 'slot-label special' }, icon('star'), 'CHAMP/HELD') : null,
           el,
         );
       }),
@@ -273,7 +275,7 @@ export class DeckBuilder {
         h(
           'div',
           { class: 'empty-state' },
-          h('span', { class: 'empty-ico', 'aria-hidden': 'true' }, '🔍'),
+          h('span', { class: 'empty-ico', 'aria-hidden': 'true' }, icon('search')),
           h('b', {}, 'Keine Karten gefunden'),
           h('span', {}, 'Probier einen anderen Suchbegriff oder weniger Filter.'),
           h('button', { class: 'btn btn-small btn-secondary', onclick: () => this.resetFilters() }, 'Filter zurücksetzen'),
@@ -316,7 +318,7 @@ export class DeckBuilder {
     }
     const a = this.selSlot;
     if (!this.canPlaceIn(slots[a], i) || !this.canPlaceIn(slots[i], a)) {
-      toast('Champions und Helden gehören in den ★-Platz.', 'warn');
+      toast('Champions und Helden gehören in Platz 3 (Champion/Held).', 'warn');
       this.selSlot = -1;
       this.renderSlots();
       return;
@@ -337,7 +339,7 @@ export class DeckBuilder {
     const pos = slots.indexOf(id);
     if (this.selSlot >= 0 && pos === -1) {
       if (!this.canPlaceIn(id, this.selSlot)) {
-        toast('Champions und Helden gehören in den ★-Platz.', 'warn');
+        toast('Champions und Helden gehören in Platz 3 (Champion/Held).', 'warn');
         return;
       }
       slots[this.selSlot] = id;
@@ -391,7 +393,7 @@ export class DeckBuilder {
       if (cur && !isSpecial(this.db.card(cur))) {
         const free = [3, 4, 5, 6, 7, 0, 1].find((i) => !slots[i]);
         if (free != null) slots[free] = cur;
-        else toast(`${this.db.card(cur).name} wurde aus dem ★-Platz entfernt.`, 'info');
+        else toast(`${this.db.card(cur).name} wurde aus Platz 3 (Champion/Held) entfernt.`, 'info');
       } else if (cur) toast(`${this.db.card(cur).name} wurde ersetzt – nur ein Champion/Held pro Deck.`, 'info');
       slots[SPECIAL_SLOT] = id;
       this.changed();

@@ -4,6 +4,7 @@ import { C2S, S2C, ERRORS, normalizeCode, isValidCodeFormat, sanitizeName } from
 import { Net } from './net.js';
 import { AudioSys } from './audio.js';
 import { Store } from './store.js';
+import { installIcons, icon } from './ui/icons.js';
 import { $, h, ico, showScreen, currentScreen, toast, modal, confirmDialog, fmtTime } from './ui/dom.js';
 import { cardEl } from './ui/cardview.js';
 import { prerenderAll, cardArt, cardArtGray } from './ui/art.js';
@@ -30,7 +31,7 @@ const TIPS = [
   'Tipp: Tippst du auf den gekürzten Gegnernamen, siehst du ihn in voller Länge.',
   'Tipp: Zerstörst du einen Wachturm, bekommst du eine Krone – drei Kronen beenden den Kampf sofort.',
   'Tipp: Der Burgturm schläft, bis er Schaden nimmt oder ein Wachturm fällt.',
-  'Tipp: Gegner-Emotes kannst du im Menü (≡) stummschalten.',
+  'Tipp: Gegner-Emotes kannst du im Kampfmenü oben links stummschalten.',
 ];
 
 class App {
@@ -67,6 +68,7 @@ class App {
 
   // ───────────── Start ─────────────
   async boot() {
+    installIcons();
     const bar = $('#boot-bar');
     const txt = $('#boot-text');
     try {
@@ -234,15 +236,15 @@ class App {
     const body = h(
       'div',
       { class: 'pause' },
-      h('p', { class: 'pause-note' }, ico('⏵'), training ? 'Das Training läuft im Hintergrund weiter.' : 'Das Spiel läuft weiter – dein Gegner kann weiterspielen.'),
-      h('button', { class: 'btn btn-primary btn-big btn-block', id: 'gm-resume', onclick: () => m.close() }, ico('▶'), 'Weiter'),
+      h('p', { class: 'pause-note' }, ico('play'), training ? 'Das Training läuft im Hintergrund weiter.' : 'Das Spiel läuft weiter – dein Gegner kann weiterspielen.'),
+      h('button', { class: 'btn btn-primary btn-big btn-block', id: 'gm-resume', onclick: () => m.close() }, ico('play'), 'Weiter'),
       h(
         'div',
         { class: 'pause-grid' },
-        toggleBtn('gm-sound', () => s.sfx, (v) => (s.sfx = v), 'Ton an', 'Ton aus', '🔊', '🔇'),
-        toggleBtn('gm-music', () => s.music, (v) => (s.music = v), 'Musik an', 'Musik aus', '🎵', '🔈'),
-        toggleBtn('gm-emotes', () => !s.muteEmotes, (v) => (s.muteEmotes = !v), 'Gegner-Emotes an', 'Gegner-Emotes stumm', '💬', '🙊'),
-        h('button', { class: 'btn btn-accent', id: 'gm-settings', onclick: () => (m.close(), openSettings(this, { allowRename: false })) }, ico('⚙'), 'Einstellungen'),
+        toggleBtn('gm-sound', () => s.sfx, (v) => (s.sfx = v), 'Ton an', 'Ton aus', 'sound', 'mute'),
+        toggleBtn('gm-music', () => s.music, (v) => (s.music = v), 'Musik an', 'Musik aus', 'music', 'music-off'),
+        toggleBtn('gm-emotes', () => !s.muteEmotes, (v) => (s.muteEmotes = !v), 'Gegner-Emotes an', 'Gegner-Emotes stumm', 'chat', 'chat-off'),
+        h('button', { class: 'btn btn-accent', id: 'gm-settings', onclick: () => (m.close(), openSettings(this, { allowRename: false })) }, ico('gear'), 'Einstellungen'),
       ),
       h(
         'button',
@@ -254,7 +256,7 @@ class App {
             if (await confirmDialog('Wirklich aufgeben?', 'Der Gegner gewinnt sofort mit 3 Kronen.', 'Aufgeben', true)) this.net.send(C2S.SURRENDER);
           },
         },
-        ico('🏳'),
+        ico('flag'),
         'Aufgeben',
       ),
       fine
@@ -440,7 +442,7 @@ class App {
     $('#menu-deck-meta').replaceChildren(
       h('div', { class: 'meta' }, h('b', {}, averageElixir(this.db, d.slots).toFixed(1).replace('.', ',')), h('span', {}, 'Ø Elixier')),
       h('div', { class: 'meta' }, h('b', {}, cycleCost(this.db, d.slots)), h('span', {}, '4er-Zyklus')),
-      h('div', { class: `meta ${ok ? 'ok' : 'bad'}` }, h('b', {}, ok ? '✔' : '!'), h('span', {}, ok ? 'spielbereit' : 'Deck unvollständig')),
+      h('div', { class: `meta ${ok ? 'ok' : 'bad'}` }, h('b', {}, ok ? icon('check') : '!'), h('span', {}, ok ? 'spielbereit' : 'Deck unvollständig')),
     );
   }
 
@@ -601,7 +603,9 @@ class App {
     }
     $('#lobby-title').textContent = m.training ? 'Training gegen Bot' : 'Freundschaftskampf';
     $('#lobby-codebox').hidden = !!m.training;
-    $('#lobby-code').textContent = m.code;
+    // Code als einzelne Kacheln (textContent bleibt der Code → Kopieren/Markieren funktioniert weiter)
+    const codeEl = $('#lobby-code');
+    if (codeEl.textContent !== m.code) codeEl.replaceChildren(...[...m.code].map((ch, i) => h('span', { class: 'code-ch', style: { '--i': i } }, ch)));
     this.fillDeckSelect($('#lobby-deck-select'));
     const render = (el, p, side) => {
       el.className = `player-card ${side === 0 ? 'blue' : 'red'}${p ? '' : ' empty'}`;
@@ -611,7 +615,7 @@ class App {
       }
       el.replaceChildren(
         h('span', { class: 'pname' }, p.name + (side === m.you ? ' (du)' : '')),
-        h('span', { class: 'pinfo' }, p.deckOk ? `Deck bereit ✔ · Ø ${String(p.avg).replace('.', ',')} Elixier` : 'Deck unvollständig ✖'),
+        h('span', { class: 'pinfo' }, p.deckOk ? [icon('check'), `Deck bereit · Ø ${String(p.avg).replace('.', ',')} Elixier`] : [icon('cross'), 'Deck unvollständig']),
         h('span', { class: `pready${p.ready ? ' ok' : ''}` }, !p.connected ? 'getrennt …' : p.ready ? 'BEREIT' : 'wählt noch …'),
       );
     };
@@ -669,10 +673,15 @@ class App {
     const text = share ? link : code;
     const btn = $(share ? '#lobby-share' : '#lobby-copy');
     const done = () => {
-      const old = btn.textContent;
-      btn.textContent = 'Kopiert! ✓';
+      btn.replaceChildren(ico('check'), 'Kopiert!');
+      btn.classList.remove('copied');
+      void btn.offsetWidth;
+      btn.classList.add('copied');
       clearTimeout(this.copyTimer);
-      this.copyTimer = setTimeout(() => (btn.textContent = old === 'Kopiert! ✓' ? (share ? 'Link teilen' : 'Code kopieren') : old), 1600);
+      this.copyTimer = setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = share ? 'Link teilen' : 'Code kopieren';
+      }, 1600);
       toast(share ? 'Link kopiert!' : `Code ${code} kopiert!`, 'ok');
     };
     if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done, () => toast(text, 'info', 5000));
@@ -801,11 +810,8 @@ class App {
     $('#s-result').dataset.outcome = draw ? 'draw' : win ? 'win' : 'lose';
     $('#res-me').textContent = m.names[you] + ' (du)';
     $('#res-opp').textContent = m.names[opp];
-    const crownSvg = (on, delay) => {
-      const el = h('span', { class: on ? 'on' : '', style: { animationDelay: `${delay}s` } });
-      el.innerHTML = `<svg viewBox="0 0 46 40"><path d="M4 34V12l10 9 9-16 9 16 10-9v22z" fill="${on ? '#ffd84d' : '#3a3358'}" stroke="#1c1830" stroke-width="3.5" stroke-linejoin="round"/>${on ? '<rect x="8" y="27" width="30" height="4" fill="rgba(255,255,255,.5)"/>' : ''}</svg>`;
-      return el;
-    };
+    // Krone auf einem Kissen; gewonnene Kronen springen gestaffelt ein (CSS crown-drop)
+    const crownSvg = (on, delay) => h('span', { class: `res-crown${on ? ' on' : ''}`, style: { animationDelay: `${delay}s` } }, icon(on ? 'crown-3d' : 'crown-empty'));
     let d = 0.5;
     const crowns = (n, root) => {
       root.replaceChildren();
@@ -828,7 +834,7 @@ class App {
     if (!reducedMotion()) this.countUp($('#res-stats'), 600, d * 1000 + 200);
     const btn = $('#res-rematch');
     btn.disabled = !m.rematchAvailable;
-    btn.textContent = '↻ Rematch';
+    btn.replaceChildren(ico('refresh'), 'Rematch');
     $('#res-rematch-status').textContent = m.rematchAvailable ? (m.training ? 'Der Bot ist jederzeit bereit.' : 'Beide müssen zustimmen.') : 'Dein Gegner hat den Raum verlassen.';
     showScreen('s-result');
     // Konfetti nur bei Sieg, ab Qualität „Mittel“ und ohne reduzierte Bewegung
@@ -862,7 +868,7 @@ class App {
     }
     if (m.want[you] && m.want[1 - you]) status.textContent = 'Rematch! Es geht gleich los …';
     else if (m.want[1 - you]) {
-      status.textContent = '🔥 Dein Gegner möchte ein Rematch!';
+      status.replaceChildren(icon('fire'), 'Dein Gegner möchte ein Rematch!');
       this.audio.sfx('emote');
     } else if (m.want[you]) status.textContent = 'Warte auf Zustimmung deines Gegners …';
   }

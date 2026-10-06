@@ -1,6 +1,7 @@
 // Karten als DOM-Elemente + Detailansicht mit allen Werten.
 import { TARGET_LABELS, TYPE_LABELS, CLASS_LABELS, costLabel } from '/shared/cards.js';
 import { h, modal } from './dom.js';
+import { icon } from './icons.js';
 import { cardArtURL } from './art.js';
 
 // Weiche Trennstellen für lange zusammengesetzte Namen (nur Anzeige, Kartendaten bleiben unverändert)
@@ -33,7 +34,7 @@ export function cardEl(db, id, opts = {}) {
     h('img', { src: cardArtURL(db, id, evo), alt: '', draggable: 'false' }),
     h('div', { class: 'cost' }, costLabel(card)),
     opts.hideName ? null : h('div', { class: `name${(evo ? card.evo.name || card.name : card.name).length > 15 ? ' long' : ''}` }, softHyphens(evo ? card.evo.name || card.name : card.name)),
-    evo ? h('div', { class: 'badge' }, 'EVO') : card.class === 'champion' ? h('div', { class: 'badge champion' }, '★') : card.class === 'hero' ? h('div', { class: 'badge hero' }, 'HELD') : card.evo && opts.showEvoHint ? h('div', { class: 'badge' }, 'evo') : null,
+    evo ? h('div', { class: 'badge' }, 'EVO') : card.class === 'champion' ? h('div', { class: 'badge champion' }, icon('star')) : card.class === 'hero' ? h('div', { class: 'badge hero' }, 'HELD') : card.evo && opts.showEvoHint ? h('div', { class: 'badge' }, 'evo') : null,
   );
   if (opts.onClick) {
     el.addEventListener('click', () => opts.onClick(id));
@@ -67,76 +68,76 @@ export function statsRows(db, card, evo = false) {
   const name = (ref) => db.unit(ref).name;
   if (card.type === 'spell') {
     const s = db.spell(card, evo);
-    if (s.mirror) add('Wirkung', 'Wiederholt deine zuletzt gespielte Karte eine Stufe stärker', '🪞');
-    if (s.damage) add(s.pulse ? `Schaden pro ${fmt(s.pulse)} s` : s.waves > 1 ? `Schaden pro Welle (${s.waves}×)` : 'Schaden', fmt(s.damage), '⚔', 'dmg', s.damage);
-    if (s.towerDamage != null && s.damage) add('Schaden an Kronentürmen', pct(s.towerDamage), '🏰');
-    if (s.buildingDamage) add('Schaden an Gebäuden', fmt(s.buildingDamage), '🏚');
-    if (s.voidTiers) add('Schaden (1 / 2–4 / 5+ Ziele)', s.voidTiers.map((t) => fmt(t[1])).join(' / '), '⚔');
-    if (s.radius) add('Radius', fmt(s.radius), '◎', 'radius', s.radius);
-    if (s.duration) add('Dauer', `${fmt(s.duration)} s`, '⌛', 'duration', s.duration);
-    if (s.stun) add(s.freeze ? 'Einfrieren' : 'Betäubung', `${fmt(s.stun)} s`, s.freeze ? '❄' : '⚡');
-    if (s.slow) add('Verlangsamung', `${pct(s.slow.amount)}${s.slow.duration ? ` (${fmt(s.slow.duration)} s)` : ''}`, '❄');
-    if (s.heal) add(`Heilung pro ${fmt(s.pulse || 1)} s`, fmt(s.heal), '✚');
-    if (s.rage) add('Tempo-Bonus', `+${Math.round((s.rage.mult - 1) * 100)} %`, '💢');
-    if (s.pull) add('Sog', `${fmt(s.pull.speed)} Felder/s`, '🌀');
-    if (s.curse) add('Fluch', 'Besiegte Gegner werden zu Schweinen für dich', '🐷');
-    if (s.clone) add('Wirkung', 'Klont deine Truppen (Klone haben 1 Leben)', '👥');
-    if (s.knockback) add('Rückstoß', fmt(s.knockback), '💨');
-    if (s.strikes) add('Blitze', s.strikes, '⚡');
-    if (s.vines) add('Ranken', `${s.vines.count} Ziele, ${fmt(s.vines.duration)} s`, '🌿');
-    if (s.roll) add('Rollweite', `${fmt(s.roll.length)} Felder`, '➜');
-    if (s.ownSide) add('Platzierung', 'nur auf deiner Seite', '⬇');
-    if (s.spawn) add('Beschwört', `${s.spawn.count}× ${name(s.spawn.unit)}`, '👥');
-    if (s.spawnAtEnd) add('Am Ende', `${s.spawnAtEnd.count}× ${name(s.spawnAtEnd.unit)}`, '👥');
-    if (s.graveyard) add('Beschwört', `${s.graveyard.count}× ${name(s.graveyard.unit)}`, '👥');
-    if (s.delay) add('Verzögerung', `${fmt(s.delay)} s`, '⏳');
+    if (s.mirror) add('Wirkung', 'Wiederholt deine zuletzt gespielte Karte eine Stufe stärker', 'mirror');
+    if (s.damage) add(s.pulse ? `Schaden pro ${fmt(s.pulse)} s` : s.waves > 1 ? `Schaden pro Welle (${s.waves}×)` : 'Schaden', fmt(s.damage), 'swords', 'dmg', s.damage);
+    if (s.towerDamage != null && s.damage) add('Schaden an Kronentürmen', pct(s.towerDamage), 'castle');
+    if (s.buildingDamage) add('Schaden an Gebäuden', fmt(s.buildingDamage), 'house');
+    if (s.voidTiers) add('Schaden (1 / 2–4 / 5+ Ziele)', s.voidTiers.map((t) => fmt(t[1])).join(' / '), 'swords');
+    if (s.radius) add('Radius', fmt(s.radius), 'radius', 'radius', s.radius);
+    if (s.duration) add('Dauer', `${fmt(s.duration)} s`, 'hourglass', 'duration', s.duration);
+    if (s.stun) add(s.freeze ? 'Einfrieren' : 'Betäubung', `${fmt(s.stun)} s`, s.freeze ? 'snow' : 'bolt');
+    if (s.slow) add('Verlangsamung', `${pct(s.slow.amount)}${s.slow.duration ? ` (${fmt(s.slow.duration)} s)` : ''}`, 'snow');
+    if (s.heal) add(`Heilung pro ${fmt(s.pulse || 1)} s`, fmt(s.heal), 'plus');
+    if (s.rage) add('Tempo-Bonus', `+${Math.round((s.rage.mult - 1) * 100)} %`, 'rage');
+    if (s.pull) add('Sog', `${fmt(s.pull.speed)} Felder/s`, 'tornado');
+    if (s.curse) add('Fluch', 'Besiegte Gegner werden zu Schweinen für dich', 'pig');
+    if (s.clone) add('Wirkung', 'Klont deine Truppen (Klone haben 1 Leben)', 'group');
+    if (s.knockback) add('Rückstoß', fmt(s.knockback), 'wind');
+    if (s.strikes) add('Blitze', s.strikes, 'bolt');
+    if (s.vines) add('Ranken', `${s.vines.count} Ziele, ${fmt(s.vines.duration)} s`, 'leaf');
+    if (s.roll) add('Rollweite', `${fmt(s.roll.length)} Felder`, 'arrow-right');
+    if (s.ownSide) add('Platzierung', 'nur auf deiner Seite', 'down');
+    if (s.spawn) add('Beschwört', `${s.spawn.count}× ${name(s.spawn.unit)}`, 'group');
+    if (s.spawnAtEnd) add('Am Ende', `${s.spawnAtEnd.count}× ${name(s.spawnAtEnd.unit)}`, 'group');
+    if (s.graveyard) add('Beschwört', `${s.graveyard.count}× ${name(s.graveyard.unit)}`, 'group');
+    if (s.delay) add('Verzögerung', `${fmt(s.delay)} s`, 'hourglass');
     return rows;
   }
   // Spirit Empress: Werte der aktuell gewählten (Luft-)Form, die zweite Form als Hinweis
   const u = db.unit(card.forms ? card.forms[0].unit : card.id, evo);
   const count = card.forms ? 1 : db.groupsOf(card, evo).reduce((sum, g) => sum + (g.count || 1), 0);
-  add('Leben', fmt(u.hp) + (count > 1 ? ` (×${count})` : ''), '❤', 'hp', u.hp);
+  add('Leben', fmt(u.hp) + (count > 1 ? ` (×${count})` : ''), 'heart', 'hp', u.hp);
   const t = u.traits;
-  if (t.shield) add('Schild', fmt(t.shield), '🛡');
-  if (t.ramp) add('Schaden', t.ramp.stages.map(fmt).join(' → '), '⚔', 'dmg', t.ramp.stages.at(-1));
-  else if (u.damage) add(u.splash ? 'Flächenschaden' : 'Schaden', fmt(u.damage), u.splash ? '💥' : '⚔', 'dmg', u.damage);
+  if (t.shield) add('Schild', fmt(t.shield), 'shield');
+  if (t.ramp) add('Schaden', t.ramp.stages.map(fmt).join(' → '), 'swords', 'dmg', t.ramp.stages.at(-1));
+  else if (u.damage) add(u.splash ? 'Flächenschaden' : 'Schaden', fmt(u.damage), u.splash ? 'burst' : 'swords', 'dmg', u.damage);
   if (u.damage || t.ramp) {
     const dps = Math.round((t.ramp ? t.ramp.stages.at(-1) : u.damage) / u.hitSpeed);
-    add('Angriffstempo', `${fmt(u.hitSpeed)} s`, '⏱');
-    add('DPS', fmt(dps), '🔥', 'dps', dps);
-    add('Reichweite', u.range < 1.3 && !u.isBuilding ? `Nahkampf (${fmt(u.range)})` : fmt(u.range), '🎯', 'range', u.range);
-    if (u.minRange) add('Mindestreichweite', fmt(u.minRange), '↔');
-    add('Ziele', TARGET_LABELS[u.targets] || u.targets, '⌖');
+    add('Angriffstempo', `${fmt(u.hitSpeed)} s`, 'stopwatch');
+    add('DPS', fmt(dps), 'fire', 'dps', dps);
+    add('Reichweite', u.range < 1.3 && !u.isBuilding ? `Nahkampf (${fmt(u.range)})` : fmt(u.range), 'target', 'range', u.range);
+    if (u.minRange) add('Mindestreichweite', fmt(u.minRange), 'width');
+    add('Ziele', TARGET_LABELS[u.targets] || u.targets, 'crosshair');
   }
-  if (!u.isBuilding) add('Tempo', speedLabel(u.speed), '👟', 'speed', u.speed);
-  if (u.flying) add('Bewegung', 'fliegt', '🪽');
-  if (u.lifetime) add('Lebensdauer', `${fmt(u.lifetime)} s`, '⌛', 'lifetime', u.lifetime);
-  if (u.splash) add('Flächenradius', fmt(u.splash), '◎');
-  if (u.towerDamage < 1) add('Schaden an Kronentürmen', pct(u.towerDamage), '🏰');
-  if (card.forms) add('Form', `ab ${card.forms[0].minElixir} Elixier fliegend, sonst zu Fuß für ${card.forms.at(-1).elixir}`, '🔀');
-  if (t.charge) add('Ansturm', `${fmt(t.charge.damage)} Schaden nach ${fmt(t.charge.distance)} Feldern`, '🐎');
-  if (t.dash) add('Sprint', `${fmt(t.dash.damage)} Schaden (${fmt(t.dash.min)}–${fmt(t.dash.max)} Felder)`, '💨');
-  if (t.leap) add('Sprungangriff', `${fmt(t.leap.damage)} Schaden`, '🦘');
-  if (t.hook) add('Haken', `zieht Ziele aus ${fmt(t.hook.max)} Feldern heran`, '🪝');
-  if (t.kamikaze) add('Besonderheit', 'opfert sich beim Angriff', '💥');
-  if (t.multiTarget) add('Ziele gleichzeitig', t.multiTarget, '✳');
-  if (t.onHit?.stun) add('Betäubt', `${fmt(t.onHit.stun)} s`, '⚡');
-  if (t.onHit?.freeze) add('Friert ein', `${fmt(t.onHit.freeze)} s`, '❄');
-  if (t.onHit?.slow) add('Verlangsamt', `${pct(t.onHit.slow.amount)} (${fmt(t.onHit.slow.duration)} s)`, '❄');
-  if (t.onHit?.chain) add('Kette', `${t.onHit.chain.count} Ziele`, '⛓');
-  if (t.pierce) add('Durchschlag', `${fmt(t.pierce.length)} Felder`, '➶');
-  if (t.secondary) add('Zweitangriff', t.secondary.damage ? fmt(t.secondary.damage) : 'ja', '✦');
-  if (t.spawner) add('Beschwört', `${t.spawner.count}× ${name(t.spawner.unit)} alle ${fmt(t.spawner.interval)} s`, '👥');
-  if (t.deathSpawn) add('Beim Tod', `${t.deathSpawn.count}× ${name(t.deathSpawn.unit)}`, '☠');
-  if (t.deathDamage) add('Todesschaden', fmt(t.deathDamage.damage), '💣');
-  if (t.deathElixir) add('Beim Tod', `Gegner erhält ${fmt(t.deathElixir)} Elixier`, '💧');
-  if (t.elixirGen) add('Elixier', `+${t.elixirGen.amount} alle ${fmt(t.elixirGen.interval)} s`, '💧');
-  if (t.deployBlast?.damage) add('Landeschaden', fmt(t.deployBlast.damage), '💥');
-  if (t.stealth) add('Besonderheit', 'unsichtbar, bis er angreift', '👻');
-  if (t.hidden) add('Besonderheit', 'versteckt sich unter der Erde', '⛏');
-  if (t.riverJump) add('Besonderheit', 'springt über den Fluss', '⭐');
-  if (t.deployAnywhere) add('Besonderheit', 'überall platzierbar', '⭐');
-  add('Aufstellzeit', `${fmt(u.deployTime)} s`, '⏬');
+  if (!u.isBuilding) add('Tempo', speedLabel(u.speed), 'boot', 'speed', u.speed);
+  if (u.flying) add('Bewegung', 'fliegt', 'wing');
+  if (u.lifetime) add('Lebensdauer', `${fmt(u.lifetime)} s`, 'hourglass', 'lifetime', u.lifetime);
+  if (u.splash) add('Flächenradius', fmt(u.splash), 'radius');
+  if (u.towerDamage < 1) add('Schaden an Kronentürmen', pct(u.towerDamage), 'castle');
+  if (card.forms) add('Form', `ab ${card.forms[0].minElixir} Elixier fliegend, sonst zu Fuß für ${card.forms.at(-1).elixir}`, 'shuffle');
+  if (t.charge) add('Ansturm', `${fmt(t.charge.damage)} Schaden nach ${fmt(t.charge.distance)} Feldern`, 'charge');
+  if (t.dash) add('Sprint', `${fmt(t.dash.damage)} Schaden (${fmt(t.dash.min)}–${fmt(t.dash.max)} Felder)`, 'wind');
+  if (t.leap) add('Sprungangriff', `${fmt(t.leap.damage)} Schaden`, 'leap');
+  if (t.hook) add('Haken', `zieht Ziele aus ${fmt(t.hook.max)} Feldern heran`, 'hook');
+  if (t.kamikaze) add('Besonderheit', 'opfert sich beim Angriff', 'burst');
+  if (t.multiTarget) add('Ziele gleichzeitig', t.multiTarget, 'multi');
+  if (t.onHit?.stun) add('Betäubt', `${fmt(t.onHit.stun)} s`, 'bolt');
+  if (t.onHit?.freeze) add('Friert ein', `${fmt(t.onHit.freeze)} s`, 'snow');
+  if (t.onHit?.slow) add('Verlangsamt', `${pct(t.onHit.slow.amount)} (${fmt(t.onHit.slow.duration)} s)`, 'snow');
+  if (t.onHit?.chain) add('Kette', `${t.onHit.chain.count} Ziele`, 'chain');
+  if (t.pierce) add('Durchschlag', `${fmt(t.pierce.length)} Felder`, 'pierce');
+  if (t.secondary) add('Zweitangriff', t.secondary.damage ? fmt(t.secondary.damage) : 'ja', 'spark');
+  if (t.spawner) add('Beschwört', `${t.spawner.count}× ${name(t.spawner.unit)} alle ${fmt(t.spawner.interval)} s`, 'group');
+  if (t.deathSpawn) add('Beim Tod', `${t.deathSpawn.count}× ${name(t.deathSpawn.unit)}`, 'skull');
+  if (t.deathDamage) add('Todesschaden', fmt(t.deathDamage.damage), 'bomb');
+  if (t.deathElixir) add('Beim Tod', `Gegner erhält ${fmt(t.deathElixir)} Elixier`, 'drop');
+  if (t.elixirGen) add('Elixier', `+${t.elixirGen.amount} alle ${fmt(t.elixirGen.interval)} s`, 'drop');
+  if (t.deployBlast?.damage) add('Landeschaden', fmt(t.deployBlast.damage), 'burst');
+  if (t.stealth) add('Besonderheit', 'unsichtbar, bis er angreift', 'ghost');
+  if (t.hidden) add('Besonderheit', 'versteckt sich unter der Erde', 'pick');
+  if (t.riverJump) add('Besonderheit', 'springt über den Fluss', 'sparkles');
+  if (t.deployAnywhere) add('Besonderheit', 'überall platzierbar', 'sparkles');
+  add('Aufstellzeit', `${fmt(u.deployTime)} s`, 'deploy');
   return rows;
 }
 
@@ -195,7 +196,7 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
         return h(
           'tr',
           {},
-          h('th', { scope: 'row' }, h('span', { class: 'stat-ico', 'aria-hidden': 'true' }, meta?.i || '•'), k),
+          h('th', { scope: 'row' }, h('span', { class: 'stat-ico', 'aria-hidden': 'true' }, meta?.i ? icon(meta.i) : '•'), k),
           h('td', {}, h('span', { class: 'stat-val' }, v), rel != null ? h('span', { class: 'stat-bar', 'aria-hidden': 'true', title: `${Math.round(rel * 100)} % des Höchstwerts` }, h('i', { style: { '--k': rel } })) : null),
         );
       }),
@@ -231,7 +232,7 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
             'div',
             { class: 'evo-head' },
             h('h4', {}, card.evo.name || 'Evo'),
-            evoState ? h('span', { class: `evo-state ${evoState}` }, evoState === 'active' ? '✓ Aktiv im Evo-Platz' : 'Inaktiv – nur in Platz 1 oder 2') : null,
+            evoState ? h('span', { class: `evo-state ${evoState}` }, evoState === 'active' ? [icon('check'), 'Aktiv im Evo-Platz'] : 'Inaktiv – nur in Platz 1 oder 2') : null,
           ),
           h('p', {}, card.evo.description),
           h(
@@ -241,7 +242,7 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
               'span',
               { class: 'pips', 'aria-hidden': 'true' },
               Array.from({ length: card.evo.cycles }, () => h('i', { class: 'pip' })),
-              h('span', { class: 'arrow' }, '→'),
+              h('span', { class: 'arrow' }, icon('arrow-right')),
               h('b', { class: 'pip evo' }, 'EVO'),
             ),
             h('span', {}, `Nach ${card.evo.cycles}× Ausspielen ist die nächste Karte entwickelt.`),

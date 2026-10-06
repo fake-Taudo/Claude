@@ -1,4 +1,5 @@
 // Kleine DOM-Helfer: Elemente bauen, Screens wechseln, Toasts, Modals.
+import { icon, hasIcon } from './icons.js';
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
@@ -11,7 +12,13 @@ export function h(tag, attrs = {}, ...children) {
     else if (k === 'text') el.textContent = v;
     else if (k === 'html') el.innerHTML = v;
     else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
-    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k === 'style' && typeof v === 'object') {
+      // CSS-Variablen (--x) gehen nur über setProperty
+      for (const [sk, sv] of Object.entries(v)) {
+        if (sk.startsWith('--')) el.style.setProperty(sk, String(sv));
+        else el.style[sk] = sv;
+      }
+    }
     else if (k === 'dataset') Object.assign(el.dataset, v);
     else el.setAttribute(k, v === true ? '' : v);
   }
@@ -22,8 +29,8 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
-/** Symbol, das bei Kontur-Schrift keine Kontur bekommt (Emoji in Buttons). */
-export const ico = (s) => h('span', { class: 'ico', 'aria-hidden': 'true' }, s);
+/** Vektor-Icon aus ui/icons.js (Name) in einem Span; unbekannte Zeichen bleiben Text ohne Kontur. */
+export const ico = (s) => h('span', { class: 'ico', 'aria-hidden': 'true' }, hasIcon(s) ? icon(s) : s);
 
 let current = 's-boot';
 export function showScreen(id) {
@@ -121,7 +128,7 @@ export function modal(title, body, { onClose, wide } = {}) {
     { class: 'modal-head' },
     h('span', { class: 'sheet-grip', 'aria-hidden': 'true' }),
     h('h2', { class: 'panel-title', id: titleId }, title),
-    h('button', { class: 'icon-btn modal-close', 'aria-label': 'Schließen', onclick: close }, '✕'),
+    h('button', { class: 'icon-btn modal-close', 'aria-label': 'Schließen', onclick: close }, icon('close')),
   );
   const panel = h('div', { class: `panel modal${wide ? ' wide' : ''}`, role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId }, head, body);
   const back = h('div', { class: 'modal-back', onclick: (e) => e.target === back && close() }, panel);
