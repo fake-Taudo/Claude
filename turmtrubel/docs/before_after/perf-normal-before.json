@@ -1,26 +1,37 @@
 {
- "phone-844x390": {
-  "frames": 102,
-  "fps": 10,
-  "p95ms": 133,
-  "worstMs": 150,
-  "longTasks": 105,
-  "longMaxMs": 170
+ "note": "Trainingsmatch (Bot), 10 s. Handy-Formate und desk-1440x900 mit CPU 4× gedrosselt; desk-1440x900-cpu1 ungedrosselt.",
+ "cpu4": {
+  "phone-844x390": {
+   "frames": 102,
+   "fps": 10,
+   "p95ms": 133,
+   "worstMs": 150,
+   "longTasks": 105,
+   "longMaxMs": 170
+  },
+  "phone-390x844": {
+   "frames": 99,
+   "fps": 10,
+   "p95ms": 133,
+   "worstMs": 167,
+   "longTasks": 101,
+   "longMaxMs": 175
+  },
+  "desk-1440x900": {
+   "frames": 105,
+   "fps": 10,
+   "p95ms": 133,
+   "worstMs": 183,
+   "longTasks": 107,
+   "longMaxMs": 172
+  }
  },
- "phone-390x844": {
-  "frames": 99,
-  "fps": 10,
-  "p95ms": 133,
-  "worstMs": 167,
-  "longTasks": 101,
-  "longMaxMs": 175
- },
- "desk-1440x900": {
-  "frames": 105,
-  "fps": 10,
-  "p95ms": 133,
-  "worstMs": 183,
-  "longTasks": 107,
-  "longMaxMs": 172
+ "desk-1440x900-cpu1": {
+  "frames": 534,
+  "fps": 53,
+  "p95ms": 33,
+  "worstMs": 33,
+  "longTasks": 0,
+  "longMaxMs": 0
  }
 }
