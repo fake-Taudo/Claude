@@ -902,8 +902,11 @@ export class Game {
     const p = this.cssPoint(e);
     this.pointer = p;
     if (e.pointerType === 'mouse' && this.hud.L) {
-      const t = this.hud.oppCut && this.hud.hit(p.x, p.y).type === 'oppName' ? this.hud.oppFull : '';
+      const hit = this.hud.hit(p.x, p.y);
+      const t = this.hud.oppCut && hit.type === 'oppName' ? this.hud.oppFull : '';
       if (this.canvas.title !== t) this.canvas.title = t;
+      // Emote unter dem Mauszeiger hervorheben
+      this.hud.hoverEmote = this.hud.emoteOpen && hit.type === 'emoteItem' ? hit.index : -1;
     }
     if (this.drag && !this.drag.active && Math.hypot(p.x - this.drag.start.x, p.y - this.drag.start.y) > 10) this.drag.active = true;
   }

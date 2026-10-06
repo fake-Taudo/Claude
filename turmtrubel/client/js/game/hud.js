@@ -10,7 +10,8 @@ import { drawEmoteFace } from './sprites.js';
 import { starPath } from './renderer.js';
 import { T, reducedMotion } from '../ui/tokens.js';
 import { OUTLINE, text, tnum, ellipsize, setFont, rr } from './canvastext.js';
-import { paintPanel, paintWell, cardSprite, selectGlow, elixirOverlay, timerBox, crownSprite, emoteButton, teamPill } from './hudart.js';
+import { paintPanel, paintWell, cardSprite, selectGlow, elixirOverlay, timerBox, crownSprite, emoteButton, teamPill, emotePanel, emoteSlot } from './hudart.js';
+import { backOut, outCubic, clamp01 } from '../design/easing.js';
 import { softGlow } from '../design/light.js';
 
 const TAU = Math.PI * 2;
@@ -1007,29 +1008,42 @@ export class Hud {
   }
 
   drawEmoteMenu(ctx, now) {
-    if (!this.emoteOpen) return;
+    if (!this.emoteOpen) {
+      this.emoT0 = 0;
+      return;
+    }
+    if (!this.emoT0) this.emoT0 = now;
+    const t = this.rm ? 1 : now - this.emoT0;
     const L = this.L;
     const m = L.emoteMenu;
+    const b = L.emoteBtn;
+    const down = m.y < b.y;
+    const dpr = this.game.spriteDpr;
+    // Panel wächst aus dem Emote-Knopf (Pop mit Überschwingen), Knöpfe folgen gestaffelt
+    const k = this.rm ? 1 : backOut(clamp01(t / 0.2), 1.4);
+    const sp = emotePanel(m.w, m.h, b.x - m.x, down, dpr);
+    const ax = b.x;
+    const ay = down ? m.y + m.h : m.y;
     ctx.save();
-    ctx.shadowColor = 'rgba(10,6,30,0.4)';
-    ctx.shadowBlur = this.hi ? 14 : 0;
-    rr(ctx, m.x, m.y, m.w, m.h, 16);
-    ctx.fillStyle = T.cream;
-    ctx.fill();
+    ctx.globalAlpha = clamp01(t / 0.08);
+    ctx.translate(ax, ay);
+    ctx.scale(0.4 + 0.6 * k, 0.4 + 0.6 * k);
+    ctx.translate(-ax, -ay);
+    ctx.drawImage(sp.cv, m.x - 4, down ? m.y - 2 : m.y - 12, sp.w, sp.h);
     ctx.restore();
-    rr(ctx, m.x, m.y, m.w, m.h, 16);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = OUTLINE;
-    ctx.stroke();
+    const hover = this.hoverEmote ?? -1;
     L.emoteItems.forEach((it, i) => {
-      ctx.beginPath();
-      ctx.arc(it.x, it.y, it.r - 2, 0, TAU);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = OUTLINE;
-      ctx.stroke();
-      drawEmoteFace(ctx, EMOTES[i].face, it.x, it.y, it.r * 0.66, now);
+      const ki = this.rm ? 1 : backOut(clamp01((t - 0.05 - i * 0.03) / 0.2), 2);
+      if (ki <= 0) return;
+      const r = it.r - 2;
+      const sl = emoteSlot(r, i === hover, dpr);
+      const lift = i === hover ? -2 : 0;
+      ctx.save();
+      ctx.translate(it.x, it.y + lift);
+      ctx.scale(ki, ki);
+      ctx.drawImage(sl.cv, -r - 2, -r - 2, sl.w, sl.h);
+      drawEmoteFace(ctx, EMOTES[i].face, 0, 0, it.r * 0.62, now);
+      ctx.restore();
     });
   }
 

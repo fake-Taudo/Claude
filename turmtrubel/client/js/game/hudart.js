@@ -410,3 +410,86 @@ export function teamPill(w, h, team, dpr) {
     c.fill();
   });
 }
+
+// ───────────── Emote-Auswahl ─────────────
+/** Nachtblau-Panel mit Zipfel zum Emote-Knopf. tailX relativ zum Panel, down = Zipfel unten (Panel über dem Knopf). */
+export function emotePanel(w, h, tailX, down, dpr) {
+  const T = 10;
+  return cached('emop|' + Math.round(w) + '|' + Math.round(h) + '|' + Math.round(tailX) + '|' + (down ? 1 : 0) + '|' + dpr, w + 8, h + T + 10, dpr, (c) => {
+    c.translate(4, down ? 2 : T + 2);
+    const path = () => {
+      rr(c, 0, 0, w, h, 16);
+      const tx = Math.max(18, Math.min(w - 18, tailX));
+      if (down) {
+        c.moveTo(tx - 9, h - 1);
+        c.lineTo(tx, h + T);
+        c.lineTo(tx + 9, h - 1);
+      } else {
+        c.moveTo(tx - 9, 1);
+        c.lineTo(tx, -T);
+        c.lineTo(tx + 9, 1);
+      }
+    };
+    // weicher Schlagschatten (versetzt nach unten rechts, Licht von oben links)
+    c.save();
+    c.translate(2, 4);
+    path();
+    c.fillStyle = 'rgba(5,4,20,0.45)';
+    c.fill();
+    c.restore();
+    path();
+    const g = c.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, C.night[600]);
+    g.addColorStop(0.5, C.night[700]);
+    g.addColorStop(1, C.night[800]);
+    c.fillStyle = g;
+    c.fill();
+    // Lichtkante oben
+    c.save();
+    rr(c, 0, 0, w, h, 16);
+    c.clip();
+    rr(c, 3, 3, w - 6, h * 0.5, 13);
+    const gl = c.createLinearGradient(0, 0, 0, h * 0.5);
+    gl.addColorStop(0, 'rgba(147,169,242,0.32)');
+    gl.addColorStop(1, 'rgba(147,169,242,0)');
+    c.fillStyle = gl;
+    c.fill();
+    c.restore();
+    path();
+    c.lineWidth = 3;
+    c.lineJoin = 'round';
+    c.strokeStyle = INK;
+    c.stroke();
+  });
+}
+
+/** Runder 3D-Knopf als Unterlage für ein Emote-Gesicht (Lippe unten, Glanz oben links). */
+export function emoteSlot(r, hot, dpr) {
+  const S = r * 2;
+  return cached('emos|' + Math.round(S) + '|' + (hot ? 1 : 0) + '|' + dpr, S + 4, S + 7, dpr, (c) => {
+    c.translate(2 + r, 2 + r);
+    c.beginPath();
+    c.arc(0, 3, r, 0, TAU);
+    c.fillStyle = hot ? '#b86b0b' : C.night[800];
+    c.fill();
+    c.beginPath();
+    c.arc(0, 0, r, 0, TAU);
+    const g = c.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r * 1.05);
+    g.addColorStop(0, hot ? '#fff3a6' : '#6f8ae6');
+    g.addColorStop(0.55, hot ? C.gold : C.night[500]);
+    g.addColorStop(1, hot ? '#f5a623' : C.night[600]);
+    c.fillStyle = g;
+    c.fill();
+    c.beginPath();
+    c.arc(0, 0, r - 3, Math.PI * 1.05, Math.PI * 1.6);
+    c.lineWidth = 2;
+    c.lineCap = 'round';
+    c.strokeStyle = 'rgba(255,255,255,0.45)';
+    c.stroke();
+    c.beginPath();
+    c.arc(0, 0, r, 0, TAU);
+    c.lineWidth = 2.5;
+    c.strokeStyle = INK;
+    c.stroke();
+  });
+}

@@ -317,7 +317,7 @@ async function runViewport(browser, url, vp, report) {
   await step('emote', async () => {
     await page.waitForTimeout(1500);
     await tapRect(await hudRect('emoteBtn'));
-    await shot('emote-auswahl', { noSettle: true, wait: 200 });
+    await shot('emote-auswahl', { noSettle: true, wait: 650 });
     await tapRect(await hudRect('emoteItems', 1));
     await page.waitForTimeout(300);
   });
