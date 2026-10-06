@@ -1,8 +1,15 @@
 // Zwischenspeicher für Kartenbilder (Canvas + Data-URL für DOM-Elemente).
-import { drawCardArt } from '../game/sprites.js';
+import { drawCardArt, onSkinImageLoaded } from '../game/sprites.js';
 
 const canvases = new Map();
 const urls = new Map();
+const grays = new Map();
+// Eigenes Skin-Bild nachgeladen → Kartenbilder beim nächsten Zugriff neu zeichnen
+onSkinImageLoaded(() => {
+  canvases.clear();
+  urls.clear();
+  grays.clear();
+});
 
 export function cardArt(db, id, evo = false, w = 180, h = 225) {
   const key = `${id}|${evo ? 1 : 0}|${w}x${h}`;
@@ -19,7 +26,6 @@ export function cardArt(db, id, evo = false, w = 180, h = 225) {
 }
 
 /** Graustufen-Fassung eines Kartenbilds (für „nicht bezahlbar“: wird mit 35 % über das Original gelegt). */
-const grays = new Map();
 export function cardArtGray(db, id, evo = false) {
   const key = `${id}|${evo ? 1 : 0}`;
   let cv = grays.get(key);

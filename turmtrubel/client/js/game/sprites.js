@@ -46,6 +46,39 @@ export function mix(a, b, t) {
   return v;
 }
 
+// ───────────── Eigene Bilder aus skin.json (look.image) ─────────────
+// Werden einmal geladen; bis sie da sind, zeichnet der Baukasten-Look bzw. der Platzhalter.
+const skinImages = new Map();
+const imageListeners = new Set();
+/** Rückruf, sobald ein Skin-Bild geladen ist (z. B. um zwischengespeicherte Kartenbilder neu zu zeichnen). */
+export function onSkinImageLoaded(fn) {
+  imageListeners.add(fn);
+}
+function skinImage(src) {
+  if (!src || typeof Image === 'undefined') return null;
+  let im = skinImages.get(src);
+  if (!im) {
+    im = new Image();
+    im.onload = () => {
+      for (const fn of imageListeners) fn(src);
+    };
+    im.src = src;
+    skinImages.set(src, im);
+  }
+  return im.complete && im.naturalWidth > 0 ? im : null;
+}
+/** Bild mit Fußpunkt (x, y) und Höhe h zeichnen; true, wenn gezeichnet. */
+function drawSkinImage(ctx, src, x, y, h, alpha = 1) {
+  const im = skinImage(src);
+  if (!im) return false;
+  const w = (h * im.naturalWidth) / im.naturalHeight;
+  ctx.save();
+  if (alpha < 1) ctx.globalAlpha *= alpha;
+  ctx.drawImage(im, x - w / 2, y - h, w, h);
+  ctx.restore();
+  return true;
+}
+
 // ───────────── Zeichen-Grundlagen ─────────────
 function ell(c, x, y, rx, ry, rot = 0) {
   c.beginPath();
@@ -1020,7 +1053,7 @@ function barrel(P, L) {
 function cart(P, L) {
   const c = P.ctx;
   const wob = P.walk ? Math.sin(P.phase * 2) * 0.03 : 0;
-  // zwei Rabauken tragen einen Stamm
+  // zwei Barbaren tragen einen Rammbock
   for (const px of [-0.35, 0.3]) {
     ell(c, px, -0.45 + wob, 0.22, 0.28);
     fill(P, '#b5552f');
@@ -1311,6 +1344,7 @@ export function drawPlaceholder(ctx, label, x, y, R, team = 'blue') {
  */
 export function drawUnit(ctx, look, o) {
   const L = look || {};
+  if (L.image && drawSkinImage(ctx, L.image, o.x, o.y - (o.lift || 0), o.U * 2.1, o.alpha ?? 1)) return;
   if (!L.body) {
     drawPlaceholder(ctx, o.label, o.x, o.y - (o.lift || 0), o.U * 0.6, o.team);
     return;
@@ -1642,6 +1676,7 @@ const BUILDINGS = {
 /** Gebäude zeichnen. o = { x, y, U (halbe Kante px), t, atk, hurt, team, aim, aux, alpha, evo, quality } */
 export function drawBuilding(ctx, look, o) {
   const L = look || {};
+  if (L.image && drawSkinImage(ctx, L.image, o.x, o.y + o.U * 0.4, o.U * 2.4, o.alpha ?? 1)) return;
   if (!L.body) {
     drawPlaceholder(ctx, o.label, o.x, o.y, o.U * 0.8, o.team);
     return;
@@ -2076,6 +2111,7 @@ const ICONS = {
 
 export function drawSpellIcon(ctx, look, x, y, R, hurt = 0, label = '') {
   const L = look || {};
+  if (L.image && drawSkinImage(ctx, L.image, x, y + R, R * 2)) return;
   if (!L.icon) {
     drawPlaceholder(ctx, label, x, y + R * 0.7, R * 0.7);
     return;
