@@ -58,7 +58,7 @@ Fallbeil-Schwert: trapezförmige, schräg geschliffene Klinge an einem langen Gr
 **Idle**
 
 - Flamme flackert, Kolben zischen leise
-- Klinge ruht auf der Schulter
+- Fallbeil hängt schwer neben dem Bein, die Spitze knapp über dem Boden
 
 **Laufen**
 

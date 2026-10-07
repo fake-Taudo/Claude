@@ -4,16 +4,16 @@
 
 ## Konzept
 
-Die Bogenschützen sind zwei sportliche Schwestern aus dem Schützenverein, die ihre Pfeile in einem fächerförmigen Köcher wie ein Pfauenrad hinter den Schultern tragen. Sie treffen Boden und Luft aus mittlerer Entfernung, flink und gut gelaunt.
+Die Bogenschützen sind zwei sportliche Schwestern aus dem Schützenverein, die ihre Pfeile in einem radförmigen Köcher tragen, der auf Hüfthöhe wie ein Pfauenrad nach hinten auffächert. Sie treffen Boden und Luft aus mittlerer Entfernung, flink und gut gelaunt.
 
 ## Eigenständigkeit
 
-Der radförmige Fächerköcher bildet einen Halbkreis aus Pfeilen hinter dem Kopf; keine andere Figur hat diese Silhouette. Andere Schützinnen im Spiel haben Mondsichel-Armbrust, Harfenbogen oder Fernrohr-Bogen. Übliche Bogenschützinnen tragen Kapuze und Umhang; diese tragen ein ockerfarbenes Sportwams mit langem Schal und Kurzbogen.
+Der Fächerköcher bildet auf Hüfthöhe ein Rad aus Pfeilen, das wie ein Pfauenschwanz nach hinten absteht; keine andere Figur hat diese Silhouette. Bewusst sitzt er tief und zeigt Schäfte mit Nocken, damit er nicht wie Kopfschmuck wirkt. Andere Schützinnen im Spiel haben Mondsichel-Armbrust, Harfenbogen oder Fernrohr-Bogen. Übliche Bogenschützinnen tragen Kapuze und Umhang; diese tragen ein ockerfarbenes Sportwams mit langem Schal und Kurzbogen.
 
 ## Silhouette, Proportionen, Größe
 
 - **Familie:** Schlank (schmales Hochrechteck, lange Diagonale durch Waffe oder Werkzeug)
-- **Silhouette:** Schlank und aufrecht, hinter dem Kopf ein Halbkreis aus etwa neun Pfeilen wie ein Rad, vorn der kurze Recurve-Bogen; der lange Schal flattert seitlich.
+- **Silhouette:** Schlank und aufrecht; hinter der Hüfte fächern sieben Pfeile um eine Holznabe nach hinten auf, vorn der kurze Recurve-Bogen; der lange Schal flattert seitlich.
 - **Proportionsformel:** Kopf 0,38 · Beine 0,30 · Arme 0,90 · Hände 0,42 · Waffe/Signature 0,55 (Anteile laut [CHAR_SYSTEM.md](../CHAR_SYSTEM.md#3-größenklassen-konturen-und-proportionen))
 - **Übertriebenes Merkmal:** Pfeilfächer breiter als die Schultern
 - **Größenklasse:** S, 1,55 Felder hoch, Außenkontur „dünn“
@@ -34,7 +34,7 @@ Der radförmige Fächerköcher bildet einen Halbkreis aus Pfeilen hinter dem Kop
 
 ## Signature-Element
 
-**Fächerköcher wie ein Pfauenrad** (Rucksack, Köcher, Behälter auf dem Rücken). Die Pfeile stecken in einem halbrunden Holzkranz, der sich beim Ziehen eines Pfeils wie ein Fächer bewegt.
+**Fächerköcher wie ein Pfauenrad** (Rucksack, Köcher, Behälter auf dem Rücken). Die Pfeile stecken mit der Spitze in einer Holznabe mit Messingkern und fächern mit bunten Nocken und Befiederung nach hinten auf.
 
 ## Details
 
@@ -59,7 +59,7 @@ Kurzer Recurve-Bogen mit nach außen gebogenen Spitzen und dicker Griffwicklung;
 
 - wippen locker auf den Zehen
 - zupfen an der Sehne und lauschen dem Ton
-- der Fächer zittert leicht
+- der Pfeilfächer an der Hüfte zittert leicht
 
 **Laufen**
 
@@ -68,7 +68,7 @@ Kurzer Recurve-Bogen mit nach außen gebogenen Spitzen und dicker Griffwicklung;
 
 **Angriff**
 
-- greift über die Schulter in den Fächer (Anticipation)
+- greift nach hinten in den Fächer an der Hüfte (Anticipation)
 - spannt weit, der Körper streckt sich (Stretch)
 - Schuss, dann federt der Körper nach hinten nach
 

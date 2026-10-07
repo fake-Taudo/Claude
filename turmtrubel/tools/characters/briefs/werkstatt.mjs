@@ -46,7 +46,7 @@ export default {
     face: 'Die Flamme ist das Gesicht: ruhig züngelnd im Idle, hoch auflodernd und spitz im Angriff, flackernd und klein, wenn getroffen.',
     weapon: 'Fallbeil-Schwert: trapezförmige, schräg geschliffene Klinge an einem langen Griff mit Ring.',
     anim: {
-      idle: ['Flamme flackert, Kolben zischen leise', 'Klinge ruht auf der Schulter'],
+      idle: ['Flamme flackert, Kolben zischen leise', 'Fallbeil hängt schwer neben dem Bein, die Spitze knapp über dem Boden'],
       walk: ['schwerer, ruckhafter Schritt mit `char.step`'],
       attack: ['Klinge weit über den Kopf (Anticipation, Stretch), Fallbeil-Hieb mit Funken (Squash)', 'Flamme lodert auf'],
       hit: ['Flamme duckt sich, Glas klirrt'],

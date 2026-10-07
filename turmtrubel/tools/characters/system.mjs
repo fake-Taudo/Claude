@@ -274,3 +274,22 @@ export function matrixViolations(figs) {
   }
   return out;
 }
+
+/** Materialtöne und -arten für die Laufzeit-Schattierung (client/js/characters/shade.js liest sie aus dem Manifest). */
+export const MATERIAL_TONES = { lightTint: MATERIAL.lightTint, shadeTint: MATERIAL.shadeTint, light: MATERIAL.light, gloss: MATERIAL.gloss, shade: MATERIAL.shade, deep: MATERIAL.deep, line: MATERIAL.line };
+export const MATERIAL_KINDS = {
+  cloth: { ao: 0.4, shift: 0.16, hi: 0.3, kind: 'soft' },
+  leather: { ao: 0.44, shift: 0.16, hi: 0.26, kind: 'soft' },
+  metal: { ao: 0.5, shift: 0.2, hi: 0.85, kind: 'streak', contrast: true },
+  gold: { ao: 0.45, shift: 0.2, hi: 0.9, kind: 'streak', contrast: true },
+  skin: { ao: 0.3, shift: 0.14, hi: 0.26, kind: 'soft' },
+  hair: { ao: 0.45, shift: 0.18, hi: 0.5, kind: 'streak' },
+  fur: { ao: 0.45, shift: 0.18, hi: 0.2, kind: 'soft' },
+  wood: { ao: 0.45, shift: 0.16, hi: 0.22, kind: 'soft' },
+  stone: { ao: 0.5, shift: 0.18, hi: 0.18, kind: 'soft' },
+  bone: { ao: 0.42, shift: 0.16, hi: 0.4, kind: 'soft' },
+  glass: { ao: 0.25, shift: 0.14, hi: 0.95, kind: 'streak' },
+  gem: { ao: 0.4, shift: 0.2, hi: 1, kind: 'spot', contrast: true },
+  scale: { ao: 0.45, shift: 0.16, hi: 0.35, kind: 'soft' },
+  flat: { ao: 0, shift: 0, hi: 0, kind: null, flat: true },
+};
