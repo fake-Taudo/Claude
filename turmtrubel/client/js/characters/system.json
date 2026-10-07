@@ -382,7 +382,7 @@
    "frameIndex": 0,
    "maxLod": 1,
    "res": 0.75,
-   "atlas": 1024,
+   "atlas": 512,
    "budgetMB": 12,
    "bakeMs": 3,
    "aura": false
@@ -392,7 +392,7 @@
    "frameIndex": 1,
    "maxLod": 2,
    "res": 1,
-   "atlas": 2048,
+   "atlas": 512,
    "budgetMB": 24,
    "bakeMs": 4,
    "aura": true
@@ -402,7 +402,7 @@
    "frameIndex": 2,
    "maxLod": 2,
    "res": 1,
-   "atlas": 2048,
+   "atlas": 512,
    "budgetMB": 48,
    "bakeMs": 5,
    "aura": true

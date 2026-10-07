@@ -10,6 +10,7 @@ import { safeInsets, reducedMotion } from '../ui/tokens.js';
 import { sprites } from '../design/spritecache.js';
 import { drawTower, drawUnit } from './sprites.js';
 import { mixHex } from '../design/light.js';
+import { figureForType, figureEntry, loadFigure, prebakeCharacter, prefetchAllFigures, setCharacterQuality, setCharacterColorblind, CharacterAnimator } from '../characters/index.js';
 
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -69,6 +70,8 @@ export class Game {
     this.latest = null;
     this.latestAt = 0;
     this.vis = new Map();
+    // Leichen neuer Figuren: spielen nach dem Ereignis d noch 0,7 s die Tod-Animation
+    this.corpses = [];
     this.proj = new Map();
     this.zones = [];
     this.typeCache = new Map();
@@ -153,6 +156,13 @@ export class Game {
       def = null;
     }
     if (!def || def.isBuilding) return;
+    const fig = figureForType(id);
+    if (fig) {
+      // Neue Figur: SVG laden und Ruhe, Laufen (beide Ansichten) und Erscheinen in den Atlas backen
+      return loadFigure(fig.figure).then(() =>
+        prebakeCharacter({ figure: fig.figure, form: fig.form, evo, scale: this.view.s, dpr: this.spriteDpr, teams: ['blue'], views: this.view.mode !== 'rotated' ? ['front', 'back'] : ['front'], states: ['idle', 'walk', 'spawn'] }),
+      );
+    }
     const cv = document.createElement('canvas');
     cv.width = cv.height = 4;
     const ctx = cv.getContext('2d');
@@ -195,6 +205,8 @@ export class Game {
   applyFxSettings() {
     const st = this.app.settings;
     this.fx.setQuality(st.quality);
+    setCharacterQuality(st.quality || 'high');
+    setCharacterColorblind(!!st.colorblind);
     this.fx.setOptions({ shake: st.shake ?? 1, reducedMotion: reducedMotion(), reduceEffects: !!st.reduceFx });
   }
 
@@ -573,8 +585,37 @@ export class Game {
       moving: false,
       U: this.view.s * (info.uf || 1),
     };
+    // Neue Figur (Manifest), sonst zeichnet der Renderer die bisherige Sprite-Figur
+    const fig = info.kind === 'unit' ? figureForType(info.key) : null;
+    if (fig) {
+      const entry = figureEntry(fig.figure);
+      v.fig = fig.figure;
+      v.form = fig.form || null;
+      v.variant = entry?.variants > 1 ? v.id % entry.variants : 0;
+      v.anim = new CharacterAnimator(fig.figure, {
+        anim: entry?.anim,
+        born: v.born,
+        hitSpeed: info.def?.hitSpeed,
+        firstHit: info.def?.firstHit,
+        speed: info.def?.speed,
+        seed: v.seed,
+        onEvent: (name) => this.charFx(v, name),
+      });
+      loadFigure(fig.figure);
+    }
     this.vis.set(v.id, v);
     return v;
+  }
+
+  /** Animations-Event einer Figur → VFX-Preset (<event>.<figur> → <event>.<familie> → <event>), falls vorhanden. */
+  charFx(v, name) {
+    const fam = figureEntry(v.fig)?.family;
+    for (const n of [`${name}.${v.fig}`, `${name}.${fam}`, name]) {
+      if (this.fx.has(n)) {
+        this.fx.emit(n, { x: v.x, y: v.y, z: v.flying ? 1.1 : 0, team: this.teamOf(v.owner) });
+        return;
+      }
+    }
   }
 
   // ───────────── Ereignisse → Effekte ─────────────
@@ -618,6 +659,7 @@ export class Game {
           const tgt = this.vis.get(ev[2]);
           if (!src) break;
           src.atk = 1;
+          src.anim?.attack(now);
           if (tgt && src.lightning) {
             const z0 = src.kind === 'building' ? src.half * 1.9 : (src.flying ? 1.1 : 0) + 0.8;
             const z1 = (tgt.flying ? 1.1 : 0) + 0.5;
@@ -638,6 +680,7 @@ export class Game {
           const v = this.vis.get(ev[1]);
           if (!v) break;
           v.hurt = 1;
+          v.anim?.hurt(now);
           const z = this.hitZ(v);
           const amount = ev[2] || 0;
           if (v.kind === 'tower') {
@@ -668,7 +711,12 @@ export class Game {
             fx.emit('building.death', { x, y, team });
             A.sfx('crumble', 0.6);
           } else if (info.kind === 'unit') {
-            if (flying) fx.emit('unit.death.flying', { x, y, z: 1.1, team });
+            const fig = figureForType(info.key);
+            const dv = this.vis.get(ev[1]);
+            if (fig) {
+              // Neue Figur: Tod-Animation als Leiche, die Auflöse-Wolke folgt am Ende (char.vanish)
+              this.corpses.push({ figure: fig.figure, form: fig.form || null, evo: !!dv?.evo, variant: dv?.variant || 0, team, x, y, flying: !!flying, face: dv?.face ?? (owner === this.side ? 1 : -1), back: !!dv?.back, t0: now, swarm: deaths++ >= 6 });
+            } else if (flying) fx.emit('unit.death.flying', { x, y, z: 1.1, team });
             else fx.emit(deaths++ < 6 ? 'unit.death' : 'unit.death.swarm', { x, y, team });
             A.sfx('pop', 0.45);
           }
@@ -874,6 +922,7 @@ export class Game {
           const info = this.typeInfo(ev[3], false);
           const card = this.db.card(info.cardId || info.key);
           const mine = ev[2] === this.side;
+          v?.anim?.ability(now);
           if (card?.ability) this.hud.banner(card.ability.name + '!', '#ffffff', '', { kind: 'card', team: mine ? 'blue' : 'red', cardId: card.id });
           if (v) fx.emit('ability.activate', { x: v.x, y: v.y, z: v.flying ? 1.1 : 0, team: this.teamOf(v.owner) });
           A.sfx('ability');

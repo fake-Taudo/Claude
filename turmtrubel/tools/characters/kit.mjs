@@ -162,3 +162,105 @@ export function emblem(F, name, bone, z, x, y, r, o = {}) {
   });
 }
 export { ellipse, circle, rrect, poly, spline, polyline, path, blob };
+
+/**
+ * Standard-Ausdrücke für ein Gesicht mit zwei Augen (vorderes zuerst). Erzeugt die Teile face.idle, face.attack,
+ * face.hurt, face.stun, face.death und face.sleep. Jede Stimmung lässt sich über o.<expr>(g, ctx) ergänzen oder mit
+ * o.replace.<expr> komplett ersetzen.
+ *
+ * o: bone, z, view ('front'), eyes [[x, y, r], [x, y, r]], iris, lidColor, look, lid (Ruhe-Lid), ratio, irisR,
+ *    brow { color, w, lift } | false, mouth [x, y, w], mood ('smile' | 'grin' | 'neutral' | 'frown' | 'smirk'),
+ *    attackMouth ('shout' | 'clench' | 'grit' | 'oh' | 'grin'), lash, skip [expr…]
+ */
+export function faceSet(F, o) {
+  const [E1, E2] = o.eyes;
+  const bc = o.brow === false ? null : o.brow?.color ?? '#3a2418';
+  const bw = o.brow?.w ?? Math.max(1, E1[2] * 0.62);
+  const bl = o.brow?.lift ?? 1;
+  const EYE = { iris: o.iris ?? '#3a2a22', lidColor: o.lidColor ?? '#e8b48c', look: o.look ?? [0.5, 0], ratio: o.ratio ?? 1.15, irisR: o.irisR, lash: o.lash, glint: o.glint };
+  const [mx, my, mw] = o.mouth || [E1[0] - (E1[0] - E2[0]) * 0.35, E1[1] + E1[2] * 3.6, E1[2] * 2.4];
+  const ctx = { E1, E2, mx, my, mw, EYE };
+  // Brauen: inner = Ende zur Nase hin; tilt > 0 senkt das innere Ende (wütend), < 0 hebt es (besorgt)
+  const browFor = (g, [x, y, r], front, tilt = 0, raise = 0, w = bw) => {
+    if (!bc) return;
+    const dir = front ? -1 : 1; // inneres Ende: vorderes Auge links, hinteres Auge rechts
+    const yb = y - r * (1.75 + 0.3 * bl) - raise * r;
+    const inner = [x + dir * r * 1.2, yb + tilt * r * 0.7];
+    const outer = [x - dir * r * 1.25, yb - tilt * r * 0.35 + r * 0.15];
+    const mid = [x, yb - r * 0.28 + tilt * r * 0.15];
+    brow(g, front ? [inner, mid, outer].reverse() : [outer, mid, inner], w);
+  };
+  const brow = (g, pts, w) => {
+    const a = pts[0];
+    const b = pts[2];
+    const m = pts[1];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const L = Math.hypot(dx, dy) || 1;
+    const nx = (-dy / L) * w;
+    const ny = (dx / L) * w;
+    g.fill(path([[a[0], a[1], 1], [m[0] - nx * 0.5, m[1] - ny * 0.5], [b[0] - nx * 0.25, b[1] - ny * 0.25], [b[0] + nx * 0.2, b[1] + ny * 0.2, 1], [m[0] + nx * 0.5, m[1] + ny * 0.5]]), bc);
+  };
+  const mouthMood = (g, mood) => {
+    if (mood === 'grin') {
+      const m = path([[mx - mw / 2, my - mw * 0.12, 1], [mx + mw / 2, my - mw * 0.2, 1], [mx + mw * 0.22, my + mw * 0.28], [mx - mw * 0.24, my + mw * 0.24]]);
+      g.fill(m, '#4a1c24', { stroke: INK, lw: Math.max(0.6, mw * 0.11) });
+      g.clipTo(m, (h) => h.fill(rrect(mx - mw / 2, my - mw * 0.3, mw, mw * 0.2, 0.3), WHITE));
+    } else if (mood === 'smirk') g.stroke(spline([[mx - mw / 2, my], [mx + mw * 0.1, my + mw * 0.06], [mx + mw / 2, my - mw * 0.18]]), INK, Math.max(0.8, mw * 0.15));
+    else mouthLine(g, mx, my, mw, mood === 'smile' ? mw * 0.18 : mood === 'frown' ? -mw * 0.14 : mw * 0.03, { lw: Math.max(0.8, mw * 0.15) });
+  };
+  const exprs = {
+    idle: (g) => {
+      eye(g, E1[0], E1[1], { ...EYE, r: E1[2], lid: o.lid ?? 0.2 });
+      eye(g, E2[0], E2[1], { ...EYE, r: E2[2], lid: o.lid ?? 0.2 });
+      browFor(g, E1, true, o.idleTilt ?? 0);
+      browFor(g, E2, false, o.idleTilt ?? 0);
+      mouthMood(g, o.mood || 'neutral');
+    },
+    attack: (g) => {
+      eye(g, E1[0], E1[1], { ...EYE, r: E1[2], lid: 0.38, look: [0.75, 0.1] });
+      eye(g, E2[0], E2[1], { ...EYE, r: E2[2], lid: 0.38, look: [0.75, 0.1] });
+      browFor(g, E1, true, 1.1, 0, bw * 1.15);
+      browFor(g, E2, false, 1.1, 0, bw * 1.15);
+      const am = o.attackMouth || 'shout';
+      if (am === 'grin') mouthMood(g, 'grin');
+      else if (am === 'oh') g.fill(ellipse(mx, my + mw * 0.08, mw * 0.24, mw * 0.3), '#4a1c24', { stroke: INK, lw: 0.7 });
+      else mouthOpen(g, mx, my + mw * 0.05, mw * 1.05, mw * (am === 'shout' ? 0.55 : 0.4), { teeth: am === 'shout' ? 'top' : 'clench', tongue: am === 'shout', lw: Math.max(0.6, mw * 0.11) });
+    },
+    hurt: (g) => {
+      eyeClosed(g, E1[0], E1[1], E1[2], { up: true, lw: Math.max(0.9, E1[2] * 0.42) });
+      eye(g, E2[0], E2[1] - E2[2] * 0.1, { ...EYE, r: E2[2] * 1.05, look: [0.1, -0.2] });
+      browFor(g, E1, true, -0.8, 0.25);
+      browFor(g, E2, false, -0.8, 0.35);
+      mouthOpen(g, mx, my + mw * 0.05, mw * 0.75, mw * 0.4, { teeth: 'top', tongue: false, lw: Math.max(0.6, mw * 0.11) });
+    },
+    stun: (g) => {
+      eyeSpiral(g, E1[0], E1[1], E1[2] * 1.05, INK, Math.max(0.6, E1[2] * 0.3));
+      eyeSpiral(g, E2[0], E2[1], E2[2] * 1.05, INK, Math.max(0.6, E2[2] * 0.3));
+      g.stroke(spline([[mx - mw / 2, my], [mx - mw / 6, my + mw * 0.12], [mx + mw / 6, my - mw * 0.08], [mx + mw / 2, my + mw * 0.06]]), INK, Math.max(0.7, mw * 0.13));
+    },
+    death: (g) => {
+      eyeX(g, E1[0], E1[1], E1[2] * 0.8, INK, Math.max(0.8, E1[2] * 0.4));
+      eyeX(g, E2[0], E2[1], E2[2] * 0.8, INK, Math.max(0.8, E2[2] * 0.4));
+      mouthLine(g, mx, my, mw * 0.85, -mw * 0.16, { lw: Math.max(0.8, mw * 0.14) });
+    },
+    sleep: (g) => {
+      eyeClosed(g, E1[0], E1[1], E1[2], { lw: Math.max(0.8, E1[2] * 0.38) });
+      eyeClosed(g, E2[0], E2[1], E2[2], { lw: Math.max(0.8, E2[2] * 0.38) });
+      browFor(g, E1, true, -0.2);
+      browFor(g, E2, false, -0.2);
+      mouthLine(g, mx, my, mw * 0.6, mw * 0.06, { lw: Math.max(0.7, mw * 0.12) });
+    },
+  };
+  const exprOf = { idle: 'idle', attack: ['attack', 'ability'], hurt: 'hurt', stun: 'stun', death: 'death', sleep: 'sleep' };
+  for (const [name, fn] of Object.entries(exprs)) {
+    if (o.skip?.includes(name)) continue;
+    F.part('face.' + name, { bone: o.bone || 'head', z: o.z ?? 32, view: o.view === undefined ? 'front' : o.view, expr: exprOf[name] }, (g) => {
+      const rep = o.replace?.[name];
+      if (rep) rep(g, ctx);
+      else fn(g);
+      o[name]?.(g, ctx);
+    });
+  }
+  return ctx;
+}

@@ -136,9 +136,9 @@ export const EVENTS = {
 
 /** Qualitätsstufen der Figuren (folgt der Grafik-Einstellung und der automatischen Qualität). */
 export const QUALITY = {
-  low: { name: 'Niedrig', frameIndex: 0, maxLod: 1, res: 0.75, atlas: 1024, budgetMB: 12, bakeMs: 3, aura: false },
-  medium: { name: 'Mittel', frameIndex: 1, maxLod: 2, res: 1, atlas: 2048, budgetMB: 24, bakeMs: 4, aura: true },
-  high: { name: 'Hoch', frameIndex: 2, maxLod: 2, res: 1, atlas: 2048, budgetMB: 48, bakeMs: 5, aura: true },
+  low: { name: 'Niedrig', frameIndex: 0, maxLod: 1, res: 0.75, atlas: 512, budgetMB: 12, bakeMs: 3, aura: false },
+  medium: { name: 'Mittel', frameIndex: 1, maxLod: 2, res: 1, atlas: 512, budgetMB: 24, bakeMs: 4, aura: true },
+  high: { name: 'Hoch', frameIndex: 2, maxLod: 2, res: 1, atlas: 512, budgetMB: 48, bakeMs: 5, aura: true },
 };
 
 /**

@@ -345,9 +345,8 @@ export default function hogRider(F) {
       keys: { carrot: { r: [[0, -14], [0.5, 12, 'io'], [1, -14, 'io']] }, ear: { r: [[0, 0], [0.5, -16], [1, 0]] }, rod: { r: [[0, 0], [0.5, -3], [1, 0]] } },
       ev: { step: [0.1, 0.35, 0.6, 0.85] },
     },
-    charge: { prog: 'quad.walk', p: { stride: 36, bob: 5, riderLean: 16 }, keys: { carrot: { r: [[0, -18], [0.5, 14], [1, -18]] } } },
-    // Flusssprung: Beine gestreckt, Ohren flattern, Karotte schwingt nach oben
-    ability: { prog: 'quad.jump', p: { reach: 50, kick: 48, riderLean: 18 }, keys: { carrot: { r: [[0, -40], [0.5, -55], [1, -40]] } } },
+    // Flusssprung (Flag JUMP → Zustand charge): Beine gestreckt, Ohren flattern, Karotte schwingt nach oben
+    charge: { prog: 'quad.jump', p: { reach: 50, kick: 48, riderLean: 18 }, keys: { carrot: { r: [[0, -40], [0.5, -55], [1, -40]] } } },
     // Schläger weit nach hinten, seitlicher Polo-Schlag, Follow-through über den Kopf
     attack: {
       prog: 'rider.swing',

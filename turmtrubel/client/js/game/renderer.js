@@ -5,6 +5,7 @@ import { drawUnit, drawBuilding, drawTower, drawEmoteFace, drawSpellIcon, TEAM, 
 import { FONT, text as ctext, tnum, rr as rrect } from './canvastext.js';
 import { softShadow, softGlow } from '../design/light.js';
 import { LIGHT } from '../design/tokens.js';
+import { drawCharacter, characterShadow, bakeTick, DEATH_DURATION } from '../characters/index.js';
 
 const TAU = Math.PI * 2;
 // Rollende Zauber (Baumstamm, Barbarenfass) und im Bogen fliegende Geschosse
@@ -514,18 +515,26 @@ export class Renderer {
     // Weiche Bodenschatten (gecacht je Größe), nach unten rechts versetzt (Licht von oben links);
     // Bodeneinheiten tragen darin einen feinen Fußring in Teamfarbe.
     const [ox, oy] = LIGHT.shadowOffset;
+    // Bau-Budget der Figuren-Atlanten für diesen Frame zurücksetzen und vorgemerkte Bilder backen
+    bakeTick();
+    this.drawCorpses(ctx, t, ox, oy);
     for (const v of list) {
       if (v.kind === 'tower') continue;
       const [x, y] = view.toScreen(v.x, v.y);
       const r = v.kind === 'building' ? v.half * s * 1.05 : v.radius * s * (v.flying ? 0.8 : 1.1);
-      const ring = v.kind === 'unit' && !v.flying && !(v.flags & EF.UNDER) ? (v.owner === mySide ? TEAM.blue.main : TEAM.red.main) : null;
-      const img = softShadow(r * dpr, ring);
-      const w = img.width / dpr;
-      const h = img.height / dpr;
-      const fy = v.kind === 'building' ? v.half * s * 0.3 : s * 0.05;
-      if (v.flying) ctx.globalAlpha = 0.6;
-      ctx.drawImage(img, x - w / 2 + r * ox, y + fy - h / 2 + r * oy, w, h);
-      if (v.flying) ctx.globalAlpha = 1;
+      if (v.fig && !(v.flags & EF.UNDER)) {
+        // Neue Figuren: Bodenschatten mit Teamring (Blau Kreis, Rot Zackenring)
+        characterShadow(ctx, { x, y: y + s * 0.05, r, team: v.owner === mySide ? 'blue' : 'red', ring: !v.flying, dpr, alpha: v.flying ? 0.6 : 1, dx: r * ox, dy: r * oy });
+      } else {
+        const ring = v.kind === 'unit' && !v.flying && !(v.flags & EF.UNDER) ? (v.owner === mySide ? TEAM.blue.main : TEAM.red.main) : null;
+        const img = softShadow(r * dpr, ring);
+        const w = img.width / dpr;
+        const h = img.height / dpr;
+        const fy = v.kind === 'building' ? v.half * s * 0.3 : s * 0.05;
+        if (v.flying) ctx.globalAlpha = 0.6;
+        ctx.drawImage(img, x - w / 2 + r * ox, y + fy - h / 2 + r * oy, w, h);
+        if (v.flying) ctx.globalAlpha = 1;
+      }
       // Champions und Helden: pulsierender Goldring am Boden
       if (v.cls === 'champion' || v.cls === 'hero') {
         const g = softGlow(v.cls === 'hero' ? '#ff9a7a' : '#ffd84d', r * 1.3 * dpr, 0.55);
@@ -608,7 +617,7 @@ export class Renderer {
     const lift = (v.flying ? s * 1.1 : 0) + hop + (spawnK < 1 ? (1 - spawnK) * (1 - spawnK) * s * 3 : 0);
     const landK = t - v.born - 0.28;
     const squash = landK > 0 && landK < 0.2 ? Math.sin((landK / 0.2) * Math.PI) * 0.6 : 0;
-    drawUnit(ctx, v.look, {
+    if (!(v.fig && this.drawFigure(ctx, v, t, team, lift, alpha))) drawUnit(ctx, v.look, {
       x: v.sx,
       y: v.sy,
       U: v.U,
@@ -642,6 +651,57 @@ export class Renderer {
     if (f & EF.CHARGE && quality > 0 && Math.random() < 0.3) this.game.fx.emit('unit.dash', { x: v.x, y: v.y });
     // Evo-Partikelhülle: einzelne Funken in der Akzentfarbe steigen auf
     if (v.evo && quality > 0 && Math.random() < 0.12) this.game.fx.burst(EVO_SPARK, { x: v.x, y: v.y, z: v.flying ? 1.1 : 0.2, k: 1, teamColor: v.look.accent || '#d7b5ff' });
+  }
+
+  /** Neue Figur über die Figuren-Laufzeit zeichnen; false, solange ihre Vektorquelle noch lädt. */
+  drawFigure(ctx, v, t, team, lift, alpha) {
+    const f = v.flags;
+    const st = v.anim.frame(t, { moving: v.moving && !(f & EF.STUN) && !(f & EF.ROOT), flags: f });
+    const r = drawCharacter(ctx, {
+      figure: v.fig,
+      form: v.form,
+      evo: v.evo,
+      team,
+      x: v.sx,
+      y: v.sy,
+      scale: this.game.view.s,
+      dpr: this.game.spriteDpr,
+      face: v.face,
+      view: v.back ? 'back' : 'front',
+      state: st.state,
+      u: st.u,
+      variant: v.variant,
+      alpha,
+      lift,
+      flash: v.hurt * 0.6,
+    });
+    if (r) v.top = r.top;
+    return !!r;
+  }
+
+  /** Leichen: Tod-Animation (0,7 s), danach Auflöse-Wolke wie bisher beim Tod. */
+  drawCorpses(ctx, t, ox, oy) {
+    const game = this.game;
+    const list = game.corpses;
+    if (!list?.length) return;
+    const view = game.view;
+    const s = view.s;
+    for (let i = list.length - 1; i >= 0; i--) {
+      const c = list[i];
+      const u = (t - c.t0) / DEATH_DURATION;
+      const [x, y] = view.toScreen(c.x, c.y);
+      if (u >= 1 || u < 0) {
+        list.splice(i, 1);
+        if (u >= 1) {
+          if (c.flying) game.fx.emit('unit.death.flying', { x: c.x, y: c.y, z: 0.2, team: c.team });
+          else game.fx.emit(c.swarm ? 'unit.death.swarm' : 'unit.death', { x: c.x, y: c.y, team: c.team });
+        }
+        continue;
+      }
+      const fall = c.flying ? 1 - Math.min(1, u * 1.3) ** 2 : 0;
+      characterShadow(ctx, { x, y: y + s * 0.05, r: s * 0.45, team: c.team, ring: false, dpr: game.spriteDpr, alpha: 1 - u, dx: s * 0.45 * ox, dy: s * 0.45 * oy });
+      drawCharacter(ctx, { figure: c.figure, form: c.form, evo: c.evo, team: c.team, x, y, scale: s, dpr: game.spriteDpr, face: c.face, view: c.back ? 'back' : 'front', state: 'death', u, variant: c.variant, lift: fall * s * 1.1 });
+    }
   }
 
   /** Eisblock (facettierter Kristall), gecacht je Größe. */

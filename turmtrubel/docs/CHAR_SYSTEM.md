@@ -439,14 +439,16 @@ Optionen von `drawCharacter`:
 
 | Stufe | Bilder pro Zustand | Detailstufe | Auflösung | Atlas | Speicherbudget | Bau-Budget pro Frame |
 |---|---|---|---|---|---|---|
-| Niedrig | niedrigster Wert (z. B. 4 für Laufen) | bis 1 | 75 % | 1024² | 12 MB | 3 ms |
-| Mittel | mittlerer Wert | bis 2 | 100 % | 2048² | 24 MB | 4 ms |
-| Hoch | höchster Wert | bis 2 | 100 % | 2048² | 48 MB | 5 ms |
+| Niedrig | niedrigster Wert (z. B. 4 für Laufen) | bis 1 | 75 % | 512² | 12 MB | 3 ms |
+| Mittel | mittlerer Wert | bis 2 | 100 % | 512² | 24 MB | 4 ms |
+| Hoch | höchster Wert | bis 2 | 100 % | 512² | 48 MB | 5 ms |
 
 **Auflösung und Wechsel:**
 - Gebacken wird für die aktuelle Pixelgröße der Figur (Feldgröße × Höhe × Gerätepixel).
 - Nur die automatische Qualität des Spiels wechselt die Stufe.
 - Atlanten werden seitenweise nach LRU geleert.
+- Atlasseiten sind bewusst klein (512²): Jedes Schreiben in eine Seite lässt den Browser die ganze Seite neu hochladen. Bei 2048²-Seiten kostete das in der Extremszene 30–60 ms pro Frame (gemessen im Pilot, siehe docs/CHAR_REPORT.md).
+- Fehlt ein Bild, nimmt die Laufzeit zuerst eines derselben Ansicht und Variante, dann eines aus anderer Ansicht oder Variante desselben Teams. Über dem Budget wird pro Frame höchstens ein solches Notbild ersetzt.
 
 ## 10. Prüfung
 

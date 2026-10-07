@@ -14,6 +14,7 @@ import { DeckBuilder } from './ui/deckbuilder.js';
 import { openSettings } from './ui/settings.js';
 import { applyBodyFlags, reducedMotion } from './ui/tokens.js';
 import { Game } from './game/game.js';
+import { initCharacters, prefetchAllFigures } from './characters/index.js';
 
 const TIPS = [
   'Tipp: Ziehe Karten direkt aufs Feld – oder tippe erst die Karte, dann das Feld.',
@@ -89,6 +90,12 @@ class App {
       this.vfxPresets = await loadPresets();
     } catch (e) {
       this.vfxPresets = {};
+      console.warn(e);
+    }
+    // Figuren-Manifest (neue Vektorfiguren); ohne Manifest zeichnet das Spiel die bisherigen Figuren
+    try {
+      await initCharacters('/assets/characters/');
+    } catch (e) {
       console.warn(e);
     }
     this.store = new Store(this.db);
@@ -742,6 +749,8 @@ class App {
       if (i % 3 === 2) await new Promise((r) => requestAnimationFrame(r));
     }
     if (this.game !== game) return;
+    // übrige Figuren (Gegnerdeck unbekannt) im Leerlauf nachladen
+    prefetchAllFigures();
     status.textContent = m.training ? 'Bereit!' : 'Bereit! Warte auf deinen Gegner …';
     // Die VS-Einblendung darf ausspielen (≈ 1,2 s), danach melden wir „geladen“
     const wait = Math.max(0, 1200 - (performance.now() - t0));

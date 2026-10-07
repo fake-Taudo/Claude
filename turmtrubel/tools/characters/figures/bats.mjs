@@ -93,9 +93,9 @@ export default function bats(F) {
     F.part(name + 'Band', { bone: name, z: z + 0.5, zb: z + 0.5, team: true }, (g) => {
       const bx = X(28 * scale);
       const by = -25.4;
-      g.mat(rrect(bx - 1.6, by - 2.6, 3.2, 5.2, 0.9).rot(s * 14, bx, by), P.team, 'cloth', { line: P.teamDeep, lw: 0.6 });
-      g.mat(path([[bx - X(0.5), by + 1.5, 1], [bx - X(3.5), by + 5.5], [bx - X(2), by + 7.8, 1], [bx - X(1.5), by + 5.6], [bx + X(0.9), by + 2, 1]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.5, lod: 1 });
-      g.mat(path([[bx + X(0.5), by + 2, 1], [bx + X(1.5), by + 6.5], [bx + X(3.4), by + 8.2, 1], [bx + X(2.6), by + 5.6], [bx + X(1.7), by + 1.6, 1]]), P.teamShade, 'cloth', { line: P.teamDeep, lw: 0.5, lod: 1 });
+      g.mat(rrect(bx - 2.5, by - 3.4, 5, 6.8, 1.2).rot(s * 14, bx, by), P.team, 'cloth', { line: P.teamDeep, lw: 0.6 });
+      g.mat(path([[bx - X(0.8), by + 2, 1], [bx - X(4.6), by + 7], [bx - X(2.6), by + 10.4, 1], [bx - X(1.8), by + 7], [bx + X(1), by + 2.6, 1]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.5 });
+      g.mat(path([[bx + X(0.6), by + 2.6, 1], [bx + X(2), by + 8], [bx + X(4.4), by + 10.4, 1], [bx + X(3.2), by + 7], [bx + X(2.2), by + 2, 1]]), P.teamShade, 'cloth', { line: P.teamDeep, lw: 0.5, lod: 1 });
     });
   };
   wing(-1, 'wingB', 2, 0.92, true);

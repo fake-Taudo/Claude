@@ -6,6 +6,7 @@ import { FigureModel } from './model.js';
 import { evalPose } from './anim.js';
 import { configureMaterials, hueShift } from './shade.js';
 import { Atlas, makeCanvas } from './atlas.js';
+export { CharacterAnimator, DEATH_DURATION } from './animator.js';
 
 const DEF_STATES = {
   idle: { dur: 1.6, loop: true, frames: [3, 6, 8] },
@@ -340,6 +341,59 @@ function quantPpm(ppm) {
   return Math.pow(2, Math.round(Math.log2(Math.max(0.05, ppm)) * 12) / 12);
 }
 
+function frameKey(o, team, cb, view, state, idx, variant, hue, ppm, lod) {
+  return `${o.figure}|${o.form || ''}|${o.evo ? 1 : 0}|${team}${cb}|${view}|${state}|${idx}|${variant}|${hue}|${ppm.toFixed(4)}|${lod}`;
+}
+function frameReq(model, o, p) {
+  const Q = qual();
+  const tier = (sys().outline?.tiers || {})[model.entry.outline || 2] || { px: 1.9 };
+  const zoom = Math.min(1.8, Math.max(0.8, Math.sqrt((o.scale || 26) / (sys().outline?.refTile || 26))));
+  return {
+    key: frameKey(o, p.team, p.cb, p.view, p.state, p.idx, p.variant, p.hue, p.ppm, p.lod),
+    figure: o.figure,
+    state: p.state,
+    u: p.u,
+    ppm: p.ppm,
+    big: !!o.big,
+    outlinePx: tier.px * zoom * p.dpr * (o.big ? 1 : Q.res),
+    sel: { view: p.view, evo: !!o.evo, form: o.form || null, variant: p.variant, lod: p.lod, team: p.team, state: p.state, hue: p.hue, cb: p.cb },
+  };
+}
+
+/**
+ * Bilder vorab in den Atlas backen (Ladescreen), ohne Bau-Budget. o: figure, form, evo, scale, dpr, variant,
+ * teams, views, states. Rückgabe: Anzahl neu gebackener Bilder.
+ */
+export function prebakeCharacter(o) {
+  const model = S.models.get(o.figure);
+  if (!model) return 0;
+  const Q = qual();
+  const dpr = o.dpr || 1;
+  const ppm = quantPpm(((o.scale || 26) / 50) * dpr * Q.res);
+  const lod = Math.min(Q.maxLod, model.restH * ppm >= 110 ? 2 : model.restH * ppm >= 46 ? 1 : 0);
+  const cb = S.colorblind ? 1 : 0;
+  const variant = o.variant || 0;
+  const before = S.used;
+  let n = 0;
+  for (const team of o.teams || ['blue'])
+    for (const v of o.views || ['front'])
+      for (const st of o.states || ['idle']) {
+        const view = v === 'back' && model.hasBack ? 'back' : 'front';
+        const { name, entry } = stateEntry(model, st);
+        const cnt = frameCount(name, entry);
+        const loop = entry.loop ?? states()[name]?.loop ?? false;
+        for (let i = 0; i < cnt; i++) {
+          const req = frameReq(model, { ...o, big: false }, { team, cb, view, state: name, idx: i, u: loop ? i / cnt : cnt > 1 ? i / (cnt - 1) : 0, variant, hue: 0, ppm, lod, dpr });
+          if (S.frames.has(req.key)) continue;
+          const f = bake(model, req);
+          if (f.page) S.frames.set(req.key, f);
+          n++;
+        }
+      }
+  S.used = before;
+  return n;
+}
+
 /**
  * Figur zeichnen. o: figure, form, evo, team, x, y (Fußpunkt, CSS-px), scale (px pro Feld), dpr, face (1/-1),
  * view ('front'/'back'), state, time (s im Zustand), variant, alpha, lift (px), flash (0–1), squash (0–1), hue (Grad),
@@ -356,8 +410,9 @@ export function drawCharacter(ctx, o) {
   const n = frameCount(name, entry);
   const dur = entry.dur ?? states()[name]?.dur ?? 1;
   const loop = entry.loop ?? states()[name]?.loop ?? false;
-  const tt = Math.max(0, o.time || 0) / dur;
-  const u = loop ? tt % 1 : Math.min(0.9999, tt);
+  // o.u: normierte Zeit im Zustand (vom CharacterAnimator), sonst o.time in Sekunden
+  const tt = o.u != null ? o.u : Math.max(0, o.time || 0) / dur;
+  const u = loop ? ((tt % 1) + 1) % 1 : Math.min(0.9999, Math.max(0, tt));
   const fi = Math.min(n - 1, Math.floor(u * n));
   const uq = loop ? fi / n : n > 1 ? fi / (n - 1) : 0;
   const dpr = o.dpr || 1;
@@ -371,25 +426,18 @@ export function drawCharacter(ctx, o) {
   const variant = o.variant || 0;
   const hue = o.hue ? Math.round(o.hue) : 0;
   const cb = S.colorblind ? 1 : 0;
-  const key = `${o.figure}|${o.form || ''}|${o.evo ? 1 : 0}|${team}${cb}|${view}|${name}|${fi}|${variant}|${hue}|${ppm.toFixed(4)}|${lod}`;
+  const key = frameKey(o, team, cb, view, name, fi, variant, hue, ppm, lod);
   const famKey = `${o.figure}|${o.form || ''}|${o.evo ? 1 : 0}|${team}${cb}|${view}|${variant}|${hue}|${ppm.toFixed(4)}`;
+  // gröbere Familie (ohne Ansicht und Variante): Notbild, bis das passende gebacken ist – Teamfarbe stimmt immer
+  const famKey2 = `${o.figure}|${o.form || ''}|${o.evo ? 1 : 0}|${team}${cb}|${hue}|${ppm.toFixed(4)}`;
   let frame = o.big ? S.big.get(key) : S.frames.get(key);
-  const tier = (sys().outline?.tiers || {})[model.entry.outline || 2] || { px: 1.9 };
-  const zoom = Math.min(1.8, Math.max(0.8, Math.sqrt((o.scale || 26) / (sys().outline?.refTile || 26))));
-  const mk = (st, idx, uu) => ({
-    key: `${o.figure}|${o.form || ''}|${o.evo ? 1 : 0}|${team}${cb}|${view}|${st}|${idx}|${variant}|${hue}|${ppm.toFixed(4)}|${lod}`,
-    figure: o.figure,
-    state: st,
-    u: uu,
-    ppm,
-    big: !!o.big,
-    outlinePx: tier.px * zoom * dpr * (o.big ? 1 : Q.res),
-    sel: { view, evo: !!o.evo, form: o.form || null, variant, lod, team, state: st, hue, cb },
-  });
+  const mk = (st, idx, uu) => frameReq(model, o, { team, cb, view, state: st, idx, u: uu, variant, hue, ppm, lod, dpr });
   if (!frame) {
     const Qb = Q.bakeMs;
-    const fallback = S.latest.get(famKey + '|' + name) || S.latest.get(famKey + '|idle');
-    if (o.big || S.used < Qb || !fallback || S.forced < 1) {
+    const exact = S.latest.get(famKey + '|' + name) || S.latest.get(famKey + '|idle');
+    const fallback = exact || S.latest.get(famKey2 + '|' + name) || S.latest.get(famKey2 + '|idle');
+    // Über dem Budget nur backen, wenn gar kein Notbild existiert oder (einmal pro Frame) nur eins aus anderer Ansicht/Variante
+    if (o.big || S.used < Qb || !fallback || (!exact && S.forced < 1)) {
       if (S.used >= Qb && fallback) S.forced++;
       frame = bake(model, mk(name, fi, uq));
       if (frame.page) S.frames.set(key, frame);
@@ -407,6 +455,7 @@ export function drawCharacter(ctx, o) {
   if (frame.page) frame.page.used = performance.now();
   if (!o.big) {
     S.latest.set(famKey + '|' + name, frame);
+    S.latest.set(famKey2 + '|' + name, frame);
     // übrige Bilder dieses Zustands vormerken
     if (n > 1 && !S.queued.has(key + '#all')) {
       S.queued.add(key + '#all');
