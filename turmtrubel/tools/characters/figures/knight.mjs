@@ -2,10 +2,14 @@
 import { ellipse, circle, rrect, poly, path, limb, polyline, spline } from '../geo.mjs';
 import { eye, eyeClosed, eyeSpiral, eyeX, brow, mouthLine, mouthOpen, rivets, bricks, chainmail, stitches, emblem, lines, INK } from '../kit.mjs';
 
-export default function knight(F) {
+/** o.hero: Held mit roségoldener Rüstung, Löwenmähnen-Kragen, Heldenumhang, Goldkamm und Kronen-Schild (knight-hero). */
+export default function knight(F, o = {}) {
+  const H = !!o.hero;
   const P = F.pal;
   const PEWTER = P.main;
-  const LEATHER = P.acc;
+  const LEATHER = H ? '#6b3a1e' : P.acc;
+  const GOLD = H ? P.acc : '#c8a046';
+  const MANE = '#d8902a';
   const LINEN = '#d9cdb4';
   const MAIL = '#7d8796';
   const STONE = '#b9b2a4';
@@ -27,6 +31,7 @@ export default function knight(F) {
     footB: [-9, -7],
     legF: [7, -25],
     footF: [8, -7],
+    ...(H ? { cape: [-2, -56] } : {}),
   });
 
   // ───────── Beine ─────────
@@ -126,7 +131,11 @@ export default function knight(F) {
     eye(g, 1.5, -69.5, { ...EYE, r: 2.2, lid: 0.32 });
     brow(g, [[8, -73.5], [11.5, -74], [15, -73.2]], 1.7, BROW);
     brow(g, [[-1.2, -73.2], [1.6, -74], [4.6, -73.6]], 1.6, BROW);
-    mouthLine(g, 9.5, -60.5, 5.2, -0.5);
+    if (H) {
+      const m = path([[6.4, -61.6, 1], [13, -62.2, 1], [11.4, -59], [7.6, -59]]);
+      g.fill(m, '#4a1c24', { stroke: INK, lw: 0.7 });
+      g.clipTo(m, (h) => h.fill(rrect(6, -62.6, 7.6, 1.6, 0.3), '#fffaf0'));
+    } else mouthLine(g, 9.5, -60.5, 5.2, -0.5);
   });
   F.part('face.attack', { bone: 'head', z: 32, view: 'front', expr: ['attack', 'ability'] }, (g) => {
     eye(g, 11.5, -69.5, { ...EYE, lid: 0.45 });
@@ -181,7 +190,7 @@ export default function knight(F) {
     g.mat(path([[-13, -76, 1], [19, -76, 1], [18, -64], [3, -58], [-12, -63]]), MAIL, 'metal');
     chainmail(g, path([[-13, -76, 1], [19, -76, 1], [18, -64], [3, -58], [-12, -63]]), [-13, -77, 19, -57], 1.3, '#5d6675');
   });
-  F.part('pennant', { bone: 'hat', z: 37, zb: 40, team: true }, (g) => {
+  if (!H) F.part('pennant', { bone: 'hat', z: 37, zb: 40, team: true }, (g) => {
     g.mat(rrect(3.2, -103, 1.8, 10, 0.8), '#6b4524', 'wood');
     g.mat(circle(4.1, -103.6, 1.6), BRASS, 'gold');
     const flag = path([[3.6, -102], [-6, -101.5], [-13.5, -99.6, 1], [-6.5, -98], [3.6, -96.4]]);
@@ -220,6 +229,8 @@ export default function knight(F) {
   });
   emblem(F, 'emblem', 'handF', 43, 23, -31, 4, { zb: 3 });
 
+  if (H) hero(F, { P, GOLD, MANE, shieldTop: -61 });
+
   // ───────── Animation ─────────
   F.anim({
     idle: { p: { breathe: 0.03, armF: -4, armB: 6, sway: 2, tilt: 1.5 } },
@@ -233,5 +244,64 @@ export default function knight(F) {
     },
     hit: { p: { knock: 3, recoil: 8 } },
     death: { p: { dir: -1, angle: 82 } },
+    ...(H
+      ? {
+          // Triumphaler Spott: Schwert hoch, Schild gegen die Brust, Brüll-Mund
+          ability: {
+            prog: 'biped.idle',
+            keys: {
+              expr: [[0.2, 1, 'attack']],
+              armB: { r: [[0, 0], [0.35, 150, 'out'], [1, 150]] },
+              handB: { r: [[0, 0], [0.35, 30], [1, 30]] },
+              armF: { r: [[0, 0], [0.45, -20], [0.55, -10, 'in'], [1, -10]] },
+              head: { r: [[0, 0], [0.4, -8], [1, -8]] },
+              cape: { r: [[0, 0], [0.5, 14], [0.8, 6], [1, 8]] },
+              layer: [[0.2, 1, 'sword', 44, 44], [0.2, 1, 'armB', 45, 45], [0.2, 1, 'handB', 46, 46]],
+            },
+            ev: { ability: 0.55 },
+          },
+        }
+      : {}),
+  });
+}
+
+/** Rang-Merkmale des Helden: Löwenmähnen-Kragen mit Heldenumhang (Teamzone), Goldkamm, Krone auf dem Schild. */
+function hero(F, { P, GOLD, MANE }) {
+  F.part('heroCape', { bone: 'cape', z: 2, zb: 48, team: true }, (g) => {
+    const c = path([[-12, -56], [10, -57], [14, -40], [16, -14], [6, -6], [-6, -9], [-18, -5], [-24, -16], [-20, -38]]);
+    g.mat(c, P.team, 'cloth', { line: P.teamDeep, hi: 0.35 });
+    lines(g, [[[-10, -50], [-14, -12]], [[-2, -50], [-4, -10]], [[6, -50], [8, -12]]], P.teamShade, 0.8, 1);
+    g.stroke(polyline([[-24, -16], [-18, -5], [-6, -9], [6, -6], [16, -14]]), GOLD, 1, { lod: 1 });
+  });
+  // Löwenmähnen-Kragen: zottiger Goldkranz rund um den Hals, fällt über beide Schultern
+  F.part('mane', { bone: 'torso', z: 39.5, zb: 29, sig: true }, (g) => {
+    const pts = [];
+    const n = 22;
+    for (let i = 0; i <= n; i++) {
+      const a = Math.PI * (0.92 + (i / n) * 1.16);
+      const r = i % 2 ? 16 : 22.5;
+      pts.push([2 + Math.cos(a) * r * 1.2, -52 + Math.sin(a) * r * 0.62, 1]);
+    }
+    g.mat(path([...pts, [26, -48, 1], [20, -44], [12, -47], [2, -45.6], [-8, -47], [-16, -44], [-23, -48, 1]]), MANE, 'hair', { hi: 0.55 });
+    g.mat(path([[-12, -52], [-6, -57], [2, -58.6], [10, -57], [16, -52], [10, -50], [2, -51], [-6, -50]]), '#e8a83a', 'hair', { line: '0' });
+    lines(g, [[[-18, -56], [-13, -52]], [[-10, -62], [-7, -57]], [[2, -64], [2, -59]], [[13, -62], [11, -57]], [[21, -56], [17, -52]]], '#a86a1a', 0.8, 1);
+  });
+  F.part('clasp', { bone: 'torso', z: 29.5, view: 'front' }, (g) => {
+    g.mat(circle(9, -51.6, 3.2), GOLD, 'gold');
+    g.fill(circle(8.2, -52.4, 0.6), '#6a4a14', { lod: 1 });
+    g.fill(circle(10, -52.4, 0.6), '#6a4a14', { lod: 1 });
+    g.stroke(spline([[7.6, -50.4], [9, -49.6], [10.4, -50.4]]), '#6a4a14', 0.5, { lod: 1 });
+  });
+  F.part('comb', { bone: 'hat', z: 35.5, zb: 38.5 }, (g) => {
+    g.mat(path([[-8, -90], [-4, -98], [4, -102, 1], [12, -99], [16, -91], [10, -93.4], [2, -95], [-4, -93.4]]), GOLD, 'gold');
+    lines(g, [[[-2, -95], [0, -98.6]], [[4, -96], [5, -100]], [[10, -94.6], [11, -97.6]]], '#9a6a1a', 0.6, 1);
+  });
+  F.part('crown', { bone: 'handF', z: 42.5, zb: 4.5 }, (g) => {
+    g.mat(path([[13, -60.6], [13, -67, 1], [17.6, -63.6], [23, -70, 1], [28.4, -63.6], [33, -67, 1], [33, -60.6]]), GOLD, 'gold');
+    for (const x of [13, 23, 33]) g.mat(circle(x, x === 23 ? -70.6 : -67.6, 1.3), '#e84a5a', 'gem', { lod: 1 });
+  });
+  F.part('lionPommel', { bone: 'propB', z: 14.5, zb: 44.5 }, (g) => {
+    g.mat(circle(-19.3, -28.4, 2.8), GOLD, 'gold');
+    g.fill(circle(-19.3, -28.4, 1.2), '#9a6a1a', { lod: 1 });
   });
 }

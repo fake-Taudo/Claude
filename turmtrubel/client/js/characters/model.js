@@ -6,7 +6,9 @@ const D2R = Math.PI / 180;
 const mul = (m, n) => [m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1], m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3], m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5]];
 
 function partMatches(p, sel, exprActive, pose) {
-  if (p.view && p.view !== sel.view) return false;
+  // pose.view: 'front'/'back' erzwingt eine Ansicht, 'flip' zeigt die jeweils andere (Drehungen, Wirbel)
+  const view = pose.view === 'flip' ? (sel.view === 'back' ? 'front' : 'back') : pose.view || sel.view;
+  if (p.view && p.view !== view) return false;
   if (p.evo === 'evo' && !sel.evo) return false;
   if (p.evo === 'base' && sel.evo) return false;
   const forms = p.form || ['base'];

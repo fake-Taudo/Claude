@@ -79,11 +79,23 @@ const DEFAULT_ANIM = {
 function mergeAnim(rig, own) {
   const out = {};
   const def = DEFAULT_ANIM[rig] || DEFAULT_ANIM.biped;
+  // rest: { knochen: { r|x|y: Wert } } – feste Ruhepose (z. B. Waffe geschultert), in jedem Zustand addiert
+  const rest = own.rest || null;
   for (const k of new Set([...Object.keys(def), ...Object.keys(own)])) {
+    if (k === 'rest') continue;
     const a = def[k] || {};
     const b = own[k] || {};
     out[k] = { ...a, ...b, p: { ...(a.p || {}), ...(b.p || {}) } };
     if (!Object.keys(out[k].p).length) delete out[k].p;
+    if (rest) {
+      const keys = { ...(out[k].keys || {}) };
+      for (const [bone, ch] of Object.entries(rest)) {
+        const bk = { ...(keys[bone] || {}) };
+        for (const [c, v] of Object.entries(ch)) bk[c] = bk[c] ? bk[c].map(([u, w, e]) => (e ? [u, w + v, e] : [u, w + v])) : [[0, v]];
+        keys[bone] = bk;
+      }
+      out[k].keys = keys;
+    }
   }
   return out;
 }
