@@ -45,8 +45,9 @@ Dann im Browser **http://localhost:3000** öffnen.
 | Karte spielen | Karte aufs Feld **ziehen** *oder* Karte **antippen**, dann Feld antippen | `1`–`4` wählt die Karte, dann Klick aufs Feld |
 | Auswahl abbrechen | Karte erneut antippen oder zurück auf die Hand ziehen | `Esc` |
 | Champion-/Helden-Fähigkeit | runder Knopf neben dem Emote-Knopf (Kartenpanel bzw. neben der Arena) | `Leertaste` oder `Q` |
-| Emote | Smiley-Knopf, dann eines von 6 Emotes | `E` |
-| Menü, Ton, Aufgeben | `≡` oben links bzw. oben im Kartenpanel | – |
+| Emote | Sprechblasen-Knopf, dann eines von 6 Emotes aus der Leiste | `E` |
+| Menü, Ton, Aufgeben | Menü-Knopf (drei Striche) oben links bzw. oben im Kartenpanel | – |
+| Leistungsanzeige (FPS, Partikel, Sprite-Cache) | – | `F3` |
 
 Solange eine Karte ausgewählt ist, ist der gesperrte Bereich rot schraffiert, die Elixierleiste markiert die Kosten, und eine Vorschau zeigt Formation, Reichweite bzw. Zauberradius. Liegt der Finger auf der gegnerischen Hälfte, rastet die Truppe am Flussufer ein.
 
@@ -138,13 +139,18 @@ turmtrubel/
 ├─ client/js/net.js         WebSocket, Reconnect, Ping
 ├─ client/js/audio.js       Web-Audio-SFX + prozedurale Musik
 ├─ client/js/store.js       localStorage (Name, Einstellungen, 5 Deck-Plätze)
-├─ client/js/ui/…           Deck-Bauer, Kartenansicht, Einstellungen, DOM-Helfer (Modal, Toast), tokens.js (Design-Tokens fürs Canvas)
-├─ client/js/game/…         game.js (Interpolation, Eingabe), renderer.js, hud.js (Layout-Engine), canvastext.js, sprites.js, particles.js
+├─ client/js/ui/…           Deck-Bauer (mit Drag-and-Drop), Kartenansicht, Einstellungen, DOM-Helfer (Modal, Toast), icons.js (SVG-Icon-Set), tokens.js
+├─ client/js/game/…         game.js (Interpolation, Eingabe, Effekt-Ereignisse), renderer.js, hud.js (Layout-Engine), hudart.js (HUD-Grafiken), canvastext.js, sprites.js
+├─ client/js/design/…       Designsystem: Tokens, Easing, Licht-Modell, Sprite-Cache, Asset-Manifest
+├─ client/js/vfx/…          VFX-Engine, Partikel-Texturen, presets.json (Effekt-Presets) und deren Prüfung
 ├─ tools/fetch-cards.mjs    lädt den Wiki-Snapshot (MediaWiki-API)
 ├─ tools/cards/             Kartendefinitionen + build.py → data/cards.json, TODO_missing_stats.md
-├─ tools/e2e/               Test-Clients, die über WebSocket komplette Kämpfe spielen
+├─ tools/e2e/               Test-Clients, die über WebSocket komplette Kämpfe spielen; browser-match.mjs (zwei Browser-Clients)
 ├─ tools/ui-shots.mjs       Screenshots aller Zustände in 8 Viewports + automatische UI-Prüfungen
-├─ docs/ui-*.md             UI-Audit, Entscheidungen, Vorher/Nachher
+├─ tools/bench/             Extremszene, Performance-Messung, CPU-Profil
+├─ tools/vfx-gallery.mjs    alle VFX-Presets als Kontaktbögen
+├─ docs/ui-*.md             UI-Audit, Entscheidungen, Vorher/Nachher (erste UI-Überarbeitung)
+├─ docs/REPORT.md           Bericht zum visuellen Upgrade (mit AUDIT, COMPARISON, STYLE_GUIDE, vfx-katalog/, before_after/)
 └─ test/…                   node:test-Tests
 ```
 
@@ -237,6 +243,10 @@ Die Tests laufen mit dem eingebauten `node:test`, ohne zusätzliche Abhängigkei
 node tools/ui-shots.mjs                          # alle 8 Viewports → docs/ui-nachher/ (+ checks.json)
 node tools/ui-shots.mjs --only=phone-360x640     # nur einzelne Viewports
 node tools/ui-shots.mjs --perf                   # FPS und Long Tasks im Bot-Kampf, CPU 4× gedrosselt
+node tools/ui-shots.mjs --perf --fixed           # dito mit fester Auflösung (automatische Qualität aus)
+node tools/bench/run.mjs                         # Extremszene (222 Entitäten) in drei Profilen
+node tools/vfx-gallery.mjs --out=docs/vfx-katalog # alle Effekte als Kontaktbögen
+node tools/e2e/browser-match.mjs                 # zwei Browser-Clients: volles Match inkl. Verlängerung, Desync- und Konsolenprüfung
 ```
 
 Das Skript startet selbst einen Server auf einem freien Port und spielt pro Viewport den ganzen Ablauf durch: Name → Menü → Einstellungen → Beitreten → Deck-Bauer → Kartendetail → Training → Countdown → Laden → Kampf → Karte wählen/ziehen/ausspielen → Fehlertoast → Emote → Pause → letzte 10 s → zerstörter Turm → Aufgeben → Ergebnis (Niederlage und Sieg) → Multiplayer-Lobby mit zwei Seiten. Jeder Zustand wird geprüft: Touch-Ziele unter 44 px, Elemente außerhalb des Bildschirms, abgeschnittene Texte ohne Volltext, HUD über der Arena (über `hud.blocks()`), Toast über dem Kampfgeschehen und Konsolenfehler. Ein nicht leerer Befund bei Arena-Überdeckung oder Seitenfehlern führt zu Exit-Code 1.
@@ -254,9 +264,9 @@ Playwright ist **keine** Projektabhängigkeit (damit `npm install` schlank bleib
 * **Keine Vorhersage beim Platzieren:** Eigene Karten erscheinen erst nach der Server-Bestätigung (Ping + ca. 110 ms Interpolationspuffer). Bis dahin ist eine Vorschau sichtbar.
 * **Netzlast:** Snapshots werden jeden Tick komplett als JSON gesendet (typisch 0,5–6 KB), ohne Delta-Kompression. Das reicht für LAN und normales Internet, ist aber nicht optimiert.
 * **Anti-Cheat** prüft alle Eingaben auf dem Server. Gegen automatisierte Clients (Bots), die gültige Eingaben senden, schützt er nicht.
-* **Grafik vollständig prozedural:** Das sieht charmant aus, ist aber einfacher als handgezeichnete Sprites. Auf sehr alten Geräten hilft *Grafikqualität: Niedrig*.
+* **Grafik vollständig prozedural:** Figuren, Türme, HUD und Effekte sind als Vektorgrafik im Code gezeichnet (Licht-Modell und Regeln in `docs/STYLE_GUIDE.md`) und werden als Sprites gecacht. Auf sehr alten Geräten hilft *Grafikqualität: Niedrig*; die automatische Qualität senkt bei Ruckeln Auflösung und Effektmenge.
 * **Audio:** Browser (besonders iOS) starten Ton erst nach der ersten Berührung. Musik und Effekte sind synthetisch.
-* **Oberfläche:** Im Hochformat erscheint der Hinweis-Toast (z. B. „Nicht genug Elixier!“) für 1,4 s am unteren Arenarand über dem eigenen Burgturm. Vibration gibt es nur, wo der Browser `navigator.vibrate` anbietet (nicht auf iOS). Die Performance ist bisher nur in Chromium gemessen (siehe `docs/ui-vorher-nachher.md`).
+* **Oberfläche:** Im Hochformat erscheint der Hinweis-Toast (z. B. „Nicht genug Elixier!“) für 1,4 s am unteren Arenarand über dem eigenen Burgturm. Vibration gibt es nur, wo der Browser `navigator.vibrate` anbietet (nicht auf iOS). Die Performance ist bisher nur in Chromium ohne GPU gemessen (siehe `docs/REPORT.md`, Abschnitt 4).
 * **Designentscheidungen:** Champions und Helden lösen ihre Fähigkeit per Knopf aus. Evo-Karten starten ungeladen (`evo.startCharged` in `rules.json`). Die Turmnamen (Wachturm, Burgturm) sind eigenständig, die Kartennamen kommen aus dem Original (umschaltbar über `skin.json`).
 
 ---
