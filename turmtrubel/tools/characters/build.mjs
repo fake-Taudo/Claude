@@ -138,6 +138,7 @@ export async function buildFigure(id) {
     variants: Math.max(0, ...F.parts.map((p) => (p.o.variant != null ? Math.max(...[].concat(p.o.variant)) + 1 : 0))),
     forms,
     formLook: F.meta.formLook || null,
+    afterAbility: F.meta.afterAbility || null,
     evo: F.meta.evo || (F.parts.some((p) => p.o.evo === 'evo') ? { aura: row.acc } : null),
     events: F.meta.events || null,
   };

@@ -656,6 +656,10 @@ export class Renderer {
   /** Neue Figur über die Figuren-Laufzeit zeichnen; false, solange ihre Vektorquelle noch lädt. */
   drawFigure(ctx, v, t, team, lift, alpha) {
     const f = v.flags;
+    if (v.formNext && t >= v.formAt) {
+      v.form = v.formNext;
+      v.formNext = null;
+    }
     const st = v.anim.frame(t, { moving: v.moving && !(f & EF.STUN) && !(f & EF.ROOT), flags: f });
     const r = drawCharacter(ctx, {
       figure: v.fig,

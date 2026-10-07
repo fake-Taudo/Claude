@@ -100,7 +100,7 @@ export async function sheet(lab, o) {
         const x = 150 + k * cellW + cellW / 2;
         const y = y0 + cellH - o.foot;
         CH.characterShadow(g, { x, y, r: o.scale * 0.45, team: r.team, ring: true, dpr: 1 });
-        CH.drawCharacter(g, { figure: r.f, state: r.s, time: t, x, y, scale: o.scale, dpr: 1, team: r.team, view: r.v, evo: r.evo, variant: r.variant, face: o.face || 1, big: o.big, lift: (CH.figureEntry(r.f)?.hover || 0) * o.scale });
+        CH.drawCharacter(g, { figure: r.f, state: r.s, time: t, x, y, scale: o.scale, dpr: 1, team: r.team, view: r.v, evo: r.evo, variant: r.variant, form: o.form, face: o.face || 1, big: o.big, lift: (CH.figureEntry(r.f)?.hover || 0) * o.scale });
         CH.bakeTick();
       }
     });
@@ -137,6 +137,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       evo: args.includes('--evo'),
       evos: args.includes('--evos') ? [false, true] : undefined,
       variants: opt('variants', '0').split(',').map(Number),
+      form: opt('form', undefined),
       big: !args.includes('--atlas'),
       cellW: +opt('cellw', 0) || undefined,
       cellH: +opt('cellh', 0) || undefined,

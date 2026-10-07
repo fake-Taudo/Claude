@@ -923,6 +923,12 @@ export class Game {
           const card = this.db.card(info.cardId || info.key);
           const mine = ev[2] === this.side;
           v?.anim?.ability(now);
+          // Figuren mit Formwechsel nach der Fähigkeit (z. B. Dunkler Prinz als Held springt ab und läuft zu Fuß)
+          const after = v?.fig ? figureEntry(v.fig)?.afterAbility : null;
+          if (after?.form) {
+            v.formNext = after.form;
+            v.formAt = now + (after.delay ?? 0.9);
+          }
           if (card?.ability) this.hud.banner(card.ability.name + '!', '#ffffff', '', { kind: 'card', team: mine ? 'blue' : 'red', cardId: card.id });
           if (v) fx.emit('ability.activate', { x: v.x, y: v.y, z: v.flying ? 1.1 : 0, team: this.teamOf(v.owner) });
           A.sfx('ability');
