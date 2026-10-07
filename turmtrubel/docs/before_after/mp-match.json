@@ -1,0 +1,79 @@
+{
+ "date": "2026-10-07T05:11:53.893Z",
+ "results": [
+  {
+   "name": "verlaengerung",
+   "wallSeconds": 108,
+   "timeScale": 3,
+   "result": {
+    "A": {
+     "title": "Unentschieden",
+     "reason": "Unentschieden",
+     "crowns": [
+      0,
+      0
+     ]
+    },
+    "B": {
+     "title": "Unentschieden",
+     "reason": "Unentschieden",
+     "crowns": [
+      0,
+      0
+     ]
+    }
+   },
+   "consistent": true,
+   "overtime": true,
+   "overtimeTicks": 2401,
+   "cardsPlayed": {
+    "A": 72,
+    "B": 70
+   },
+   "ticksCompared": 6001,
+   "desyncTicks": 0,
+   "firstDesync": [],
+   "consoleErrors": {
+    "A": [],
+    "B": []
+   }
+  },
+  {
+   "name": "normal",
+   "wallSeconds": 67,
+   "timeScale": 3,
+   "result": {
+    "A": {
+     "title": "Niederlage",
+     "reason": "Burgturm zerstört",
+     "crowns": [
+      0,
+      3
+     ]
+    },
+    "B": {
+     "title": "Sieg!",
+     "reason": "Burgturm zerstört",
+     "crowns": [
+      3,
+      0
+     ]
+    }
+   },
+   "consistent": true,
+   "overtime": false,
+   "overtimeTicks": 0,
+   "cardsPlayed": {
+    "A": 46,
+    "B": 44
+   },
+   "ticksCompared": 3534,
+   "desyncTicks": 0,
+   "firstDesync": [],
+   "consoleErrors": {
+    "A": [],
+    "B": []
+   }
+  }
+ ]
+}

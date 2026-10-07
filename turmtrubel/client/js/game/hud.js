@@ -381,18 +381,24 @@ export class Hud {
     return padX * 2 + cs * 3.3 + (label ? 30 : 0);
   }
 
-  /** Emote-Auswahl (3×2) oberhalb des Emote-Knopfs, im Bildschirm gehalten. */
+  /** Emote-Leiste oberhalb des Emote-Knopfs (einzeilig; bei zu wenig Breite 3×2), im Bildschirm gehalten. */
   placeEmoteMenu(L) {
     const b = L.emoteBtn;
     const r = TAP / 2;
     const gap = 8;
-    const mw = 3 * TAP + 2 * gap + 20;
-    const mh = 2 * TAP + gap + 20;
+    const n = EMOTES.length;
+    const cols = n * TAP + (n - 1) * gap + 20 <= L.w - 12 ? n : Math.ceil(n / 2);
+    const rows = Math.ceil(n / cols);
+    const mw = cols * TAP + (cols - 1) * gap + 20;
+    const mh = rows * TAP + (rows - 1) * gap + 20;
     const mx = clamp(b.x - mw + r + 10, 6, L.w - mw - 6);
     let my = b.y - b.r - 10 - mh;
     if (my < 6) my = b.y + b.r + 10;
     L.emoteMenu = { x: mx, y: my, w: mw, h: mh };
-    L.emoteItems = EMOTES.map((_, i) => ({ x: mx + 10 + r + (i % 3) * (TAP + gap), y: my + 10 + r + Math.floor(i / 3) * (TAP + gap), r }));
+    L.emoteItems = EMOTES.map((_, i) => ({ x: mx + 10 + r + (i % cols) * (TAP + gap), y: my + 10 + r + Math.floor(i / cols) * (TAP + gap), r }));
+    // Pop-Reihenfolge: vom Knopf aus nach außen
+    const byDist = L.emoteItems.map((it, i) => [Math.hypot(it.x - b.x, it.y - b.y), i]).sort((p, q) => p[0] - q[0]);
+    byDist.forEach(([, i], rank) => (L.emoteItems[i].rank = rank));
   }
 
   /** Benannte HUD-Rechtecke (für tools/ui-shots.mjs: nichts davon darf die Arena überdecken). */
@@ -1059,7 +1065,7 @@ export class Hud {
     ctx.restore();
     const hover = this.hoverEmote ?? -1;
     L.emoteItems.forEach((it, i) => {
-      const ki = this.rm ? 1 : backOut(clamp01((t - 0.05 - i * 0.03) / 0.2), 2);
+      const ki = this.rm ? 1 : backOut(clamp01((t - 0.05 - (it.rank ?? i) * 0.03) / 0.2), 2);
       if (ki <= 0) return;
       const r = it.r - 2;
       const sl = emoteSlot(r, i === hover, dpr);
