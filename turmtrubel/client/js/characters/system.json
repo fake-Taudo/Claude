@@ -1,0 +1,4813 @@
+{
+ "_info": "Archetypen- und Unterscheidungssystem der Figuren (docs/CHAR_SYSTEM.md). Erzeugt von tools/characters/gen-docs.mjs aus tools/characters/system.mjs und figures.mjs – nicht von Hand bearbeiten. Liegt unter client/js/characters/ statt src/characters/, weil der Client hier seine Quellen hat.",
+ "version": 1,
+ "muPerTile": 50,
+ "families": {
+  "schlank": {
+   "name": "Schlank",
+   "shape": "schmales Hochrechteck, lange Diagonale durch Waffe oder Werkzeug",
+   "role": "Fernkampf, Präzision",
+   "rig": "biped"
+  },
+  "breit": {
+   "name": "Breit",
+   "shape": "Quadrat bis Trapez, breite Schultern, breiter Stand",
+   "role": "robuste Nahkämpfer",
+   "rig": "biped"
+  },
+  "keil": {
+   "name": "Keil",
+   "shape": "umgedrehtes Dreieck: sehr breite Schultern, schmale Hüfte",
+   "role": "schnelle, harte Nahkämpfer",
+   "rig": "biped"
+  },
+  "dreieckig": {
+   "name": "Dreieckig",
+   "shape": "breiter Saum unten (Robe, Kleid, Mantel), schmaler Kopf oben",
+   "role": "Zauber und Unterstützung",
+   "rig": "robe"
+  },
+  "hochgewachsen": {
+   "name": "Hochgewachsen",
+   "shape": "hohes Rechteck, lange Beine oder Robe, hohe Kopfbedeckung",
+   "role": "Zauberer, Spezialisten, Champions",
+   "rig": "biped"
+  },
+  "geduckt": {
+   "name": "Geduckt",
+   "shape": "liegendes Oval, Kopf vorn, tiefer Schwerpunkt",
+   "role": "Sprinter, Gräber, Schleicher",
+   "rig": "biped"
+  },
+  "kugelig": {
+   "name": "Kugelig",
+   "shape": "Kreis mit Stummelbeinen",
+   "role": "Wurf- und Sprengfiguren, Golemiten",
+   "rig": "biped"
+  },
+  "massig": {
+   "name": "Massig",
+   "shape": "Berg: riesiger Oberkörper, kleiner Kopf, große Fäuste",
+   "role": "Tanks und Riesen",
+   "rig": "biped"
+  },
+  "winzig": {
+   "name": "Winzig",
+   "shape": "kleiner Körper mit großem Kopf (Kopf mindestens 40 % der Höhe)",
+   "role": "Schwärme, Kinder, Kleinfiguren",
+   "rig": "biped"
+  },
+  "schwebend": {
+   "name": "Schwebend",
+   "shape": "Tropfen ohne Füße, unten Schweif, Korb oder Fass",
+   "role": "Geister, Ballone, Geister-Elementare",
+   "rig": "hover"
+  },
+  "gefluegelt": {
+   "name": "Geflügelt",
+   "shape": "Flügel als breiteste Form, Körper in der Mitte",
+   "role": "Flieger",
+   "rig": "flyer"
+  },
+  "vierbeinig": {
+   "name": "Vierbeinig",
+   "shape": "liegendes Rechteck auf vier Beinen",
+   "role": "Tiere, Rammer",
+   "rig": "quadruped"
+  },
+  "reiter": {
+   "name": "Reiter",
+   "shape": "Tierkörper plus aufrechte Figur darüber",
+   "role": "Ansturm, Gebäudejäger",
+   "rig": "rider"
+  },
+  "mechanisch": {
+   "name": "Mechanisch",
+   "shape": "kantige Maschinenteile: Kessel, Kolben, Rohre, Räder",
+   "role": "Maschinen und Automaten",
+   "rig": "biped"
+  },
+  "fahrzeug": {
+   "name": "Fahrzeug",
+   "shape": "Rechteck auf Rädern mit Mannschaft",
+   "role": "Rammen und Geschütze",
+   "rig": "vehicle"
+  },
+  "amorph": {
+   "name": "Amorph",
+   "shape": "weiche Blob-Form ohne Skelett",
+   "role": "Kleckse, Tarnung",
+   "rig": "blob"
+  },
+  "bauwerk": {
+   "name": "Bauwerk",
+   "shape": "Haus, Turm oder Grabmal mit Öffnung",
+   "role": "Gebäude-Spawner",
+   "rig": "building"
+  },
+  "schlangenartig": {
+   "name": "Schlangenartig",
+   "shape": "langer S-förmiger Leib",
+   "role": "Drachen-Reittier",
+   "rig": "serpent"
+  }
+ },
+ "signatureCategories": {
+  "kopfbedeckung": "Helm, Hut, Krone, Kapuze",
+  "schild": "Schild oder schildartiges Bauteil",
+  "waffe": "Waffe mit eigener Form",
+  "werkzeug": "Werkzeug oder Gerät",
+  "ruecken": "Rucksack, Köcher, Behälter auf dem Rücken",
+  "schulter": "Schulterstück",
+  "umhang": "Umhang, Mantel, Kragen",
+  "begleiter": "Tier oder Wesen, das mitkommt",
+  "fluegel": "Flügel als Merkmal",
+  "koerper": "Körpermerkmal (Bauch, Schädel, Ohren, Krater …)",
+  "kostuem": "Ganzkörper-Kostüm oder Verkleidung",
+  "schmuck": "Schmuck oder Fesseln",
+  "leuchten": "Leuchtendes Merkmal",
+  "fahne": "Banner oder Fahne",
+  "reittier": "besonderes Reittier",
+  "fahrzeug": "Fahrzeugteil",
+  "bauwerk": "Bauwerk-Merkmal"
+ },
+ "sizeClasses": [
+  {
+   "id": "XS",
+   "min": 0.9,
+   "max": 1.29,
+   "outline": 1
+  },
+  {
+   "id": "S",
+   "min": 1.3,
+   "max": 1.69,
+   "outline": 1
+  },
+  {
+   "id": "M",
+   "min": 1.7,
+   "max": 2.04,
+   "outline": 2
+  },
+  {
+   "id": "L",
+   "min": 2.05,
+   "max": 2.44,
+   "outline": 2
+  },
+  {
+   "id": "XL",
+   "min": 2.45,
+   "max": 2.94,
+   "outline": 3
+  },
+  {
+   "id": "XXL",
+   "min": 2.95,
+   "max": 3.6,
+   "outline": 3
+  }
+ ],
+ "outline": {
+  "ink": "#1c1830",
+  "refTile": 26,
+  "scale": [
+   0.8,
+   1.8
+  ],
+  "tiers": {
+   "1": {
+    "name": "dünn",
+    "px": 1.5,
+    "innerMu": 1.5
+   },
+   "2": {
+    "name": "mittel",
+    "px": 1.9,
+    "innerMu": 1.8
+   },
+   "3": {
+    "name": "dick",
+    "px": 2.4,
+    "innerMu": 2.2
+   }
+  }
+ },
+ "team": {
+  "placeholders": {
+   "main": "#ff00f1",
+   "light": "#ff00f2",
+   "shade": "#ff00f3",
+   "deep": "#ff00f4",
+   "symbol": "#ff00f5"
+  },
+  "blue": {
+   "main": "#3d8bff",
+   "light": "#9cc8ff",
+   "shade": "#1f5fc9",
+   "deep": "#0f3a85",
+   "symbol": "#f4f9ff",
+   "shape": "kreis"
+  },
+  "red": {
+   "main": "#ff4d57",
+   "light": "#ffb0b5",
+   "shade": "#c42233",
+   "deep": "#7a1020",
+   "symbol": "#fff4f4",
+   "shape": "dreieck"
+  },
+  "ring": {
+   "blue": "glatter Kreisring",
+   "red": "Ring mit sechs nach außen zeigenden Zacken"
+  },
+  "maxArea": 0.25,
+  "colorblind": {
+   "emblemScale": 1.5,
+   "ringAlpha": 0.95,
+   "note": "Teamsymbol größer, Bodenring kräftiger; die Form trägt die Information"
+  }
+ },
+ "lod": {
+  "1": 46,
+  "2": 110
+ },
+ "states": {
+  "idle": {
+   "name": "Ruhe",
+   "dur": 1.6,
+   "loop": true,
+   "frames": [
+    3,
+    6,
+    8
+   ]
+  },
+  "walk": {
+   "name": "Laufen",
+   "dur": 0.8,
+   "loop": true,
+   "frames": [
+    4,
+    8,
+    10
+   ],
+   "note": "Dauer skaliert mit der Laufgeschwindigkeit"
+  },
+  "attack": {
+   "name": "Angriff",
+   "dur": null,
+   "loop": false,
+   "frames": [
+    4,
+    8,
+    10
+   ],
+   "events": {
+    "windup": 0,
+    "strike": 0.55
+   },
+   "note": "Dauer aus hitSpeed (höchstens 0,9 s); strike liegt auf dem Server-Ereignis a"
+  },
+  "hit": {
+   "name": "Treffer",
+   "dur": 0.24,
+   "loop": false,
+   "frames": [
+    2,
+    3,
+    3
+   ]
+  },
+  "spawn": {
+   "name": "Erscheinen",
+   "dur": 0.5,
+   "loop": false,
+   "frames": [
+    3,
+    5,
+    6
+   ],
+   "events": {
+    "land": 0.55
+   }
+  },
+  "death": {
+   "name": "Tod",
+   "dur": 0.7,
+   "loop": false,
+   "frames": [
+    4,
+    6,
+    8
+   ],
+   "events": {
+    "fall": 0.45,
+    "vanish": 1
+   }
+  },
+  "ability": {
+   "name": "Fähigkeit",
+   "dur": 0.9,
+   "loop": false,
+   "frames": [
+    4,
+    6,
+    8
+   ],
+   "events": {
+    "ability": 0.6
+   }
+  },
+  "stun": {
+   "name": "Betäubt",
+   "dur": 0.9,
+   "loop": true,
+   "frames": [
+    2,
+    4,
+    4
+   ]
+  },
+  "sleep": {
+   "name": "Schlaf",
+   "dur": 2,
+   "loop": true,
+   "frames": [
+    2,
+    4,
+    4
+   ]
+  },
+  "charge": {
+   "name": "Ansturm",
+   "dur": 0.5,
+   "loop": true,
+   "frames": [
+    4,
+    6,
+    6
+   ]
+  }
+ },
+ "statePriority": [
+  "idle",
+  "walk",
+  "charge",
+  "attack",
+  "sleep",
+  "stun",
+  "hit",
+  "ability",
+  "spawn",
+  "death"
+ ],
+ "events": {
+  "char.step": "Fußaufsatz (nur XL/XXL und Vierbeiner): Staub, bei XXL leichtes Beben",
+  "char.windup": "Beginn der Ausholbewegung: Glanzblitz an der Waffe",
+  "char.strike": "Treffer-Bild des Nahkampfs, fällt auf das Server-Ereignis a",
+  "char.release": "Abschuss eines Geschosses, fällt auf das Server-Ereignis a",
+  "char.land": "Landung nach dem Erscheinen",
+  "char.fall": "Aufprall beim Tod",
+  "char.vanish": "Ende der Todesanimation (Auflösen in Funken oder Staub)",
+  "char.ability": "Höhepunkt der Fähigkeits-Pose (Champions und Helden)",
+  "char.flap": "Flügel-Abwärtsschlag",
+  "char.spawnUnit": "Tür oder Klappe öffnet sich (Spawner, Ofen, Hexen, Fass)",
+  "char.evo": "Puls der Evo-Partikelhülle"
+ },
+ "quality": {
+  "low": {
+   "name": "Niedrig",
+   "frameIndex": 0,
+   "maxLod": 1,
+   "res": 0.75,
+   "atlas": 1024,
+   "budgetMB": 12,
+   "bakeMs": 3,
+   "aura": false
+  },
+  "medium": {
+   "name": "Mittel",
+   "frameIndex": 1,
+   "maxLod": 2,
+   "res": 1,
+   "atlas": 2048,
+   "budgetMB": 24,
+   "bakeMs": 4,
+   "aura": true
+  },
+  "high": {
+   "name": "Hoch",
+   "frameIndex": 2,
+   "maxLod": 2,
+   "res": 1,
+   "atlas": 2048,
+   "budgetMB": 48,
+   "bakeMs": 5,
+   "aura": true
+  }
+ },
+ "rigs": {
+  "biped": [
+   "root",
+   "hip",
+   "torso",
+   "head",
+   "armB",
+   "handB",
+   "armF",
+   "handF",
+   "legB",
+   "footB",
+   "legF",
+   "footF",
+   "prop",
+   "cape",
+   "back",
+   "hat",
+   "tail"
+  ],
+  "robe": [
+   "root",
+   "hip",
+   "skirt",
+   "torso",
+   "head",
+   "armB",
+   "handB",
+   "armF",
+   "handF",
+   "prop",
+   "cape",
+   "back",
+   "hat",
+   "buddy"
+  ],
+  "hover": [
+   "root",
+   "body",
+   "head",
+   "armB",
+   "handB",
+   "armF",
+   "handF",
+   "trail",
+   "prop",
+   "hat"
+  ],
+  "flyer": [
+   "root",
+   "body",
+   "head",
+   "jaw",
+   "wingB",
+   "wingF",
+   "tail",
+   "legB",
+   "legF",
+   "crest"
+  ],
+  "quadruped": [
+   "root",
+   "body",
+   "head",
+   "jaw",
+   "ear",
+   "tail",
+   "legFn",
+   "legFf",
+   "legBn",
+   "legBf"
+  ],
+  "rider": [
+   "root",
+   "body",
+   "head",
+   "jaw",
+   "ear",
+   "tail",
+   "legFn",
+   "legFf",
+   "legBn",
+   "legBf",
+   "rHip",
+   "rTorso",
+   "rHead",
+   "rArmB",
+   "rHandB",
+   "rArmF",
+   "rHandF",
+   "prop",
+   "cape"
+  ],
+  "vehicle": [
+   "root",
+   "body",
+   "wheelB",
+   "wheelF",
+   "barrel",
+   "c1Torso",
+   "c1Head",
+   "c1ArmF",
+   "c1ArmB",
+   "c2Torso",
+   "c2Head",
+   "c2ArmF",
+   "c2ArmB",
+   "flag"
+  ],
+  "blob": [
+   "root",
+   "body",
+   "eyes",
+   "hat",
+   "feet"
+  ],
+  "building": [
+   "root",
+   "base",
+   "roof",
+   "door",
+   "chimney",
+   "flag",
+   "glow",
+   "crew"
+  ],
+  "serpent": [
+   "root",
+   "seg1",
+   "seg2",
+   "seg3",
+   "seg4",
+   "seg5",
+   "seg6",
+   "head",
+   "jaw",
+   "rTorso",
+   "rHead",
+   "rArmF",
+   "rHandF",
+   "rArmB"
+  ]
+ },
+ "colorRules": {
+  "teamMain": 15,
+  "teamShade": 12,
+  "teamLight": 8,
+  "teamAccent": 10,
+  "family": {
+   "main": 10,
+   "mainWithAccent": 6,
+   "accent": 25
+  },
+  "global": {
+   "scheme": 8,
+   "main": 6,
+   "accent": 20
+  },
+  "related": {
+   "scheme": 6
+  },
+  "accentWeight": 0.6
+ },
+ "related": [
+  [
+   "golem",
+   "golemite"
+  ],
+  [
+   "elixir-golem",
+   "elixir-golemite"
+  ],
+  [
+   "elixir-golemite",
+   "elixir-blob"
+  ],
+  [
+   "lava-hound",
+   "lava-pup"
+  ],
+  [
+   "goblinstein",
+   "goblinstein-monster"
+  ],
+  [
+   "rascal-boy",
+   "rascal-girl"
+  ],
+  [
+   "wall-breakers",
+   "wall-breaker-runner"
+  ],
+  [
+   "royal-ghost",
+   "souldier"
+  ],
+  [
+   "spirit-empress-ground",
+   "spirit-empress-air"
+  ],
+  [
+   "tombstone-hero",
+   "tomb-queen"
+  ],
+  [
+   "skeletons",
+   "shadow-skeleton"
+  ],
+  [
+   "skeletons",
+   "general-gerry"
+  ],
+  [
+   "suspicious-bush",
+   "bush-goblin"
+  ]
+ ],
+ "forms": {
+  "cannon-cart-cannon": {
+   "figure": "cannon-cart",
+   "form": "cannon",
+   "note": "Rohr auf Dreibein, Karren zerbrochen, Kanonier hält sich die Ohren zu"
+  },
+  "goblin-demolisher-kamikaze": {
+   "figure": "goblin-demolisher",
+   "form": "kamikaze",
+   "note": "Helmlunte brennt, rennt mit nach hinten gestreckten Armen"
+  },
+  "phoenix-egg": {
+   "figure": "phoenix",
+   "form": "egg",
+   "note": "glühendes Ei mit Rissen, pulsiert"
+  },
+  "phoenix-reborn": {
+   "figure": "phoenix",
+   "form": "reborn",
+   "note": "flaumiges Küken mit kleiner Flamme"
+  },
+  "magic-archer-decoy": {
+   "figure": "magic-archer-hero",
+   "form": "decoy",
+   "note": "Sternenstaub-Doppelgänger, halb durchsichtig"
+  },
+  "lumberjack-ghost": {
+   "figure": "lumberjack",
+   "form": "ghost",
+   "note": "durchscheinender Geist mit leuchtender Axt"
+  }
+ },
+ "figures": [
+  {
+   "id": "knight",
+   "name": "Ritter",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "breit",
+   "size": "M",
+   "outline": 2,
+   "height": 1.85,
+   "main": "#8f99a8",
+   "accent": "#9a5b2a",
+   "signature": {
+    "category": "schild",
+    "text": "Zinnenschild in Burgturm-Form"
+   },
+   "teamZones": [
+    "Schildfeld",
+    "Helmwimpel"
+   ],
+   "proportion": {
+    "head": 0.36,
+    "legs": 0.22,
+    "arms": 0.85,
+    "hands": 0.5,
+    "weapon": 0.75
+   },
+   "exaggerated": "Zinnenschild fast so hoch wie er selbst",
+   "mood": "stur und pflichtbewusst, Pflaster quer über der Nase",
+   "idle": "klopft mit dem Schwertknauf zweimal an den Schild und späht über die Zinnen",
+   "attack": "Schild vor, kurzer Hieb von oben hinter dem Schild hervor",
+   "evo": true
+  },
+  {
+   "id": "archers",
+   "name": "Bogenschützen",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "schlank",
+   "size": "S",
+   "outline": 1,
+   "height": 1.55,
+   "main": "#d9a520",
+   "accent": "#2a9d8f",
+   "signature": {
+    "category": "ruecken",
+    "text": "Fächerköcher wie ein Pfauenrad"
+   },
+   "teamZones": [
+    "langer Schal",
+    "Köcherband"
+   ],
+   "proportion": {
+    "head": 0.38,
+    "legs": 0.3,
+    "arms": 0.9,
+    "hands": 0.42,
+    "weapon": 0.55
+   },
+   "exaggerated": "Pfeilfächer breiter als die Schultern",
+   "mood": "sportlich und eifrig, zwinkern beim Zielen",
+   "idle": "wippen auf den Zehen und zupfen an der Sehne",
+   "attack": "Pfeil aus dem Fächer, weites Spannen, Schuss mit Schwung nach hinten",
+   "variants": [
+    "Zopf",
+    "Dutt"
+   ],
+   "evo": true
+  },
+  {
+   "id": "musketeer",
+   "name": "Musketierin",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "schlank",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#8f7a24",
+   "accent": "#f4efe6",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Musketengabel als Stütze"
+   },
+   "teamZones": [
+    "Hutfeder",
+    "Schärpe"
+   ],
+   "proportion": {
+    "head": 0.32,
+    "legs": 0.36,
+    "arms": 0.9,
+    "hands": 0.4,
+    "weapon": 1
+   },
+   "exaggerated": "Muskete länger als sie selbst",
+   "mood": "ruhig und präzise, hebt eine Augenbraue",
+   "idle": "stellt die Gabel ab, pustet über die Mündung",
+   "attack": "Gabel aufstellen, zielen, Schuss mit Rauchring und Rückstoß",
+   "evo": true
+  },
+  {
+   "id": "three-musketeers",
+   "name": "Drei Musketierinnen",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "schlank",
+   "size": "M",
+   "outline": 2,
+   "height": 1.9,
+   "main": "#1f4e5a",
+   "accent": "#e7d9a8",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Dreispitz mit großer Kokarde"
+   },
+   "teamZones": [
+    "Kokarde",
+    "Schärpe"
+   ],
+   "proportion": {
+    "head": 0.33,
+    "legs": 0.34,
+    "arms": 0.9,
+    "hands": 0.42,
+    "weapon": 0.7
+   },
+   "exaggerated": "riesige Kokarden am Dreispitz",
+   "mood": "eingespielt und keck, Schwestern-Grinsen",
+   "idle": "drehen den Karabiner wie einen Taktstock",
+   "attack": "Karabiner-Schuss; aus der Nähe Bajonett-Stoß",
+   "variants": [
+    "Zopf",
+    "Locken",
+    "Kurzhaar"
+   ]
+  },
+  {
+   "id": "royal-recruits",
+   "name": "Königsrekruten",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "breit",
+   "size": "M",
+   "outline": 2,
+   "height": 1.75,
+   "main": "#9fb39a",
+   "accent": "#6b4a2a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "übergroßer Schüsselhelm, der über die Augen rutscht"
+   },
+   "teamZones": [
+    "Rundschild-Feld",
+    "Halstuch"
+   ],
+   "proportion": {
+    "head": 0.42,
+    "legs": 0.22,
+    "arms": 0.8,
+    "hands": 0.45,
+    "weapon": 0.9
+   },
+   "exaggerated": "Helm so groß wie der Oberkörper",
+   "mood": "jung, nervös und tapfer",
+   "idle": "schieben den Helm hoch, der wieder herunterrutscht",
+   "attack": "Pikenstoß über den Schildrand",
+   "variants": [
+    "Sommersprossen",
+    "Zahnlücke",
+    "Brille"
+   ],
+   "evo": true
+  },
+  {
+   "id": "prince",
+   "name": "Prinz",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "reiter",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.45,
+   "main": "#8fbf3a",
+   "accent": "#f0c040",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Froschmaul-Stechhelm"
+   },
+   "teamZones": [
+    "Schabracke",
+    "Lanzenwimpel"
+   ],
+   "proportion": {
+    "head": 0.24,
+    "legs": 0,
+    "arms": 0.8,
+    "hands": 0.4,
+    "weapon": 1.15
+   },
+   "exaggerated": "Turnierlanze mit Spiralstreifen",
+   "mood": "edel und ungeduldig",
+   "idle": "Pferd scharrt, Prinz richtet die Lanze aus",
+   "attack": "Lanzenstoß im Vorbeireiten; Ansturm mit gesenkter Lanze"
+  },
+  {
+   "id": "princess",
+   "name": "Prinzessin",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "dreieckig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.6,
+   "main": "#f7b49a",
+   "accent": "#8fe3c0",
+   "signature": {
+    "category": "waffe",
+    "text": "Harfenbogen mit Saiten"
+   },
+   "teamZones": [
+    "Schleife am Kleid",
+    "Diadem-Stein"
+   ],
+   "proportion": {
+    "head": 0.36,
+    "legs": 0,
+    "arms": 0.85,
+    "hands": 0.38,
+    "weapon": 0.65
+   },
+   "exaggerated": "Glockenkleid fast so breit wie hoch",
+   "mood": "verträumt, summt beim Zielen",
+   "idle": "zupft eine Saite und lauscht",
+   "attack": "zieht eine glühende Saite wie eine Sehne, brennender Pfeil im hohen Bogen",
+   "evo": true
+  },
+  {
+   "id": "golden-knight",
+   "name": "Goldener Ritter",
+   "kind": "champion",
+   "faction": "krone",
+   "family": "schlank",
+   "size": "L",
+   "outline": 2,
+   "height": 2.2,
+   "main": "#f2c14e",
+   "accent": "#fff6e0",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Strahlenkranz-Helmzier"
+   },
+   "teamZones": [
+    "Umhang",
+    "Brustemblem"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.38,
+    "arms": 0.9,
+    "hands": 0.4,
+    "weapon": 0.75
+   },
+   "exaggerated": "Strahlenkranz wie eine Sonne hinter dem Kopf",
+   "mood": "eitel und strahlend, posiert",
+   "idle": "poliert die Klinge und pustet eine Haarsträhne weg",
+   "attack": "Fechter-Ausfall mit dem Rapier"
+  },
+  {
+   "id": "archer-queen",
+   "name": "Bogenschützen-Königin",
+   "kind": "champion",
+   "faction": "krone",
+   "family": "hochgewachsen",
+   "size": "L",
+   "outline": 2,
+   "height": 2.15,
+   "main": "#1f6b52",
+   "accent": "#e8b33c",
+   "signature": {
+    "category": "waffe",
+    "text": "Mondsichel-Armbrust"
+   },
+   "teamZones": [
+    "Schleppe des Umhangs",
+    "Kronenjuwel"
+   ],
+   "proportion": {
+    "head": 0.27,
+    "legs": 0.42,
+    "arms": 0.95,
+    "hands": 0.38,
+    "weapon": 0.8
+   },
+   "exaggerated": "steife Spitzenkrause bis über die Ohren",
+   "mood": "kühl und überlegen, hochgezogene Augenbraue",
+   "idle": "prüft die Sehne, der Umhang weht",
+   "attack": "legt an, kurzes Zielen, Schuss mit Rückstoß"
+  },
+  {
+   "id": "little-prince",
+   "name": "Little Prince",
+   "kind": "champion",
+   "faction": "krone",
+   "family": "winzig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.55,
+   "main": "#2f8f8a",
+   "accent": "#f7f2ea",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "viel zu große Krone, die über die Augen rutscht"
+   },
+   "teamZones": [
+    "Umhang",
+    "Kronenkissen"
+   ],
+   "proportion": {
+    "head": 0.46,
+    "legs": 0.22,
+    "arms": 0.75,
+    "hands": 0.42,
+    "weapon": 0.55
+   },
+   "exaggerated": "Krone so breit wie der ganze Prinz",
+   "mood": "verwöhnt und ungeduldig, stampft",
+   "idle": "schiebt die Krone hoch und verschränkt die Arme",
+   "attack": "kurbelt die Repetier-Armbrust, die immer schneller schießt"
+  },
+  {
+   "id": "guardienne",
+   "name": "Guardienne",
+   "kind": "token",
+   "faction": "krone",
+   "family": "keil",
+   "size": "L",
+   "outline": 2,
+   "height": 2.15,
+   "main": "#7a5f96",
+   "accent": "#e8d9b0",
+   "signature": {
+    "category": "schild",
+    "text": "echte Holztür als Schild"
+   },
+   "teamZones": [
+    "Türfenster-Vorhang",
+    "Schärpe"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0.36,
+    "arms": 0.95,
+    "hands": 0.5,
+    "weapon": 1
+   },
+   "exaggerated": "Tür-Schild mit Klinke und Briefschlitz",
+   "mood": "wachsam, beschützend, wortkarg",
+   "idle": "stellt die Tür ab und lehnt sich daran",
+   "attack": "Hellebardenstoß hinter der Tür hervor; Ansturm mit der Tür voran"
+  },
+  {
+   "id": "tower-king",
+   "name": "König (Königsturm)",
+   "kind": "tower",
+   "faction": "krone",
+   "family": "dreieckig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.6,
+   "main": "#7d3f8c",
+   "accent": "#ffd34d",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Zinnenkrone wie ein kleiner Turm"
+   },
+   "teamZones": [
+    "Hermelinkragen-Saum",
+    "Zepterstein"
+   ],
+   "proportion": {
+    "head": 0.4,
+    "legs": 0,
+    "arms": 0.7,
+    "hands": 0.45,
+    "weapon": 0.6
+   },
+   "exaggerated": "runder Königsbauch im Hermelinmantel",
+   "mood": "gemütlich und stolz, im Schlaf mit Zipfelmütze",
+   "idle": "schläft mit Zipfelmütze über der Krone; wach: zeigt mit dem Zepter",
+   "attack": "zeigt mit dem Zepter auf das Ziel, die Turmkanone feuert"
+  },
+  {
+   "id": "tower-guard",
+   "name": "Turmwache (Prinzessinnenturm)",
+   "kind": "tower",
+   "faction": "krone",
+   "family": "schlank",
+   "size": "S",
+   "outline": 1,
+   "height": 1.35,
+   "main": "#7a8a68",
+   "accent": "#f0e0b0",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Signalhorn am Schulterriemen"
+   },
+   "teamZones": [
+    "Wimpel am Horn",
+    "Kappe"
+   ],
+   "proportion": {
+    "head": 0.4,
+    "legs": 0.28,
+    "arms": 0.85,
+    "hands": 0.4,
+    "weapon": 0.6
+   },
+   "exaggerated": "langer Turmbogen",
+   "mood": "aufmerksam, streng",
+   "idle": "späht unter der Hand hervor, bläst kurz ins Horn",
+   "attack": "schneller Schuss mit dem Turmbogen"
+  },
+  {
+   "id": "barbarians",
+   "name": "Barbaren",
+   "kind": "troop",
+   "faction": "nordvolk",
+   "family": "breit",
+   "size": "M",
+   "outline": 2,
+   "height": 1.8,
+   "main": "#857565",
+   "accent": "#b57a3a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Wolfskopf-Kapuze mit offenem Maul"
+   },
+   "teamZones": [
+    "Gürtelschärpe",
+    "Armwickel"
+   ],
+   "proportion": {
+    "head": 0.34,
+    "legs": 0.22,
+    "arms": 0.9,
+    "hands": 0.55,
+    "weapon": 0.6
+   },
+   "exaggerated": "gewaltige umwickelte Unterarme",
+   "mood": "laut und draufgängerisch, brüllt",
+   "idle": "rollt die Schultern und klopft sich auf die Brust",
+   "attack": "weit ausholender Hackschwert-Hieb über den Kopf bis zum Boden",
+   "variants": [
+    "Rauschebart",
+    "Narbe",
+    "Zöpfe",
+    "Glatze",
+    "Schnauzer"
+   ],
+   "evo": true
+  },
+  {
+   "id": "elite-barbarians",
+   "name": "Elitebarbaren",
+   "kind": "troop",
+   "faction": "nordvolk",
+   "family": "keil",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#e4a11b",
+   "accent": "#5a3a22",
+   "signature": {
+    "category": "schulter",
+    "text": "Bärenschädel-Schulterpanzer"
+   },
+   "teamZones": [
+    "Gürtelschärpe",
+    "Kriegsbemalung-Streifen am Schwertgriff"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0.3,
+    "arms": 1,
+    "hands": 0.5,
+    "weapon": 0.85
+   },
+   "exaggerated": "Schultern doppelt so breit wie die Hüfte",
+   "mood": "angeberisch, grinst überlegen",
+   "idle": "Wellenschwert lässig auf der Schulter, dehnt den Nacken",
+   "attack": "zweihändiger Diagonalhieb mit halber Drehung",
+   "variants": [
+    "Zopfbart",
+    "Irokese"
+   ],
+   "evo": true
+  },
+  {
+   "id": "valkyrie",
+   "name": "Walküre",
+   "kind": "troop",
+   "faction": "nordvolk",
+   "family": "breit",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#5a7a8a",
+   "accent": "#d98c3a",
+   "signature": {
+    "category": "waffe",
+    "text": "Rad-Doppelaxt mit Speichen"
+   },
+   "teamZones": [
+    "Gürtel",
+    "Helmflügel-Spitzen"
+   ],
+   "proportion": {
+    "head": 0.32,
+    "legs": 0.28,
+    "arms": 0.9,
+    "hands": 0.5,
+    "weapon": 0.7
+   },
+   "exaggerated": "Axt mit Radnabe, so breit wie sie",
+   "mood": "kampflustig, lacht beim Wirbeln",
+   "idle": "stützt die Axt auf und wirft einen Zopf zurück",
+   "attack": "Anlauf-Drehung: ganzer Körper wirbelt mit der Axt einmal herum",
+   "evo": true
+  },
+  {
+   "id": "lumberjack",
+   "name": "Holzfäller",
+   "kind": "troop",
+   "faction": "nordvolk",
+   "family": "hochgewachsen",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#2f6b3a",
+   "accent": "#c25b2c",
+   "signature": {
+    "category": "ruecken",
+    "text": "Holzkraxe mit Holzscheiten und Wutflasche"
+   },
+   "teamZones": [
+    "Halstuch",
+    "Mützenband"
+   ],
+   "proportion": {
+    "head": 0.27,
+    "legs": 0.41,
+    "arms": 1.05,
+    "hands": 0.5,
+    "weapon": 0.8
+   },
+   "exaggerated": "Bart voller Tannenzweige",
+   "mood": "hektisch und gutgelaunt",
+   "idle": "wirft die Fällaxt hoch und fängt sie",
+   "attack": "blitzschnelle Hiebe wie beim Holzhacken",
+   "evo": true,
+   "forms": [
+    "lumberjack-ghost"
+   ]
+  },
+  {
+   "id": "battle-ram",
+   "name": "Rammbock",
+   "kind": "troop",
+   "faction": "nordvolk",
+   "family": "fahrzeug",
+   "size": "M",
+   "outline": 2,
+   "height": 1.7,
+   "main": "#6e4523",
+   "accent": "#8a8f99",
+   "signature": {
+    "category": "fahrzeug",
+    "text": "geschnitzter Widderkopf mit eisernen Spiralhörnern am Stamm"
+   },
+   "teamZones": [
+    "Wimpel am Stamm",
+    "Schärpen der Schieber"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.2,
+    "arms": 0.9,
+    "hands": 0.5,
+    "weapon": 1.4
+   },
+   "exaggerated": "riesige eiserne Spiralhörner",
+   "mood": "zwei schnaufende Schieber, entschlossen",
+   "idle": "Schieber stampfen auf der Stelle, Stamm wippt",
+   "attack": "Anlauf, Rammstoß mit Squash des Stammes, Splitterwolke",
+   "evo": true
+  },
+  {
+   "id": "berserker",
+   "name": "Berserker",
+   "kind": "troop",
+   "faction": "nordvolk",
+   "family": "keil",
+   "size": "M",
+   "outline": 2,
+   "height": 1.75,
+   "main": "#c96f3b",
+   "accent": "#3a5a40",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Kochtopf-Helm mit Henkeln wie Hörner"
+   },
+   "teamZones": [
+    "Schürze",
+    "Zopfbänder"
+   ],
+   "proportion": {
+    "head": 0.34,
+    "legs": 0.3,
+    "arms": 0.95,
+    "hands": 0.5,
+    "weapon": 0.5
+   },
+   "exaggerated": "zwei riesige Bratpfannen",
+   "mood": "wild, lacht gackernd",
+   "idle": "schlägt die Pfannen gegeneinander, Funken",
+   "attack": "abwechselnde Pfannenschläge links und rechts, sehr schnell"
+  },
+  {
+   "id": "barbarian-hut",
+   "name": "Barbarenhütte",
+   "kind": "spawner",
+   "faction": "nordvolk",
+   "family": "bauwerk",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.9,
+   "main": "#5a7a34",
+   "accent": "#3a3330",
+   "signature": {
+    "category": "bauwerk",
+    "text": "Langhaus mit Wolfsschädel über dem Tor"
+   },
+   "teamZones": [
+    "Torbehang",
+    "Dachfahne"
+   ],
+   "proportion": {
+    "head": 0,
+    "legs": 0,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0.3
+   },
+   "exaggerated": "tief heruntergezogenes Grassodendach",
+   "mood": "rauchend und lärmend",
+   "idle": "Rauch aus dem Dachloch, Torbehang weht",
+   "attack": "Tor fliegt auf, Barbaren stürmen heraus"
+  },
+  {
+   "id": "giant",
+   "name": "Riese",
+   "kind": "troop",
+   "faction": "riesen",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.75,
+   "main": "#9a6b3c",
+   "accent": "#e8c35a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Bommelmütze mit Riesenbommel"
+   },
+   "teamZones": [
+    "Bommel",
+    "Latzhosen-Flicken"
+   ],
+   "proportion": {
+    "head": 0.2,
+    "legs": 0.2,
+    "arms": 1.1,
+    "hands": 0.75,
+    "weapon": 0.2
+   },
+   "exaggerated": "riesige Arbeitshandschuhe",
+   "mood": "gutmütig und schnaufend",
+   "idle": "kratzt sich unter der Mütze",
+   "attack": "beide Fäuste gefaltet, Hammerschlag von oben"
+  },
+  {
+   "id": "royal-giant",
+   "name": "Königsriese",
+   "kind": "troop",
+   "faction": "riesen",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.7,
+   "main": "#4d4b23",
+   "accent": "#d4b04a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "hohe Bärenfellmütze der Leibgarde"
+   },
+   "teamZones": [
+    "Schärpe",
+    "Mützenkordel"
+   ],
+   "proportion": {
+    "head": 0.24,
+    "legs": 0.22,
+    "arms": 1,
+    "hands": 0.65,
+    "weapon": 0.5
+   },
+   "exaggerated": "Schulterkanone mit Löwenmaul-Mündung",
+   "mood": "streng und stolz, Schnurrbart zuckt",
+   "idle": "salutiert und putzt einen Messingknopf",
+   "attack": "Kanone auf der Schulter: Zielen, Abfeuern, Rückstoß bis in die Knie",
+   "evo": true
+  },
+  {
+   "id": "rune-giant",
+   "name": "Rune Giant",
+   "kind": "troop",
+   "faction": "riesen",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.7,
+   "main": "#9a9890",
+   "accent": "#7af0ff",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Runentafel als Schild und Waffe"
+   },
+   "teamZones": [
+    "Lendentuch",
+    "Armreif"
+   ],
+   "proportion": {
+    "head": 0.22,
+    "legs": 0.24,
+    "arms": 1.05,
+    "hands": 0.6,
+    "weapon": 0.55
+   },
+   "exaggerated": "leuchtende Runen-Tätowierungen",
+   "mood": "feierlich und weise, murmelt",
+   "idle": "meißelt eine neue Rune in die Tafel",
+   "attack": "Tafel-Stoß von oben; beim Verzaubern leuchtet eine Rune auf"
+  },
+  {
+   "id": "electro-giant",
+   "name": "Elektroriese",
+   "kind": "troop",
+   "faction": "werkstatt",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.75,
+   "main": "#d07f3a",
+   "accent": "#5fe3ff",
+   "signature": {
+    "category": "schulter",
+    "text": "Teslaspulen als Schulterpolster"
+   },
+   "teamZones": [
+    "Gürtel",
+    "Helmstreifen"
+   ],
+   "proportion": {
+    "head": 0.22,
+    "legs": 0.22,
+    "arms": 1.05,
+    "hands": 0.7,
+    "weapon": 0.3
+   },
+   "exaggerated": "riesige Gummihandschuhe",
+   "mood": "grimmig, knurrt durch das Schweißervisier",
+   "idle": "Funken springen zwischen den Spulen",
+   "attack": "Faustschlag von oben mit Entladung; Gegenschlag lässt die Spulen aufblitzen"
+  },
+  {
+   "id": "bowler",
+   "name": "Bowler",
+   "kind": "troop",
+   "faction": "riesen",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.6,
+   "main": "#7f9a6a",
+   "accent": "#2e2a33",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "winziger Melonenhut auf riesigem Kopf"
+   },
+   "teamZones": [
+    "Hosenträger",
+    "Hutband"
+   ],
+   "proportion": {
+    "head": 0.26,
+    "legs": 0.24,
+    "arms": 1.05,
+    "hands": 0.65,
+    "weapon": 0.35
+   },
+   "exaggerated": "Moos-Rücken eines Steintrolls",
+   "mood": "gemütlich, konzentriert wie beim Kegeln",
+   "idle": "poliert die Runenkugel am Bauch",
+   "attack": "tiefer Kegelwurf: weit ausholen, rollen lassen, Bein hoch"
+  },
+  {
+   "id": "mega-knight",
+   "name": "Megaritter",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.8,
+   "main": "#5a6372",
+   "accent": "#b07a3a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Glockenhelm, der beim Landen läutet"
+   },
+   "teamZones": [
+    "Schulterumhang",
+    "Helmband"
+   ],
+   "proportion": {
+    "head": 0.24,
+    "legs": 0.2,
+    "arms": 1,
+    "hands": 0.8,
+    "weapon": 0
+   },
+   "exaggerated": "Kugelfäuste aus Gusseisen",
+   "mood": "wuchtig und selbstgefällig",
+   "idle": "lässt die Kugelfäuste aneinanderklacken",
+   "attack": "Doppelfaust-Hammer; Sprung mit Glockenläuten bei der Landung",
+   "evo": true
+  },
+  {
+   "id": "goblinstein-monster",
+   "name": "Monster",
+   "kind": "token",
+   "faction": "kobolde",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.75,
+   "main": "#7a8f74",
+   "accent": "#c47a3a",
+   "signature": {
+    "category": "ruecken",
+    "text": "Rücken-Akku mit Kabeln zu Kupferklemmen am Hals"
+   },
+   "teamZones": [
+    "Hosenbund",
+    "Armbinde"
+   ],
+   "proportion": {
+    "head": 0.2,
+    "legs": 0.24,
+    "arms": 1.1,
+    "hands": 0.7,
+    "weapon": 0.2
+   },
+   "exaggerated": "Flickenkörper mit ungleich großen Armen",
+   "mood": "sanftes Monster, brummt Wiegenlieder",
+   "idle": "Funken an den Klemmen, wiegt den Kopf",
+   "attack": "schwerfälliger Doppelschlag; Blitzverbindung zum Doktor"
+  },
+  {
+   "id": "goblin-giant",
+   "name": "Koboldriese",
+   "kind": "troop",
+   "faction": "kobolde",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.75,
+   "main": "#6f8f3a",
+   "accent": "#c08a4a",
+   "skin": "#6f8f3a",
+   "signature": {
+    "category": "ruecken",
+    "text": "Fass-Krähennest mit zwei Speerkobolden"
+   },
+   "teamZones": [
+    "Krähennest-Fähnchen",
+    "Gürtel"
+   ],
+   "proportion": {
+    "head": 0.22,
+    "legs": 0.2,
+    "arms": 1.1,
+    "hands": 0.7,
+    "weapon": 0.45
+   },
+   "exaggerated": "Riesenohren mit Ohrringen wie Fassreifen",
+   "mood": "tumb und gutmütig, grinst schief",
+   "idle": "die beiden Speerkobolde zanken sich im Fass",
+   "attack": "schwerer Schwinger mit der Faust; oben werfen die Speerkobolde",
+   "evo": true
+  },
+  {
+   "id": "pekka",
+   "name": "P.E.K.K.A.",
+   "kind": "troop",
+   "faction": "werkstatt",
+   "family": "mechanisch",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.85,
+   "main": "#4a3d36",
+   "accent": "#58e0c0",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Laternenkopf mit Flamme"
+   },
+   "teamZones": [
+    "Brustwappen",
+    "Schulterwimpel"
+   ],
+   "proportion": {
+    "head": 0.2,
+    "legs": 0.3,
+    "arms": 1,
+    "hands": 0.55,
+    "weapon": 0.9
+   },
+   "exaggerated": "Fallbeil-Schwert länger als der Rumpf",
+   "mood": "stumm und unaufhaltsam, die Flamme flackert vor Zorn",
+   "idle": "Flamme flackert, Kolben zischen leise",
+   "attack": "Schwert weit über den Kopf, Fallbeil-Hieb mit Funken",
+   "evo": true
+  },
+  {
+   "id": "mini-pekka",
+   "name": "Mini-P.E.K.K.A.",
+   "kind": "troop",
+   "faction": "werkstatt",
+   "family": "mechanisch",
+   "size": "M",
+   "outline": 2,
+   "height": 1.7,
+   "main": "#6f7682",
+   "accent": "#ff8a3d",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Dampfpfeife auf dem Kessel, pfeift beim Schlag"
+   },
+   "teamZones": [
+    "Brustplakette",
+    "Pfeifenband"
+   ],
+   "proportion": {
+    "head": 0.5,
+    "legs": 0.22,
+    "arms": 0.8,
+    "hands": 0.5,
+    "weapon": 0.7
+   },
+   "exaggerated": "Riesen-Rohrzange",
+   "mood": "eifrig und tollpatschig, ein großes Zyklopenauge",
+   "idle": "tippelt, Dampfwölkchen aus der Pfeife",
+   "attack": "Rohrzange über den Kopf, Schlag, Pfiff"
+  },
+  {
+   "id": "sparky",
+   "name": "Funki",
+   "kind": "troop",
+   "faction": "werkstatt",
+   "family": "mechanisch",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.5,
+   "main": "#3a5a3a",
+   "accent": "#9ff0ff",
+   "signature": {
+    "category": "waffe",
+    "text": "Kondensator-Schüssel mit Ladebalken"
+   },
+   "teamZones": [
+    "Panzerstreifen",
+    "Antennenwimpel"
+   ],
+   "proportion": {
+    "head": 0.2,
+    "legs": 0.15,
+    "arms": 0.6,
+    "hands": 0.5,
+    "weapon": 0.6
+   },
+   "exaggerated": "Schüssel größer als der Käferpanzer",
+   "mood": "brummt ungeduldig, Ladebalken als Gesichtsausdruck",
+   "idle": "Ladebalken füllen sich, Beine trippeln",
+   "attack": "volle Ladung: Schüssel glüht, gewaltiger Entladungsschuss, Rückstoß"
+  },
+  {
+   "id": "zappies",
+   "name": "Zappys",
+   "kind": "troop",
+   "faction": "werkstatt",
+   "family": "mechanisch",
+   "size": "S",
+   "outline": 1,
+   "height": 1.3,
+   "main": "#c0c8d0",
+   "accent": "#ffe14a",
+   "signature": {
+    "category": "koerper",
+    "text": "Glühbirnen-Kopf mit Wendelfaden"
+   },
+   "teamZones": [
+    "Batteriestreifen",
+    "Fußkappen"
+   ],
+   "proportion": {
+    "head": 0.45,
+    "legs": 0.25,
+    "arms": 0.7,
+    "hands": 0.45,
+    "weapon": 0.3
+   },
+   "exaggerated": "Batterie-Rucksack größer als der Rumpf",
+   "mood": "aufgekratzt, flackern beim Reden",
+   "idle": "Birne flackert, Federbeine wippen",
+   "attack": "Birne leuchtet auf, Zap-Blitz aus der Antenne",
+   "variants": [
+    "Birne rund",
+    "Birne spitz",
+    "Birne gedreht"
+   ]
+  },
+  {
+   "id": "flying-machine",
+   "name": "Flugmaschine",
+   "kind": "troop",
+   "faction": "werkstatt",
+   "family": "mechanisch",
+   "size": "M",
+   "outline": 2,
+   "height": 1.7,
+   "main": "#e5d3a8",
+   "accent": "#5b8c5a",
+   "signature": {
+    "category": "fluegel",
+    "text": "Schlagflügel aus Segeltuch mit Holzrippen"
+   },
+   "teamZones": [
+    "Flügelstreifen",
+    "Pilotenschal"
+   ],
+   "proportion": {
+    "head": 0.2,
+    "legs": 0,
+    "arms": 0.6,
+    "hands": 0.4,
+    "weapon": 1.3
+   },
+   "exaggerated": "Flügelspannweite doppelt so groß wie die Höhe",
+   "mood": "Pilotin mit Zunge im Mundwinkel",
+   "idle": "Flügel schlagen, Pilotin kurbelt",
+   "attack": "Bugkanone feuert, Gestell ruckt zurück"
+  },
+  {
+   "id": "furnace",
+   "name": "Ofen",
+   "kind": "troop",
+   "faction": "werkstatt",
+   "family": "mechanisch",
+   "size": "L",
+   "outline": 2,
+   "height": 2.1,
+   "main": "#3b4250",
+   "accent": "#ff8a2a",
+   "signature": {
+    "category": "koerper",
+    "text": "glühende Ofenklappe als Bauch"
+   },
+   "teamZones": [
+    "Ofenrohr-Band",
+    "Henkeltuch"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.2,
+    "arms": 0.6,
+    "hands": 0.45,
+    "weapon": 0.4
+   },
+   "exaggerated": "Ofenrohr als hoher Hut",
+   "mood": "brummig und hitzköpfig",
+   "idle": "pafft Rauchringe aus dem Ofenrohr",
+   "attack": "Klappe schnappt auf, spuckt Glut; Feuergeist hüpft heraus",
+   "evo": true
+  },
+  {
+   "id": "cannon-cart",
+   "name": "Kanonenkarre",
+   "kind": "troop",
+   "faction": "werkstatt",
+   "family": "fahrzeug",
+   "size": "M",
+   "outline": 2,
+   "height": 1.7,
+   "main": "#3f8f86",
+   "accent": "#c99a3c",
+   "signature": {
+    "category": "waffe",
+    "text": "Hechtkopf-Kanonenrohr"
+   },
+   "teamZones": [
+    "Karrenwimpel",
+    "Ohrenschützer des Kanoniers"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0,
+    "arms": 0.7,
+    "hands": 0.45,
+    "weapon": 0.9
+   },
+   "exaggerated": "Fischmaul-Mündung mit Zähnen",
+   "mood": "Kanonier mit Ohrenschützern, pfeift",
+   "idle": "Kanonier schaut durchs Fernrohr",
+   "attack": "Rohr ruckt zurück, Rauch aus dem Fischmaul",
+   "forms": [
+    "cannon-cart-cannon"
+   ]
+  },
+  {
+   "id": "goblin-machine",
+   "name": "Goblin Machine",
+   "kind": "troop",
+   "faction": "kobolde",
+   "family": "mechanisch",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.55,
+   "main": "#8a5a44",
+   "accent": "#4fd1c5",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Kolbenfaust mit Dampfzylinder"
+   },
+   "teamZones": [
+    "Raketenwimpel",
+    "Pilotenhelm"
+   ],
+   "proportion": {
+    "head": 0.2,
+    "legs": 0.25,
+    "arms": 1,
+    "hands": 0.8,
+    "weapon": 0.4
+   },
+   "exaggerated": "Kolbenfaust größer als der Pilot",
+   "mood": "Pilot jauchzt, Maschine stampft",
+   "idle": "Auspuff pufft, Pilot kurbelt an den Hebeln",
+   "attack": "Kolbenfaust schnellt vor; Schulter-Raketenwerfer feuert unabhängig"
+  },
+  {
+   "id": "goblin-drill",
+   "name": "Koboldbohrer",
+   "kind": "spawner",
+   "faction": "kobolde",
+   "family": "bauwerk",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.6,
+   "main": "#a05a36",
+   "accent": "#e0b040",
+   "signature": {
+    "category": "bauwerk",
+    "text": "Bohrturm mit Schraubenspitze und Kobold-Fahrer"
+   },
+   "teamZones": [
+    "Turmfahne",
+    "Fahrerhelm"
+   ],
+   "proportion": {
+    "head": 0,
+    "legs": 0,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0.4
+   },
+   "exaggerated": "Riesenschraube",
+   "mood": "rattert und ruckelt",
+   "idle": "Schraube dreht, Erdbrocken fliegen",
+   "attack": "Luke springt auf, Kobold hüpft heraus",
+   "evo": true
+  },
+  {
+   "id": "wizard",
+   "name": "Magier",
+   "kind": "troop",
+   "faction": "zirkel",
+   "family": "dreieckig",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#8a2d55",
+   "accent": "#ffb347",
+   "signature": {
+    "category": "begleiter",
+    "text": "fliegendes, feuerspuckendes Zauberbuch"
+   },
+   "teamZones": [
+    "Gürtelschärpe",
+    "Hutband"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0,
+    "arms": 0.85,
+    "hands": 0.45,
+    "weapon": 0.35
+   },
+   "exaggerated": "Ballonärmel",
+   "mood": "theatralisch, deklamiert",
+   "idle": "blättert im schwebenden Buch, das gähnt",
+   "attack": "Buch schnappt auf, spuckt einen Feuerball; Magier dirigiert",
+   "evo": true
+  },
+  {
+   "id": "ice-wizard",
+   "name": "Eismagier",
+   "kind": "troop",
+   "faction": "zirkel",
+   "family": "dreieckig",
+   "size": "M",
+   "outline": 2,
+   "height": 1.9,
+   "main": "#d8eefc",
+   "accent": "#8e7bd8",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Schneekugel-Stab mit Winterlandschaft"
+   },
+   "teamZones": [
+    "Schal",
+    "Mantelsaum"
+   ],
+   "proportion": {
+    "head": 0.32,
+    "legs": 0,
+    "arms": 0.8,
+    "hands": 0.45,
+    "weapon": 0.85
+   },
+   "exaggerated": "Eiszapfen-Bart bis zum Gürtel",
+   "mood": "gelassen und schusselig",
+   "idle": "schüttelt die Schneekugel und staunt",
+   "attack": "schwenkt die Schneekugel, Eissplitter-Fächer"
+  },
+  {
+   "id": "electro-wizard",
+   "name": "Elektromagier",
+   "kind": "troop",
+   "faction": "zirkel",
+   "family": "hochgewachsen",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#126e82",
+   "accent": "#f7f06d",
+   "signature": {
+    "category": "ruecken",
+    "text": "Rucksack aus Blitzflaschen mit Kupferbügeln"
+   },
+   "teamZones": [
+    "Mantelkragen",
+    "Brillenband"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0.4,
+    "arms": 1,
+    "hands": 0.5,
+    "weapon": 0.45
+   },
+   "exaggerated": "Kupferspulen-Handschuhe",
+   "mood": "exzentrisch, grinst manisch",
+   "idle": "Funken knistern zwischen den Fingern",
+   "attack": "beide Hände vor, zwei Blitze gleichzeitig"
+  },
+  {
+   "id": "witch",
+   "name": "Hexe",
+   "kind": "troop",
+   "faction": "zirkel",
+   "family": "hochgewachsen",
+   "size": "L",
+   "outline": 2,
+   "height": 2.1,
+   "main": "#4f7a3a",
+   "accent": "#c8a2e8",
+   "signature": {
+    "category": "begleiter",
+    "text": "Krähe auf der Hutspitze"
+   },
+   "teamZones": [
+    "Hutband",
+    "Mantelfutter"
+   ],
+   "proportion": {
+    "head": 0.26,
+    "legs": 0.42,
+    "arms": 1,
+    "hands": 0.4,
+    "weapon": 0.9
+   },
+   "exaggerated": "krummer, zweimal geknickter Hut",
+   "mood": "gackernd und verschlagen",
+   "idle": "Krähe putzt sich, Knochen-Windspiel klimpert",
+   "attack": "Stab nach vorn, Knochenspiel klingt, Geisterkugel fliegt",
+   "evo": true
+  },
+  {
+   "id": "night-witch",
+   "name": "Nachthexe",
+   "kind": "troop",
+   "faction": "zirkel",
+   "family": "hochgewachsen",
+   "size": "L",
+   "outline": 2,
+   "height": 2.1,
+   "main": "#2e2448",
+   "accent": "#c8d0e0",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Glockenturm-Hut, aus dem Fledermäuse fliegen"
+   },
+   "teamZones": [
+    "Mantelfutter",
+    "Glockenseil"
+   ],
+   "proportion": {
+    "head": 0.24,
+    "legs": 0.42,
+    "arms": 1,
+    "hands": 0.4,
+    "weapon": 0.8
+   },
+   "exaggerated": "Hut mit kleinem Glockenstuhl",
+   "mood": "träge und spöttisch, gähnt",
+   "idle": "die Glocke im Hut schwingt, eine Fledermaus guckt heraus",
+   "attack": "Sichelstab-Hieb; beim Rufen läutet die Hutglocke"
+  },
+  {
+   "id": "mother-witch",
+   "name": "Hexenmutter",
+   "kind": "troop",
+   "faction": "zirkel",
+   "family": "dreieckig",
+   "size": "M",
+   "outline": 2,
+   "height": 1.9,
+   "main": "#6b6b2a",
+   "accent": "#ff6fb5",
+   "signature": {
+    "category": "ruecken",
+    "text": "Kessel-Rucksack mit blubberndem Fluchsud"
+   },
+   "teamZones": [
+    "Schultertuch",
+    "Hutschleife"
+   ],
+   "proportion": {
+    "head": 0.32,
+    "legs": 0,
+    "arms": 0.85,
+    "hands": 0.45,
+    "weapon": 0.45
+   },
+   "exaggerated": "Lockenwickler unter dem Hut",
+   "mood": "resolute Hexen-Oma, droht mit der Kelle",
+   "idle": "rührt im Rückenkessel, schnuppert",
+   "attack": "schleudert Fluchsud mit der Kelle"
+  },
+  {
+   "id": "magic-archer",
+   "name": "Magieschütze",
+   "kind": "troop",
+   "faction": "zirkel",
+   "family": "schlank",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#3b2a6b",
+   "accent": "#f8e38a",
+   "signature": {
+    "category": "waffe",
+    "text": "Fernrohr-Bogen mit Messingvisier"
+   },
+   "teamZones": [
+    "Hutband",
+    "Umhangfutter"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.38,
+    "arms": 0.95,
+    "hands": 0.4,
+    "weapon": 0.9
+   },
+   "exaggerated": "Astrolabium-Hutkrempe mit Messingringen",
+   "mood": "verträumter Sterngucker, präzise",
+   "idle": "schaut durch das Fernrohr in den Himmel",
+   "attack": "zielt durch das Fernrohr, Lichtpfeil schießt in gerader Linie"
+  },
+  {
+   "id": "executioner",
+   "name": "Scharfrichter",
+   "kind": "troop",
+   "faction": "zirkel",
+   "family": "hochgewachsen",
+   "size": "L",
+   "outline": 2,
+   "height": 2.3,
+   "main": "#4a3426",
+   "accent": "#b8862d",
+   "signature": {
+    "category": "waffe",
+    "text": "Sichelaxt an einer Kette"
+   },
+   "teamZones": [
+    "Schulterband",
+    "Kettenschleife"
+   ],
+   "proportion": {
+    "head": 0.22,
+    "legs": 0.44,
+    "arms": 1.05,
+    "hands": 0.5,
+    "weapon": 0.6
+   },
+   "exaggerated": "Eisenmaske mit zwei runden Gucklöchern",
+   "mood": "stoisch, summt unheimlich",
+   "idle": "lässt die Axt an der Kette pendeln",
+   "attack": "Drehung, die Axt fliegt im weiten Bogen aus und kommt zurück in die Hand",
+   "evo": true
+  },
+  {
+   "id": "goblinstein",
+   "name": "Goblinstein",
+   "kind": "champion",
+   "faction": "kobolde",
+   "family": "schlank",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#eef0f2",
+   "accent": "#7b4fd1",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Fernsteuerkasten mit Blitzantenne"
+   },
+   "teamZones": [
+    "Armbinde",
+    "Brillenband"
+   ],
+   "proportion": {
+    "head": 0.34,
+    "legs": 0.34,
+    "arms": 0.9,
+    "hands": 0.45,
+    "weapon": 0.55
+   },
+   "exaggerated": "Schweißerbrille mit dicken Gläsern",
+   "mood": "größenwahnsinnig, lacht irre",
+   "idle": "drückt Knöpfe am Kasten, Antenne funkt",
+   "attack": "reckt die Antenne, Blitz auf das Ziel"
+  },
+  {
+   "id": "monk",
+   "name": "Mönch",
+   "kind": "champion",
+   "faction": "zirkel",
+   "family": "breit",
+   "size": "L",
+   "outline": 2,
+   "height": 2.15,
+   "main": "#9a4a7a",
+   "accent": "#d39a3a",
+   "signature": {
+    "category": "ruecken",
+    "text": "Bronzegong auf dem Rücken"
+   },
+   "teamZones": [
+    "Schärpe",
+    "Gebetskette-Quaste"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.26,
+    "arms": 0.95,
+    "hands": 0.6,
+    "weapon": 0.55
+   },
+   "exaggerated": "riesige Handflächen",
+   "mood": "heiter und unerschütterlich",
+   "idle": "streicht sich den Bart, Gebetskette klackert",
+   "attack": "Kombo aus Handflächenstößen, der dritte mit Gongschlag"
+  },
+  {
+   "id": "spirit-empress-ground",
+   "name": "Spirit Empress (zu Fuß)",
+   "kind": "token",
+   "faction": "zirkel",
+   "family": "dreieckig",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#3fb07c",
+   "accent": "#ffb45a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Laternenkrone mit schwebenden Lichtern"
+   },
+   "teamZones": [
+    "Ärmelsaum",
+    "Fächerquaste"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0,
+    "arms": 0.95,
+    "hands": 0.4,
+    "weapon": 0.5
+   },
+   "exaggerated": "bodenlange Seidenärmel",
+   "mood": "würdevoll, lächelt geheimnisvoll",
+   "idle": "fächelt mit dem Seidenfächer, Lichter kreisen",
+   "attack": "Fächerschlag mit Geisterwelle"
+  },
+  {
+   "id": "spirit-empress-air",
+   "name": "Spirit Empress (Drache)",
+   "kind": "token",
+   "faction": "zirkel",
+   "family": "schlangenartig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.9,
+   "main": "#f8d9f5",
+   "accent": "#ffb45a",
+   "signature": {
+    "category": "reittier",
+    "text": "Nebelband-Drache, auf dem die Kaiserin reitet"
+   },
+   "teamZones": [
+    "Zügelband",
+    "Ärmelsaum"
+   ],
+   "proportion": {
+    "head": 0.2,
+    "legs": 0,
+    "arms": 0.8,
+    "hands": 0.4,
+    "weapon": 1.6
+   },
+   "exaggerated": "Drachenleib als endloses Nebelband",
+   "mood": "schwebend und erhaben",
+   "idle": "Drachenleib wogt in Wellen",
+   "attack": "Drache stößt eine Geisterwelle aus"
+  },
+  {
+   "id": "goblins",
+   "name": "Kobolde",
+   "kind": "troop",
+   "faction": "kobolde",
+   "family": "winzig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.3,
+   "main": "#8b5a3c",
+   "accent": "#e9e2d0",
+   "skin": "#7fae4a",
+   "signature": {
+    "category": "waffe",
+    "text": "geschliffener Löffeldolch"
+   },
+   "teamZones": [
+    "Halstuch",
+    "Gürtelknoten"
+   ],
+   "proportion": {
+    "head": 0.48,
+    "legs": 0.22,
+    "arms": 0.8,
+    "hands": 0.45,
+    "weapon": 0.35
+   },
+   "exaggerated": "Riesenohren mit Goldringen",
+   "mood": "frech und gierig",
+   "idle": "hüpfen und lecken am Löffel",
+   "attack": "schnelles Zustechen mit dem Löffeldolch",
+   "variants": [
+    "Ohrring links",
+    "Ohrring rechts",
+    "Zahnlücke",
+    "Nasenring"
+   ]
+  },
+  {
+   "id": "spear-goblins",
+   "name": "Speerkobolde",
+   "kind": "troop",
+   "faction": "kobolde",
+   "family": "schlank",
+   "size": "S",
+   "outline": 1,
+   "height": 1.4,
+   "main": "#e8892f",
+   "accent": "#c6c26a",
+   "skin": "#93b844",
+   "signature": {
+    "category": "ruecken",
+    "text": "Bambusspeer-Bündel auf dem Rücken"
+   },
+   "teamZones": [
+    "Hutband",
+    "Speerwimpel"
+   ],
+   "proportion": {
+    "head": 0.44,
+    "legs": 0.26,
+    "arms": 0.85,
+    "hands": 0.42,
+    "weapon": 0.75
+   },
+   "exaggerated": "Anglerhut mit Haken an der Krempe",
+   "mood": "eifrig, streckt die Zunge raus",
+   "idle": "zählen ihre Speere",
+   "attack": "weit ausholender Speerwurf mit Hüpfer",
+   "variants": [
+    "Haken am Hut",
+    "Feder am Hut",
+    "Flicken am Hut"
+   ]
+  },
+  {
+   "id": "dart-goblin",
+   "name": "Blasrohrkobold",
+   "kind": "troop",
+   "faction": "kobolde",
+   "family": "geduckt",
+   "size": "S",
+   "outline": 1,
+   "height": 1.35,
+   "main": "#c2418f",
+   "accent": "#e9f27a",
+   "skin": "#6fb08a",
+   "signature": {
+    "category": "waffe",
+    "text": "Blasrohr doppelt so lang wie er selbst"
+   },
+   "teamZones": [
+    "Stirnband",
+    "Federschmuck"
+   ],
+   "proportion": {
+    "head": 0.44,
+    "legs": 0.24,
+    "arms": 0.8,
+    "hands": 0.4,
+    "weapon": 1.4
+   },
+   "exaggerated": "Blasrohr",
+   "mood": "hibbelig, schielt beim Zielen",
+   "idle": "pustet Staub aus dem Blasrohr",
+   "attack": "Backen aufblasen, Pfeil, Backen fallen zusammen",
+   "evo": true
+  },
+  {
+   "id": "goblin-demolisher",
+   "name": "Goblin Demolisher",
+   "kind": "troop",
+   "faction": "kobolde",
+   "family": "kugelig",
+   "size": "M",
+   "outline": 2,
+   "height": 1.75,
+   "main": "#b5a26b",
+   "accent": "#f4c430",
+   "skin": "#7fae4a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Bullaugen-Helm am gepolsterten Bombenanzug"
+   },
+   "teamZones": [
+    "Warnstreifen",
+    "Helmlampe"
+   ],
+   "proportion": {
+    "head": 0.36,
+    "legs": 0.18,
+    "arms": 0.75,
+    "hands": 0.55,
+    "weapon": 0.3
+   },
+   "exaggerated": "kugelrunder Polsteranzug",
+   "mood": "fröhlich-leichtsinnig",
+   "idle": "klopft an die Helmscheibe",
+   "attack": "Dynamitstange über Kopf werfen; Ansturm-Form mit brennender Helmlunte",
+   "forms": [
+    "goblin-demolisher-kamikaze"
+   ]
+  },
+  {
+   "id": "goblin-brawler",
+   "name": "Kobold-Raufbold",
+   "kind": "token",
+   "faction": "kobolde",
+   "family": "keil",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#a35d3d",
+   "accent": "#8a95a3",
+   "skin": "#6e9c40",
+   "signature": {
+    "category": "schmuck",
+    "text": "gesprengte Handschellen mit Kettenresten"
+   },
+   "teamZones": [
+    "Boxerhosen-Bund",
+    "Faustwickel"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.24,
+    "arms": 1.1,
+    "hands": 0.75,
+    "weapon": 0.3
+   },
+   "exaggerated": "Fäuste groß wie der Kopf",
+   "mood": "wütend und befreit, schnaubt",
+   "idle": "schattenboxt, Ketten klirren",
+   "attack": "Haken-Kombination mit den Kettenfäusten"
+  },
+  {
+   "id": "bush-goblin",
+   "name": "Busch-Kobold",
+   "kind": "token",
+   "faction": "kobolde",
+   "family": "geduckt",
+   "size": "S",
+   "outline": 1,
+   "height": 1.35,
+   "main": "#3f7a35",
+   "accent": "#ff9a3d",
+   "skin": "#86b84f",
+   "signature": {
+    "category": "kostuem",
+    "text": "Tarnanzug aus Zweigen und Blättern"
+   },
+   "teamZones": [
+    "Stirnband",
+    "Gürtel"
+   ],
+   "proportion": {
+    "head": 0.44,
+    "legs": 0.22,
+    "arms": 0.8,
+    "hands": 0.45,
+    "weapon": 0.35
+   },
+   "exaggerated": "Blätterschopf wie ein Strauch",
+   "mood": "verschwörerisch, flüstert",
+   "idle": "schaut sich verstohlen um",
+   "attack": "Sprung aus der Hocke mit Stichdolch"
+  },
+  {
+   "id": "decoy-goblin",
+   "name": "Lockvogel-Kobold",
+   "kind": "token",
+   "faction": "kobolde",
+   "family": "winzig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.35,
+   "main": "#b8b0a0",
+   "accent": "#2e8a5a",
+   "skin": "#97c25a",
+   "signature": {
+    "category": "kostuem",
+    "text": "Lockente-Kostüm mit Holzschnabel"
+   },
+   "teamZones": [
+    "Schnabelband",
+    "Halstuch"
+   ],
+   "proportion": {
+    "head": 0.46,
+    "legs": 0.2,
+    "arms": 0.75,
+    "hands": 0.42,
+    "weapon": 0.3
+   },
+   "exaggerated": "Entenschnabel-Kapuze",
+   "mood": "albern, quakt",
+   "idle": "watschelt auf der Stelle",
+   "attack": "Schnabel-Kopfstoß und Stich"
+  },
+  {
+   "id": "goblin-hut",
+   "name": "Koboldhütte",
+   "kind": "spawner",
+   "faction": "kobolde",
+   "family": "bauwerk",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.8,
+   "main": "#a8865a",
+   "accent": "#e07a2a",
+   "signature": {
+    "category": "bauwerk",
+    "text": "schiefe Flickwerk-Hütte mit Kürbis-Schornstein"
+   },
+   "teamZones": [
+    "Türvorhang",
+    "Dachfahne"
+   ],
+   "proportion": {
+    "head": 0,
+    "legs": 0,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0.3
+   },
+   "exaggerated": "krummer Kürbisschornstein",
+   "mood": "knarzend, Kobolde gucken heraus",
+   "idle": "Schornstein raucht, Vorhang wackelt",
+   "attack": "Vorhang fliegt auf, ein Speerkobold springt heraus"
+  },
+  {
+   "id": "goblin-cage",
+   "name": "Koboldkäfig",
+   "kind": "spawner",
+   "faction": "kobolde",
+   "family": "bauwerk",
+   "size": "L",
+   "outline": 2,
+   "height": 2.2,
+   "main": "#d0a840",
+   "accent": "#3a3a40",
+   "signature": {
+    "category": "bauwerk",
+    "text": "vergoldeter Vogelkäfig mit rüttelndem Raufbold"
+   },
+   "teamZones": [
+    "Käfigschild",
+    "Wimpel"
+   ],
+   "proportion": {
+    "head": 0,
+    "legs": 0,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0.3
+   },
+   "exaggerated": "riesiges Vorhängeschloss",
+   "mood": "wackelnd, der Gefangene tobt",
+   "idle": "Raufbold rüttelt an den Stäben",
+   "attack": "Käfig platzt, Raufbold stürmt heraus; Evo: Stäbe ziehen Gegner hinein",
+   "evo": true
+  },
+  {
+   "id": "skeletons",
+   "name": "Skelette",
+   "kind": "troop",
+   "faction": "gruft",
+   "family": "winzig",
+   "size": "XS",
+   "outline": 1,
+   "height": 1.05,
+   "main": "#efe6d0",
+   "accent": "#5ee6ff",
+   "signature": {
+    "category": "koerper",
+    "text": "riesiger rissiger Schädel mit Geisteraugen"
+   },
+   "teamZones": [
+    "Halstuch"
+   ],
+   "proportion": {
+    "head": 0.52,
+    "legs": 0.2,
+    "arms": 0.75,
+    "hands": 0.45,
+    "weapon": 0.35
+   },
+   "exaggerated": "Schädel halb so groß wie der ganze Körper",
+   "mood": "klapprig-fröhlich",
+   "idle": "Kiefer klappert, Kopf wackelt",
+   "attack": "Stich mit dem Knochendolch",
+   "variants": [
+    "Riss links",
+    "Riss rechts",
+    "Zahn fehlt"
+   ],
+   "evo": true
+  },
+  {
+   "id": "guards",
+   "name": "Wächter",
+   "kind": "troop",
+   "faction": "gruft",
+   "family": "winzig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.4,
+   "main": "#8a7a78",
+   "accent": "#efe6d0",
+   "signature": {
+    "category": "schild",
+    "text": "Sargdeckel-Schild"
+   },
+   "teamZones": [
+    "Sargdeckel-Emblem",
+    "Helmfeder"
+   ],
+   "proportion": {
+    "head": 0.42,
+    "legs": 0.22,
+    "arms": 0.8,
+    "hands": 0.42,
+    "weapon": 0.85
+   },
+   "exaggerated": "Sargdeckel länger als der Wächter",
+   "mood": "steif und pflichtbewusst, salutieren",
+   "idle": "stehen stramm, ein Knochen wackelt",
+   "attack": "Speerstoß hinter dem Sargdeckel hervor",
+   "variants": [
+    "Helmfeder",
+    "Rostfleck",
+    "Kerbe im Schild"
+   ]
+  },
+  {
+   "id": "giant-skeleton",
+   "name": "Riesenskelett",
+   "kind": "troop",
+   "faction": "gruft",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.9,
+   "main": "#d9c9a0",
+   "accent": "#3d4a3a",
+   "signature": {
+    "category": "koerper",
+    "text": "Uhrwerk-Bombe im Brustkorb"
+   },
+   "teamZones": [
+    "Halstuch",
+    "Armband"
+   ],
+   "proportion": {
+    "head": 0.24,
+    "legs": 0.3,
+    "arms": 1.1,
+    "hands": 0.7,
+    "weapon": 0.3
+   },
+   "exaggerated": "Riesenfäuste aus Fingerknochen",
+   "mood": "dröhnend lachend",
+   "idle": "Kiefer klappert, die Bombe tickt",
+   "attack": "Rundumschlag mit der Knochenfaust"
+  },
+  {
+   "id": "skeleton-king",
+   "name": "Skelettkönig",
+   "kind": "champion",
+   "faction": "gruft",
+   "family": "massig",
+   "size": "XXL",
+   "outline": 3,
+   "height": 3,
+   "main": "#4b4a62",
+   "accent": "#d8ccb0",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Geweihkrone"
+   },
+   "teamZones": [
+    "Robensaum",
+    "Schulterumhang"
+   ],
+   "proportion": {
+    "head": 0.24,
+    "legs": 0.3,
+    "arms": 1.05,
+    "hands": 0.6,
+    "weapon": 0.65
+   },
+   "exaggerated": "Grabstein-Keule",
+   "mood": "majestätisch und hohl lachend",
+   "idle": "stützt sich auf die Grabstein-Keule, Seelenlichter kreisen",
+   "attack": "Grabstein-Keule von oben, Flächenschlag"
+  },
+  {
+   "id": "tomb-queen",
+   "name": "Grabkönigin",
+   "kind": "token",
+   "faction": "gruft",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.8,
+   "main": "#2a6b6b",
+   "accent": "#d9b54a",
+   "signature": {
+    "category": "kostuem",
+    "text": "aufrechter Sarkophag als Kleid"
+   },
+   "teamZones": [
+    "Sarkophag-Band",
+    "Schleier"
+   ],
+   "proportion": {
+    "head": 0.22,
+    "legs": 0,
+    "arms": 1,
+    "hands": 0.5,
+    "weapon": 0.5
+   },
+   "exaggerated": "Sarkophag-Rumpf mit bemalter Maske",
+   "mood": "eisig und erhaben",
+   "idle": "Sarkophagdeckel öffnet sich einen Spalt",
+   "attack": "Schlag mit dem Zepter, Deckel klappt auf"
+  },
+  {
+   "id": "skeleton-dragons",
+   "name": "Skelettdrachen",
+   "kind": "troop",
+   "faction": "gruft",
+   "family": "gefluegelt",
+   "size": "M",
+   "outline": 2,
+   "height": 1.75,
+   "main": "#ded2b5",
+   "accent": "#6dff9a",
+   "signature": {
+    "category": "leuchten",
+    "text": "grünes Geisterfeuer im Brustkorb"
+   },
+   "teamZones": [
+    "Halsband"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 1.2
+   },
+   "exaggerated": "Knochenflügel mit zerfetzter Haut",
+   "mood": "gierig, schnappt",
+   "idle": "Flügelschlag, Feuer züngelt durch die Rippen",
+   "attack": "grüner Feuerball aus dem Kiefer",
+   "variants": [
+    "Hornspitze",
+    "Kerbe im Kiefer"
+   ]
+  },
+  {
+   "id": "skeleton-barrel",
+   "name": "Skelettfass",
+   "kind": "troop",
+   "faction": "gruft",
+   "family": "schwebend",
+   "size": "L",
+   "outline": 2,
+   "height": 2.2,
+   "main": "#6b4a3a",
+   "accent": "#efe6d0",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Propellerkappe auf dem Fass"
+   },
+   "teamZones": [
+    "Fähnchen",
+    "Fassband"
+   ],
+   "proportion": {
+    "head": 0,
+    "legs": 0,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0.3
+   },
+   "exaggerated": "Knochen gucken aus den Spundlöchern",
+   "mood": "ratternd und kichernd",
+   "idle": "Propeller dreht, Fass schaukelt",
+   "attack": "Sturz auf das Gebäude, Fass platzt",
+   "evo": true
+  },
+  {
+   "id": "wall-breakers",
+   "name": "Mauerbrecher",
+   "kind": "troop",
+   "faction": "gruft",
+   "family": "geduckt",
+   "size": "S",
+   "outline": 1,
+   "height": 1.45,
+   "main": "#9a6a3a",
+   "accent": "#2a2a2a",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Pulverfass über dem Kopf mit glimmender Lunte"
+   },
+   "teamZones": [
+    "Stirnband",
+    "Fassband"
+   ],
+   "proportion": {
+    "head": 0.4,
+    "legs": 0.26,
+    "arms": 0.8,
+    "hands": 0.45,
+    "weapon": 0.45
+   },
+   "exaggerated": "Fass größer als der Träger",
+   "mood": "begeistert, rennt kichernd",
+   "idle": "balanciert das Fass",
+   "attack": "Sprung gegen das Gebäude, Fass zündet",
+   "evo": true
+  },
+  {
+   "id": "wall-breaker-runner",
+   "name": "Läufer",
+   "kind": "token",
+   "faction": "gruft",
+   "family": "geduckt",
+   "size": "S",
+   "outline": 1,
+   "height": 1.35,
+   "main": "#e6dcc2",
+   "accent": "#ff6a3d",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "flatterndes Sprinter-Stirnband"
+   },
+   "teamZones": [
+    "Stirnband"
+   ],
+   "proportion": {
+    "head": 0.42,
+    "legs": 0.3,
+    "arms": 0.85,
+    "hands": 0.45,
+    "weapon": 0.2
+   },
+   "exaggerated": "extrem lange Knochenbeine",
+   "mood": "gehetzt, rudert mit den Armen",
+   "idle": "trippelt auf der Stelle",
+   "attack": "Hechtsprung mit Faustschlag"
+  },
+  {
+   "id": "general-gerry",
+   "name": "General Gerry",
+   "kind": "token",
+   "faction": "gruft",
+   "family": "winzig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.4,
+   "main": "#2b2d3a",
+   "accent": "#e0b040",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Zweispitz mit Federbusch"
+   },
+   "teamZones": [
+    "Federbusch",
+    "Schärpe"
+   ],
+   "proportion": {
+    "head": 0.46,
+    "legs": 0.2,
+    "arms": 0.8,
+    "hands": 0.42,
+    "weapon": 0.5
+   },
+   "exaggerated": "goldene Epauletten breiter als der Schädel",
+   "mood": "kommandierend, zeigt mit dem Säbel",
+   "idle": "zeigt mit dem Säbel nach vorn",
+   "attack": "Säbelhieb mit Schildstoß"
+  },
+  {
+   "id": "shadow-skeleton",
+   "name": "Schattenskelett",
+   "kind": "token",
+   "faction": "gruft",
+   "family": "winzig",
+   "size": "XS",
+   "outline": 1,
+   "height": 1.05,
+   "main": "#4a3a7a",
+   "accent": "#c9b8ff",
+   "signature": {
+    "category": "koerper",
+    "text": "Rauchschweif statt Beine"
+   },
+   "teamZones": [
+    "Augenglut-Ring"
+   ],
+   "proportion": {
+    "head": 0.5,
+    "legs": 0,
+    "arms": 0.75,
+    "hands": 0.45,
+    "weapon": 0.35
+   },
+   "exaggerated": "leuchtende Augenhöhlen",
+   "mood": "flüsternd, unheimlich",
+   "idle": "flackert und wabert",
+   "attack": "Schattenstich"
+  },
+  {
+   "id": "skeletrooper",
+   "name": "Skelett-Fallschirmjäger",
+   "kind": "token",
+   "faction": "gruft",
+   "family": "winzig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.45,
+   "main": "#6b7a3a",
+   "accent": "#e9dfc5",
+   "signature": {
+    "category": "ruecken",
+    "text": "Fallschirm-Packsack mit Reißleine"
+   },
+   "teamZones": [
+    "Fliegerschal",
+    "Packsack-Streifen"
+   ],
+   "proportion": {
+    "head": 0.44,
+    "legs": 0.22,
+    "arms": 0.8,
+    "hands": 0.42,
+    "weapon": 0.55
+   },
+   "exaggerated": "Fliegerbrille über leeren Augenhöhlen",
+   "mood": "tollkühn, salutiert",
+   "idle": "zieht an den Gurten",
+   "attack": "Landung mit Speer voran, dann Speerstöße"
+  },
+  {
+   "id": "royal-ghost",
+   "name": "Königsgeist",
+   "kind": "troop",
+   "faction": "gruft",
+   "family": "schwebend",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#a8f0e0",
+   "accent": "#c9a24a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "schwebende Krone über leerem Helm"
+   },
+   "teamZones": [
+    "Umhangfetzen"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0,
+    "arms": 0.9,
+    "hands": 0.45,
+    "weapon": 0.6
+   },
+   "exaggerated": "leerer Helm, aus dem Licht scheint",
+   "mood": "melancholisch, seufzt",
+   "idle": "Krone kreist, Schweif wabert",
+   "attack": "Geistersäbel-Schwung mit Flächenwelle",
+   "evo": true
+  },
+  {
+   "id": "souldier",
+   "name": "Seelensoldat",
+   "kind": "token",
+   "faction": "gruft",
+   "family": "schwebend",
+   "size": "S",
+   "outline": 1,
+   "height": 1.4,
+   "main": "#7fd8c8",
+   "accent": "#e6e0c0",
+   "signature": {
+    "category": "waffe",
+    "text": "Geisterpike mit Wimpelfetzen"
+   },
+   "teamZones": [
+    "Wimpelfetzen"
+   ],
+   "proportion": {
+    "head": 0.4,
+    "legs": 0,
+    "arms": 0.8,
+    "hands": 0.42,
+    "weapon": 0.9
+   },
+   "exaggerated": "Pike doppelt so lang wie der Geist",
+   "mood": "eifrig und durchscheinend",
+   "idle": "schwebt im Kreis",
+   "attack": "Pikenstoß nach vorn"
+  },
+  {
+   "id": "tombstone",
+   "name": "Grabstein",
+   "kind": "spawner",
+   "faction": "gruft",
+   "family": "bauwerk",
+   "size": "M",
+   "outline": 2,
+   "height": 1.9,
+   "main": "#8d8a9a",
+   "accent": "#7dff8a",
+   "signature": {
+    "category": "bauwerk",
+    "text": "Grabstein mit winkender Skeletthand"
+   },
+   "teamZones": [
+    "Grablicht-Schirm",
+    "Kranzschleife"
+   ],
+   "proportion": {
+    "head": 0,
+    "legs": 0,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0.3
+   },
+   "exaggerated": "schiefer Grabstein mit Moos",
+   "mood": "unheimlich-witzig",
+   "idle": "die Skeletthand winkt, Grablicht flackert",
+   "attack": "Erde bricht auf, Skelette klettern heraus"
+  },
+  {
+   "id": "golem",
+   "name": "Golem",
+   "kind": "troop",
+   "faction": "elementar",
+   "family": "massig",
+   "size": "XXL",
+   "outline": 3,
+   "height": 3.3,
+   "main": "#c4938a",
+   "accent": "#3fe0c5",
+   "signature": {
+    "category": "begleiter",
+    "text": "Bäumchen mit Vogelnest auf der Schulter"
+   },
+   "teamZones": [
+    "Tuch am Bäumchen",
+    "Armband"
+   ],
+   "proportion": {
+    "head": 0.18,
+    "legs": 0.24,
+    "arms": 1.1,
+    "hands": 0.8,
+    "weapon": 0.3
+   },
+   "exaggerated": "Felsfäuste so groß wie der Rumpf",
+   "mood": "uralt und träge, brummt",
+   "idle": "ein Vogel hüpft im Bäumchen",
+   "attack": "langsamer Doppelfausthieb"
+  },
+  {
+   "id": "golemite",
+   "name": "Golemit",
+   "kind": "token",
+   "faction": "elementar",
+   "family": "kugelig",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#a87f76",
+   "accent": "#3fe0c5",
+   "signature": {
+    "category": "koerper",
+    "text": "halbe Säule als Rumpf mit Kapitell-Kopf"
+   },
+   "teamZones": [
+    "Armband"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.2,
+    "arms": 0.9,
+    "hands": 0.6,
+    "weapon": 0.2
+   },
+   "exaggerated": "abgebrochenes Säulenkapitell",
+   "mood": "trotzig",
+   "idle": "bröselt",
+   "attack": "Kopfstoß mit dem Kapitell"
+  },
+  {
+   "id": "elixir-golem",
+   "name": "Elixiergolem",
+   "kind": "troop",
+   "faction": "elementar",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.55,
+   "main": "#d13cf0",
+   "accent": "#e6f7ff",
+   "signature": {
+    "category": "koerper",
+    "text": "Glasbauch voller blubbernder Flüssigkeit"
+   },
+   "teamZones": [
+    "Halsband",
+    "Korkensiegel"
+   ],
+   "proportion": {
+    "head": 0.18,
+    "legs": 0.2,
+    "arms": 1,
+    "hands": 0.6,
+    "weapon": 0.3
+   },
+   "exaggerated": "Korken als Kopf",
+   "mood": "tumb-fröhlich, blubbert",
+   "idle": "Blasen steigen, Flüssigkeit schwappt",
+   "attack": "schwappende Doppelfaust"
+  },
+  {
+   "id": "elixir-golemite",
+   "name": "Elixiergolemit",
+   "kind": "token",
+   "faction": "elementar",
+   "family": "kugelig",
+   "size": "M",
+   "outline": 2,
+   "height": 1.9,
+   "main": "#b84ad8",
+   "accent": "#d8fff7",
+   "signature": {
+    "category": "koerper",
+    "text": "Erlenmeyerkolben-Körper mit Stopfen"
+   },
+   "teamZones": [
+    "Halsband"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.2,
+    "arms": 0.85,
+    "hands": 0.55,
+    "weapon": 0.2
+   },
+   "exaggerated": "Glasbauch mit Messskala",
+   "mood": "aufgeregt",
+   "idle": "schwappt",
+   "attack": "Kopfnuss mit dem Stopfen"
+  },
+  {
+   "id": "elixir-blob",
+   "name": "Elixierklecks",
+   "kind": "token",
+   "faction": "elementar",
+   "family": "amorph",
+   "size": "XS",
+   "outline": 1,
+   "height": 1.2,
+   "main": "#ff8ae2",
+   "accent": "#7a4a2a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Korkhütchen auf dem Klecks"
+   },
+   "teamZones": [
+    "Hutband"
+   ],
+   "proportion": {
+    "head": 0.5,
+    "legs": 0,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0.2
+   },
+   "exaggerated": "riesige glänzende Augen",
+   "mood": "quietschfidel",
+   "idle": "wabbelt",
+   "attack": "Platscher nach vorn"
+  },
+  {
+   "id": "ice-golem",
+   "name": "Eisgolem",
+   "kind": "troop",
+   "faction": "elementar",
+   "family": "kugelig",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#9fe0f5",
+   "accent": "#ff9a62",
+   "signature": {
+    "category": "koerper",
+    "text": "eingefrorener Fisch im Bauch"
+   },
+   "teamZones": [
+    "Strickschal"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0.18,
+    "arms": 0.75,
+    "hands": 0.55,
+    "weapon": 0.3
+   },
+   "exaggerated": "kugelrunder Eisbauch",
+   "mood": "verschlafen-friedlich",
+   "idle": "gähnt, Eiskristalle rieseln",
+   "attack": "Kopfstoß mit Frostklirren"
+  },
+  {
+   "id": "lava-hound",
+   "name": "Lavahund",
+   "kind": "troop",
+   "faction": "elementar",
+   "family": "schwebend",
+   "size": "XXL",
+   "outline": 3,
+   "height": 3,
+   "main": "#3a2f34",
+   "accent": "#ff6a1a",
+   "signature": {
+    "category": "koerper",
+    "text": "Vulkankrater auf dem Rücken"
+   },
+   "teamZones": [
+    "Halsband"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.1,
+    "arms": 0.3,
+    "hands": 0.4,
+    "weapon": 0.3
+   },
+   "exaggerated": "Basaltplatten-Panzer",
+   "mood": "hechelnd und gutmütig",
+   "idle": "Krater raucht, Zunge hängt heraus",
+   "attack": "Lavaspucke"
+  },
+  {
+   "id": "lava-pup",
+   "name": "Lavawelpe",
+   "kind": "token",
+   "faction": "elementar",
+   "family": "gefluegelt",
+   "size": "XS",
+   "outline": 1,
+   "height": 1.15,
+   "main": "#7a4f4f",
+   "accent": "#ffb02e",
+   "signature": {
+    "category": "koerper",
+    "text": "Glutkringel-Schwanz"
+   },
+   "teamZones": [
+    "Halsband"
+   ],
+   "proportion": {
+    "head": 0.45,
+    "legs": 0.15,
+    "arms": 0.3,
+    "hands": 0.4,
+    "weapon": 0.3
+   },
+   "exaggerated": "riesige Welpenaugen",
+   "mood": "tapsig",
+   "idle": "jagt den eigenen Schwanz",
+   "attack": "kleiner Glutbiss"
+  },
+  {
+   "id": "fire-spirit",
+   "name": "Feuergeist",
+   "kind": "troop",
+   "faction": "elementar",
+   "family": "schwebend",
+   "size": "XS",
+   "outline": 1,
+   "height": 1,
+   "main": "#ff7a1a",
+   "accent": "#ffd84d",
+   "signature": {
+    "category": "koerper",
+    "text": "Kerzenwachs-Körper mit Flammenhaar"
+   },
+   "teamZones": [
+    "Wachsmanschette"
+   ],
+   "proportion": {
+    "head": 0.55,
+    "legs": 0,
+    "arms": 0.5,
+    "hands": 0.4,
+    "weapon": 0
+   },
+   "exaggerated": "Flammenhaar höher als der Körper",
+   "mood": "übermütig",
+   "idle": "tropft, Flamme züngelt",
+   "attack": "Hechtsprung und Explosion"
+  },
+  {
+   "id": "ice-spirit",
+   "name": "Eisgeist",
+   "kind": "troop",
+   "faction": "elementar",
+   "family": "winzig",
+   "size": "XS",
+   "outline": 1,
+   "height": 0.95,
+   "main": "#e8fbff",
+   "accent": "#4fa3c7",
+   "signature": {
+    "category": "koerper",
+    "text": "Eiskristall-Stacheln wie ein Igel"
+   },
+   "teamZones": [
+    "Schleife"
+   ],
+   "proportion": {
+    "head": 0.6,
+    "legs": 0.12,
+    "arms": 0.4,
+    "hands": 0.4,
+    "weapon": 0
+   },
+   "exaggerated": "Stachelkranz",
+   "mood": "kichernd, kalt",
+   "idle": "rollt sich ein und wieder auf",
+   "attack": "Kugelsprung und Frostplatzer",
+   "evo": true
+  },
+  {
+   "id": "electro-spirit",
+   "name": "Elektrogeist",
+   "kind": "troop",
+   "faction": "elementar",
+   "family": "schwebend",
+   "size": "XS",
+   "outline": 1,
+   "height": 1,
+   "main": "#ffe14a",
+   "accent": "#8d5cf6",
+   "signature": {
+    "category": "koerper",
+    "text": "Steckerzinken als Ohren"
+   },
+   "teamZones": [
+    "Schwanzband"
+   ],
+   "proportion": {
+    "head": 0.55,
+    "legs": 0,
+    "arms": 0.4,
+    "hands": 0.4,
+    "weapon": 0
+   },
+   "exaggerated": "Zickzack-Schwanz",
+   "mood": "aufgekratzt",
+   "idle": "zappelt, Funken",
+   "attack": "Sprung, Blitz springt weiter"
+  },
+  {
+   "id": "heal-spirit",
+   "name": "Heilungsgeist",
+   "kind": "troop",
+   "faction": "elementar",
+   "family": "schwebend",
+   "size": "XS",
+   "outline": 1,
+   "height": 1,
+   "main": "#d6f07a",
+   "accent": "#ff9ac8",
+   "signature": {
+    "category": "koerper",
+    "text": "Pusteblumen-Kopf"
+   },
+   "teamZones": [
+    "Blattschleife"
+   ],
+   "proportion": {
+    "head": 0.6,
+    "legs": 0,
+    "arms": 0.4,
+    "hands": 0.4,
+    "weapon": 0
+   },
+   "exaggerated": "Samenschirmchen",
+   "mood": "sanft und kichernd",
+   "idle": "Samen lösen sich und schweben",
+   "attack": "Sprung, Samenwolke heilt"
+  },
+  {
+   "id": "snowman",
+   "name": "Schneemann",
+   "kind": "token",
+   "faction": "elementar",
+   "family": "kugelig",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#f4f8ff",
+   "accent": "#7fc8ff",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Frostkrone aus Eiszapfen"
+   },
+   "teamZones": [
+    "Strickschal"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0,
+    "arms": 0.6,
+    "hands": 0.4,
+    "weapon": 0.3
+   },
+   "exaggerated": "Rübennase mit Raureif",
+   "mood": "frostig-freundlich",
+   "idle": "Schneeflocken rieseln um ihn",
+   "attack": "Frostaura pulsiert"
+  },
+  {
+   "id": "baby-dragon",
+   "name": "Drachenbaby",
+   "kind": "troop",
+   "faction": "tiere",
+   "family": "gefluegelt",
+   "size": "M",
+   "outline": 2,
+   "height": 1.75,
+   "main": "#35b6a0",
+   "accent": "#ffe3b0",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Eierschalen-Mütze"
+   },
+   "teamZones": [
+    "Lätzchen"
+   ],
+   "proportion": {
+    "head": 0.45,
+    "legs": 0.15,
+    "arms": 0.4,
+    "hands": 0.4,
+    "weapon": 0.6
+   },
+   "exaggerated": "Kopf so groß wie der Bauch, Stummelflügel",
+   "mood": "verspielt und neugierig",
+   "idle": "schielt nach der Eierschale, Schwanz wedelt",
+   "attack": "holt Luft, Bauch bläht sich, spuckt einen Feuerball und hustet Rauch",
+   "evo": true
+  },
+  {
+   "id": "electro-dragon",
+   "name": "Elektrodrache",
+   "kind": "troop",
+   "faction": "tiere",
+   "family": "gefluegelt",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#3a3aa0",
+   "accent": "#ffe14a",
+   "signature": {
+    "category": "koerper",
+    "text": "Blitzableiter-Horn mit Kupferspule"
+   },
+   "teamZones": [
+    "Flügelsaum"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.15,
+    "arms": 0.4,
+    "hands": 0.4,
+    "weapon": 0.9
+   },
+   "exaggerated": "statisch abstehende Mähne",
+   "mood": "nervös, zuckt",
+   "idle": "Funken zwischen Horn und Schwanzspitze",
+   "attack": "Horn lädt auf, Kettenblitz aus dem Maul",
+   "evo": true
+  },
+  {
+   "id": "inferno-dragon",
+   "name": "Infernodrache",
+   "kind": "troop",
+   "faction": "tiere",
+   "family": "gefluegelt",
+   "size": "L",
+   "outline": 2,
+   "height": 2.15,
+   "main": "#5a2a2a",
+   "accent": "#ff9d2e",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Brennglas in Messingfassung vor dem Maul"
+   },
+   "teamZones": [
+    "Halfterriemen"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0.15,
+    "arms": 0.4,
+    "hands": 0.4,
+    "weapon": 0.9
+   },
+   "exaggerated": "Brennglas so groß wie der Kopf",
+   "mood": "brütend und konzentriert",
+   "idle": "Rauch aus den Nüstern, Linse glänzt",
+   "attack": "Hitzestrahl durch die Linse, die mit jeder Stufe heller glüht",
+   "evo": true
+  },
+  {
+   "id": "phoenix",
+   "name": "Phönix",
+   "kind": "troop",
+   "faction": "tiere",
+   "family": "gefluegelt",
+   "size": "M",
+   "outline": 2,
+   "height": 1.9,
+   "main": "#ffb02e",
+   "accent": "#e0306f",
+   "signature": {
+    "category": "koerper",
+    "text": "Schleppfedern wie Flammenbänder"
+   },
+   "teamZones": [
+    "Fußring"
+   ],
+   "proportion": {
+    "head": 0.26,
+    "legs": 0.2,
+    "arms": 0.4,
+    "hands": 0.4,
+    "weapon": 1.2
+   },
+   "exaggerated": "Flammenkamm",
+   "mood": "stolz und feurig",
+   "idle": "Federn lodern, Kopfnicken",
+   "attack": "Krallenhieb im Flug; Formen: glühendes Ei, flaumiges Küken",
+   "forms": [
+    "phoenix-reborn",
+    "phoenix-egg"
+   ]
+  },
+  {
+   "id": "bats",
+   "name": "Fledermäuse",
+   "kind": "troop",
+   "faction": "tiere",
+   "family": "gefluegelt",
+   "size": "XS",
+   "outline": 1,
+   "height": 0.95,
+   "main": "#4f5d7a",
+   "accent": "#ff7aa8",
+   "signature": {
+    "category": "koerper",
+    "text": "Lindenblatt-Ohren und ein einzelner Zahn"
+   },
+   "teamZones": [
+    "Flügelspitzen-Bänder"
+   ],
+   "proportion": {
+    "head": 0.6,
+    "legs": 0,
+    "arms": 0.3,
+    "hands": 0.3,
+    "weapon": 0
+   },
+   "exaggerated": "Ohren größer als der Körper",
+   "mood": "hibbelig, quietscht",
+   "idle": "flattert schnell im Kreis",
+   "attack": "Sturzflug-Biss",
+   "variants": [
+    "Ohr geknickt",
+    "Zahn links",
+    "Bauchfleck"
+   ],
+   "evo": true
+  },
+  {
+   "id": "minions",
+   "name": "Lakaien",
+   "kind": "troop",
+   "faction": "tiere",
+   "family": "gefluegelt",
+   "size": "S",
+   "outline": 1,
+   "height": 1.3,
+   "main": "#7c5cc4",
+   "accent": "#ff9f43",
+   "signature": {
+    "category": "koerper",
+    "text": "einzelnes Stirnhorn und Pik-Schwanz"
+   },
+   "teamZones": [
+    "Halstuch"
+   ],
+   "proportion": {
+    "head": 0.45,
+    "legs": 0.15,
+    "arms": 0.6,
+    "hands": 0.45,
+    "weapon": 0.3
+   },
+   "exaggerated": "Pik-Schwanzspitze",
+   "mood": "frech und zappelig",
+   "idle": "flattern, zeigen auf Ziele",
+   "attack": "spucken eine glühende Kugel",
+   "variants": [
+    "Horn gebogen",
+    "Horn gerade",
+    "Zahnlücke"
+   ],
+   "evo": true
+  },
+  {
+   "id": "mega-minion",
+   "name": "Megalakai",
+   "kind": "troop",
+   "faction": "tiere",
+   "family": "gefluegelt",
+   "size": "M",
+   "outline": 2,
+   "height": 1.85,
+   "main": "#7a7590",
+   "accent": "#ffb347",
+   "signature": {
+    "category": "koerper",
+    "text": "Steinbauch-Panzer mit Wasserspeier-Hörnern"
+   },
+   "teamZones": [
+    "Armbinde"
+   ],
+   "proportion": {
+    "head": 0.32,
+    "legs": 0.18,
+    "arms": 0.8,
+    "hands": 0.6,
+    "weapon": 0.3
+   },
+   "exaggerated": "kleine Flügel tragen einen schweren Steinbauch",
+   "mood": "grimmig, ächzt",
+   "idle": "Flügel arbeiten schwer, Bauch schaukelt",
+   "attack": "Sturzfaust von oben"
+  },
+  {
+   "id": "minion-giant",
+   "name": "Minion Giant",
+   "kind": "troop",
+   "faction": "tiere",
+   "family": "gefluegelt",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.6,
+   "main": "#6a1a6e",
+   "accent": "#c8ff6b",
+   "signature": {
+    "category": "koerper",
+    "text": "Kehlsack, der sich vor dem Spucken aufbläht"
+   },
+   "teamZones": [
+    "Ohrmarke",
+    "Armbinde"
+   ],
+   "proportion": {
+    "head": 0.26,
+    "legs": 0.15,
+    "arms": 0.9,
+    "hands": 0.6,
+    "weapon": 0.3
+   },
+   "exaggerated": "genähte Laborflügel",
+   "mood": "träge und verfressen",
+   "idle": "Kehlsack bläht sich langsam",
+   "attack": "Kehlsack bläht sich auf, Giftspucke im Bogen"
+  },
+  {
+   "id": "royal-hogs",
+   "name": "Königsschweinchen",
+   "kind": "troop",
+   "faction": "tiere",
+   "family": "vierbeinig",
+   "size": "XS",
+   "outline": 1,
+   "height": 1.15,
+   "main": "#f3cdb5",
+   "accent": "#f2c14e",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Minikrone zwischen den Ohren"
+   },
+   "teamZones": [
+    "Schleife am Ringelschwanz"
+   ],
+   "proportion": {
+    "head": 0.45,
+    "legs": 0.2,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0
+   },
+   "exaggerated": "Schweineschnauze groß wie der Kopf",
+   "mood": "quiekend und stolz",
+   "idle": "schnüffeln, Ohren wackeln",
+   "attack": "Kopfstoß mit Kronenspitze",
+   "variants": [
+    "Fleck am Ohr",
+    "Krone schief",
+    "Doppelkinn"
+   ],
+   "evo": true
+  },
+  {
+   "id": "cursed-hog",
+   "name": "Fluch-Schwein",
+   "kind": "token",
+   "faction": "tiere",
+   "family": "vierbeinig",
+   "size": "XS",
+   "outline": 1,
+   "height": 1.25,
+   "main": "#c79ad8",
+   "accent": "#5b8a2a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Mini-Hexenhut mit Fluchsternchen"
+   },
+   "teamZones": [
+    "Hutband"
+   ],
+   "proportion": {
+    "head": 0.48,
+    "legs": 0.18,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0
+   },
+   "exaggerated": "Fluchrauch aus den Ohren",
+   "mood": "verwirrt und grantig",
+   "idle": "grunzt, Fluchsternchen kreisen",
+   "attack": "Rammstoß"
+  },
+  {
+   "id": "rhino",
+   "name": "Nashorn",
+   "kind": "token",
+   "faction": "tiere",
+   "family": "vierbeinig",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#8a8f80",
+   "accent": "#c9b13f",
+   "signature": {
+    "category": "koerper",
+    "text": "Doppelhorn mit Sichelmond-Schutzplatte"
+   },
+   "teamZones": [
+    "Satteldecke"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.25,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0.5
+   },
+   "exaggerated": "Panzerfalten wie Plattenrüstung",
+   "mood": "stur und schnaubend",
+   "idle": "scharrt mit dem Huf",
+   "attack": "Ansturm mit gesenktem Horn"
+  },
+  {
+   "id": "hog-rider",
+   "name": "Schweinereiter",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "reiter",
+   "size": "L",
+   "outline": 2,
+   "height": 2.15,
+   "main": "#b3735a",
+   "accent": "#ff8c1a",
+   "signature": {
+    "category": "reittier",
+    "text": "Karottenangel vor der Schweineschnauze"
+   },
+   "teamZones": [
+    "Rennseide-Rauten",
+    "Satteldecke"
+   ],
+   "proportion": {
+    "head": 0.26,
+    "legs": 0,
+    "arms": 0.85,
+    "hands": 0.45,
+    "weapon": 0.6
+   },
+   "exaggerated": "Rennbrille und flatternde Jockeymütze",
+   "mood": "übermütig, jauchzt",
+   "idle": "Schwein scharrt, Reiter wippt im Sattel",
+   "attack": "Polo-Schlag seitlich von oben; Flusssprung mit flatternden Ohren"
+  },
+  {
+   "id": "dark-prince",
+   "name": "Dunkler Prinz",
+   "kind": "troop",
+   "faction": "krone",
+   "family": "reiter",
+   "size": "L",
+   "outline": 2,
+   "height": 2.35,
+   "main": "#3b3350",
+   "accent": "#9be564",
+   "signature": {
+    "category": "reittier",
+    "text": "gepanzerter Waran als Reittier"
+   },
+   "teamZones": [
+    "Schabracke",
+    "Schildmitte"
+   ],
+   "proportion": {
+    "head": 0.22,
+    "legs": 0,
+    "arms": 0.85,
+    "hands": 0.45,
+    "weapon": 0.6
+   },
+   "exaggerated": "Waran-Krallen und Stachelschulter",
+   "mood": "düster und arrogant",
+   "idle": "Waran züngelt, Morgenstern pendelt",
+   "attack": "Rundumschlag mit dem Morgenstern"
+  },
+  {
+   "id": "ram-rider",
+   "name": "Widderreiterin",
+   "kind": "troop",
+   "faction": "nordvolk",
+   "family": "reiter",
+   "size": "L",
+   "outline": 2,
+   "height": 2.3,
+   "main": "#f1e6d0",
+   "accent": "#2b8c7a",
+   "signature": {
+    "category": "reittier",
+    "text": "Widder mit Doppelspiral-Hörnern und Glöckchen"
+   },
+   "teamZones": [
+    "Satteldecke",
+    "Zopfbänder"
+   ],
+   "proportion": {
+    "head": 0.24,
+    "legs": 0,
+    "arms": 0.85,
+    "hands": 0.42,
+    "weapon": 0.5
+   },
+   "exaggerated": "Hörner groß wie Wagenräder",
+   "mood": "abenteuerlustig, ruft",
+   "idle": "Widder schüttelt die Glöckchen",
+   "attack": "Widder rammt; die Reiterin wirbelt die Bola"
+  },
+  {
+   "id": "bandit",
+   "name": "Banditin",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "geduckt",
+   "size": "M",
+   "outline": 2,
+   "height": 1.7,
+   "main": "#cf6a2a",
+   "accent": "#3c3a4a",
+   "signature": {
+    "category": "kostuem",
+    "text": "Fuchsohr-Kapuze mit Fuchsschwanz-Schal"
+   },
+   "teamZones": [
+    "Schalknoten",
+    "Gürtel"
+   ],
+   "proportion": {
+    "head": 0.34,
+    "legs": 0.3,
+    "arms": 0.9,
+    "hands": 0.45,
+    "weapon": 0.35
+   },
+   "exaggerated": "buschiger Schwanzschal",
+   "mood": "verschlagen, grinst",
+   "idle": "wirft den Knüppel hoch und fängt ihn",
+   "attack": "Uppercut mit dem Knüppel; Sprint als Schemen mit Nachbildern"
+  },
+  {
+   "id": "boss-bandit",
+   "name": "Boss Bandit",
+   "kind": "champion",
+   "faction": "gesindel",
+   "family": "keil",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#9a6274",
+   "accent": "#f2c14e",
+   "signature": {
+    "category": "ruecken",
+    "text": "Beutesack über der Schulter, aus dem Münzen fallen"
+   },
+   "teamZones": [
+    "Mantelfutter",
+    "Halstuch"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0.34,
+    "arms": 0.95,
+    "hands": 0.45,
+    "weapon": 0.5
+   },
+   "exaggerated": "riesiger Silberfuchs-Kragen",
+   "mood": "selbstsicher und arrogant",
+   "idle": "wirft eine Münze hoch",
+   "attack": "Doppelschlag mit zwei Brecheisen; Rauchgranate zur Flucht"
+  },
+  {
+   "id": "fisherman",
+   "name": "Fischer",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "breit",
+   "size": "M",
+   "outline": 2,
+   "height": 1.9,
+   "main": "#f2c230",
+   "accent": "#2e7d6b",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Angelrute mit Riesen-Blinker"
+   },
+   "teamZones": [
+    "Halstuch",
+    "Hutband"
+   ],
+   "proportion": {
+    "head": 0.33,
+    "legs": 0.23,
+    "arms": 0.92,
+    "hands": 0.55,
+    "weapon": 1.2
+   },
+   "exaggerated": "Südwester mit breiter Krempe",
+   "mood": "knurrig-gemütlich, Pfeife im Mund",
+   "idle": "zieht an der Pfeife, prüft die Schnur",
+   "attack": "Rutenstoß; Auswurf mit dem Blinker, Schnur spannt, Einholen"
+  },
+  {
+   "id": "hunter",
+   "name": "Jäger",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "breit",
+   "size": "M",
+   "outline": 2,
+   "height": 1.9,
+   "main": "#5e4a26",
+   "accent": "#c4602d",
+   "signature": {
+    "category": "waffe",
+    "text": "Donnerbüchse mit Trichtermündung"
+   },
+   "teamZones": [
+    "Patronengurt-Schärpe",
+    "Mützenschwanz-Band"
+   ],
+   "proportion": {
+    "head": 0.32,
+    "legs": 0.24,
+    "arms": 0.9,
+    "hands": 0.55,
+    "weapon": 0.75
+   },
+   "exaggerated": "Biberfellmütze mit Schwanz",
+   "mood": "brummig, kneift ein Auge zu",
+   "idle": "stopft Pulver nach",
+   "attack": "Anlegen, Bumm mit starkem Rückstoß",
+   "evo": true
+  },
+  {
+   "id": "miner",
+   "name": "Tunnelgräber",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "geduckt",
+   "size": "M",
+   "outline": 2,
+   "height": 1.7,
+   "main": "#6e5e58",
+   "accent": "#ffd84d",
+   "signature": {
+    "category": "koerper",
+    "text": "Maulwurf-Schaufelkrallen"
+   },
+   "teamZones": [
+    "Halstuch"
+   ],
+   "proportion": {
+    "head": 0.36,
+    "legs": 0.22,
+    "arms": 0.8,
+    "hands": 0.8,
+    "weapon": 0
+   },
+   "exaggerated": "Krallen breiter als der Kopf",
+   "mood": "kurzsichtig und fleißig",
+   "idle": "schnuppert mit der Rüsselnase",
+   "attack": "Krallenhieb; taucht als Erdhügel unter"
+  },
+  {
+   "id": "mighty-miner",
+   "name": "Großer Gräber",
+   "kind": "champion",
+   "faction": "gesindel",
+   "family": "breit",
+   "size": "L",
+   "outline": 2,
+   "height": 2.35,
+   "main": "#e0a030",
+   "accent": "#6f7682",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Bohrer statt rechtem Arm"
+   },
+   "teamZones": [
+    "Helmband",
+    "Gürtel"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0.22,
+    "arms": 1,
+    "hands": 0.65,
+    "weapon": 0.5
+   },
+   "exaggerated": "Bauhelm mit greller Stirnlampe",
+   "mood": "polternd und zufrieden",
+   "idle": "lässt den Bohrer kurz aufheulen",
+   "attack": "Bohrer bohrt mit steigender Drehzahl; Flucht durch die Erde mit Bombe"
+  },
+  {
+   "id": "ronin",
+   "name": "Ronin",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "schlank",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#5b6b4f",
+   "accent": "#d9c8a0",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "tiefer Strohhut mit Papiersiegel"
+   },
+   "teamZones": [
+    "Hüftschärpe",
+    "Siegelband"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0.38,
+    "arms": 0.95,
+    "hands": 0.42,
+    "weapon": 0.65
+   },
+   "exaggerated": "Hutkrempe breiter als die Schultern",
+   "mood": "ruhig und wachsam",
+   "idle": "steht still, Hand am Griff",
+   "attack": "Ziehen und Schlag in einer Bewegung; Parade mit Funken"
+  },
+  {
+   "id": "firecracker",
+   "name": "Feuerwerkerin",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "schlank",
+   "size": "S",
+   "outline": 1,
+   "height": 1.6,
+   "main": "#1fb5c4",
+   "accent": "#ff4fa3",
+   "signature": {
+    "category": "waffe",
+    "text": "Papierschirm, dessen Speichen Raketen sind"
+   },
+   "teamZones": [
+    "Schirmrand",
+    "Gürtelschleife"
+   ],
+   "proportion": {
+    "head": 0.36,
+    "legs": 0.3,
+    "arms": 0.85,
+    "hands": 0.42,
+    "weapon": 0.7
+   },
+   "exaggerated": "Wunderkerzen im Haarknoten",
+   "mood": "aufgekratzt, lacht laut",
+   "idle": "dreht den Schirm, Funken sprühen",
+   "attack": "Schirm nach vorn, Rakete zischt, Rückstoß-Hüpfer nach hinten",
+   "evo": true
+  },
+  {
+   "id": "battle-healer",
+   "name": "Kampfheilerin",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "breit",
+   "size": "M",
+   "outline": 2,
+   "height": 1.85,
+   "main": "#8fb573",
+   "accent": "#f4ecd8",
+   "signature": {
+    "category": "ruecken",
+    "text": "Mörser-Rucksack mit Kräutern"
+   },
+   "teamZones": [
+    "Kopftuch",
+    "Schürzenband"
+   ],
+   "proportion": {
+    "head": 0.32,
+    "legs": 0.22,
+    "arms": 0.9,
+    "hands": 0.55,
+    "weapon": 0.8
+   },
+   "exaggerated": "Riesenstößel als Keule",
+   "mood": "resolut und fürsorglich",
+   "idle": "zerstößt Kräuter in der Luft und schnuppert",
+   "attack": "Stößel von oben wie beim Zerstoßen, Kräuterwolke heilt"
+  },
+  {
+   "id": "bomber",
+   "name": "Bomber",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "kugelig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.45,
+   "main": "#3a3532",
+   "accent": "#f2efe6",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Zylinder voller Bomben"
+   },
+   "teamZones": [
+    "Halstuch",
+    "Hutband"
+   ],
+   "proportion": {
+    "head": 0.4,
+    "legs": 0.18,
+    "arms": 0.75,
+    "hands": 0.45,
+    "weapon": 0.4
+   },
+   "exaggerated": "Zylinder höher als der Körper",
+   "mood": "kichernd und schelmisch",
+   "idle": "jongliert eine Bombe, Ruß bröselt",
+   "attack": "lüpft den Hut, zieht eine Bombe, Wurf im hohen Bogen",
+   "evo": true
+  },
+  {
+   "id": "balloon",
+   "name": "Ballon",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "schwebend",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.6,
+   "main": "#7a3b69",
+   "accent": "#c9a24a",
+   "signature": {
+    "category": "koerper",
+    "text": "Zwiebelkuppel-Ballon aus Flicken mit Messingpropeller"
+   },
+   "teamZones": [
+    "Wimpelkette",
+    "Korbrand"
+   ],
+   "proportion": {
+    "head": 0.12,
+    "legs": 0,
+    "arms": 0.5,
+    "hands": 0.4,
+    "weapon": 0.3
+   },
+   "exaggerated": "Gnom-Pilot mit Riesen-Hörrohr",
+   "mood": "schadenfroh kichernder Pilot",
+   "idle": "Ballon schaukelt, Propeller dreht, Pilot lauscht",
+   "attack": "Pilot wuchtet eine Bombe über den Korbrand"
+  },
+  {
+   "id": "rascal-boy",
+   "name": "Rabauke",
+   "kind": "token",
+   "faction": "gesindel",
+   "family": "breit",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#c8a46a",
+   "accent": "#3f8f3f",
+   "signature": {
+    "category": "kostuem",
+    "text": "Rüstung aus Pappkartons mit Klebeband"
+   },
+   "teamZones": [
+    "Kappe",
+    "Klebeband-Streifen"
+   ],
+   "proportion": {
+    "head": 0.36,
+    "legs": 0.24,
+    "arms": 0.9,
+    "hands": 0.5,
+    "weapon": 0.6
+   },
+   "exaggerated": "Kochtopfdeckel als Schild",
+   "mood": "großspurig, Zahnlücke",
+   "idle": "wedelt mit dem Holzschwert",
+   "attack": "Holzschwert-Kloppe von oben"
+  },
+  {
+   "id": "rascal-girl",
+   "name": "Rabaukin",
+   "kind": "token",
+   "faction": "gesindel",
+   "family": "winzig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.5,
+   "main": "#e8879a",
+   "accent": "#3a3d5c",
+   "signature": {
+    "category": "waffe",
+    "text": "Astgabel-Schleuder"
+   },
+   "teamZones": [
+    "Haarschleifen",
+    "Latzhosen-Träger"
+   ],
+   "proportion": {
+    "head": 0.44,
+    "legs": 0.24,
+    "arms": 0.8,
+    "hands": 0.42,
+    "weapon": 0.35
+   },
+   "exaggerated": "Zöpfe, die beim Schießen hochfliegen",
+   "mood": "frech, Sommersprossen",
+   "idle": "sucht Steinchen am Boden",
+   "attack": "Schleuder spannen, Zielen mit einem Auge, Schuss",
+   "variants": [
+    "Zöpfe",
+    "Pferdeschwanz"
+   ]
+  },
+  {
+   "id": "suspicious-bush",
+   "name": "Suspicious Bush",
+   "kind": "troop",
+   "faction": "gesindel",
+   "family": "amorph",
+   "size": "S",
+   "outline": 1,
+   "height": 1.35,
+   "main": "#3f8f3a",
+   "accent": "#ffd23f",
+   "signature": {
+    "category": "koerper",
+    "text": "zwei Augenpaare im Busch und große Schuhe"
+   },
+   "teamZones": [
+    "Schnürsenkel"
+   ],
+   "proportion": {
+    "head": 0,
+    "legs": 0.12,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0
+   },
+   "exaggerated": "Schuhe unter dem Busch",
+   "mood": "verdächtig unschuldig",
+   "idle": "Augen blinzeln abwechselnd",
+   "attack": "Busch springt auf, zwei Kobolde hüpfen heraus"
+  },
+  {
+   "id": "knight-hero",
+   "name": "Ritter (Held)",
+   "kind": "hero",
+   "faction": "krone",
+   "family": "breit",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#c8a090",
+   "accent": "#e0a83a",
+   "signature": {
+    "category": "umhang",
+    "text": "Löwenmähnen-Kragen mit Heldenumhang"
+   },
+   "teamZones": [
+    "Umhang",
+    "Schildfeld"
+   ],
+   "proportion": {
+    "head": 0.35,
+    "legs": 0.22,
+    "arms": 0.85,
+    "hands": 0.5,
+    "weapon": 0.75
+   },
+   "exaggerated": "Zinnenschild mit goldener Krone",
+   "mood": "herausfordernd, ruft zum Kampf",
+   "idle": "Spott-Pose: schlägt mit dem Schwert auf den Schild und winkt Gegner heran",
+   "attack": "Schild vor, Hieb von oben",
+   "base": "knight"
+  },
+  {
+   "id": "giant-hero",
+   "name": "Riese (Held)",
+   "kind": "hero",
+   "faction": "riesen",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.9,
+   "main": "#c08a46",
+   "accent": "#f3d36b",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Erntekrone aus Weizenähren"
+   },
+   "teamZones": [
+    "Steppdecken-Umhang",
+    "Bommel"
+   ],
+   "proportion": {
+    "head": 0.19,
+    "legs": 0.21,
+    "arms": 1.12,
+    "hands": 0.8,
+    "weapon": 0.2
+   },
+   "exaggerated": "Steppdecken-Umhang",
+   "mood": "stolzer Erntekönig",
+   "idle": "Heldenwurf-Pose: packt die Luft und holt weit aus",
+   "attack": "Hammerfaust; Fähigkeit: packt eine Truppe und schleudert sie",
+   "base": "giant"
+  },
+  {
+   "id": "mini-pekka-hero",
+   "name": "Mini-P.E.K.K.A. (Held)",
+   "kind": "hero",
+   "faction": "werkstatt",
+   "family": "mechanisch",
+   "size": "M",
+   "outline": 2,
+   "height": 1.8,
+   "main": "#6fa08a",
+   "accent": "#f0b23a",
+   "signature": {
+    "category": "ruecken",
+    "text": "Pfannkuchen-Turm auf dem Rücken mit Sirupflasche"
+   },
+   "teamZones": [
+    "Brustplakette",
+    "Serviette"
+   ],
+   "proportion": {
+    "head": 0.48,
+    "legs": 0.22,
+    "arms": 0.8,
+    "hands": 0.5,
+    "weapon": 0.7
+   },
+   "exaggerated": "Pfannkuchen-Stapel mit drei Füllleisten",
+   "mood": "verfressen und begeistert",
+   "idle": "Pfannkuchen-Pose: schnuppert am Stapel, Pfeife trällert",
+   "attack": "Rohrzangen-Schlag; Fähigkeit: verschlingt die Pfannkuchen",
+   "base": "mini-pekka"
+  },
+  {
+   "id": "musketeer-hero",
+   "name": "Musketierin (Held)",
+   "kind": "hero",
+   "faction": "krone",
+   "family": "schlank",
+   "size": "L",
+   "outline": 2,
+   "height": 2.05,
+   "main": "#3f8a63",
+   "accent": "#f2d58a",
+   "signature": {
+    "category": "werkzeug",
+    "text": "Werkzeuggürtel mit Kurbel und Bauplan-Rolle"
+   },
+   "teamZones": [
+    "Hutfeder",
+    "Schärpe"
+   ],
+   "proportion": {
+    "head": 0.31,
+    "legs": 0.36,
+    "arms": 0.9,
+    "hands": 0.4,
+    "weapon": 1
+   },
+   "exaggerated": "Federhut mit Orden",
+   "mood": "tüchtig, plant voraus",
+   "idle": "Bauplan-Pose: entrollt den Plan und zeigt nach vorn",
+   "attack": "Musketenschuss; Fähigkeit: wirft den Geschützturm-Bausatz",
+   "base": "musketeer"
+  },
+  {
+   "id": "ice-golem-hero",
+   "name": "Eisgolem (Held)",
+   "kind": "hero",
+   "faction": "elementar",
+   "family": "kugelig",
+   "size": "L",
+   "outline": 2,
+   "height": 2.05,
+   "main": "#c8f0ff",
+   "accent": "#ffcf6b",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Eiskrone mit Schneeflocken-Zacken"
+   },
+   "teamZones": [
+    "Frostschärpe",
+    "Strickschal"
+   ],
+   "proportion": {
+    "head": 0.28,
+    "legs": 0.18,
+    "arms": 0.8,
+    "hands": 0.55,
+    "weapon": 0.3
+   },
+   "exaggerated": "Schneesturm-Wirbel um den Bauch",
+   "mood": "majestätisch-verschlafen",
+   "idle": "Schneesturm-Pose: Arme hoch, Wirbel kreist",
+   "attack": "Kopfstoß; Fähigkeit: drei Eisstöße",
+   "base": "ice-golem"
+  },
+  {
+   "id": "wizard-hero",
+   "name": "Magier (Held)",
+   "kind": "hero",
+   "faction": "zirkel",
+   "family": "dreieckig",
+   "size": "L",
+   "outline": 2,
+   "height": 2.05,
+   "main": "#b4307a",
+   "accent": "#ff8a3a",
+   "signature": {
+    "category": "umhang",
+    "text": "Flammenumhang, der sich zu Flügeln öffnet"
+   },
+   "teamZones": [
+    "Gürtelschärpe",
+    "Hutband"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0,
+    "arms": 0.85,
+    "hands": 0.45,
+    "weapon": 0.35
+   },
+   "exaggerated": "Feuerflügel im Flug",
+   "mood": "großspurig, hebt ab",
+   "idle": "Flug-Pose: Umhang bauscht sich, Füße heben ab",
+   "attack": "Feuerball aus dem Buch; Fähigkeit: Feuriger Flug mit Wirbeln",
+   "base": "wizard"
+  },
+  {
+   "id": "goblins-hero",
+   "name": "Kobolde (Held)",
+   "kind": "hero",
+   "faction": "kobolde",
+   "family": "winzig",
+   "size": "S",
+   "outline": 1,
+   "height": 1.4,
+   "main": "#533143",
+   "accent": "#ffd34d",
+   "skin": "#7fae4a",
+   "signature": {
+    "category": "fahne",
+    "text": "Brigade-Banner auf dem Rücken"
+   },
+   "teamZones": [
+    "Bannertuch",
+    "Halstuch"
+   ],
+   "proportion": {
+    "head": 0.46,
+    "legs": 0.22,
+    "arms": 0.8,
+    "hands": 0.45,
+    "weapon": 0.6
+   },
+   "exaggerated": "Banner doppelt so hoch wie der Kobold",
+   "mood": "kriegerisch-frech, Kriegsbemalung",
+   "idle": "Banner-Pose: schwenkt das Banner",
+   "attack": "Löffeldolch-Stich; Fähigkeit: rammt das Banner in den Boden",
+   "base": "goblins"
+  },
+  {
+   "id": "mega-minion-hero",
+   "name": "Megalakai (Held)",
+   "kind": "hero",
+   "faction": "tiere",
+   "family": "gefluegelt",
+   "size": "M",
+   "outline": 2,
+   "height": 1.95,
+   "main": "#9a93b3",
+   "accent": "#ffd36b",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Visierhelm mit Heldenstern"
+   },
+   "teamZones": [
+    "Armbinde",
+    "Helmbusch"
+   ],
+   "proportion": {
+    "head": 0.31,
+    "legs": 0.18,
+    "arms": 0.85,
+    "hands": 0.6,
+    "weapon": 0.3
+   },
+   "exaggerated": "Steinbauch mit Goldgravur",
+   "mood": "jagend, fixiert sein Ziel",
+   "idle": "Sprung-Pose: duckt sich in der Luft zum Teleport",
+   "attack": "Sturzfaust; Fähigkeit: Teleport zum schwächsten Gegner",
+   "base": "mega-minion"
+  },
+  {
+   "id": "magic-archer-hero",
+   "name": "Magieschütze (Held)",
+   "kind": "hero",
+   "faction": "zirkel",
+   "family": "schlank",
+   "size": "L",
+   "outline": 2,
+   "height": 2.1,
+   "main": "#6a52b8",
+   "accent": "#fff0a8",
+   "signature": {
+    "category": "umhang",
+    "text": "Sternbild-Mantel mit drei leuchtenden Pfeilsternen"
+   },
+   "teamZones": [
+    "Hutband",
+    "Umhangfutter"
+   ],
+   "proportion": {
+    "head": 0.3,
+    "legs": 0.38,
+    "arms": 0.95,
+    "hands": 0.4,
+    "weapon": 0.9
+   },
+   "exaggerated": "Sternbilder, die sich auf dem Mantel bewegen",
+   "mood": "gerissen und verspielt",
+   "idle": "Dreifach-Pose: fächert drei Pfeile auf",
+   "attack": "Lichtpfeil; Fähigkeit: Sprung zurück, Lockvogel bleibt stehen",
+   "base": "magic-archer",
+   "forms": [
+    "magic-archer-decoy"
+   ]
+  },
+  {
+   "id": "balloon-hero",
+   "name": "Ballon (Held)",
+   "kind": "hero",
+   "faction": "gesindel",
+   "family": "schwebend",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.75,
+   "main": "#f08a5a",
+   "accent": "#2f4f6f",
+   "signature": {
+    "category": "begleiter",
+    "text": "Skelett-Kadett mit Fallschirm im Korb"
+   },
+   "teamZones": [
+    "Wimpelkette",
+    "Korbrand"
+   ],
+   "proportion": {
+    "head": 0.12,
+    "legs": 0,
+    "arms": 0.55,
+    "hands": 0.4,
+    "weapon": 0.3
+   },
+   "exaggerated": "Fallschirm-Ausleger am Korb",
+   "mood": "Pilot und Kadett salutieren",
+   "idle": "Absprung-Pose: Kadett klettert auf den Korbrand",
+   "attack": "Bombenabwurf; Fähigkeit: Kadett springt mit Fallschirm ab",
+   "base": "balloon"
+  },
+  {
+   "id": "bowler-hero",
+   "name": "Bowler (Held)",
+   "kind": "hero",
+   "faction": "riesen",
+   "family": "massig",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.75,
+   "main": "#e6e2d8",
+   "accent": "#ffcf6b",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Krone aus Kegeln"
+   },
+   "teamZones": [
+    "Hosenträger",
+    "Kegelband"
+   ],
+   "proportion": {
+    "head": 0.25,
+    "legs": 0.25,
+    "arms": 1.08,
+    "hands": 0.65,
+    "weapon": 0.35
+   },
+   "exaggerated": "Kegelkrone",
+   "mood": "triumphierender Kegelkönig",
+   "idle": "Mörser-Pose: stemmt einen Felsen über den Kopf",
+   "attack": "Kegelwurf; Fähigkeit: Felswürfe im hohen Bogen",
+   "base": "bowler"
+  },
+  {
+   "id": "dark-prince-hero",
+   "name": "Dunkler Prinz (Held)",
+   "kind": "hero",
+   "faction": "krone",
+   "family": "reiter",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.5,
+   "main": "#2f3d33",
+   "accent": "#c6f07a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Sichelmond-Krone über dem Visier"
+   },
+   "teamZones": [
+    "Schabracke",
+    "Schildmitte"
+   ],
+   "proportion": {
+    "head": 0.22,
+    "legs": 0,
+    "arms": 0.85,
+    "hands": 0.45,
+    "weapon": 0.6
+   },
+   "exaggerated": "reitet ein gepanzertes Nashorn",
+   "mood": "eiskalt und siegesgewiss",
+   "idle": "Absprung-Pose: steht in den Steigbügeln",
+   "attack": "Morgenstern-Rundumschlag; Fähigkeit: springt ab, das Nashorn stürmt allein",
+   "base": "dark-prince"
+  },
+  {
+   "id": "berserker-hero",
+   "name": "Berserker (Held)",
+   "kind": "hero",
+   "faction": "nordvolk",
+   "family": "keil",
+   "size": "M",
+   "outline": 2,
+   "height": 1.85,
+   "main": "#6b4a30",
+   "accent": "#6b8a4a",
+   "signature": {
+    "category": "umhang",
+    "text": "Bärenfell-Umhang mit Bärenkopf-Kapuze"
+   },
+   "teamZones": [
+    "Schürze",
+    "Zopfbänder"
+   ],
+   "proportion": {
+    "head": 0.33,
+    "legs": 0.3,
+    "arms": 0.95,
+    "hands": 0.5,
+    "weapon": 0.5
+   },
+   "exaggerated": "Bärengeist-Schemen bei der Wut",
+   "mood": "wild, brüllt wie ein Bär",
+   "idle": "Wut-Pose: Pfannen hoch, Bärenkopf brüllt",
+   "attack": "Pfannen-Wirbel; Fähigkeit: Bärengeist-Raserei",
+   "base": "berserker"
+  },
+  {
+   "id": "valkyrie-hero",
+   "name": "Walküre (Held)",
+   "kind": "hero",
+   "faction": "nordvolk",
+   "family": "breit",
+   "size": "L",
+   "outline": 2,
+   "height": 2.05,
+   "main": "#7a9aa8",
+   "accent": "#f0b24a",
+   "signature": {
+    "category": "kopfbedeckung",
+    "text": "Sturmflügelhelm mit goldenen Schwingen"
+   },
+   "teamZones": [
+    "Gürtel",
+    "Windbänder"
+   ],
+   "proportion": {
+    "head": 0.31,
+    "legs": 0.28,
+    "arms": 0.9,
+    "hands": 0.5,
+    "weapon": 0.7
+   },
+   "exaggerated": "Windbänder an der Axt",
+   "mood": "stürmisch",
+   "idle": "Wirbelwind-Pose: Axt über dem Kopf kreisend",
+   "attack": "Drehschlag; Fähigkeit: Wirbelwind",
+   "base": "valkyrie"
+  },
+  {
+   "id": "ice-wizard-hero",
+   "name": "Eismagier (Held)",
+   "kind": "hero",
+   "faction": "zirkel",
+   "family": "dreieckig",
+   "size": "M",
+   "outline": 2,
+   "height": 2,
+   "main": "#eaf6ff",
+   "accent": "#5fd0c8",
+   "signature": {
+    "category": "begleiter",
+    "text": "kleiner Schneemann-Gehilfe auf der Schulter"
+   },
+   "teamZones": [
+    "Schal",
+    "Mantelsaum"
+   ],
+   "proportion": {
+    "head": 0.31,
+    "legs": 0,
+    "arms": 0.8,
+    "hands": 0.45,
+    "weapon": 0.85
+   },
+   "exaggerated": "Schneekugel-Stab mit Schneemann darin",
+   "mood": "großväterlich, lacht",
+   "idle": "Frostkerl-Pose: formt einen Schneeball",
+   "attack": "Eissplitter-Fächer; Fähigkeit: beschwört den Schneemann",
+   "base": "ice-wizard"
+  },
+  {
+   "id": "tombstone-hero",
+   "name": "Grabstein (Held)",
+   "kind": "spawner",
+   "faction": "gruft",
+   "family": "bauwerk",
+   "size": "XL",
+   "outline": 3,
+   "height": 2.5,
+   "main": "#6f7b8a",
+   "accent": "#d9b54a",
+   "signature": {
+    "category": "bauwerk",
+    "text": "Mausoleum mit Säulen und Krone über dem Tor"
+   },
+   "teamZones": [
+    "Torbanner",
+    "Kranzschleife"
+   ],
+   "proportion": {
+    "head": 0,
+    "legs": 0,
+    "arms": 0,
+    "hands": 0,
+    "weapon": 0.3
+   },
+   "exaggerated": "Krone über dem Portal",
+   "mood": "feierlich und unheimlich",
+   "idle": "Tor knarrt, Licht flackert",
+   "attack": "Skelette schlurfen heraus; Fähigkeit: Tor öffnet sich für die Grabkönigin",
+   "base": "tombstone"
+  }
+ ]
+}
