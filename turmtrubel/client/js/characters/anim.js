@@ -487,6 +487,30 @@ function quadSpawn(u, p, P) {
   }
 }
 
+// ───────────── Schlange / Nebeldrache ─────────────
+/** Wellenbewegung durch die Segmentkette seg1…seg6 (jedes Segment erbt die Drehung des vorigen). */
+function serpentWave(u, p, P) {
+  const ph = u * TAU * (p.waves ?? 1);
+  const A = p.amp ?? 7;
+  for (let i = 1; i <= 6; i++) P.r('seg' + i, A * Math.sin(ph - i * (p.lag ?? 0.9)) * (i === 1 ? 0.5 : 1));
+  P.y('root', (p.float ?? 3) * Math.sin(u * TAU));
+  P.r('head', (p.nod ?? 5) * Math.sin(ph + 0.6));
+  P.r('jaw', p.jaw ?? 0);
+  P.r('rTorso', (p.riderSway ?? 2) * Math.sin(ph - 1.2));
+  P.r('rArmF', (p.rArmF ?? 0) + 4 * Math.sin(ph));
+}
+/** Atem-/Wellenangriff: Kopf zurück (Ausholen), Maul auf, Stoß nach vorn. */
+function serpentBreath(u, p, P) {
+  serpentWave(u, { ...p, amp: (p.amp ?? 7) * 0.6 }, P);
+  const h = p.hit ?? 0.55;
+  P.r('head', key(atkKeys(h, p.wind ?? -24, p.strike ?? 14, 0), u));
+  P.r('jaw', key([[0, 0], [h * 0.8, 8], [h, p.jawOpen ?? 30, 'snap'], [h + 0.25, p.jawOpen ?? 30], [1, 0]], u));
+  P.r('seg1', key(atkKeys(h, -8, 6), u));
+  P.r('rArmF', key(atkKeys(h, -40, -90, 0), u));
+  if (u >= h && u < h + 0.2) P.show.add('muzzle');
+  P.expr = 'attack';
+}
+
 // ───────────── Schwebend, Blob, Bauwerk, Fahrzeug ─────────────
 function hoverIdle(u, p, P) {
   const ph = u * TAU;
@@ -613,6 +637,8 @@ export const PROGRAMS = {
   'quad.jump': quadJump,
   'rider.swing': riderSwing,
   'hover.idle': hoverIdle,
+  'serpent.wave': serpentWave,
+  'serpent.breath': serpentBreath,
   'blob.idle': blobIdle,
   'blob.walk': blobWalk,
   'building.idle': buildingIdle,

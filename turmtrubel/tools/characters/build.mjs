@@ -73,7 +73,7 @@ const DEFAULT_ANIM = {
   vehicle: { idle: { prog: 'vehicle.idle' }, walk: { prog: 'vehicle.walk' }, charge: { prog: 'vehicle.walk', p: { spins: 2 } }, attack: { prog: 'vehicle.idle', hit: 0.55 }, hit: { prog: 'generic.hit' }, spawn: { prog: 'generic.spawn' }, death: { prog: 'generic.death' } },
   blob: { idle: { prog: 'blob.idle' }, walk: { prog: 'blob.walk' }, attack: { prog: 'blob.walk', hit: 0.55 }, hit: { prog: 'generic.hit' }, spawn: { prog: 'generic.spawn' }, death: { prog: 'generic.death' } },
   building: { idle: { prog: 'building.idle' }, attack: { prog: 'building.spawnUnit', hit: 0.3 }, hit: { prog: 'generic.hit' }, spawn: { prog: 'building.spawn' }, death: { prog: 'building.death' } },
-  serpent: { idle: { prog: 'hover.idle' }, walk: { prog: 'hover.idle' }, attack: { prog: 'hover.idle', hit: 0.55 }, hit: { prog: 'generic.hit' }, spawn: { prog: 'generic.spawn' }, death: { prog: 'generic.death' } },
+  serpent: { idle: { prog: 'serpent.wave' }, walk: { prog: 'serpent.wave', p: { amp: 10, waves: 2 } }, attack: { prog: 'serpent.breath', hit: 0.55 }, hit: { prog: 'generic.hit' }, spawn: { prog: 'generic.spawn' }, death: { prog: 'generic.death' } },
 };
 
 function mergeAnim(rig, own) {
