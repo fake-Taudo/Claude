@@ -123,6 +123,8 @@ export function figure(row, extra = {}) {
     if (F.parts.some((p) => p.name === name)) throw new Error(`Teil ${name} doppelt in ${F.id}`);
     if (o.bone && !F.boneMap.has(o.bone)) throw new Error(`Teil ${name}: Knochen ${o.bone} fehlt in ${F.id}`);
     const part = { name, o: { z: 0, ...o }, els: [], bb: [Infinity, Infinity, -Infinity, -Infinity] };
+    // F.defaultForm: Teile ohne eigene Form gelten in allen genannten Formen (z. B. Lockvogel = ganze Figur)
+    if (part.o.form === undefined && F.defaultForm) part.o.form = F.defaultForm;
     const g = builder(part, Mx.id());
     fn(g);
     F.parts.push(part);
@@ -195,7 +197,8 @@ export function figure(row, extra = {}) {
   F.box = () => {
     const bb = [Infinity, Infinity, -Infinity, -Infinity];
     for (const p of F.parts) {
-      if (p.o.form || p.o.state || p.o.evo === 'evo' || !isFinite(p.bb[0])) continue;
+      const forms = p.o.form ? [].concat(p.o.form) : null;
+      if ((forms && !forms.includes('base') && !forms.includes('*')) || p.o.state || p.o.evo === 'evo' || !isFinite(p.bb[0])) continue;
       bb[0] = Math.min(bb[0], p.bb[0]);
       bb[1] = Math.min(bb[1], p.bb[1]);
       bb[2] = Math.max(bb[2], p.bb[2]);

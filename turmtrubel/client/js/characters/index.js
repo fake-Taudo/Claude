@@ -477,7 +477,8 @@ export function drawCharacter(ctx, o) {
   const sx = 1 + sq * 0.16;
   const sy = 1 - sq * 0.24;
   const lift = o.lift || 0;
-  const a = (o.alpha ?? 1) * (frame.alpha ?? 1);
+  // Formen mit eigener Deckkraft (z. B. halb durchsichtiger Lockvogel)
+  const a = (o.alpha ?? 1) * (frame.alpha ?? 1) * (o.form ? model.entry.formLook?.[o.form]?.alpha ?? 1 : 1);
   if (a <= 0.01) return { top: o.y - lift + frame.top * k * frame.ppm, bottom: o.y - lift + frame.bottom * k * frame.ppm };
   ctx.save();
   ctx.translate(o.x, o.y - lift);

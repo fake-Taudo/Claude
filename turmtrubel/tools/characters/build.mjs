@@ -137,6 +137,7 @@ export async function buildFigure(id) {
     views: F.parts.some((p) => p.o.view === 'back') ? ['front', 'back'] : ['front'],
     variants: Math.max(0, ...F.parts.map((p) => (p.o.variant != null ? Math.max(...[].concat(p.o.variant)) + 1 : 0))),
     forms,
+    formLook: F.meta.formLook || null,
     evo: F.meta.evo || (F.parts.some((p) => p.o.evo === 'evo') ? { aura: row.acc } : null),
     events: F.meta.events || null,
   };
