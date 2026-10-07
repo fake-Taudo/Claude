@@ -6,6 +6,7 @@
 //   node tools/ui-shots.mjs --out=/tmp/shots --jpeg
 //   node tools/ui-shots.mjs --url=http://localhost:3000   # vorhandenen Server nutzen
 //   node tools/ui-shots.mjs --perf                         # nur Performance: 10 s Bot-Kampf, CPU 4× gedrosselt
+//   node tools/ui-shots.mjs --perf --fixed                 # dito mit fester Auflösung (automatische Qualität aus)
 //
 // Startet (ohne --url) selbst einen Server auf einem freien Port, spielt pro Viewport den
 // kompletten Ablauf durch (Name → Menü → Deck-Bauer → Training → Kampf → Pause → Ergebnis,
@@ -429,6 +430,8 @@ async function runPerf(browser, url, vp) {
   await page.fill('#name-input', 'Messung');
   await page.click('#name-form button[type=submit]');
   await page.waitForFunction(() => window.turmtrubel?.net?.welcomed, null, { timeout: 8000 });
+  // --fixed: automatische Qualität aus → feste Auflösung wie vor dem Upgrade (fairer Vergleich)
+  if (args.fixed) await page.evaluate(() => (window.turmtrubel.settings.autoQuality = false));
   await page.click('#btn-training');
   await page.waitForSelector('#s-game.active', { timeout: 15000 });
   await page.waitForTimeout(800);

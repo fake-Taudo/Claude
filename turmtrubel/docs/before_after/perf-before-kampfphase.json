@@ -1,0 +1,65 @@
+{
+ "date": "2026-10-06T22:00:04.129Z",
+ "maxEntities": 222,
+ "profiles": {
+  "desktop-1440x900": {
+   "frames": 671,
+   "fps": 26,
+   "p95ms": 67,
+   "worstMs": 600,
+   "longTasks": 142,
+   "longMaxMs": 97,
+   "heapMB": 28.6,
+   "peakParticles": 700,
+   "prepareMs": 15,
+   "battle": {
+    "worstMs": 117,
+    "p99ms": 83,
+    "longTasks": 142,
+    "longMaxMs": 97
+   },
+   "errors": [],
+   "replaySeconds": 25.7,
+   "drawCallsPerFrame": 4387
+  },
+  "phone-390x844": {
+   "frames": 736,
+   "fps": 6,
+   "p95ms": 333,
+   "worstMs": 2817,
+   "longTasks": 494,
+   "longMaxMs": 469,
+   "heapMB": 24.6,
+   "peakParticles": 699,
+   "prepareMs": 58,
+   "battle": {
+    "worstMs": 467,
+    "p99ms": 400,
+    "longTasks": 493,
+    "longMaxMs": 469
+   },
+   "errors": [],
+   "replaySeconds": 125.1
+  },
+  "phone-844x390": {
+   "frames": 755,
+   "fps": 6,
+   "p95ms": 333,
+   "worstMs": 2800,
+   "longTasks": 505,
+   "longMaxMs": 418,
+   "heapMB": 23.2,
+   "peakParticles": 700,
+   "prepareMs": 60,
+   "battle": {
+    "worstMs": 433,
+    "p99ms": 383,
+    "longTasks": 504,
+    "longMaxMs": 418
+   },
+   "errors": [],
+   "replaySeconds": 132.3
+  }
+ },
+ "note": "Stand vor dem Upgrade (Commit 3ac0793), gemessen mit dem erweiterten tools/bench/run.mjs (Vorbereitung und Kampfphase getrennt)."
+}
