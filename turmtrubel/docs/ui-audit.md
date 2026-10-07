@@ -45,7 +45,7 @@ Stand vor der UI-Überarbeitung, Commit `1f05370`. In dieser Phase wurde kein Co
 
 Im Repository gibt es kein Screenshot-Skript. Die Referenzbilder entstanden mit temporären Playwright-Skripten. Neu entsteht **`tools/ui-shots.mjs`** mit allen Viewports, Zuständen und automatischen Prüfungen.
 
-Die Referenz-Screenshots liegen lokal in `docs/ui-referenz/` (PNGs sind per `.gitignore` ausgenommen, 27 MB). Eine Auswahl liegt als JPEG in `docs/ui-referenz/vorher/`.
+Die Referenz-Screenshots liegen lokal in `docs/ui-referenz/` (PNGs sind per `.gitignore` ausgenommen, 27 MB). Die frühere JPEG-Auswahl in `docs/ui-referenz/vorher/` wurde entfernt, weil sie noch erfundene Karten zeigte (Git-Historie, Commit a2c4935 und früher).
 
 > **Wichtig zur Lesart:** `desk-07` … `desk-13` zeigen noch das **alte Desktop-Layout** mit Hand unten. Seit Commit `c7b5319` nutzt der Desktop bereits eine hochkant stehende Arena mit Panel rechts (siehe `dk-036`). B-01 ist damit teilweise erledigt. Top-Bar-, Kronen- und Toast-Probleme bestehen weiter.
 

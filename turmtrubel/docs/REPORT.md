@@ -252,7 +252,6 @@ Nur Kampfphase: Für diesen fairen Vergleich wurde auch der Stand vor dem Upgrad
 - Optional ein Radial-Layout für Emotes als Alternative zur Leiste.
 - Eigene Animationen für Sonderfiguren (zum Beispiel Bergarbeiter beim Graben, Ballon beim Abwurf) statt der generischen Archetyp-Frames.
 - Eigene Sound-Dateien über den Sound-Hook (`{ "type": "sound", "name": … }`) einbinden.
-- Alte Vorher-Bilder unter `docs/ui-referenz/vorher*` zeigen noch die früher erfundenen Karten. Ob sie gelöscht werden sollen, ist offen und wartet auf deine Entscheidung.
 
 ## 7. Anleitungen
 
