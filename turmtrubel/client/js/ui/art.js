@@ -1,5 +1,6 @@
 // Zwischenspeicher für Kartenbilder (Canvas + Data-URL für DOM-Elemente).
 import { drawCardArt, onSkinImageLoaded } from '../game/sprites.js';
+import { characterManifest, loadFigure } from '../characters/index.js';
 
 const canvases = new Map();
 const urls = new Map();
@@ -19,8 +20,8 @@ export function cardArt(db, id, evo = false, w = 180, h = 225) {
     cv.width = w;
     cv.height = h;
     const card = db.card(id);
-    if (card) drawCardArt(cv.getContext('2d'), db, card, 0, 0, w, h, { evo });
-    canvases.set(key, cv);
+    // Lädt eine Figur noch, bleibt das Bild ungespeichert und wird beim nächsten Zugriff neu gezeichnet
+    if (!card || drawCardArt(cv.getContext('2d'), db, card, 0, 0, w, h, { evo }) !== false) canvases.set(key, cv);
   }
   return cv;
 }
@@ -57,13 +58,24 @@ export function cardArtURL(db, id, evo = false) {
   let u = urls.get(key);
   if (!u) {
     u = cardArt(db, id, evo).toDataURL('image/png');
-    urls.set(key, u);
+    if (canvases.has(`${key}|180x225`)) urls.set(key, u);
   }
   return u;
 }
 
 /** Alle Kartenbilder vorab erzeugen (Ladebildschirm). onProgress(0..1) */
 export async function prerenderAll(db, onProgress) {
+  // Figuren der Kartenbilder laden (erste Hälfte des Balkens)
+  const ids = Object.keys(characterManifest()?.figures || {});
+  let done = 0;
+  await Promise.all(
+    ids.map((fid) =>
+      loadFigure(fid).then(() => {
+        done++;
+        if (done % 8 === 0) onProgress?.((done / ids.length) * 0.5);
+      }),
+    ),
+  );
   const jobs = [];
   for (const c of db.cards) {
     jobs.push([c.id, false]);
@@ -72,7 +84,7 @@ export async function prerenderAll(db, onProgress) {
   for (let i = 0; i < jobs.length; i++) {
     cardArtURL(db, jobs[i][0], jobs[i][1]);
     if (i % 6 === 5) {
-      onProgress?.((i + 1) / jobs.length);
+      onProgress?.(0.5 + ((i + 1) / jobs.length) * 0.5);
       await new Promise((r) => setTimeout(r, 0));
     }
   }

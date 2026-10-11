@@ -198,7 +198,9 @@ export function figure(row, extra = {}) {
     const bb = [Infinity, Infinity, -Infinity, -Infinity];
     for (const p of F.parts) {
       const forms = p.o.form ? [].concat(p.o.form) : null;
-      if ((forms && !forms.includes('base') && !forms.includes('*')) || p.o.state || p.o.evo === 'evo' || !isFinite(p.bb[0])) continue;
+      // Ruhepose: Grundform, ohne Evo; Teile mit Zustandsliste zählen, wenn sie in Ruhe (idle) sichtbar sind
+      const idle = !p.o.state || [].concat(p.o.state).includes('idle');
+      if ((forms && !forms.includes('base') && !forms.includes('*')) || !idle || p.o.evo === 'evo' || !isFinite(p.bb[0])) continue;
       bb[0] = Math.min(bb[0], p.bb[0]);
       bb[1] = Math.min(bb[1], p.bb[1]);
       bb[2] = Math.max(bb[2], p.bb[2]);

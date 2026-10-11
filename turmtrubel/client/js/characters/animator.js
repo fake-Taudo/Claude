@@ -1,7 +1,8 @@
 // CharacterAnimator (docs/CHAR_SYSTEM.md §9.5/§9.7): leitet pro Einheit Zustand und normierte Zeit aus Flags,
 // Server-Ereignissen (a = Treffer/Abschuss, h = getroffen, ab = Fähigkeit) und Bewegung ab und meldet
 // Animations-Events (char.step, char.strike, …) für das VFX-System.
-import { EF } from '/shared/protocol.js';
+// relativ statt '/shared/…', damit auch Node (Tests über design/manifest.js) das Modul auflöst; im Browser identisch
+import { EF } from '../../../shared/protocol.js';
 
 const SPAWN = 0.5;
 const HIT = 0.24;

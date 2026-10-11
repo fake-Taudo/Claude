@@ -92,7 +92,7 @@ class App {
       this.vfxPresets = {};
       console.warn(e);
     }
-    // Figuren-Manifest (neue Vektorfiguren); ohne Manifest zeichnet das Spiel die bisherigen Figuren
+    // Figuren-Manifest (Vektorfiguren für Einheiten, Spawner-Gebäude, Turmfiguren und Kartenbilder)
     try {
       await initCharacters('/assets/characters/');
     } catch (e) {

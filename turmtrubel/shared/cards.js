@@ -91,7 +91,8 @@ export function scaleStats(obj, f, parentKey = '') {
 /**
  * Wendet ein Namens-/Grafik-Mapping an (data/skin.json). Fehlende Einträge fallen auf das Original zurück.
  * Pro Karte: name, description, look, image, evo: {name, description}, ability: {name, description},
- * optional archetype (Figuren-Körper) und fx: {preset, tint} (nur Darstellung).
+ * optional character (Figur aus dem Figuren-Manifest), archetype (wird auf character abgebildet) und
+ * fx: {preset, tint} (nur Darstellung).
  */
 export function applySkin(raw, skin, which) {
   const name = which || skin?.active || 'original';
@@ -114,6 +115,10 @@ export function applySkin(raw, skin, which) {
     // Visuelles Upgrade (rein optisch, Simulation liest es nicht):
     // archetype = anderer Figuren-Körper (look.body), fx = { preset, tint } für Ausspiel-/Zauber-Effekt
     if (typeof o.archetype === 'string' && o.archetype && isObj(n.unit)) n.unit = { ...n.unit, look: { ...(n.unit.look || {}), body: o.archetype } };
+    // character = Figur aus dem Figuren-Manifest (client/assets/characters/manifest.json) für die eigene Einheit;
+    // ein archetype wird darauf abgebildet (der Client prüft, ob es die Figur gibt)
+    const character = typeof o.character === 'string' && o.character ? o.character : typeof o.archetype === 'string' && o.archetype ? o.archetype : null;
+    if (character && n.type !== 'spell') n.character = character;
     if (isObj(o.fx) && (o.fx.preset || o.fx.tint)) n.skinFx = pick(o.fx, ['preset', 'tint']);
     return n;
   });

@@ -1,7 +1,7 @@
 // Zeichnet Arena, Zauberzonen, Einheiten, Projektile, Effekte und Platzierungsvorschau.
 import { ARENA_W, ARENA_H, RIVER_Y0, RIVER_Y1, BRIDGES, TOWER_SLOTS, placementRects } from '/shared/arena.js';
 import { EF, EMOTES } from '/shared/protocol.js';
-import { drawUnit, drawBuilding, drawTower, drawEmoteFace, drawSpellIcon, TEAM, OUTLINE, shade } from './sprites.js';
+import { drawBuilding, drawTower, drawEmoteFace, drawSpellIcon, TEAM, OUTLINE, shade } from './sprites.js';
 import { FONT, text as ctext, tnum, rr as rrect } from './canvastext.js';
 import { softShadow, softGlow } from '../design/light.js';
 import { LIGHT } from '../design/tokens.js';
@@ -602,6 +602,11 @@ export class Renderer {
     const spawnK = Math.min(1, (t - v.born) / 0.28);
     const label = v.info?.label;
     if (v.kind === 'building') {
+      // Spawner-Gebäude mit Figur (Hütten, Grabstein, Käfig, Bohrer, Phönix-Ei); Basis wie beim Gebäude-Baukasten
+      if (v.fig) {
+        this.drawFigure(ctx, v, t, team, 0, alpha, v.half * s * 0.35);
+        return;
+      }
       const squash = spawnK < 1 ? 1 - spawnK : 0;
       drawBuilding(ctx, v.look, { x: v.sx, y: v.sy + v.half * s * 0.35, U: v.half * s * 0.95, t, atk: v.atk, hurt: v.hurt, team, aim, aux: v.aux, alpha, evo: v.evo, quality, squash, label, dpr: this.game.spriteDpr });
       return;
@@ -617,27 +622,8 @@ export class Renderer {
     const lift = (v.flying ? s * 1.1 : 0) + hop + (spawnK < 1 ? (1 - spawnK) * (1 - spawnK) * s * 3 : 0);
     const landK = t - v.born - 0.28;
     const squash = landK > 0 && landK < 0.2 ? Math.sin((landK / 0.2) * Math.PI) * 0.6 : 0;
-    if (!(v.fig && this.drawFigure(ctx, v, t, team, lift, alpha))) drawUnit(ctx, v.look, {
-      x: v.sx,
-      y: v.sy,
-      U: v.U,
-      fx: v.face,
-      t: t + v.seed,
-      walk: v.moving && !(f & EF.STUN),
-      atk: v.atk,
-      hurt: v.hurt,
-      team,
-      evo: v.evo,
-      lift,
-      alpha,
-      mood: f & EF.STUN ? 'stun' : null,
-      seed: v.seed,
-      quality,
-      squash,
-      label,
-      back: !!v.back,
-      dpr: this.game.spriteDpr,
-    });
+    // Neue Figur; solange ihre Vektorquelle lädt, bleibt die Stelle leer (Schatten und Balken stehen schon)
+    if (v.fig) this.drawFigure(ctx, v, t, team, lift, alpha, 0, squash);
     if (f & EF.CLONE && quality > 0) {
       ctx.save();
       ctx.globalAlpha = 0.5;
@@ -654,7 +640,7 @@ export class Renderer {
   }
 
   /** Neue Figur über die Figuren-Laufzeit zeichnen; false, solange ihre Vektorquelle noch lädt. */
-  drawFigure(ctx, v, t, team, lift, alpha) {
+  drawFigure(ctx, v, t, team, lift, alpha, dy = 0, squash = 0) {
     const f = v.flags;
     if (v.formNext && t >= v.formAt) {
       v.form = v.formNext;
@@ -673,7 +659,7 @@ export class Renderer {
       evo: v.evo,
       team,
       x: v.sx,
-      y: v.sy,
+      y: v.sy + dy,
       scale: this.game.view.s,
       dpr: this.game.spriteDpr,
       face: v.face,
@@ -683,6 +669,7 @@ export class Renderer {
       variant: v.variant,
       alpha,
       lift,
+      squash,
       flash: v.hurt * 0.6,
     });
     if (r) v.top = r.top;
@@ -709,8 +696,9 @@ export class Renderer {
         continue;
       }
       const fall = c.flying ? 1 - Math.min(1, u * 1.3) ** 2 : 0;
-      characterShadow(ctx, { x, y: y + s * 0.05, r: s * 0.45, team: c.team, ring: false, dpr: game.spriteDpr, alpha: 1 - u, dx: s * 0.45 * ox, dy: s * 0.45 * oy });
-      drawCharacter(ctx, { figure: c.figure, form: c.form, evo: c.evo, team: c.team, x, y, scale: s, dpr: game.spriteDpr, face: c.face, view: c.back ? 'back' : 'front', state: 'death', u, variant: c.variant, lift: fall * s * 1.1 });
+      const by = c.half ? c.half * s * 0.35 : 0;
+      if (!c.half) characterShadow(ctx, { x, y: y + s * 0.05, r: s * 0.45, team: c.team, ring: false, dpr: game.spriteDpr, alpha: 1 - u, dx: s * 0.45 * ox, dy: s * 0.45 * oy });
+      drawCharacter(ctx, { figure: c.figure, form: c.form, evo: c.evo, team: c.team, x, y: y + by, scale: s, dpr: game.spriteDpr, face: c.face, view: c.back ? 'back' : 'front', state: 'death', u, variant: c.variant, lift: fall * s * 1.1 });
     }
   }
 
@@ -1406,7 +1394,8 @@ export class Renderer {
       ctx.lineWidth = 2;
       ctx.fillRect(x - h, y - h, h * 2, h * 2);
       ctx.strokeRect(x - h, y - h, h * 2, h * 2);
-      drawBuilding(ctx, g.look, { x, y: y + h * 0.35, U: h * 0.95, t, team: 'blue', quality: 1, label: g.label });
+      if (g.fig) drawCharacter(ctx, { figure: g.fig.figure, form: g.fig.form, team: 'blue', x, y: y + h * 0.35, scale: s, dpr: this.game.spriteDpr, face: 1, view: 'front', state: 'idle', time: t, alpha: 0.75 });
+      else drawBuilding(ctx, g.look, { x, y: y + h * 0.35, U: h * 0.95, t, team: 'blue', quality: 1, label: g.label });
     } else {
       if (g.range) {
         ctx.strokeStyle = 'rgba(255,255,255,0.6)';
@@ -1419,7 +1408,7 @@ export class Renderer {
       }
       for (const [ox, oy] of g.offsets) {
         const [px, py] = view.toScreen(g.x + ox, g.y + oy);
-        drawUnit(ctx, g.look, { x: px, y: py, U: g.U, fx: 1, t, team: g.valid ? 'blue' : 'red', lift: g.flying ? s * 1.1 : 0, quality: 1, label: g.label });
+        if (g.fig) drawCharacter(ctx, { figure: g.fig.figure, form: g.fig.form, team: g.valid ? 'blue' : 'red', x: px, y: py, scale: s, dpr: this.game.spriteDpr, face: 1, view: this.game.view.mode !== 'rotated' ? 'back' : 'front', state: 'idle', time: t, alpha: 0.75, lift: g.flying ? s * 1.1 : 0 });
       }
     }
     ctx.restore();

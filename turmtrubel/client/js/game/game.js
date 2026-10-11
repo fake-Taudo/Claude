@@ -8,9 +8,9 @@ import { text as ctext } from './canvastext.js';
 import { cardArt } from '../ui/art.js';
 import { safeInsets, reducedMotion } from '../ui/tokens.js';
 import { sprites } from '../design/spritecache.js';
-import { drawTower, drawUnit } from './sprites.js';
+import { drawTower } from './sprites.js';
 import { mixHex } from '../design/light.js';
-import { figureForType, figureEntry, loadFigure, prebakeCharacter, prefetchAllFigures, setCharacterQuality, setCharacterColorblind, CharacterAnimator } from '../characters/index.js';
+import { figureForType, figureEntry, loadFigure, loadFigures, prebakeCharacter, prefetchAllFigures, setCharacterQuality, setCharacterColorblind, CharacterAnimator } from '../characters/index.js';
 
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -155,27 +155,30 @@ export class Game {
     } catch {
       def = null;
     }
-    if (!def || def.isBuilding) return;
-    const fig = figureForType(id);
-    if (fig) {
-      // Neue Figur: SVG laden und Ruhe, Laufen (beide Ansichten) und Erscheinen in den Atlas backen
-      return loadFigure(fig.figure).then(() =>
-        prebakeCharacter({ figure: fig.figure, form: fig.form, evo, scale: this.view.s, dpr: this.spriteDpr, teams: ['blue'], views: this.view.mode !== 'rotated' ? ['front', 'back'] : ['front'], states: ['idle', 'walk', 'spawn'] }),
-      );
-    }
-    const cv = document.createElement('canvas');
-    cv.width = cv.height = 4;
-    const ctx = cv.getContext('2d');
-    const U = this.view.s * (0.42 + def.radius * 0.8) * (def.look?.scale || 1);
-    const quality = QUALITY_LEVEL[this.app.settings.quality] ?? 2;
-    const poses = [{}, { walk: true, t: 0.02 }, { walk: true, t: 0.32 }, { atk: 0.9 }, { atk: 0.4 }];
-    const backs = this.view.mode !== 'rotated' ? [false, true] : [false];
-    for (const p of poses) for (const back of backs) for (const fx of [1, -1]) drawUnit(ctx, def.look || {}, { x: 0, y: 0, U, fx, team: 'blue', evo, quality, back, dpr: this.spriteDpr, force: true, seed: 0, ...p });
+    const fig = def ? this.figureOf(id) : null;
+    if (!fig) return;
+    // SVG laden und Ruhe, Laufen (beide Ansichten) und Erscheinen bzw. beim Spawner-Gebäude das Herbeirufen backen
+    const states = def.isBuilding ? ['idle', 'spawn', 'spawnUnit'] : ['idle', 'walk', 'spawn'];
+    return loadFigure(fig.figure).then(() =>
+      prebakeCharacter({ figure: fig.figure, form: fig.form, evo, scale: this.view.s, dpr: this.spriteDpr, teams: ['blue'], views: this.view.mode !== 'rotated' ? ['front', 'back'] : ['front'], states }),
+    );
+  }
+
+  /** Figur eines Spieltyps: skin.json „character“ der Karte ersetzt die Figur ihrer eigenen Einheit. */
+  figureOf(type) {
+    const card = this.db.card?.(type);
+    if (card?.character && figureEntry(card.character)) return { figure: card.character, form: null };
+    return figureForType(type);
   }
 
   /** Türme samt Figuren im Ladescreen vorrendern (sonst kostet der erste Kampf-Frame mehrere hundert ms). */
   prewarmTowers() {
     if (typeof document === 'undefined') return;
+    // Turmfiguren (König, Turmwache) zuerst laden, sonst fehlen sie im vorgebackenen Bild
+    return loadFigures(['tower-king', 'tower-guard']).then(() => this.bakeTowers());
+  }
+
+  bakeTowers() {
     const cv = document.createElement('canvas');
     cv.width = cv.height = 4;
     const ctx = cv.getContext('2d');
@@ -585,8 +588,8 @@ export class Game {
       moving: false,
       U: this.view.s * (info.uf || 1),
     };
-    // Neue Figur (Manifest), sonst zeichnet der Renderer die bisherige Sprite-Figur
-    const fig = info.kind === 'unit' ? figureForType(info.key) : null;
+    // Figur aus dem Manifest (Einheiten und Spawner-Gebäude); Gebäude ohne Figur zeichnet der Gebäude-Baukasten
+    const fig = info.kind === 'unit' || info.kind === 'building' ? this.figureOf(info.key) : null;
     if (fig) {
       const entry = figureEntry(fig.figure);
       v.fig = fig.figure;
@@ -711,8 +714,12 @@ export class Game {
           if (info.kind === 'building') {
             fx.emit('building.death', { x, y, team });
             A.sfx('crumble', 0.6);
+            // Spawner-Gebäude mit Figur: Tod-Animation als Leiche (Einsturz, Ei schlüpft)
+            const fig = this.figureOf(info.key);
+            const dv = this.vis.get(ev[1]);
+            if (fig) this.corpses.push({ figure: fig.figure, form: dv?.form || fig.form || null, evo: !!dv?.evo, variant: 0, team, x, y, flying: false, face: dv?.face ?? (owner === this.side ? 1 : -1), back: false, t0: now, swarm: false, half: info.half || 0.5 });
           } else if (info.kind === 'unit') {
-            const fig = figureForType(info.key);
+            const fig = this.figureOf(info.key);
             const dv = this.vis.get(ev[1]);
             if (fig) {
               // Neue Figur: Tod-Animation als Leiche, die Auflöse-Wolke folgt am Ende (char.vanish)
@@ -1254,6 +1261,7 @@ export class Game {
     }
     const def = eff.forms ? this.db.unit(ref) : pos.def || this.db.unit(ref);
     g.look = def.look;
+    g.fig = this.figureOf(eff.forms ? ref : eff.id) || this.figureOf(ref);
     g.label = eff.name;
     if (eff.type === 'building') {
       g.kind = 'building';
