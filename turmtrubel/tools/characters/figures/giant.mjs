@@ -1,8 +1,10 @@
-// Riese – gutmütiger Bauernriese mit Bommelmütze und Arbeitshandschuhen (Brief: docs/briefs/giant.md)
+// Riese – gutmütiger Bauernriese mit Bommelmütze und Arbeitshandschuhen (Brief: docs/briefs/giant.md).
+// o.hero: Erntekönig mit Ährenkrone, Steppdecken-Umhang und Heldenwurf (giant-hero).
 import { ellipse, circle, rrect, poly, path, limb, polyline, spline } from '../geo.mjs';
 import { eye, eyeClosed, eyeSpiral, eyeX, brow, mouthLine, mouthOpen, rivets, stitches, lines, emblem, INK } from '../kit.mjs';
 
-export default function giant(F) {
+export default function giant(F, o = {}) {
+  const H = !!o.hero;
   const P = F.pal;
   const DENIM = P.main;
   const GLOVE = P.acc;
@@ -43,9 +45,9 @@ export default function giant(F) {
   };
   leg(-12, 8, 'legB', 'footB');
   leg(12, 12, 'legF', 'footF');
-  F.part('kneePatch', { bone: 'legF', z: 12.5, team: true, lod: 1 }, (g) => {
-    g.mat(rrect(10, -27, 10, 9, 2).rot(-6, 15, -22), P.team, 'cloth', { line: P.teamDeep, lw: 0.9 });
-    stitches(g, [[10.6, -26.6], [19.6, -27.4], [19.4, -18.4], [10.6, -17.8], [10.6, -26.6]], P.symbol, { step: 2.4, len: 1.2, cross: true, lod: 1 });
+  F.part('kneePatch', { bone: 'legF', z: 12.5, team: !H, lod: 1 }, (g) => {
+    g.mat(rrect(10, -27, 10, 9, 2).rot(-6, 15, -22), H ? '#f3d36b' : P.team, 'cloth', { line: H ? '#a8862e' : P.teamDeep, lw: 0.9 });
+    stitches(g, [[10.6, -26.6], [19.6, -27.4], [19.4, -18.4], [10.6, -17.8], [10.6, -26.6]], H ? '#6b4626' : P.symbol, { step: 2.4, len: 1.2, cross: true, lod: 1 });
   });
 
   // ───────── Hinterer Arm ─────────
@@ -82,8 +84,8 @@ export default function giant(F) {
     g.mat(circle(-20, -86, 3.2), BRASS, 'gold');
     g.mat(circle(22, -86, 3.2), BRASS, 'gold');
   });
-  F.part('backPatch', { bone: 'hip', z: 21, zb: 31, view: 'back', team: true }, (g) => {
-    g.mat(rrect(-12, -50, 18, 14, 3), P.team, 'cloth', { line: P.teamDeep });
+  F.part('backPatch', { bone: 'hip', z: 21, zb: 31, view: 'back', team: !H }, (g) => {
+    g.mat(rrect(-12, -50, 18, 14, 3), H ? '#f3d36b' : P.team, 'cloth', { line: H ? '#a8862e' : P.teamDeep });
     stitches(g, [[-11, -49], [5, -49], [5, -37], [-11, -37], [-11, -49]], P.symbol, { step: 2.6, len: 1.3, cross: true, lod: 1 });
   });
   F.part('backStraps', { bone: 'torso', z: 22, zb: 32, view: 'back' }, (g) => {
@@ -140,28 +142,62 @@ export default function giant(F) {
     g.fill(ellipse(16.6, -104, 2.4, 1.5), '#f08a7a', { op: 0.45, lod: 1 });
     g.fill(ellipse(4.2, -104, 2, 1.3), '#f08a7a', { op: 0.35, lod: 1 });
   });
-  F.part('beanie', { bone: 'head', z: 35, zb: 38, sig: true }, (g) => {
-    const cap = path([[-10, -114, 1], [-9, -124], [-2, -133], [9, -136], [19, -132], [24, -123], [24, -114, 1]]);
-    g.mat(cap, KNIT, 'cloth');
-    g.clipTo(cap, (h) => {
-      for (let x = -10; x < 26; x += 4.2) h.stroke(spline([[x, -116], [x + 1.6, -126], [x + 0.4, -138]]), '#66765a', 0.7, { lod: 1 });
-    });
-    const cuff = path([[-11, -119], [7, -121.4], [25, -118.6], [25, -112.2], [7, -114.6], [-11, -112.4]]);
-    g.mat(cuff, '#6c7c5e', 'cloth');
-    g.clipTo(cuff, (h) => {
-      for (let x = -11; x < 26; x += 2.4) h.stroke(polyline([[x, -122], [x, -111]]), '#56664a', 0.55, { lod: 1 });
-    });
-  });
-  F.part('bobble', { bone: 'hat', z: 36, zb: 39, team: true }, (g) => {
-    g.mat(circle(8, -143, 13), P.team, 'fur', { line: P.teamDeep });
-    g.lod(1, (h) => {
-      for (let i = 0; i < 18; i++) {
-        const a = (i / 18) * Math.PI * 2;
-        h.stroke(polyline([[8 + Math.cos(a) * 8.6, -143 + Math.sin(a) * 8.6], [8 + Math.cos(a) * 13.8, -143 + Math.sin(a) * 13.8]]), P.teamShade, 1);
+  if (H) {
+    // Ährenkrone (Rang-Merkmal) mit Krempelband und Bommel (Teamzone)
+    F.part('wheatCrown', { bone: 'head', z: 35, zb: 38, sig: true }, (g) => {
+      g.mat(path([[-10, -114, 1], [24, -114, 1], [24, -120], [-10, -120]]), '#c8a046', 'cloth', { hi: 0.5 });
+      for (let i = 0; i < 7; i++) {
+        const x = -8 + i * 5.2;
+        const h = 14 + (i % 2) * 6;
+        g.mat(path([[x - 1.6, -119, 1], [x + 1.6, -119, 1], [x + 2.4, -119 - h * 0.6], [x, -119 - h, 1], [x - 2.4, -119 - h * 0.6]]), '#e8c860', 'cloth', { hi: 0.6 });
+        g.lod(1, (k) => {
+          for (let j = 0; j < 3; j++) k.stroke(polyline([[x, -121 - j * 4], [x - 2, -124 - j * 4]]), '#b8902e', 0.5);
+        });
       }
-      h.fill(ellipse(3.6, -148, 4.2, 3), P.teamLight, { op: 0.7 });
+      g.stroke(polyline([[-10, -117], [24, -117]]), '#8a6a2a', 1);
     });
-  });
+    F.part('bobble', { bone: 'hat', z: 36, zb: 39, team: true }, (g) => {
+      g.mat(rrect(-12, -118.6, 6, 4, 1.4), P.team, 'cloth', { line: P.teamDeep, lw: 0.6 });
+      g.mat(circle(-12, -112, 5.6), P.team, 'fur', { line: P.teamDeep });
+      g.lod(1, (h) => h.fill(ellipse(-13.6, -114, 2, 1.4), P.teamLight, { op: 0.7 }));
+    });
+    // Steppdecken-Umhang (Teamzone)
+    F.part('quilt', { bone: 'torso', z: 4, zb: 46, team: true }, (g) => {
+      const q = path([[-34, -108], [20, -110], [24, -80], [10, -30], [-40, -24], [-50, -60]]);
+      g.mat(q, P.team, 'cloth', { line: P.teamDeep, hi: 0.3 });
+      g.clipTo(q, (h) => {
+        for (let x = -50; x < 30; x += 10) h.stroke(polyline([[x, -112], [x + 10, -20]]), P.teamShade, 0.9);
+        for (let y = -104; y < -20; y += 10) h.stroke(polyline([[-52, y], [30, y - 4]]), P.teamShade, 0.9);
+        h.lod(1, (k) => {
+          for (const [x, y] of [[-30, -90], [-10, -70], [-34, -50], [6, -94]]) k.fill(rrect(x, y, 8, 8, 1), '#c86a4a', { op: 0.8 });
+        });
+      });
+      g.lod(1, (h) => lines(h, [[[-40, -26], [-36, -18]], [[-20, -28], [-22, -20]]], '#e8c860', 0.7, 1));
+    });
+  } else {
+    F.part('beanie', { bone: 'head', z: 35, zb: 38, sig: true }, (g) => {
+      const cap = path([[-10, -114, 1], [-9, -124], [-2, -133], [9, -136], [19, -132], [24, -123], [24, -114, 1]]);
+      g.mat(cap, KNIT, 'cloth');
+      g.clipTo(cap, (h) => {
+        for (let x = -10; x < 26; x += 4.2) h.stroke(spline([[x, -116], [x + 1.6, -126], [x + 0.4, -138]]), '#66765a', 0.7, { lod: 1 });
+      });
+      const cuff = path([[-11, -119], [7, -121.4], [25, -118.6], [25, -112.2], [7, -114.6], [-11, -112.4]]);
+      g.mat(cuff, '#6c7c5e', 'cloth');
+      g.clipTo(cuff, (h) => {
+        for (let x = -11; x < 26; x += 2.4) h.stroke(polyline([[x, -122], [x, -111]]), '#56664a', 0.55, { lod: 1 });
+      });
+    });
+    F.part('bobble', { bone: 'hat', z: 36, zb: 39, team: true }, (g) => {
+      g.mat(circle(8, -143, 13), P.team, 'fur', { line: P.teamDeep });
+      g.lod(1, (h) => {
+        for (let i = 0; i < 18; i++) {
+          const a = (i / 18) * Math.PI * 2;
+          h.stroke(polyline([[8 + Math.cos(a) * 8.6, -143 + Math.sin(a) * 8.6], [8 + Math.cos(a) * 13.8, -143 + Math.sin(a) * 13.8]]), P.teamShade, 1);
+        }
+        h.fill(ellipse(3.6, -148, 4.2, 3), P.teamLight, { op: 0.7 });
+      });
+    });
+  }
   F.part('headBack', { bone: 'head', z: 34, zb: 37, view: 'back' }, (g) => {
     g.mat(path([[-9, -114], [24, -114], [22, -102], [8, -96], [-6, -100]]), SKIN, 'skin');
     g.fill(path([[-8, -113], [23, -113], [21, -109], [-6, -109]]), HAIR, { lod: 1 });
@@ -191,5 +227,11 @@ export default function giant(F) {
     hit: { p: { knock: 2, recoil: 5, jolt: 8 } },
     // setzt sich, kippt nach hinten, der Bommel rollt davon
     death: { p: { dir: -1, angle: 80 }, keys: { hat: { r: [[0, 0], [0.45, 0], [1, -160, 'out']], x: [[0, 0], [0.45, 0], [1, -22, 'out']] } } },
+    ...(H
+      ? {
+          // Heldenwurf: greifen, ganze Drehung, Wurf mit Follow-through
+          ability: { prog: 'atk.throw', hit: 0.6, p: { wind: -200, strike: -40, over: 20, lean: 14, lunge: 16 }, keys: { root: { sx: [[0, 1], [0.3, 1], [0.42, -1], [0.54, 1]] }, armB: { r: [[0, 0], [0.3, -120], [0.6, -40], [1, 0]] } }, ev: { ability: 0.6 } },
+        }
+      : {}),
   });
 }
