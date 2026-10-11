@@ -486,6 +486,17 @@ export function drawCharacter(ctx, o) {
   if ((o.face || 1) < 0) ctx.scale(-sx, sy);
   else if (sq) ctx.scale(sx, sy);
   if (a < 1) ctx.globalAlpha *= a;
+  // Nachbilder (z. B. Sprint der Banditin): dasselbe Bild versetzt und durchscheinend hinter der Figur
+  const ai = model.entry.afterimages;
+  if (ai && ai.states.includes(name)) {
+    const a0 = ctx.globalAlpha;
+    const step = (ai.step ?? 13) * k * frame.ppm;
+    for (let i = ai.n; i >= 1; i--) {
+      ctx.globalAlpha = a0 * Math.max(0.05, 0.42 - i * 0.1);
+      ctx.drawImage(frame.src, frame.sx, frame.sy, frame.w, frame.h, -frame.ax * k - i * step, -frame.ay * k, fw, fh);
+    }
+    ctx.globalAlpha = a0;
+  }
   ctx.drawImage(frame.src, frame.sx, frame.sy, frame.w, frame.h, -frame.ax * k, -frame.ay * k, fw, fh);
   if (o.flash > 0.02) {
     ctx.globalCompositeOperation = 'lighter';

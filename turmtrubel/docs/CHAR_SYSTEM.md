@@ -359,6 +359,8 @@ Suffix **B** = hinten (weiter vom Betrachter), **F** = vorn.
 | `events` | Animations-Event → VFX-Preset (sonst gilt die Preset-Suche unten) |
 | `expr`, `views`, `variants` | vorhandene Ausdrücke, Ansichten, Schwarm-Varianten |
 | `evo`, `forms` | Evo-Hülle und Formen |
+| `formLook`, `afterAbility`, `shieldBreak` | Deckkraft je Form, Form nach der Fähigkeit, Form nach dem Schildbruch |
+| `afterimages` | `{ n, states, step }`: in diesen Zuständen zeichnet die Laufzeit dasselbe Bild n-mal versetzt (step mu) und durchscheinend hinter der Figur (Sprint-Nachbilder) |
 
 `skin.json` bleibt gültig und bekommt pro Karte das optionale Feld **`character`** (Figuren-ID aus dem Manifest). Das bisherige `archetype` wird darauf abgebildet.
 

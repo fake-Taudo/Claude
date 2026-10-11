@@ -166,6 +166,9 @@ export default function bossBandit(F) {
   });
   emblem(F, 'emblem', 'torso', 25, -8, -54, 2.3, { zb: 25 });
 
+  // Sprint (DASH): drei Nachbilder
+  F.meta.afterimages = { n: 3, states: ['charge'] };
+
   F.anim({
     // wirft eine Münze hoch
     idle: { p: { breathe: 0.02, bob: 0.5, sway: 1, tilt: 2 }, keys: { armF: { r: [[0, 0], [0.3, 0], [0.4, -40], [0.75, -40], [0.85, 0]] }, prop: { r: [[0, 0], [0.3, 0], [0.4, 30], [0.75, 30], [0.85, 0]] }, coin: { y: [[0, 0], [0.4, 0], [0.55, -30, 'out'], [0.7, 0, 'in']], x: [[0, 0], [0.4, 30], [0.7, 32], [0.71, 0]] } } },
@@ -173,6 +176,8 @@ export default function bossBandit(F) {
     walk: { p: { stride: 22, bob: 1.6, armSwing: 10, lean: -1 }, keys: { back: { r: [[0, -3], [0.5, 3], [1, -3]] } } },
     // Doppelschlag mit beiden Brecheisen
     attack: { prog: 'atk.swing', hit: 0.45, p: { wind: -150, strike: -30, over: 12, cock: -20, snap: 30, lean: 8, lunge: 12 }, keys: { armB: { r: [[0, 0], [0.45, 0], [0.6, -130], [0.75, -20], [1, 0]] }, layer: [[0.08, 0.42, 'barF', 27, 4], [0.08, 0.42, 'armF', 26.5, 6], [0.08, 0.42, 'cuffF', 26.8, 6.5], [0.08, 0.42, 'handF', 27.5, 7]] }, ev: { strike: [0.45, 0.75] } },
+    // Sprint als Schemen mit Nachbildern, der Sack fliegt hinterher
+    charge: { prog: 'biped.run', p: { stride: 38, bob: 2.4, armSwing: 30, lean: 16 }, keys: { back: { r: [[0, 10], [0.5, 16], [1, 10]] } } },
     // Münzen fallen aus dem Sack
     hit: { p: { knock: 1.8, recoil: 4 }, keys: { coin: { y: [[0, 0], [1, 20]] } } },
     // landet und schultert den Sack

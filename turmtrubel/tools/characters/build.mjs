@@ -140,6 +140,7 @@ export async function buildFigure(id) {
     formLook: F.meta.formLook || null,
     afterAbility: F.meta.afterAbility || null,
     shieldBreak: F.meta.shieldBreak || null,
+    afterimages: F.meta.afterimages || null,
     evo: F.meta.evo || (F.parts.some((p) => p.o.evo === 'evo') ? { aura: row.acc } : null),
     events: F.meta.events || null,
   };

@@ -33,7 +33,8 @@ export function skeletonPivots(s = 1, extra = {}) {
 /**
  * Schädel mit Ausdrücken und Knochenkörper. o: s (Maßstab), bone ('#efe6d0'), shadow (Knochenschatten), eye (Glutfarbe),
  * legs (false: kein Unterkörper, z. B. Rauchschweif), crack ('variant' | 'left' | 'right' | false), chipped (Variante
- * mit abgebrochenem Zahn oder true), form, skipArms, socket (Farbe der Augenhöhlen)
+ * mit abgebrochenem Zahn oder true), form, skipArms, socket (Farbe der Augenhöhlen), lift (Oberkörper anheben; die
+ * Beine zeichnet dann die Figur selbst, legs: false)
  */
 export function skeleton(F, o = {}) {
   const s = o.s || 1;
@@ -45,7 +46,11 @@ export function skeleton(F, o = {}) {
   const pt = (p) => [X(p[0]), X(p[1]), ...(p[2] ? [1] : [])];
   const P = (pts) => pts.map(pt);
   const form = o.form;
-  const part = (name, opt, fn) => F.part(name, form ? { ...opt, form } : opt, fn);
+  // lift: Oberkörper (alles außer Beinen und Füßen) um lift Einheiten anheben – für besonders lange Beine
+  const lift = o.lift || 0;
+  const LEGS = new Set(['legB', 'legF', 'footB', 'footF']);
+  const part = (name, opt, fn) =>
+    F.part(name, form ? { ...opt, form } : opt, lift && !LEGS.has(name) ? (g) => g.group({ t: [1, 0, 0, 1, 0, -lift] }, fn) : fn);
 
   // ───────── Knochenkörper ─────────
   if (o.legs !== false) {
