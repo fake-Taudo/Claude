@@ -5,7 +5,7 @@ import { drawUnit, drawBuilding, drawTower, drawEmoteFace, drawSpellIcon, TEAM, 
 import { FONT, text as ctext, tnum, rr as rrect } from './canvastext.js';
 import { softShadow, softGlow } from '../design/light.js';
 import { LIGHT } from '../design/tokens.js';
-import { drawCharacter, characterShadow, bakeTick, DEATH_DURATION } from '../characters/index.js';
+import { drawCharacter, characterShadow, bakeTick, figureEntry, DEATH_DURATION } from '../characters/index.js';
 
 const TAU = Math.PI * 2;
 // Rollende Zauber (Baumstamm, Barbarenfass) und im Bogen fliegende Geschosse
@@ -661,9 +661,11 @@ export class Renderer {
       v.formNext = null;
     }
     const st = v.anim.frame(t, { moving: v.moving && !(f & EF.STUN) && !(f & EF.ROOT), flags: f });
+    // Schildbruch: Figuren mit shieldBreak wechseln in diese Form, sobald der Schild-Wert 0 ist
+    const brk = v.maxShield > 0 && !(v.shield > 0) ? figureEntry(v.fig)?.shieldBreak : null;
     const r = drawCharacter(ctx, {
       figure: v.fig,
-      form: v.form,
+      form: brk || v.form,
       evo: v.evo,
       team,
       x: v.sx,
