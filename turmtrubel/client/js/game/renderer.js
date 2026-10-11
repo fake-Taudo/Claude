@@ -661,11 +661,15 @@ export class Renderer {
       v.formNext = null;
     }
     const st = v.anim.frame(t, { moving: v.moving && !(f & EF.STUN) && !(f & EF.ROOT), flags: f });
-    // Schildbruch: Figuren mit shieldBreak wechseln in diese Form, sobald der Schild-Wert 0 ist
-    const brk = v.maxShield > 0 && !(v.shield > 0) ? figureEntry(v.fig)?.shieldBreak : null;
+    // Schildbruch: Figuren mit shieldBreak wechseln in diese Form, sobald der Schild-Wert 0 ist;
+    // hpForm: Formwechsel unter einer Lebensschwelle (z. B. Evo-Skelettfass verliert das untere Fass)
+    const ent = figureEntry(v.fig);
+    const brk = v.maxShield > 0 && !(v.shield > 0) ? ent?.shieldBreak : null;
+    const hf = ent?.hpForm;
+    const low = hf && (!hf.evo || v.evo) && v.maxHp > 0 && v.hp < v.maxHp * hf.below ? hf.form : null;
     const r = drawCharacter(ctx, {
       figure: v.fig,
-      form: brk || v.form,
+      form: brk || low || v.form,
       evo: v.evo,
       team,
       x: v.sx,
