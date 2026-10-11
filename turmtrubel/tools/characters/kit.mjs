@@ -153,10 +153,10 @@ export function lines(g, list, color, lw = 0.6, lod = 1) {
 }
 /** Teamsymbol: Kreis (Blau) bzw. Dreieck (Rot), zwei Teile mit data-team-only. */
 export function emblem(F, name, bone, z, x, y, r, o = {}) {
-  F.part(name + '.blue', { bone, z, zb: o.zb, teamOnly: 'blue', team: true, lod: o.lod ?? 1, view: o.view, form: o.form }, (g) => {
+  F.part(name + '.blue', { bone, z, zb: o.zb, teamOnly: 'blue', team: true, lod: o.lod ?? 1, view: o.view, form: o.form, state: o.state }, (g) => {
     g.fill(circle(x, y, r), F.pal.symbol, { stroke: F.pal.teamDeep, lw: r * 0.28 });
   });
-  F.part(name + '.red', { bone, z, zb: o.zb, teamOnly: 'red', team: true, lod: o.lod ?? 1, view: o.view, form: o.form }, (g) => {
+  F.part(name + '.red', { bone, z, zb: o.zb, teamOnly: 'red', team: true, lod: o.lod ?? 1, view: o.view, form: o.form, state: o.state }, (g) => {
     const h = r * 1.15;
     g.fill(poly([[x, y - h], [x + h * 0.95, y + h * 0.65], [x - h * 0.95, y + h * 0.65]], r * 0.18), F.pal.symbol, { stroke: F.pal.teamDeep, lw: r * 0.28 });
   });
