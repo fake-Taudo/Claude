@@ -349,11 +349,26 @@
     6,
     6
    ]
+  },
+  "spawnUnit": {
+   "name": "Herbeirufen",
+   "dur": 0.8,
+   "loop": false,
+   "frames": [
+    3,
+    5,
+    6
+   ],
+   "events": {
+    "spawnUnit": 0.35
+   },
+   "note": "Laufende Spawner (Hexen): im Takt von traits.spawner, nur in Ruhe und beim Laufen"
   }
  },
  "statePriority": [
   "idle",
   "walk",
+  "spawnUnit",
   "charge",
   "attack",
   "sleep",

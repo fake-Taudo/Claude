@@ -20,6 +20,7 @@ const DEF_STATES = {
   sleep: { dur: 2, loop: true, frames: [2, 4, 4] },
   charge: { dur: 0.5, loop: true, frames: [4, 6, 6] },
   fidget: { dur: 1.2, loop: false, frames: [3, 6, 8] },
+  spawnUnit: { dur: 0.8, loop: false, frames: [3, 5, 6] },
 };
 const DEF_QUALITY = {
   low: { frameIndex: 0, maxLod: 1, res: 0.75, atlas: 1024, budgetMB: 12, bakeMs: 3 },
@@ -30,7 +31,7 @@ const DEF_TEAM = {
   blue: { main: '#3d8bff', light: '#9cc8ff', shade: '#1f5fc9', deep: '#0f3a85', symbol: '#f4f9ff' },
   red: { main: '#ff4d57', light: '#ffb0b5', shade: '#c42233', deep: '#7a1020', symbol: '#fff4f4' },
 };
-const FALLBACK = { stun: 'idle', sleep: 'idle', charge: 'walk', fidget: 'idle', ability: 'attack', hit: 'idle', spawn: 'idle', death: 'hit', walk: 'idle', attack: 'idle' };
+const FALLBACK = { spawnUnit: 'idle', stun: 'idle', sleep: 'idle', charge: 'walk', fidget: 'idle', ability: 'attack', hit: 'idle', spawn: 'idle', death: 'hit', walk: 'idle', attack: 'idle' };
 
 const S = {
   base: '/assets/characters/',

@@ -11,6 +11,7 @@ const STUN = 0.9;
 const IDLE = 1.6;
 const CHARGE = 0.5;
 const SLEEP = 2;
+const SPAWN_UNIT = 0.8;
 /** Längste Wartezeit am Treffer-Bild, falls das Ereignis a später als erwartet kommt. */
 const HOLD = 0.25;
 
@@ -19,7 +20,8 @@ const evList = (v) => (v == null ? [] : Array.isArray(v) ? v : [v]);
 export class CharacterAnimator {
   /**
    * @param {string} figure Figuren-ID aus dem Manifest
-   * @param {{anim?:object, born:number, hitSpeed?:number, firstHit?:number, speed?:number, seed?:number, onEvent?:Function}} o  anim: Manifest-Eintrag figures[id].anim
+   * @param {{anim?:object, born:number, hitSpeed?:number, firstHit?:number, speed?:number, seed?:number, spawner?:{interval:number, firstDelay?:number}, onEvent?:Function}} o
+   *   anim: Manifest-Eintrag figures[id].anim; spawner: traits.spawner laufender Spawner (Takt für den Zustand spawnUnit)
    */
   constructor(figure, o = {}) {
     this.figure = figure;
@@ -29,6 +31,7 @@ export class CharacterAnimator {
     this.speed = o.speed || 1;
     this.seed = o.seed || 0;
     this.onEvent = o.onEvent || null;
+    this.spawner = o.spawner?.interval > 0 && o.anim?.spawnUnit ? { first: o.spawner.firstDelay ?? o.spawner.interval, every: o.spawner.interval } : null;
     this.lastA = null;
     this.atkOn = null;
     this.hurtT = -9;
@@ -96,6 +99,11 @@ export class CharacterAnimator {
     }
     if (now - this.hurtT < HIT && !inp.moving && !attacking) return { state: 'hit', u: (now - this.hurtT) / HIT };
     if (f & (EF.CHARGE | EF.DASH | EF.JUMP)) return { state: 'charge', u: loop(CHARGE) };
+    // Laufender Spawner: Herbeirufen im Takt der Karte (Ruhe und Laufen; Angriff und Treffer haben Vorrang)
+    if (this.spawner && age >= this.spawner.first) {
+      const k = (age - this.spawner.first) % this.spawner.every;
+      if (k < SPAWN_UNIT) return { state: 'spawnUnit', u: k / SPAWN_UNIT };
+    }
     if (inp.moving) return { state: 'walk', u: loop(this.walkDur) };
     return { state: 'idle', u: loop(IDLE) };
   }

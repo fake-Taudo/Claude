@@ -115,9 +115,10 @@ export const STATES = {
   stun: { name: 'Betäubt', dur: 0.9, loop: true, frames: [2, 4, 4] },
   sleep: { name: 'Schlaf', dur: 2.0, loop: true, frames: [2, 4, 4] },
   charge: { name: 'Ansturm', dur: 0.5, loop: true, frames: [4, 6, 6] },
+  spawnUnit: { name: 'Herbeirufen', dur: 0.8, loop: false, frames: [3, 5, 6], events: { spawnUnit: 0.35 }, note: 'Laufende Spawner (Hexen): im Takt von traits.spawner, nur in Ruhe und beim Laufen' },
 };
 /** Vorrang bei gleichzeitigen Zuständen (höher gewinnt). Treffer überlagert Ruhe und Laufen, im Angriff nur als Aufblitzen. */
-export const STATE_PRIORITY = ['idle', 'walk', 'charge', 'attack', 'sleep', 'stun', 'hit', 'ability', 'spawn', 'death'];
+export const STATE_PRIORITY = ['idle', 'walk', 'spawnUnit', 'charge', 'attack', 'sleep', 'stun', 'hit', 'ability', 'spawn', 'death'];
 
 /** Animations-Ereignisse → VFX-Hooks. Preset-Suche: <event>.<figur> → <event>.<familie> → <event>. */
 export const EVENTS = {

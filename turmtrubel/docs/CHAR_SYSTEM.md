@@ -376,8 +376,9 @@ Suffix **B** = hinten (weiter vom Betrachter), **F** = vorn.
 | `stun` | 0,9 s | ja | 2 / 4 / 4 | – | Flag `STUN`; `FREEZE` hält die aktuelle Pose an und legt Eis darüber |
 | `sleep` | 2,0 s | ja | 2 / 4 / 4 | – | inaktiver König |
 | `charge` | 0,5 s | ja | 4 / 6 / 6 | `char.step` | Flags `CHARGE`, `DASH`, `JUMP` |
+| `spawnUnit` | 0,8 s | nein | 3 / 5 / 6 | `spawnUnit` 0,35 | laufende Spawner (Hexe, Nachthexe): Takt aus `traits.spawner` (`firstDelay`, `interval`) ab `born`; nur statt `idle`/`walk`, Angriff und Treffer haben Vorrang. Das Protokoll bleibt unverändert. |
 
-- **Vorrang:** `death` > `spawn` > `ability` > `hit` > `stun` > `sleep` > `attack` > `charge` > `walk` > `idle`.
+- **Vorrang:** `death` > `spawn` > `ability` > `hit` > `stun` > `sleep` > `attack` > `charge` > `spawnUnit` > `walk` > `idle`.
 - **Übergänge:**
   - Wechsel zwischen Schleifen (`idle` ↔ `walk`) beginnen in der passenden Phase, damit nichts springt.
   - Ein abgebrochenes Ausholen (Ziel tot) läuft über 0,15 s zurück.

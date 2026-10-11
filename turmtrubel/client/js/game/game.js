@@ -598,6 +598,7 @@ export class Game {
         hitSpeed: info.def?.hitSpeed,
         firstHit: info.def?.firstHit,
         speed: info.def?.speed,
+        spawner: info.def?.traits?.spawner,
         seed: v.seed,
         onEvent: (name) => this.charFx(v, name),
       });
