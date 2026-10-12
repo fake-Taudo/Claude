@@ -206,7 +206,7 @@ export class DraftUI {
       E.turn.textContent = m.done ? t('revealSub') : myTurn ? t('pickOne') : t('waitOpp', { name: oppName });
     } else {
       myTurn = m.turn === m.you;
-      const first = mine.length === 0 && m.picks[this.oppSeat()].length === 0 ? ' ' + t('firstPick', { name: m.first === m.you ? t('you') : m.names[m.first] }) : '';
+      const first = mine.length === 0 && m.picks[this.oppSeat()].length === 0 ? ' ' + (m.first === m.you ? t('firstPickYou') : t('firstPick', { name: m.names[m.first] })) : '';
       E.turn.textContent = (m.done ? t('revealSub') : myTurn ? t('yourTurn') : t('oppTurn', { name: oppName })) + first;
     }
     E.turn.classList.toggle('mine', !!myTurn);

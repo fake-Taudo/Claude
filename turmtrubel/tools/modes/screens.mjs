@@ -194,6 +194,7 @@ async function runViewport(vp) {
     await A.page.locator('.mega-filters .chips >> nth=0').locator('.fchip >> nth=0').click();
     // Detail per Halten
     const card = A.page.locator('.pool-card >> nth=0');
+    await card.scrollIntoViewIfNeeded();
     const box = await card.boundingBox();
     await A.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await A.page.mouse.down();
@@ -250,7 +251,7 @@ async function runViewport(vp) {
         const g = window.turmtrubel.game;
         for (let i = 0; i < 4; i++) {
           g.sel = i;
-          if (g.tryPlay(4 + k * 9, g.side === 0 ? 24 : 8)) break;
+          if (g.tryPlay(5 + k * 8, g.side === 0 ? 21 : 11)) break;
         }
       }, k);
       await C.page.waitForTimeout(700);
@@ -291,5 +292,8 @@ try {
   await browser.close();
   proc.kill();
 }
-fs.writeFileSync(path.join(OUT, 'checks.json'), JSON.stringify(report, null, 1));
+// Teil-Läufe (--only) ergänzen eine vorhandene checks.json
+const file = path.join(OUT, 'checks.json');
+const prev = only && fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
+fs.writeFileSync(file, JSON.stringify({ ...prev, ...report }, null, 1));
 console.log(`\nScreenshots und checks.json in ${path.relative(process.cwd(), OUT)}`);

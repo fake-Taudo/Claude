@@ -1,6 +1,6 @@
 # Turmtrubel
 
-**Turmtrubel** ist ein 1v1-Echtzeit-Kartenspiel für den Browser: zwei Lanes, ein Fluss mit zwei Brücken, drei Türme pro Seite, Elixier, Karten ziehen und platzieren. Gespielt wird mit den **echten Clash-Royale-Karten** (Namen, Elixier, Seltenheit, Typ und Werte wie im Original, Turnierstandard Level 11), alle von Anfang an freigeschaltet. Grafik und Ton sind eigene Entwürfe und werden komplett im Code erzeugt; es gibt keine kopierten Original-Assets und keine Bild- oder Audiodateien.
+**Turmtrubel** ist ein Echtzeit-Kartenspiel für den Browser – klassisch 1 gegen 1, außerdem 2 gegen 2, Triple Draft, Mega Draft und Unendlich-Elixier: zwei Lanes, ein Fluss mit zwei Brücken, drei Türme pro Seite, Elixier, Karten ziehen und platzieren. Gespielt wird mit den **echten Clash-Royale-Karten** (Namen, Elixier, Seltenheit, Typ und Werte wie im Original, Turnierstandard Level 11), alle von Anfang an freigeschaltet. Grafik und Ton sind eigene Entwürfe und werden komplett im Code erzeugt; es gibt keine kopierten Original-Assets und keine Bild- oder Audiodateien.
 
 > Privates Hobbyprojekt, nicht mit Supercell verbunden. Clash Royale ist eine Marke von Supercell. Die Kartenwerte stammen aus dem Community-Wiki (siehe [Datenquelle](#datenquelle)).
 
@@ -27,7 +27,7 @@ Dann im Browser **http://localhost:3000** öffnen.
 
 * **Mit einem Freund im selben WLAN:** Beide öffnen `http://<IP-des-Rechners>:3000` (die IP zeigt z. B. `ipconfig` bzw. `ip addr`). Einer tippt auf *Kampf erstellen* und nennt dem anderen den 6-stelligen Code. Alternativ *Link teilen*: Der Link enthält den Code, der Beitritt läuft dann automatisch.
 * **Übers Internet:** Den Server auf einem VPS oder Hoster mit WebSocket-Unterstützung starten (z. B. hinter nginx/Caddy mit HTTPS; `wss://` wird automatisch genutzt) oder zum Testen einen Tunnel verwenden.
-* **Alleine testen:** *Training gegen Bot* im Hauptmenü. Oder zwei Browser-Tabs öffnen: Jeder Tab ist ein eigener Spieler.
+* **Alleine testen:** *Training gegen Bot* im Hauptmenü (oder *Gegen Bot* bei einem Spielmodus, Stärke Leicht/Mittel/Schwer). Oder mehrere Browser-Tabs öffnen: Jeder Tab ist ein eigener Spieler (für 2 gegen 2 vier Tabs).
 
 | Variable | Standard | Bedeutung |
 | -------- | -------- | --------- |
@@ -46,6 +46,8 @@ Dann im Browser **http://localhost:3000** öffnen.
 | Auswahl abbrechen | Karte erneut antippen oder zurück auf die Hand ziehen | `Esc` |
 | Champion-/Helden-Fähigkeit | runder Knopf neben dem Emote-Knopf (Kartenpanel bzw. neben der Arena) | `Leertaste` oder `Q` |
 | Emote | Sprechblasen-Knopf, dann eines von 6 Emotes aus der Leiste | `E` |
+| Zeichen für den Teamkollegen (2 gegen 2) | ohne gewählte Karte auf die Arena **tippen und halten** | – |
+| Draft: Karte wählen / Details | Karte antippen, dann *Wählen* · Karte **halten** zeigt die Werte | `Enter` wählt, `I` Details |
 | Menü, Ton, Aufgeben | Menü-Knopf (drei Striche) oben links bzw. oben im Kartenpanel | – |
 | Leistungsanzeige (FPS, Partikel, Sprite-Cache) | – | `F3` |
 
@@ -65,6 +67,22 @@ Solange eine Karte ausgewählt ist, ist der gesperrte Bereich rot schraffiert, d
 * **Deck:** 8 Karten, 4 auf der Hand, die nächste wird angezeigt. Die gespielte Karte wandert ans Ende der Warteschlange, die nächste rückt in den freien Platz nach (Rotation wie im Original).
 * **Platzieren:** Truppen und Gebäude nur auf der eigenen Hälfte, Zauber überall. Fällt ein gegnerischer Wachturm, wird in seiner Lane eine *Tasche* auf der Gegnerseite freigeschaltet.
 * **Truppen-KI:** Einheiten laufen zum nächsten Ziel ihres Typs (Boden, Luft, Gebäude) und suchen den Weg per A* über die Brücken. Sie greifen Gegner an, die in Sichtweite kommen (Ausnahme: Gebäudejäger), und bleiben am Ziel, solange es in Reichweite ist.
+
+### Spielmodi
+
+Im Hauptmenü unter **Spielmodi** – jeweils *Mit Freunden* (Code) oder *Gegen Bot*. Alle Werte stehen in `data/modes.json`; der Server legt sie beim Erstellen des Raums fest, Clients schicken nur die Modus-ID. Vor dem ersten Spiel eines Modus erklärt ein kurzes Fenster die Regeln (abschaltbar).
+
+| Modus | Spieler | Bots | Besonderheit |
+|---|---|---|---|
+| **Klassisch** | 1 gegen 1 | ✓ | Standard, unverändert |
+| **Unendlich-Elixier** | 1 gegen 1 | ✓ | Elixier ×7 durchgehend (keine Doppel-/Dreifach-Phase), Start mit 10. Höchstens 2,5 Karten pro Sekunde (Burst 4). Schalter `elixir.infinite` für „nie verbraucht“. |
+| **Triple Draft** | 1 gegen 1 | ✓ | 8 Runden 1 aus 3, gleichzeitig und verdeckt, 15 s pro Runde (sonst Zufallswahl). Max. 1 Champion und 1 Held, keine Evolutionen. Angebote sichern ein spielbares Deck. |
+| **Mega Draft** | 1 gegen 1 | ✓ | Gemeinsamer Pool aus 40 Karten (genau 3 Champions, keine Helden, keine Evolutionen, Mindestanteile für günstige, Luft-, Zauber- und Gebäudekarten). Abwechselnd wählen, bis jeder 8 hat, 25 s pro Wahl. Max. 1 Champion pro Deck. |
+| **2 gegen 2** | 2 gegen 2 | – | Gemeinsame Türme und Hälfte pro Team, eigenes Deck, eigene Hand und eigenes Elixier. Kein Eigenbeschuss, Heilung/Wut wirken auf Verbündete. Team-Lobby mit Platzwahl, Zeichen per Halten. Wer nach 30 s nicht zurück ist (oder den Kampf verlässt), wird von einem Bot ersetzt. |
+
+**Bots** (alle Modi außer 2 gegen 2): *Leicht* reagiert langsam und verteidigt nicht immer, *Mittel* ist der bisherige Trainingsbot, *Schwer* kontert passend zur Bedrohung, fängt Gebäudejäger früh ab, unterstützt eigene Angriffe und nutzt Zauber nur mit Wert. Im Draft wählen Bots nach Elixier-Kurve und Rollen (Schwer auch nach Synergie und gegen sichtbare Picks des Gegners), mit 1–6 s Bedenkzeit. Nach einem Draft lassen sich beide Decks im Ergebnis ansehen und das eigene speichern.
+
+Details: `docs/MODES_REPORT.md` (Bericht, neuer Modus per `modes.json`), `docs/PROTOCOL.md` (Protokoll Version 2), `docs/MODES_AUDIT.md`, Screenshots in `docs/screens/`.
 
 ### Kartenarten
 
@@ -116,15 +134,19 @@ turmtrubel/
 ├─ data/cards.json          Kartendatenbank (erzeugt aus tools/cards/, Level 11)
 ├─ data/rules.json          Spielregeln (Zeiten, Elixier, Türme, Lobby, cardLevel)
 ├─ data/skin.json           Namens-/Grafik-Mapping: „original“ (Standard) oder „custom“
+├─ data/modes.json          Spielmodi (Spieler, Teams, Elixier, Zeiten, Draft, Bots, Limits)
 ├─ data/source/             Wiki-Snapshot (wiki-cards.json) als Datenquelle
 ├─ TODO_missing_stats.md    fehlende, geschätzte und widersprüchliche Werte
 ├─ shared/arena.js          Geometrie, Brücken, Türme, Platzierungsregeln
 ├─ shared/cards.js          DB-Aufbau, Einheiten-/Evo-Auflösung, Deck-Validierung, Zufallsdeck
 ├─ shared/decks.js          Startdecks
-├─ shared/protocol.js       Nachrichtentypen, Fehlertexte, Emotes, Flags
+├─ shared/protocol.js       Nachrichtentypen (Version 2), Fehlertexte, Emotes, Flags
+├─ shared/modes.js          modes.json prüfen, Modus → effektive Regeln (komponierbare Modifikatoren)
 ├─ server/index.js          HTTP + WebSocket, Routing, Rate-Limit, Tick-Schleife
-├─ server/rooms.js          RoomManager/Room: Codes, Lobby, Reconnect, Rematch, Training
-├─ server/bot.js            Trainingsgegner (spielt über dieselben Prüfungen)
+├─ server/rooms.js          RoomManager/Room: Codes, Modi, Team-Lobby, Draft-Phase, Reconnect, Rematch, Training, Bot-Übernahme
+├─ server/draft.js          Triple/Mega Draft: seed-basierte Angebote und Pools, Regeln, Auto-Pick
+├─ server/botdraft.js       Draft-Entscheidungen der Bots (Leicht/Mittel/Schwer)
+├─ server/bot.js            Bots Leicht/Mittel/Schwer (spielen über dieselben Prüfungen wie Menschen)
 ├─ server/sim/match.js      Simulation: Kern, Ausspielen, Ticks, Snapshots, Sieg
 ├─ server/sim/combat.js     Zielwahl, Angriffe, Geschosse, Schaden, Buffs, Schild/Rüstung
 ├─ server/sim/motion.js     Laufen, Ansturm, Sprint, Sprung, Haken, Wurf, Untergrund, Kollision
@@ -140,7 +162,8 @@ turmtrubel/
 ├─ client/js/audio.js       Web-Audio-SFX + prozedurale Musik
 ├─ client/js/store.js       localStorage (Name, Einstellungen, 5 Deck-Plätze)
 ├─ client/js/updates.js     Update-Verlauf für das Fenster „Neu in Turmtrubel“ (neuester Eintrag zuerst)
-├─ client/js/ui/…           Deck-Bauer (mit Drag-and-Drop), Kartenansicht, Einstellungen, updates.js (Update-Fenster), DOM-Helfer (Modal, Toast), icons.js (SVG-Icon-Set), tokens.js
+├─ client/js/ui/…           Deck-Bauer (mit Drag-and-Drop), Kartenansicht, Einstellungen, modes.js (Modi-Kacheln, Regel-Hinweis), draft.js (Draft-Screen), updates.js (Update-Fenster), DOM-Helfer (Modal, Toast), icons.js (SVG-Icon-Set), tokens.js
+├─ client/js/lang/de.js     Texte der Spielmodi
 ├─ client/js/game/…         game.js (Interpolation, Eingabe, Effekt-Ereignisse), renderer.js, hud.js (Layout-Engine), hudart.js (HUD-Grafiken), canvastext.js, sprites.js
 ├─ client/js/design/…       Designsystem: Tokens, Easing, Licht-Modell, Sprite-Cache, Asset-Manifest
 ├─ client/js/vfx/…          VFX-Engine, Partikel-Texturen, presets.json (Effekt-Presets) und deren Prüfung
@@ -149,6 +172,7 @@ turmtrubel/
 ├─ tools/e2e/               Test-Clients, die über WebSocket komplette Kämpfe spielen; browser-match.mjs (zwei Browser-Clients)
 ├─ tools/ui-shots.mjs       Screenshots aller Zustände in 8 Viewports + automatische UI-Prüfungen
 ├─ tools/bench/             Extremszene, Performance-Messung, CPU-Profil
+├─ tools/modes/             Klassik-Regressionsaufzeichnung, Screenshot-Serie der Modi, Unendlich-Lasttest, Bot-Auswertung
 ├─ tools/vfx-gallery.mjs    alle VFX-Presets als Kontaktbögen
 ├─ docs/ui-*.md             UI-Audit, Entscheidungen, Vorher/Nachher (erste UI-Überarbeitung)
 ├─ docs/REPORT.md           Bericht zum visuellen Upgrade (mit AUDIT, COMPARISON, STYLE_GUIDE, vfx-katalog/, before_after/)
@@ -255,6 +279,13 @@ Die Tests laufen mit dem eingebauten `node:test`, ohne zusätzliche Abhängigkei
 * **placement**: Zonen, Fluss, Türme, Gebäude, Taschen, gedrehte Ansicht
 * **rooms**: Codeformat und Eindeutigkeit, Fehler (ungültig, unbekannt, voll, abgelaufen), Countdown, Lade-Timeout, Reconnect innerhalb und nach 30 s, Rematch, Verlassen, Training
 * **integration**: echter Server auf zufälligem Port mit zwei WebSocket-Clients: Lobby, Kampf, gültige und ungültige Züge, Emote, Ping, Reconnect, Aufgabe, Rematch
+* **classic-regression**: 12 Bot-Kämpfe, vor dem Modus-Umbau aufgezeichnet (`test/fixtures/classic-replay.json`), werden Tick für Tick mit Prüfsumme über den kompletten Snapshot nachgespielt – der klassische Modus muss identisch bleiben
+* **modes**: `modes.json`, komponierbare Modifikatoren, Elixier ×7 mit Maximum und festen Tick-Schritten, keine Phasen im Unendlich-Modus, Eingabe-Limit, „nie verbraucht“, Spielzeiten, keine Evos im Draft
+* **draft**: seed-basiert reproduzierbar, Angebote ohne Duplikate, Deckregeln, Spielbarkeits-Schutz (150 Seeds), Mega-Pool über 500 Seeds (40 eindeutige Karten, genau 3 Champions, 0 Helden, Mindestanteile), abwechselnde Wahl, Sperren, Champion-Regel inkl. Auto-Pick und Bots
+* **teams**: 4 Spieler/2 Teams, gemeinsame Türme und Kronen, kein Eigenbeschuss, Wut und Heilung für Verbündete, Folge-Einheiten gehören dem Spieler, Elixier-Effekte und Champions pro Spieler, 2v2 mit vier Bots
+* **rooms-modes**: Modus-Wahl, gefälschte Modus-Werte, Team-Lobby (Platz, Verschieben, Entfernen), Start mit 4, Bot-Übernahme, Rematch mit allen, Team-Ping, Draft im Raum mit Auto-Pick, Reconnect und Abbruch, Training in allen Modi
+* **modes-e2e**: echte WebSockets – 4 Clients spielen 2 gegen 2 (Teamwechsel, Rematch, Abbruch mit Bot-Übernahme), Triple und Mega Draft mit Reconnect mitten im Draft, Unendlich-Elixier mit Massen-Platzierungen (Server-Tick gemessen), manipulierte Clients
+* **bots**: jede Stufe in jedem Bot-Modus bis zum Ende, Aktionsbremse, Sichtbarkeit, Stärke-Auswertung (Schwer > Mittel > Leicht)
 * **e2e**: zwei automatische Test-Clients (`tools/e2e/`) spielen über WebSocket drei **komplette Kämpfe** gegeneinander (Server im Zeitraffer ×8, Regeln unverändert). Zusammen decken die Testdecks jede Mechanik-Gruppe ab und lösen Champion- und Heldenfähigkeiten sowie Evolutionen aus. `npm run e2e` zeigt dazu einen ausführlichen Bericht.
 
 ### UI-Screenshots und Prüfungen
@@ -267,6 +298,10 @@ node tools/ui-shots.mjs --perf --fixed           # dito mit fester Auflösung (a
 node tools/bench/run.mjs                         # Extremszene (222 Entitäten) in drei Profilen
 node tools/vfx-gallery.mjs --out=docs/vfx-katalog # alle Effekte als Kontaktbögen
 node tools/e2e/browser-match.mjs                 # zwei Browser-Clients: volles Match inkl. Verlängerung, Desync- und Konsolenprüfung
+node tools/modes/screens.mjs --jpeg              # Spielmodi: Menü, Regeln, Lobby 2v2, Drafts, Reveal, Kämpfe, Ergebnisse → docs/screens/
+node tools/modes/perf-infinite.mjs               # Unendlich-Elixier mit voller Arena: Server-Tick und FPS in drei Profilen
+node tools/modes/bot-eval.mjs --games=20 --mode=classic,mega-draft   # Bot gegen Bot: Siegquoten der Stufen
+node tools/modes/classic-replay.mjs              # klassischen Modus mit der Aufzeichnung vergleichen
 ```
 
 Das Skript startet selbst einen Server auf einem freien Port und spielt pro Viewport den ganzen Ablauf durch: Name → Menü → Einstellungen → Beitreten → Deck-Bauer → Kartendetail → Training → Countdown → Laden → Kampf → Karte wählen/ziehen/ausspielen → Fehlertoast → Emote → Pause → letzte 10 s → zerstörter Turm → Aufgeben → Ergebnis (Niederlage und Sieg) → Multiplayer-Lobby mit zwei Seiten. Jeder Zustand wird geprüft: Touch-Ziele unter 44 px, Elemente außerhalb des Bildschirms, abgeschnittene Texte ohne Volltext, HUD über der Arena (über `hud.blocks()`), Toast über dem Kampfgeschehen und Konsolenfehler. Ein nicht leerer Befund bei Arena-Überdeckung oder Seitenfehlern führt zu Exit-Code 1.
@@ -287,6 +322,7 @@ Playwright ist **keine** Projektabhängigkeit (damit `npm install` schlank bleib
 * **Grafik vollständig prozedural:** Figuren sind Vektor-Modelle mit Skelett-Animation (Quellen in `tools/characters/figures/`), die je Zustand in Atlanten gebacken werden; Türme, HUD und Effekte sind als Vektorgrafik im Code gezeichnet (Licht-Modell und Regeln in `docs/STYLE_GUIDE.md`). Auf sehr alten Geräten hilft *Grafikqualität: Niedrig*; die automatische Qualität senkt bei Ruckeln Auflösung, Effektmenge und zuletzt die Figuren-Stufe. Tauchen sehr viele verschiedene Figuren gleichzeitig zum ersten Mal auf, zeigen sie für einige Sekunden weniger Animationsbilder, bis alles gebacken ist (`docs/CHAR_REPORT.md`, Performance).
 * **Audio:** Browser (besonders iOS) starten Ton erst nach der ersten Berührung. Musik und Effekte sind synthetisch.
 * **Oberfläche:** Im Hochformat erscheint der Hinweis-Toast (z. B. „Nicht genug Elixier!“) für 1,4 s am unteren Arenarand über dem eigenen Burgturm. Vibration gibt es nur, wo der Browser `navigator.vibrate` anbietet (nicht auf iOS). Die Performance ist bisher nur in Chromium ohne GPU gemessen (siehe `docs/REPORT.md`, Abschnitt 4).
+* **Spielmodi:** Die Arena hat genau zwei Hälften, deshalb gibt es immer 2 Teams (2 gegen 2 ist das Maximum). Drafts gibt es nur im 1 gegen 1. „Aufgeben“ heißt im 2 gegen 2 „Kampf verlassen“ (ein Bot übernimmt). Zieht ein Spieler aus der Draft-Phase aus, wird der Draft abgebrochen. Im schlimmsten Fall von Unendlich-Elixier (voller Arena) erreicht der Client ohne GPU die Ziel-FPS nicht (`docs/MODES_REPORT.md`, Performance).
 * **Designentscheidungen:** Champions und Helden lösen ihre Fähigkeit per Knopf aus. Evo-Karten starten ungeladen (`evo.startCharged` in `rules.json`). Die Turmnamen (Wachturm, Burgturm) sind eigenständig, die Kartennamen kommen aus dem Original (umschaltbar über `skin.json`).
 
 ---

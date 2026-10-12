@@ -1,0 +1,155 @@
+{
+ "classic": [
+  {
+   "a": "hard",
+   "b": "medium",
+   "games": 40,
+   "scoreA": 28,
+   "rateA": 70,
+   "reasons": {
+    "time": 21,
+    "king": 12,
+    "suddenDeath": 7
+   }
+  },
+  {
+   "a": "medium",
+   "b": "easy",
+   "games": 40,
+   "scoreA": 28,
+   "rateA": 70,
+   "reasons": {
+    "time": 20,
+    "king": 13,
+    "suddenDeath": 6,
+    "tiebreak": 1
+   }
+  },
+  {
+   "a": "hard",
+   "b": "easy",
+   "games": 40,
+   "scoreA": 32,
+   "rateA": 80,
+   "reasons": {
+    "time": 15,
+    "king": 21,
+    "suddenDeath": 4
+   }
+  }
+ ],
+ "infinite-elixir": [
+  {
+   "a": "hard",
+   "b": "medium",
+   "games": 40,
+   "scoreA": 25,
+   "rateA": 62.5,
+   "reasons": {
+    "king": 36,
+    "time": 3,
+    "suddenDeath": 1
+   }
+  },
+  {
+   "a": "medium",
+   "b": "easy",
+   "games": 40,
+   "scoreA": 37,
+   "rateA": 92.5,
+   "reasons": {
+    "king": 38,
+    "time": 2
+   }
+  },
+  {
+   "a": "hard",
+   "b": "easy",
+   "games": 40,
+   "scoreA": 38,
+   "rateA": 95,
+   "reasons": {
+    "king": 39,
+    "time": 1
+   }
+  }
+ ],
+ "triple-draft": [
+  {
+   "a": "hard",
+   "b": "medium",
+   "games": 40,
+   "scoreA": 26,
+   "rateA": 65,
+   "reasons": {
+    "king": 13,
+    "time": 20,
+    "suddenDeath": 7
+   }
+  },
+  {
+   "a": "medium",
+   "b": "easy",
+   "games": 40,
+   "scoreA": 28,
+   "rateA": 70,
+   "reasons": {
+    "king": 7,
+    "time": 26,
+    "suddenDeath": 6,
+    "tiebreak": 1
+   }
+  },
+  {
+   "a": "hard",
+   "b": "easy",
+   "games": 40,
+   "scoreA": 34,
+   "rateA": 85,
+   "reasons": {
+    "king": 12,
+    "time": 26,
+    "suddenDeath": 2
+   }
+  }
+ ],
+ "mega-draft": [
+  {
+   "a": "hard",
+   "b": "medium",
+   "games": 40,
+   "scoreA": 26,
+   "rateA": 65,
+   "reasons": {
+    "time": 25,
+    "king": 9,
+    "suddenDeath": 6
+   }
+  },
+  {
+   "a": "medium",
+   "b": "easy",
+   "games": 40,
+   "scoreA": 34,
+   "rateA": 85,
+   "reasons": {
+    "time": 20,
+    "king": 13,
+    "suddenDeath": 7
+   }
+  },
+  {
+   "a": "hard",
+   "b": "easy",
+   "games": 40,
+   "scoreA": 35,
+   "rateA": 87.5,
+   "reasons": {
+    "time": 20,
+    "king": 12,
+    "suddenDeath": 7,
+    "tiebreak": 1
+   }
+  }
+ ]
+}

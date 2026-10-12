@@ -55,6 +55,7 @@ export const DE = Object.freeze({
   championLocked: 'Du hast bereits einen Champion',
   notYourTurn: 'Warte, bis du dran bist.',
   firstPick: '{name} beginnt (per Los).',
+  firstPickYou: 'Du beginnst (per Los).',
   deckBar: 'Dein Deck',
   oppPicks: 'Picks von {name}',
   avgElixir: 'Ø {v} Elixier',

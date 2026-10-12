@@ -1,0 +1,242 @@
+{
+ "phone-390x844": {
+  "states": [
+   {
+    "state": "menue-modi",
+    "file": "phone-390x844-01-menue-modi.jpg",
+    "issues": []
+   },
+   {
+    "state": "regeln-mega",
+    "file": "phone-390x844-02-regeln-mega.jpg",
+    "issues": []
+   },
+   {
+    "state": "triple-draft",
+    "file": "phone-390x844-03-triple-draft.jpg",
+    "issues": []
+   },
+   {
+    "state": "triple-auswahl",
+    "file": "phone-390x844-04-triple-auswahl.jpg",
+    "issues": []
+   },
+   {
+    "state": "reveal",
+    "file": "phone-390x844-05-reveal.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-draft",
+    "file": "phone-390x844-06-ergebnis-draft.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-draft",
+    "file": "phone-390x844-07-mega-draft.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-auswahl",
+    "file": "phone-390x844-08-mega-auswahl.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-filter-zauber",
+    "file": "phone-390x844-09-mega-filter-zauber.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-detail",
+    "file": "phone-390x844-10-mega-detail.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-unendlich-banner",
+    "file": "phone-390x844-11-kampf-unendlich-banner.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-unendlich",
+    "file": "phone-390x844-12-kampf-unendlich.jpg",
+    "issues": []
+   },
+   {
+    "state": "lobby-2v2",
+    "file": "phone-390x844-13-lobby-2v2.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-2v2",
+    "file": "phone-390x844-14-kampf-2v2.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-2v2",
+    "file": "phone-390x844-15-ergebnis-2v2.jpg",
+    "issues": []
+   }
+  ],
+  "log": []
+ },
+ "phone-844x390": {
+  "states": [
+   {
+    "state": "menue-modi",
+    "file": "phone-844x390-01-menue-modi.jpg",
+    "issues": []
+   },
+   {
+    "state": "regeln-mega",
+    "file": "phone-844x390-02-regeln-mega.jpg",
+    "issues": []
+   },
+   {
+    "state": "triple-draft",
+    "file": "phone-844x390-03-triple-draft.jpg",
+    "issues": []
+   },
+   {
+    "state": "triple-auswahl",
+    "file": "phone-844x390-04-triple-auswahl.jpg",
+    "issues": []
+   },
+   {
+    "state": "reveal",
+    "file": "phone-844x390-05-reveal.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-draft",
+    "file": "phone-844x390-06-ergebnis-draft.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-draft",
+    "file": "phone-844x390-07-mega-draft.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-auswahl",
+    "file": "phone-844x390-08-mega-auswahl.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-filter-zauber",
+    "file": "phone-844x390-09-mega-filter-zauber.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-detail",
+    "file": "phone-844x390-10-mega-detail.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-unendlich-banner",
+    "file": "phone-844x390-11-kampf-unendlich-banner.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-unendlich",
+    "file": "phone-844x390-12-kampf-unendlich.jpg",
+    "issues": []
+   },
+   {
+    "state": "lobby-2v2",
+    "file": "phone-844x390-13-lobby-2v2.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-2v2",
+    "file": "phone-844x390-14-kampf-2v2.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-2v2",
+    "file": "phone-844x390-15-ergebnis-2v2.jpg",
+    "issues": []
+   }
+  ],
+  "log": []
+ },
+ "desk-1440x900": {
+  "states": [
+   {
+    "state": "menue-modi",
+    "file": "desk-1440x900-01-menue-modi.jpg",
+    "issues": []
+   },
+   {
+    "state": "regeln-mega",
+    "file": "desk-1440x900-02-regeln-mega.jpg",
+    "issues": []
+   },
+   {
+    "state": "triple-draft",
+    "file": "desk-1440x900-03-triple-draft.jpg",
+    "issues": []
+   },
+   {
+    "state": "triple-auswahl",
+    "file": "desk-1440x900-04-triple-auswahl.jpg",
+    "issues": []
+   },
+   {
+    "state": "reveal",
+    "file": "desk-1440x900-05-reveal.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-draft",
+    "file": "desk-1440x900-06-ergebnis-draft.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-draft",
+    "file": "desk-1440x900-07-mega-draft.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-auswahl",
+    "file": "desk-1440x900-08-mega-auswahl.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-filter-zauber",
+    "file": "desk-1440x900-09-mega-filter-zauber.jpg",
+    "issues": []
+   },
+   {
+    "state": "mega-detail",
+    "file": "desk-1440x900-10-mega-detail.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-unendlich-banner",
+    "file": "desk-1440x900-11-kampf-unendlich-banner.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-unendlich",
+    "file": "desk-1440x900-12-kampf-unendlich.jpg",
+    "issues": []
+   },
+   {
+    "state": "lobby-2v2",
+    "file": "desk-1440x900-13-lobby-2v2.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-2v2",
+    "file": "desk-1440x900-14-kampf-2v2.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis-2v2",
+    "file": "desk-1440x900-15-ergebnis-2v2.jpg",
+    "issues": []
+   }
+  ],
+  "log": []
+ }
+}

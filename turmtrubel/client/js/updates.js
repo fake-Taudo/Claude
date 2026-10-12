@@ -8,6 +8,22 @@
 
 export const UPDATES = [
   {
+    id: '2026-10-12.2',
+    version: '1.5',
+    date: '12.10.2026',
+    title: 'Vier neue Spielmodi',
+    items: [
+      { icon: 'menu', title: 'Spielmodi im Hauptmenü', text: 'Neuer Bereich mit Kacheln für jeden Modus: mit Freunden per Code oder gegen einen Bot. Beim ersten Mal erklärt ein kurzes Fenster die Regeln.' },
+      { icon: 'group', title: '2 gegen 2', text: 'Zu viert in zwei Teams: gemeinsame Türme, eigenes Deck und Elixier für jeden. Team-Lobby mit Platzwahl, Teamkollegen-Anzeige im Kampf und Zeichen per Tippen und Halten.' },
+      { icon: 'cards', title: 'Triple Draft', text: 'Acht Runden lang bekommst du drei zufällige Karten und nimmst eine – daraus entsteht dein Deck für den Kampf.' },
+      { icon: 'crown', title: 'Mega Draft', text: 'Ein gemeinsamer Pool aus 40 Karten mit drei Champions. Ihr wählt abwechselnd – was der andere nimmt, ist weg.' },
+      { icon: 'drop', title: 'Unendlich-Elixier', text: 'Elixier lädt sich siebenmal so schnell auf, du startest mit vollen 10. Karte um Karte!' },
+      { icon: 'target', title: 'Bots in drei Stufen', text: 'Leicht, Mittel oder Schwer – in allen Modi außer 2 gegen 2. Der schwere Bot kontert gezielt und baut Angriffe auf.' },
+      { icon: 'star', title: 'Draft-Decks behalten', text: 'Nach einem Draft siehst du beide Decks im Ergebnis und kannst deins in einem Deck-Platz speichern.' },
+      { icon: 'check', title: 'Kleine Handys', text: 'Auf dem Ergebnis-Bildschirm passen „Rematch“ und „Zurück zum Menü“ jetzt auch auf sehr schmale Displays.' },
+    ],
+  },
+  {
     id: '2026-10-12.1',
     version: '1.4',
     date: '12.10.2026',

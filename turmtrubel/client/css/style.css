@@ -1794,8 +1794,19 @@ body.card-dragging, body.card-dragging * { cursor: grabbing !important; user-sel
 @media (max-height: 520px) and (orientation: landscape) {
   .triple-offer { grid-template-columns: repeat(3, minmax(0, 130px)); }
   .draft-foot { position: static; }
+  /* Querformat: Suche und Filterleisten nebeneinander statt untereinander */
+  .mega-filters { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 6px 8px; gap: 4px 10px; }
+  .mega-filters .search { flex: 1 1 180px; max-width: 260px; }
+  .mega-filters .chips { flex: 1 1 280px; padding-bottom: 0; }
+  .draft-head { gap: 4px; }
+  .draft-title { font-size: 22px; }
+  .draft-turn { font-size: 17px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mode-tile, .mode-rule-list li, .offer-card, .reveal-row, .reveal-card, .reveal-title, .draft-confirm { animation: none; }
   .draft-turn.mine { animation: none; }
 }
+
+/* Ergebnis: Knöpfe brechen auf schmalen Handys um (vorher 8 px zu breit bei 360 px) */
+.result-col > .row { flex-wrap: wrap; justify-content: center; max-width: 100%; }
+.result-col > .row .btn { max-width: 100%; }
