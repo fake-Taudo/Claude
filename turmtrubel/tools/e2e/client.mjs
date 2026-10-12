@@ -208,8 +208,8 @@ export async function playMatch({ port, decks, seed = 1, timeoutMs = 120000 }) {
   await a.connect();
   await b.connect();
   try {
-    a.send({ type: 'hello', name: a.name });
-    b.send({ type: 'hello', name: b.name });
+    a.send({ type: 'hello', name: a.name, protocol: 2 });
+    b.send({ type: 'hello', name: b.name, protocol: 2 });
     await a.wait((m) => m.type === 'welcome');
     await b.wait((m) => m.type === 'welcome');
     a.send({ type: 'create', deck: a.deck });

@@ -1,14 +1,16 @@
 // Gemeinsames Nachrichtenprotokoll für Server und Client.
 // Alle Nachrichten sind JSON-Objekte mit einem Feld "type".
 
-export const PROTOCOL_VERSION = 1;
+// Version 2: Spielmodi (Modus beim Erstellen, Team-Lobby, Draft, Team-Ping, Bot-Übernahme).
+// Clients mit anderer Version erhalten beim Anmelden ERRORS.OUTDATED („Bitte Seite neu laden“).
+export const PROTOCOL_VERSION = 2;
 
 // Client → Server
 export const C2S = Object.freeze({
-  HELLO: 'hello',         // { name, token? }
-  CREATE: 'create',       // { deck }
+  HELLO: 'hello',         // { name, token?, protocol }
+  CREATE: 'create',       // { deck, mode }
   JOIN: 'join',           // { code, deck }
-  TRAINING: 'training',   // { deck }
+  TRAINING: 'training',   // { deck, mode, difficulty }
   LEAVE: 'leave',         // {}
   DECK: 'deck',           // { deck }
   READY: 'ready',         // { ready }
@@ -20,6 +22,11 @@ export const C2S = Object.freeze({
   SURRENDER: 'surrender', // {}
   PING: 'ping',           // { t }
   NAME: 'name',           // { name }
+  SEAT: 'seat',           // { seat }        Platz wählen (Team-Lobby)
+  MOVE: 'move',           // { from, to }    Gastgeber verschiebt/tauscht Spieler
+  KICK: 'kick',           // { seat }        Gastgeber entfernt Spieler
+  DRAFT_PICK: 'draftPick', // { card }       Karte im Draft wählen
+  MAP_PING: 'mapPing',    // { x, y }        Zeichen für den Teamkollegen
 });
 
 // Server → Client
@@ -37,7 +44,11 @@ export const S2C = Object.freeze({
   PONG: 'pong',             // { t, st }
   CLOSED: 'roomClosed',     // { reason, message }
   NOTICE: 'notice',         // { message }
-  PRESENCE: 'presence',     // { side, connected, graceLeft }
+  PRESENCE: 'presence',     // { side, team, name, connected, graceLeft }
+  DRAFT: 'draft',           // Draft-Zustand für diesen Spieler
+  DRAFT_REVEAL: 'draftReveal', // { decks, names, seconds }
+  TEAM_PING: 'teamPing',    // { seat, x, y }
+  TAKEOVER: 'takeover',     // { seat, name, bot }
 });
 
 // Bit-Flags für Entitäten im Snapshot
@@ -87,6 +98,28 @@ export const ERRORS = Object.freeze({
   NO_SESSION: 'Bitte zuerst anmelden.',
   RATE_LIMIT: 'Zu viele Nachrichten – bitte langsamer.',
   BAD_MESSAGE: 'Ungültige Nachricht.',
+  OUTDATED: 'Turmtrubel wurde aktualisiert – bitte Seite neu laden.',
+  UNKNOWN_MODE: 'Diesen Spielmodus gibt es nicht.',
+  NO_BOTS: 'Diesen Modus gibt es nur mit Freunden (Multiplayer).',
+  BAD_DIFFICULTY: 'Unbekannte Schwierigkeitsstufe.',
+  NOT_HOST: 'Das darf nur der Gastgeber.',
+  SEAT_TAKEN: 'Dieser Platz ist schon besetzt.',
+  BAD_SEAT: 'Diesen Platz gibt es nicht.',
+  NOT_IN_LOBBY: 'Das geht nur in der Lobby.',
+  KICKED: 'Der Gastgeber hat dich aus dem Raum entfernt.',
+  TAKEN_OVER: 'Die Frist zum Wiederverbinden ist abgelaufen – ein Bot hat deinen Platz übernommen.',
+});
+
+// Ablehnungen im Draft (Antwort auf draftPick)
+export const DRAFT_REJECTS = Object.freeze({
+  NOT_DRAFTING: 'Gerade läuft kein Draft.',
+  NOT_YOUR_TURN: 'Du bist gerade nicht dran.',
+  NOT_OFFERED: 'Diese Karte steht nicht zur Wahl.',
+  ALREADY_PICKED: 'Du hast in dieser Runde schon gewählt.',
+  TAKEN: 'Diese Karte ist schon vergeben.',
+  CHAMPION_LIMIT: 'Du hast bereits einen Champion.',
+  HERO_LIMIT: 'Du hast bereits einen Helden.',
+  CONFLICT: 'Held und Grundkarte können nicht zusammen ins Deck.',
 });
 
 export const REJECTS = Object.freeze({
@@ -103,6 +136,7 @@ export const REJECTS = Object.freeze({
   EMOTE_COOLDOWN: 'Emote noch nicht bereit.',
   LIMIT: 'Zu viele Einheiten auf dem Feld.',
   MIRROR_EMPTY: 'Der Spiegel braucht eine zuvor gespielte Karte.',
+  TOO_FAST: 'Zu schnell – warte kurz bis zur nächsten Karte.',
 });
 
 // Sechs Emotes – die Gesichter werden im Client prozedural gezeichnet.
@@ -124,6 +158,9 @@ export const END_REASONS = Object.freeze({
   forfeit: 'Aufgabe',
   disconnect: 'Verbindung getrennt',
 });
+
+// Zeichen für den Teamkollegen (2 gegen 2)
+export const PING_COOLDOWN = 2;
 
 export function normalizeCode(input) {
   return String(input ?? '').toUpperCase().replace(/[\s-]/g, '');

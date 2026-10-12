@@ -39,7 +39,7 @@ export const Traits = {
       e.genT -= dt;
       if (e.genT <= 0) {
         e.genT += tr.elixirGen.interval;
-        this.addElixir(e.owner, tr.elixirGen.amount, e.x, e.y);
+        this.addElixir(e.pl, tr.elixirGen.amount, e.x, e.y);
       }
     }
     if (rootedOnly) return;
@@ -289,7 +289,7 @@ export const Traits = {
       let px = clamp(x + ox * flip, def.radius, ARENA_W - def.radius);
       let py = clamp(y + oy * flip, def.radius, ARENA_H - def.radius);
       if (!def.flying && !def.isBuilding && blockedByRiver(px, py)) py = py < 16 ? 14.9 - def.radius : 17.1 + def.radius;
-      const e = this.addEntity(def, owner, px, py, { deployTime, evo: !!opts.evo && def.evo, groupId: opts.groupId || 0, clone: !!opts.clone, cardId: opts.cardId });
+      const e = this.addEntity(def, owner, px, py, { deployTime, evo: !!opts.evo && def.evo, groupId: opts.groupId || 0, clone: !!opts.clone, cardId: opts.cardId, pl: opts.pl });
       if (opts.spawnedBy) e.spawnedBy = opts.spawnedBy;
       out.push(e);
     }
@@ -305,6 +305,7 @@ export const Traits = {
       if (!e.dead || e.removed) continue;
       e.removed = true;
       any = true;
+      this.ctxPl = e.pl;
       if (!e.silentDeath) this.onDeath(e);
       if (e.kind !== 'unit') this.structDirty = true;
       if (e.kind === 'tower') this.onTowerDestroyed(e);
@@ -337,12 +338,12 @@ export const Traits = {
       this.spawnAround(ds.unit, ds.count, e.owner, e.x, e.y, 0.3, { evo: !!ds.evo, cardId: e.cardId });
     }
     if (tr.deathSpell) this.addZone(e.owner, tr.deathSpell, e.x, e.y, { evo: e.evo });
-    if (tr.deathElixir && !e.clone) this.addElixir(1 - e.owner, tr.deathElixir, e.x, e.y);
-    if (tr.deathElixirSelf && !e.expired) this.addElixir(e.owner, tr.deathElixirSelf, e.x, e.y);
+    if (tr.deathElixir && !e.clone) this.addElixirToEnemies(e.owner, tr.deathElixir, e.x, e.y);
+    if (tr.deathElixirSelf && !e.expired) this.addElixir(e.pl, tr.deathElixirSelf, e.x, e.y);
     // Fluch (Hexenmutter, Goblin Curse): verfluchte Truppe wird zum Diener des Fluchers
     if (e.curse && e.kind === 'unit' && !e.clone) {
       const c = e.curse;
-      this.spawnAround(c.unit, 1, c.owner, e.x, e.y, 0.4);
+      this.spawnAround(c.unit, 1, c.owner, e.x, e.y, 0.4, { pl: c.pl });
       this.events.push(['bl', r2(e.x), r2(e.y), 0.8, c.owner, 'curse']);
     }
     // Evo-Skelettarmee: Schatten kämpfen weiter, solange General Gerry lebt
@@ -391,9 +392,9 @@ export const Traits = {
 
   /** Champion kehrt in den Kartenzyklus zurück, wenn alle seine Teile gefallen sind. */
   maybeReturnChampion(e) {
-    const p = this.players[e.owner];
-    if (p.championOut !== e.championOf) return;
-    if (this.entities.some((o) => !o.dead && o !== e && o.championOf === e.championOf && o.owner === e.owner)) return;
+    const p = this.players[e.pl];
+    if (!p || p.championOut !== e.championOf) return;
+    if (this.entities.some((o) => !o.dead && o !== e && o.championOf === e.championOf && o.pl === e.pl)) return;
     p.queue.push(p.championOut);
     p.championOut = null;
   },

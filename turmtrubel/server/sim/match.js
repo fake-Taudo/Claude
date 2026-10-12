@@ -26,8 +26,12 @@ export class Match {
    * @param {object} o
    * @param {object} o.db     – Karten-DB (shared/cards.js createDb)
    * @param {object} o.rules  – rules.json
-   * @param {string[][]} o.decks – zwei Decks à 8 Karten-IDs
+   * @param {string[][]} o.decks – ein Deck à 8 Karten-IDs pro Spieler
    * @param {number} [o.seed]
+   *
+   * Spieler und Teams: `rules.teamOf` ordnet jedem Spieler (Sitz) ein Team (0 = blau, 1 = rot) zu, Standard
+   * [0, 1] = klassisch. Entitäten, Zonen und Geschosse tragen `owner` = Team (Feind/Freund, Spielhälfte,
+   * Türme) und `pl` = Spieler (Elixier, Hand, Champion, Fähigkeit, Statistik).
    */
   constructor({ db, rules, decks, seed = 1 }) {
     this.db = db;
@@ -50,10 +54,18 @@ export class Match {
     this.timers = [];
     this.events = [];
     this.crowns = [0, 0];
-    this.stats = [0, 1].map(() => ({ played: 0, spent: 0, towerDamage: 0, abilities: 0 }));
+    this.teamOf = rules.teamOf ? rules.teamOf.slice() : decks.map((_, i) => i);
+    this.teamMode = this.teamOf.length > 2;
+    // erster Spieler je Team: Besitzer von Dingen, die keinem Spieler zuzuordnen sind
+    this.firstPl = [0, 1].map((t) => this.teamOf.indexOf(t));
+    // Spieler, dessen Einheit/Zauber/Geschoss gerade wirkt (für Folge-Einheiten, Elixier, Statistik)
+    this.ctxPl = null;
+    this.stats = this.teamOf.map(() => ({ played: 0, spent: 0, towerDamage: 0, abilities: 0 }));
+    this.evoOn = rules.evo?.enabled !== false;
+    this.limits = rules.limits || null;
     this.nav = new NavGrid();
     this.structDirty = true;
-    this.players = [0, 1].map((side) => this.makePlayer(side, decks[side]));
+    this.players = this.teamOf.map((_, pl) => this.makePlayer(pl, decks[pl]));
     this.towers = [];
     this.createTowers();
     this.rebuildNav();
@@ -61,7 +73,7 @@ export class Match {
 
   // ───────────────────────────── Aufbau ─────────────────────────────
 
-  makePlayer(side, slots) {
+  makePlayer(pl, slots) {
     const order = shuffle(slots.slice(), this.rng);
     const handSize = this.rules.hand?.size ?? 4;
     // „Nie in der Starthand“ (Spiegel, Elixiersammler): nach hinten tauschen
@@ -72,7 +84,7 @@ export class Match {
     }
     const evoCards = new Set();
     const evoCharge = {};
-    for (const i of EVO_SLOTS) {
+    for (const i of this.evoOn ? EVO_SLOTS : []) {
       const c = this.db.card(slots[i]);
       if (c && c.evo) {
         evoCards.add(c.id);
@@ -80,7 +92,8 @@ export class Match {
       }
     }
     return {
-      side,
+      side: pl,
+      team: this.teamOf[pl],
       deck: slots.slice(),
       hand: order.slice(0, handSize),
       queue: order.slice(handSize),
@@ -92,7 +105,14 @@ export class Match {
       lastPlayed: null,
       lastCost: 0,
       emoteReadyAt: 0,
+      playTokens: this.limits ? this.limits.burst : 0,
     };
+  }
+
+  /** Spieler, dem etwas Neues des Teams `owner` gehört: der gerade wirkende Spieler, sonst der erste des Teams. */
+  plFor(owner) {
+    const c = this.ctxPl;
+    return c != null && this.teamOf[c] === owner ? c : (this.firstPl[owner] ?? owner);
   }
 
   createTowers() {
@@ -137,6 +157,7 @@ export class Match {
       id: this.nextId++,
       def,
       owner,
+      pl: opts.pl ?? this.plFor(owner),
       kind,
       typeIdx: this.db.typeIndex.get(def.key) ?? -1,
       cardId: opts.cardId || def.cardId || null,
@@ -249,7 +270,7 @@ export class Match {
 
   /** Verzögerte Aktion (z. B. Kettenblitz-Sprünge, gestaffelte Spawns). */
   later(delay, fn) {
-    this.timers.push({ at: this.time + delay, fn });
+    this.timers.push({ at: this.time + delay, fn, pl: this.ctxPl });
   }
 
   updateTimers() {
@@ -258,16 +279,24 @@ export class Match {
     const keep = [];
     for (const t of this.timers) (t.at <= this.time + 1e-9 ? due : keep).push(t);
     this.timers = keep;
-    for (const t of due) t.fn();
+    for (const t of due) {
+      this.ctxPl = t.pl;
+      t.fn();
+    }
+    this.ctxPl = null;
   }
 
   // ───────────────────────────── Zeit & Elixier ─────────────────────────────
 
+  /** Elixier-Faktor: Modus-Faktor (rules.elixir.rate, Standard 1) × Phase (Doppel/Dreifach, abschaltbar). */
   elixirMultiplier() {
     const R = this.rules;
-    if (this.phase === 'overtime') return R.elixir.overtimeMultiplier;
-    if (this.time >= R.regularSeconds - R.doubleElixirLastSeconds) return R.elixir.doubleMultiplier;
-    return 1;
+    const k = R.elixir.rate ?? 1;
+    if (R.elixir.phases === false) return k;
+    let m = 1;
+    if (this.phase === 'overtime') m = R.elixir.overtimeMultiplier;
+    else if (this.time >= R.regularSeconds - R.doubleElixirLastSeconds) m = R.elixir.doubleMultiplier;
+    return k === 1 ? m : m * k;
   }
 
   timeLeft() {
@@ -282,11 +311,16 @@ export class Match {
     for (const p of this.players) p.elixir = Math.min(E.max, p.elixir + rate * dt);
   }
 
-  addElixir(side, amount, x, y) {
-    const p = this.players[side];
+  addElixir(pl, amount, x, y) {
+    const p = this.players[pl];
     if (!p) return;
     p.elixir = Math.min(this.rules.elixir.max, p.elixir + amount);
-    this.events.push(['el', side, r2(x), r2(y), amount]);
+    this.events.push(['el', pl, r2(x), r2(y), amount]);
+  }
+
+  /** Elixier an alle Spieler der Gegner von Team `team` (Elixiergolem). */
+  addElixirToEnemies(team, amount, x, y) {
+    for (let pl = 0; pl < this.players.length; pl++) if (this.teamOf[pl] !== team) this.addElixir(pl, amount, x, y);
   }
 
   updateClock() {
@@ -318,12 +352,16 @@ export class Match {
     this.updateZones(dt);
     for (let i = 0; i < this.entities.length; i++) {
       const e = this.entities[i];
-      if (!e.dead) this.updateEntity(e, dt);
+      if (e.dead) continue;
+      this.ctxPl = e.pl;
+      this.updateEntity(e, dt);
     }
     this.updateProjectiles(dt);
     this.updateLines(dt);
+    this.ctxPl = null;
     this.resolveCollisions();
     this.processDeaths();
+    this.ctxPl = null;
     this.checkEnd();
   }
 
@@ -367,10 +405,10 @@ export class Match {
     this.events.push(['end', winner ?? -1, reason]);
   }
 
-  /** Aufgabe oder endgültige Trennung eines Spielers. */
-  forfeit(side, reason = 'forfeit') {
+  /** Aufgabe oder endgültige Trennung: Team `team` verliert, der Gegner bekommt 3 Kronen. */
+  forfeit(team, reason = 'forfeit') {
     if (this.result) return;
-    const w = 1 - side;
+    const w = 1 - team;
     this.crowns[w] = 3;
     this.end(w, reason);
   }
@@ -397,8 +435,9 @@ export class Match {
     return card;
   }
 
-  canPlace(side, card, x, y) {
-    card = this.effectiveCard(side, card);
+  canPlace(pl, card, x, y) {
+    card = this.effectiveCard(pl, card);
+    const side = this.teamOf[pl];
     if (!card) return false;
     let kind = 'troop';
     let half = 0;
@@ -423,31 +462,40 @@ export class Match {
     return isPlacementValid({ side, x, y, kind, half, anywhere, obstacles, enemyPrincessDown });
   }
 
-  /** Karte ausspielen. Gibt { ok } oder { ok:false, code, message } zurück. */
-  play(side, slot, cardId, x, y) {
+  /** Karte ausspielen (pl = Spieler/Sitz). Gibt { ok } oder { ok:false, code, message } zurück. */
+  play(pl, slot, cardId, x, y) {
     const fail = (code) => ({ ok: false, code, message: REJECTS[code] });
     if (!this.started || this.result) return fail('NOT_RUNNING');
-    const p = this.players[side];
+    const p = this.players[pl];
     if (!p) return fail('NOT_RUNNING');
+    const side = p.team;
     if (!Number.isInteger(slot) || slot < 0 || slot >= p.hand.length) return fail('BAD_SLOT');
     if (typeof cardId !== 'string' || p.hand[slot] !== cardId) return fail('NOT_IN_HAND');
     if (this.time + 1e-9 < p.handReady[slot]) return fail('NOT_READY');
     const card = this.db.card(cardId);
     if (!card) return fail('NOT_IN_HAND');
-    const cost = this.costOf(side, card);
+    const cost = this.costOf(pl, card);
     if (cost == null) return fail('MIRROR_EMPTY');
     if (p.elixir + 1e-9 < cost) return fail('ELIXIR');
     x = Number(x);
     y = Number(y);
-    if (!this.canPlace(side, card, x, y)) return fail('PLACEMENT');
-    const eff = this.effectiveCard(side, card);
+    if (!this.canPlace(pl, card, x, y)) return fail('PLACEMENT');
+    const eff = this.effectiveCard(pl, card);
     if (eff.type !== 'spell' && this.entities.length + this.countOf(eff) > this.maxEntities) return fail('LIMIT');
+    // Eingabe-Limit (Modi mit sehr schnellem Elixier): Token-Bucket pro Spieler auf Sim-Zeit
+    if (this.limits) {
+      const L = this.limits;
+      p.playTokens = Math.min(L.burst, p.playTokens + (this.time - (p.playT ?? 0)) * L.playsPerSecond);
+      p.playT = this.time;
+      if (p.playTokens < 1 - 1e-9) return fail('TOO_FAST');
+      p.playTokens -= 1;
+    }
     const form = this.formOf(eff, p.elixir);
 
-    // Bezahlen
-    p.elixir -= cost;
-    this.stats[side].played++;
-    this.stats[side].spent += cost;
+    // Bezahlen („Unendlich“-Schalter: Elixier wird nie verbraucht)
+    if (!this.rules.elixir.infinite) p.elixir -= cost;
+    this.stats[pl].played++;
+    this.stats[pl].spent += cost;
 
     // Evo-Ladung (der Spiegel kopiert keine Evolution)
     let evo = false;
@@ -474,10 +522,12 @@ export class Match {
       p.lastCost = cost;
     }
 
+    this.ctxPl = pl;
     if (eff.type === 'spell') this.castSpell(side, eff, x, y, evo, levelBonus);
     else this.spawnCard(side, eff, x, y, evo, levelBonus, form);
+    this.ctxPl = null;
 
-    this.events.push(['pl', side, this.db.typeIndex.get(cardId), r2(x), r2(y), evo ? 1 : 0]);
+    this.events.push(['pl', pl, this.db.typeIndex.get(cardId), r2(x), r2(y), evo ? 1 : 0]);
     return { ok: true, evo };
   }
 
@@ -521,14 +571,15 @@ export class Match {
     return out;
   }
 
-  emote(side, index) {
+  emote(pl, index) {
     const fail = (code) => ({ ok: false, code, message: REJECTS[code] });
     if (!this.started || this.result) return fail('NOT_RUNNING');
     if (!Number.isInteger(index) || index < 0 || index >= EMOTES.length) return fail('EMOTE_COOLDOWN');
-    const p = this.players[side];
+    const p = this.players[pl];
+    if (!p) return fail('NOT_RUNNING');
     if (this.time + 1e-9 < p.emoteReadyAt) return fail('EMOTE_COOLDOWN');
     p.emoteReadyAt = this.time + (this.rules.emoteCooldown ?? 3);
-    this.events.push(['em', side, index]);
+    this.events.push(['em', pl, index]);
     return { ok: true };
   }
 
@@ -647,6 +698,7 @@ export class Match {
         en.fx,
         this.auxOf(en),
       ]);
+      if (this.teamMode) e[e.length - 1].push(en.pl);
     }
     const p = this.projectiles.map((pr) => [pr.id, pr.kind, r2(pr.x), r2(pr.y), pr.owner, r2(pr.sx), r2(pr.sy), r2(pr.tx), r2(pr.ty)]);
     for (const l of this.lines) if (l.kind) p.push([l.id, l.kind, r2(l.x), r2(l.y), l.owner, r2(l.sx), r2(l.sy), r2(l.x + l.dx), r2(l.y + l.dy)]);
@@ -680,6 +732,19 @@ export class Match {
 
   meState(side) {
     const p = this.players[side];
+    const st = this.meStateOf(side, p);
+    if (this.teamMode) {
+      // Teamkollegen: Elixier und zuletzt gespielte Karte (nur fürs eigene Team sichtbar)
+      st.tm = [];
+      for (let o = 0; o < this.players.length; o++) {
+        if (o === side || this.teamOf[o] !== p.team) continue;
+        st.tm.push([o, Math.floor(this.players[o].elixir * 10) / 10, this.players[o].lastPlayed]);
+      }
+    }
+    return st;
+  }
+
+  meStateOf(side, p) {
     const evoInfo = (id) => (id && p.evoCards.has(id) ? [p.evoCharge[id], this.db.card(id).evo.cycles] : 0);
     const ab = this.abilityEntity(side);
     const next = p.queue[0] ?? null;

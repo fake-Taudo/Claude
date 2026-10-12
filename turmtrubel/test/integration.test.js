@@ -60,8 +60,8 @@ test('HTTP liefert Client, Daten und blockiert Pfad-Traversal', async () => {
 test('Kompletter Ablauf über WebSocket', async () => {
   const a = await client();
   const b = await client();
-  a.send({ type: 'hello', name: 'Alice' });
-  b.send({ type: 'hello', name: 'Bob' });
+  a.send({ type: 'hello', name: 'Alice', protocol: 2 });
+  b.send({ type: 'hello', name: 'Bob', protocol: 2 });
   await a.wait((m) => m.type === 'welcome');
   const wb = await b.wait((m) => m.type === 'welcome');
 
@@ -106,7 +106,7 @@ test('Kompletter Ablauf über WebSocket', async () => {
   b.ws.close();
   await a.wait((m) => m.type === 'presence' && m.connected === false);
   const b2 = await client();
-  b2.send({ type: 'hello', token: wb.token });
+  b2.send({ type: 'hello', token: wb.token, protocol: 2 });
   assert.equal((await b2.wait((m) => m.type === 'welcome')).resumed, true);
   await b2.wait((m) => m.type === 'matchStart');
   await b2.wait((m) => m.type === 's');

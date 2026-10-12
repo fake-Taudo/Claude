@@ -5,10 +5,10 @@ import { REJECTS } from '../../shared/protocol.js';
 import { TAU, r2, clamp, isStruct, surfaceDist, segDist } from './geom.js';
 
 export const Abilities = {
-  abilityEntity(side) {
+  abilityEntity(pl) {
     let best = null;
     for (const e of this.entities) {
-      if (e.dead || e.owner !== side || !e.ability || e.clone) continue;
+      if (e.dead || e.pl !== pl || !e.ability || e.clone) continue;
       if (e.abilityUses <= 0 && !e.cast) continue;
       if (!best || e.id > best.id) best = e;
     }
@@ -18,6 +18,7 @@ export const Abilities = {
   useAbility(side) {
     const fail = (code) => ({ ok: false, code, message: REJECTS[code] });
     if (!this.started || this.result) return fail('NOT_RUNNING');
+    if (!this.players[side]) return fail('NOT_RUNNING');
     const e = this.abilityEntity(side);
     if (!e) return fail('NO_ABILITY');
     if (e.deployT > 0 || e.cast) return fail('DEPLOYING');
@@ -26,7 +27,7 @@ export const Abilities = {
     if (e.abilityUses <= 0) return fail('USED');
     if (e.abilityCd > 1e-9) return fail('COOLDOWN');
     if (p.elixir + 1e-9 < (ab.cost || 0)) return fail('ELIXIR');
-    p.elixir -= ab.cost || 0;
+    if (!this.rules.elixir.infinite) p.elixir -= ab.cost || 0;
     e.abilityUses--;
     e.abilityCd = ab.cooldown || 0;
     this.stats[side].abilities++;
@@ -47,7 +48,7 @@ export const Abilities = {
   /** Stirbt die Einheit vor dem Wirken, gibt es das Elixier zurück (Regel des Originals). */
   refundCast(e) {
     if (!e.cast) return;
-    this.addElixir(e.owner, e.cast.ab.cost || 0, e.x, e.y);
+    if (!this.rules.elixir.infinite) this.addElixir(e.pl, e.cast.ab.cost || 0, e.x, e.y);
     e.cast = null;
   },
 

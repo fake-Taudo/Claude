@@ -345,7 +345,7 @@ export function cycleCost(db, slots) {
   return costs.slice(0, 4).reduce((a, b) => a + b, 0);
 }
 
-function targetsAir(db, card) {
+export function targetsAir(db, card) {
   if (card.type === 'spell') return !!(card.spell?.damage || card.spell?.voidTiers || card.spell?.strikes);
   const u = db.unit(db.unitRefOf(card));
   return u.targets === 'both' || u.targets === 'air' || !!u.traits.secondary;

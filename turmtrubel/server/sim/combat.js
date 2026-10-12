@@ -411,6 +411,7 @@ export const Combat = {
       id: this.nextId++,
       kind: proj.kind || 'rock',
       owner: src.owner,
+      pl: src.pl ?? this.plFor(src.owner),
       x: src.x,
       y: src.y,
       sx: src.x,
@@ -428,6 +429,7 @@ export const Combat = {
   updateProjectiles(dt) {
     const keep = [];
     for (const pr of this.projectiles) {
+      this.ctxPl = pr.pl;
       let target = null;
       if (pr.homing) {
         target = this.byId.get(pr.targetId);
@@ -449,6 +451,7 @@ export const Combat = {
           if (src && !src.dead) {
             pr.reflected = true;
             pr.owner = target.owner;
+            pr.pl = target.pl;
             pr.payload = { ...pr.payload, owner: target.owner, srcId: target.id, onHit: null, splash: 0 };
             pr.targetId = src.id;
             pr.homing = true;
@@ -479,6 +482,7 @@ export const Combat = {
       id: this.nextId++,
       kind: o.kind || 'magic',
       owner: payload.owner,
+      pl: this.plFor(payload.owner),
       srcId: src?.id || 0,
       sx,
       sy,
@@ -510,6 +514,7 @@ export const Combat = {
     if (!this.lines.length) return;
     const keep = [];
     for (const l of this.lines) {
+      this.ctxPl = l.pl;
       const step = l.speed * dt;
       const x0 = l.x;
       const y0 = l.y;
@@ -630,7 +635,7 @@ export const Combat = {
     if (oh.stun) this.stun(o, oh.stun, !!oh.freeze);
     if (oh.slow && (!p.troopsOnly || o.kind === 'unit')) this.slow(o, oh.slow.amount, oh.slow.duration);
     if (oh.knockback && o.kind === 'unit') this.knockback(o, p.sx, p.sy, oh.knockback);
-    if (oh.curse && o.kind === 'unit') o.curse = { owner: p.owner, unit: oh.curse.unit, until: this.time + oh.curse.duration };
+    if (oh.curse && o.kind === 'unit') o.curse = { owner: p.owner, pl: this.plFor(p.owner), unit: oh.curse.unit, until: this.time + oh.curse.duration };
   },
 
   /** Kettenblitz (Elektrodrache, Elektrogeist): springt vom Ziel auf die nächsten Gegner. */
@@ -894,7 +899,7 @@ export const Combat = {
     if (minHp && o.hp < minHp) o.hp = minHp;
     if (src) o.lastHitBy = src.id;
     if (o.kind === 'tower') {
-      if (srcOwner === 0 || srcOwner === 1) this.stats[srcOwner].towerDamage += dealt;
+      if (srcOwner === 0 || srcOwner === 1) this.stats[this.plFor(srcOwner)].towerDamage += dealt;
       if (o.towerKey === 'king' && !o.active) this.activateKing(o);
       if (this.phase === 'overtime' && this.rules.suddenDeath === 'firstHit' && srcOwner !== o.owner) {
         this.end(1 - o.owner, 'suddenDeath');

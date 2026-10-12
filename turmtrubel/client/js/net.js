@@ -1,5 +1,5 @@
 // WebSocket-Verbindung mit automatischem Reconnect (30 s) und Ping-Messung.
-import { C2S, S2C } from '/shared/protocol.js';
+import { C2S, S2C, PROTOCOL_VERSION } from '/shared/protocol.js';
 
 const TOKEN_KEY = 'turmtrubel.token';
 
@@ -45,7 +45,7 @@ export class Net {
     this.ws = ws;
     ws.onopen = () => {
       this.connected = true;
-      this.send(C2S.HELLO, { name: this.name, token: this.token });
+      this.send(C2S.HELLO, { name: this.name, token: this.token, protocol: PROTOCOL_VERSION });
       this.startPing();
     };
     ws.onmessage = (ev) => {

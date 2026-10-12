@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 import { createDb } from '../shared/cards.js';
 import { C2S, S2C, ERRORS, PROTOCOL_VERSION, sanitizeName } from '../shared/protocol.js';
+import { createModes } from '../shared/modes.js';
 import { RoomManager } from './rooms.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -16,14 +17,16 @@ export function loadData(root = ROOT) {
   const rulesText = fs.readFileSync(path.join(root, 'data/rules.json'), 'utf8');
   const skinPath = path.join(root, 'data/skin.json');
   const skinText = fs.existsSync(skinPath) ? fs.readFileSync(skinPath, 'utf8') : '{}';
+  const modesText = fs.readFileSync(path.join(root, 'data/modes.json'), 'utf8');
+  const modes = createModes(JSON.parse(modesText));
   const rules = JSON.parse(rulesText);
   const skin = JSON.parse(skinText);
   // Umgebungsvariable SKIN (z. B. SKIN=custom) hat Vorrang vor rules.json → skin und skin.json → active
   if (process.env.SKIN) rules.skin = process.env.SKIN;
   const db = createDb(JSON.parse(cardsText), { level: rules.cardLevel, skin, skinName: rules.skin });
   const rulesOut = process.env.SKIN ? JSON.stringify(rules) : rulesText;
-  const version = crypto.createHash('sha1').update(cardsText).update(rulesOut).update(skinText).digest('hex').slice(0, 10);
-  return { db, rules, cardsText, rulesText: rulesOut, skinText, version };
+  const version = crypto.createHash('sha1').update(cardsText).update(rulesOut).update(skinText).update(modesText).digest('hex').slice(0, 10);
+  return { db, rules, modes, cardsText, rulesText: rulesOut, skinText, modesText, version };
 }
 
 const MIME = {
@@ -62,9 +65,10 @@ function makeStaticHandler(data) {
     const p = decodeURIComponent(url.pathname);
     const headers = { 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-cache' };
     // Daten immer aus dem Speicher → identisch mit dem, was der Server simuliert
-    if (p === '/data/cards.json' || p === '/data/rules.json' || p === '/data/skin.json') {
+    const json = { '/data/cards.json': data.cardsText, '/data/rules.json': data.rulesText, '/data/skin.json': data.skinText, '/data/modes.json': data.modesText };
+    if (json[p] !== undefined) {
       res.writeHead(200, { ...headers, 'Content-Type': MIME['.json'], ETag: data.version });
-      res.end(p === '/data/cards.json' ? data.cardsText : p === '/data/rules.json' ? data.rulesText : data.skinText);
+      res.end(json[p]);
       return;
     }
     if (p === '/healthz') {
@@ -121,7 +125,7 @@ function makeLimiter(rate = 30, burst = 60) {
  */
 export function startServer({ port = Number(process.env.PORT) || 3000, host = process.env.HOST || '0.0.0.0', quiet = false, timeScale = 1 } = {}) {
   const data = loadData();
-  const mgr = new RoomManager({ db: data.db, rules: data.rules });
+  const mgr = new RoomManager({ db: data.db, rules: data.rules, modes: data.modes });
   const server = http.createServer(makeStaticHandler(data));
   const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
 
@@ -160,6 +164,11 @@ export function startServer({ port = Number(process.env.PORT) || 3000, host = pr
       }
       if (msg.type === C2S.HELLO) {
         if (session) return;
+        // Alte (oder neuere) Clients: klare Meldung statt stiller Fehler
+        if (msg.protocol !== PROTOCOL_VERSION) {
+          error('OUTDATED');
+          return;
+        }
         const resumed = msg.token ? mgr.resume(msg.token, sendRaw) : null;
         if (resumed) {
           session = resumed;
@@ -167,9 +176,11 @@ export function startServer({ port = Number(process.env.PORT) || 3000, host = pr
           if (session.room) session.room.sendState(session);
           return;
         }
+        const gone = msg.token ? mgr.goneMessage(msg.token) : null;
         const name = sanitizeName(msg.name) || 'Spieler' + Math.floor(Math.random() * 900 + 100);
         session = mgr.createSession(name, sendRaw);
         sendRaw({ type: S2C.WELCOME, token: session.token, name: session.name, resumed: false, inRoom: false, dataVersion: data.version, protocol: PROTOCOL_VERSION });
+        if (gone) sendRaw({ type: S2C.NOTICE, message: gone, takenOver: true });
         return;
       }
       if (!session) {
@@ -184,13 +195,13 @@ export function startServer({ port = Number(process.env.PORT) || 3000, host = pr
           reply(mgr.rename(session, msg.name));
           break;
         case C2S.CREATE:
-          reply(mgr.createRoom(session, msg.deck));
+          reply(mgr.createRoom(session, msg.deck, msg.mode));
           break;
         case C2S.JOIN:
           reply(mgr.joinRoom(session, msg.code, msg.deck));
           break;
         case C2S.TRAINING:
-          reply(mgr.createTraining(session, msg.deck));
+          reply(mgr.createTraining(session, msg.deck, msg.mode, msg.difficulty));
           break;
         case C2S.LEAVE:
           if (room) room.leave(session, 'leave');
@@ -222,6 +233,25 @@ export function startServer({ port = Number(process.env.PORT) || 3000, host = pr
           break;
         case C2S.REMATCH:
           if (room) reply(room.requestRematch(session, msg.want !== false));
+          break;
+        case C2S.SEAT:
+          if (!room) error('NOT_IN_ROOM');
+          else reply(room.chooseSeat(session, msg.seat));
+          break;
+        case C2S.MOVE:
+          if (!room) error('NOT_IN_ROOM');
+          else reply(room.movePlayer(session, msg.from, msg.to));
+          break;
+        case C2S.KICK:
+          if (!room) error('NOT_IN_ROOM');
+          else reply(room.kick(session, msg.seat));
+          break;
+        case C2S.DRAFT_PICK:
+          if (!room) error('NOT_IN_ROOM');
+          else reply(room.draftPick(session, msg.card));
+          break;
+        case C2S.MAP_PING:
+          if (room) room.mapPing(session, msg.x, msg.y);
           break;
         default:
           break;

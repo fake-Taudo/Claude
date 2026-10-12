@@ -36,6 +36,7 @@ export const Spells = {
     const z = {
       id: this.nextId++,
       owner,
+      pl: o.pl ?? this.plFor(owner),
       s,
       x,
       y,
@@ -77,6 +78,7 @@ export const Spells = {
   updateZones(dt) {
     for (const z of this.zones) {
       if (z.done) continue;
+      this.ctxPl = z.pl;
       z.t += dt;
       const s = z.s;
       if (z.follow) {
@@ -133,7 +135,7 @@ export const Spells = {
       if (o.underT > 0) continue;
       if (s.slow && s.slow.duration == null && affects(s.targets || 'both', o)) this.slow(o, s.slow.amount, 0.3);
       if (s.pull && o.kind === 'unit') this.pull(o, z.x, z.y, s.pull.speed * this.dt);
-      if (s.curse && o.kind === 'unit') o.curse = { owner: z.owner, unit: s.curse.unit, until: this.time + 0.3 };
+      if (s.curse && o.kind === 'unit') o.curse = { owner: z.owner, pl: z.pl, unit: s.curse.unit, until: this.time + 0.3 };
     }
   },
 

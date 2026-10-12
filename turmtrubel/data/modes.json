@@ -1,0 +1,124 @@
+{
+  "_info": "Spielmodi von Turmtrubel. Jeder Modus setzt nur die Werte, die vom klassischen Kampf (rules.json) abweichen. Leere oder fehlende Werte = wie klassisch. Änderungen wirken nach einem Server-Neustart. Anleitung für neue Modi: docs/MODES_REPORT.md.",
+  "defaultMode": "classic",
+  "modes": [
+    {
+      "id": "classic",
+      "name": "Klassisch",
+      "short": "1 gegen 1 mit deinem Deck",
+      "description": "Der Standardkampf: dein eigenes Deck, Doppel-Elixier in der letzten Minute, Verlängerung bei Gleichstand.",
+      "icon": "swords",
+      "players": 2,
+      "teams": 2,
+      "multiplayerOnly": false,
+      "botsAllowed": true,
+      "deckSource": "saved",
+      "rules": [
+        "Jeder spielt sein eigenes Deck aus 8 Karten.",
+        "3 Minuten Spielzeit, in der letzten Minute Doppel-Elixier.",
+        "Bei Gleichstand Verlängerung mit Dreifach-Elixier: Der erste zerstörte Turm gewinnt."
+      ]
+    },
+    {
+      "id": "infinite-elixir",
+      "name": "Unendlich-Elixier",
+      "short": "Elixier ×7 von Anfang an",
+      "description": "Elixier lädt sich siebenmal so schnell auf. Du startest mit vollem Elixier – spiel Karte um Karte!",
+      "icon": "drop",
+      "players": 2,
+      "teams": 2,
+      "multiplayerOnly": false,
+      "botsAllowed": true,
+      "deckSource": "saved",
+      "elixir": { "multiplier": 7, "phases": false, "start": 10, "infinite": false },
+      "match": { "regularSeconds": null, "overtimeSeconds": null, "suddenDeath": null },
+      "limits": { "playsPerSecond": 2.5, "burst": 4 },
+      "bot": { "minGap": { "easy": 2.2, "medium": 1.3, "hard": 0.8 } },
+      "rules": [
+        "Elixier lädt sich durchgehend 7× so schnell auf (kein Doppel- oder Dreifach-Elixier).",
+        "Du startest mit 10 Elixier, das Maximum bleibt 10.",
+        "Spielzeit, Verlängerung und Sieg wie im klassischen Kampf.",
+        "Pro Sekunde sind höchstens 2–3 Karten erlaubt, der Kartenzyklus läuft normal."
+      ]
+    },
+    {
+      "id": "triple-draft",
+      "name": "Triple Draft",
+      "short": "Wähle 1 aus 3 – achtmal",
+      "description": "Vor dem Kampf baut ihr eure Decks: Acht Runden lang bekommt jeder drei zufällige Karten und nimmt eine davon.",
+      "icon": "cards",
+      "players": 2,
+      "teams": 2,
+      "multiplayerOnly": false,
+      "botsAllowed": true,
+      "deckSource": "draft",
+      "evos": false,
+      "draft": {
+        "kind": "triple",
+        "rounds": 8,
+        "offer": 3,
+        "pickSeconds": 15,
+        "maxChampionsPerDeck": 1,
+        "maxHeroesPerDeck": 1,
+        "allowEvos": false,
+        "playabilityGuard": true,
+        "revealSeconds": 5
+      },
+      "rules": [
+        "8 Runden: Jeder bekommt 3 zufällige Karten und wählt 1. Ihr wählt gleichzeitig und seht die Wahl des anderen nicht.",
+        "15 Sekunden pro Runde – danach wird zufällig gewählt.",
+        "Höchstens 1 Champion und 1 Held pro Deck, keine Evolutionen.",
+        "Deine gespeicherten Decks bleiben unverändert."
+      ]
+    },
+    {
+      "id": "mega-draft",
+      "name": "Mega Draft",
+      "short": "40 Karten, abwechselnd wählen",
+      "description": "Ein gemeinsamer Pool aus 40 Karten: Ihr wählt abwechselnd, bis jeder 8 Karten hat. Was der andere nimmt, ist weg.",
+      "icon": "crown",
+      "players": 2,
+      "teams": 2,
+      "multiplayerOnly": false,
+      "botsAllowed": true,
+      "deckSource": "draft",
+      "evos": false,
+      "draft": {
+        "kind": "mega",
+        "poolSize": 40,
+        "champions": 3,
+        "picksPerPlayer": 8,
+        "pickSeconds": 25,
+        "maxChampionsPerDeck": 1,
+        "revealSeconds": 5,
+        "poolMinimums": { "cheap": 6, "cheapMaxElixir": 3, "air": 5, "spells": 4, "buildings": 2, "rarities": 3 }
+      },
+      "rules": [
+        "Gemeinsamer Pool aus 40 Karten mit genau 3 Champions – ohne Helden und Evolutionen.",
+        "Ihr wählt abwechselnd je 1 Karte, bis jeder 8 hat. Wer anfängt, entscheidet das Los.",
+        "Höchstens 1 Champion pro Deck. 25 Sekunden pro Wahl – danach wird zufällig gewählt.",
+        "Deine gespeicherten Decks bleiben unverändert."
+      ]
+    },
+    {
+      "id": "2v2",
+      "name": "2 gegen 2",
+      "short": "Zu viert, zwei Teams",
+      "description": "Zwei Teams mit je zwei Spielern teilen sich Türme und Spielhälfte. Jeder hat sein eigenes Deck und Elixier.",
+      "icon": "group",
+      "players": 4,
+      "teams": 2,
+      "multiplayerOnly": true,
+      "botsAllowed": false,
+      "deckSource": "saved",
+      "twoVsTwo": { "botTakeover": true, "pingCooldown": 2 },
+      "rules": [
+        "4 Spieler in 2 Teams. Jedes Team teilt sich Burgturm, zwei Wachtürme und die eigene Spielhälfte.",
+        "Jeder hat sein eigenes Deck, seine eigene Hand und eigenes Elixier.",
+        "Kein Eigenbeschuss – Heilung und Wut wirken auch auf deinen Teamkollegen.",
+        "Tippe und halte auf die Arena, um deinem Kollegen ein Zeichen zu geben.",
+        "Wer die Verbindung verliert und nicht zurückkommt, wird von einem Bot ersetzt."
+      ]
+    }
+  ]
+}
