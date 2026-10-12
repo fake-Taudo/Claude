@@ -236,6 +236,13 @@ async function runViewport(browser, url, vp, report) {
     await shot('einstellungen');
     await page.keyboard.press('Escape');
   });
+  await step('neuigkeiten', async () => {
+    await page.click('#menu-news');
+    await page.waitForSelector('.upd-modal');
+    await shot('neuigkeiten', { wait: 700 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  });
   await step('beitreten', async () => {
     await page.click('#btn-join');
     await page.waitForSelector('.join-code-input, [data-code-input]');

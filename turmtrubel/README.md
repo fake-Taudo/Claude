@@ -139,7 +139,8 @@ turmtrubel/
 ├─ client/js/net.js         WebSocket, Reconnect, Ping
 ├─ client/js/audio.js       Web-Audio-SFX + prozedurale Musik
 ├─ client/js/store.js       localStorage (Name, Einstellungen, 5 Deck-Plätze)
-├─ client/js/ui/…           Deck-Bauer (mit Drag-and-Drop), Kartenansicht, Einstellungen, DOM-Helfer (Modal, Toast), icons.js (SVG-Icon-Set), tokens.js
+├─ client/js/updates.js     Update-Verlauf für das Fenster „Neu in Turmtrubel“ (neuester Eintrag zuerst)
+├─ client/js/ui/…           Deck-Bauer (mit Drag-and-Drop), Kartenansicht, Einstellungen, updates.js (Update-Fenster), DOM-Helfer (Modal, Toast), icons.js (SVG-Icon-Set), tokens.js
 ├─ client/js/game/…         game.js (Interpolation, Eingabe, Effekt-Ereignisse), renderer.js, hud.js (Layout-Engine), hudart.js (HUD-Grafiken), canvastext.js, sprites.js
 ├─ client/js/design/…       Designsystem: Tokens, Easing, Licht-Modell, Sprite-Cache, Asset-Manifest
 ├─ client/js/vfx/…          VFX-Engine, Partikel-Texturen, presets.json (Effekt-Presets) und deren Prüfung
@@ -212,6 +213,12 @@ Nach Änderungen an `data/cards.json`, `data/rules.json` oder `data/skin.json` d
 **Fähigkeiten** (`ability`): `name`, `cost`, `uses` (Standard 1), `cooldown`, `castTime` und ein Effekt-Baustein, z. B. `cloak`, `vanish`, `dash`, `burrow`, `guard`, `souls`, `taunt`, `hurl`, `build`, `summon`, `flight`, `banner`, `warp`, `reroll`, `decoy`, `tripleShot`, `paratrooper`, `stance`, `dismount`, `frenzy`, `spin`, `link`, `pulses`, `pancakes`, `summonCharge`.
 
 **Aussehen:** Jede Truppe, jedes Token, jeder Spawner (Hütten, Grabstein, Käfig, Bohrer) und die Turmfiguren haben eine eigene Figur (Abschnitt „Figuren“). `look` beschreibt nur noch Zauber (`icon` + `color`) und Gebäude ohne Figur (`body`: `cannon`, `tesla`, `inferno`, `bombtower`, `mortar`, `ballista`, `pump`, `turret`) und liefert Effektfarben (`accent`). Fehlt beides, zeichnet der Client einen Platzhalter mit dem Kartennamen.
+
+### Update-Fenster
+
+Beim Öffnen des Spiels zeigt das Hauptmenü das Fenster „Neu in Turmtrubel“ mit den neuen Funktionen des letzten Updates (frühere Updates darunter aufklappbar). „X“ oder „Los geht's“ schließt es nur bis zum nächsten Öffnen; „Nicht mehr anzeigen bis zum nächsten Update“ speichert die Update-ID im Browser (`localStorage`, Schlüssel `turmtrubel.updates`). Über den Glitzer-Knopf oben im Hauptmenü lässt es sich jederzeit öffnen.
+
+**Bei jeder Änderung am Spiel** kommt ein neuer Eintrag oben in `client/js/updates.js` (neue, höhere `id`, z. B. `2026-10-12.2`) – dadurch erscheint das Fenster auch bei Spielern wieder, die es ausgeblendet hatten. `test/updates.test.js` prüft IDs, Reihenfolge und Icons. Unter Testautomatisierung (`navigator.webdriver`) öffnet es sich nicht von selbst; Screenshots öffnen es mit `window.turmtrubel.showUpdates()`.
 
 ### Figuren
 

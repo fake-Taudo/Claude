@@ -12,6 +12,7 @@ import { loadPresets } from './vfx/presets.js';
 import { drawTower } from './game/sprites.js';
 import { DeckBuilder } from './ui/deckbuilder.js';
 import { openSettings } from './ui/settings.js';
+import { showUpdates, updatesPending } from './ui/updates.js';
 import { applyBodyFlags, reducedMotion } from './ui/tokens.js';
 import { Game } from './game/game.js';
 import { initCharacters, prefetchAllFigures } from './characters/index.js';
@@ -171,6 +172,7 @@ class App {
 
     $('#menu-rename').addEventListener('click', () => this.openRename());
     $('#menu-settings').addEventListener('click', () => openSettings(this));
+    $('#menu-news').addEventListener('click', () => this.showUpdates());
     $('#btn-deckbuilder').addEventListener('click', () => this.deckBuilder.open(this.store.active));
     window.addEventListener('resize', () => {
       clearTimeout(this.stageTimer);
@@ -429,6 +431,18 @@ class App {
       this.pendingJoin = null;
       this.openJoin(code);
     }
+    // Update-Fenster: einmal pro Spielstart, nicht über einer Einladung und nicht unter Testautomatisierung
+    // (das Modal setzt #app inert; Werkzeuge öffnen es bei Bedarf über window.turmtrubel.showUpdates()).
+    if (!this.updatesSeen && !this.pendingJoin && !navigator.webdriver && updatesPending()) {
+      this.updatesSeen = true;
+      this.showUpdates();
+    }
+  }
+
+  /** „Neu in Turmtrubel“ öffnen (automatisch beim Start oder über den Glitzer-Knopf im Hauptmenü). */
+  showUpdates() {
+    this.updatesSeen = true;
+    return showUpdates();
   }
 
   /** „Du bist noch in einem Raum“ als Banner im Hauptmenü (statt Umweg über die Einstellungen). */
