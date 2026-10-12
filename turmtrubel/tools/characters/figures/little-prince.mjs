@@ -48,7 +48,8 @@ export default function littlePrince(F) {
   const leg = (name, foot, x, z) => {
     F.part(name, { bone: name, z }, (g) => {
       g.mat(limb(x, -16, x * 1.05, -5, 2, 1.8), '#fbf7ef', 'cloth');
-      g.mat(blob([[x - 4, -19], [x + 4, -19], [x + 4.6, -13], [x, -11.6], [x - 4.6, -13]], 0.6), '#e8d8b0', 'cloth', { hi: 0.4 });
+      // Pluderhose aus demselben Samt wie der Mantel
+      g.mat(blob([[x - 4.6, -19], [x + 4.6, -19], [x + 5.2, -12.6], [x, -10.6], [x - 5.2, -12.6]], 0.6), VELVET, 'cloth', { hi: 0.45 });
     });
     F.part(foot, { bone: foot, z: z + 1 }, (g) => {
       g.mat(path([[x - 2.6, -4], [x + 2.6, -4.4], [x + 6.4, -1.6], [x + 6.4, 0, 1], [x - 3, 0, 1]]), '#2a2030', 'leather', { hi: 0.6 });
@@ -64,11 +65,12 @@ export default function littlePrince(F) {
 
   // ───────── Samtmantel mit Hermelinkragen ─────────
   F.part('coat', { bone: 'torso', z: 20, zb: 20 }, (g) => {
-    const c = path([[-6, -32], [7, -32], [9, -22], [10, -14], [-8, -14], [-8, -22]]);
+    // Samtrock bis über die Pluderhose, Hermelinsaum unten
+    const c = path([[-7, -32], [8, -32], [10, -22], [11.4, -11.6], [-9.6, -11.6], [-9, -22]]);
     g.mat(c, VELVET, 'cloth', { hi: 0.45 });
     g.clipTo(c, (h) => {
-      h.fill(rrect(-9, -16.4, 20, 2.6, 0), ERMINE);
-      for (const x of [-6, -2, 2, 6]) h.fill(ellipse(x, -15, 0.5, 0.9), '#1a1a22', { lod: 1 });
+      h.fill(rrect(-10, -13.8, 22, 2.4, 0), ERMINE);
+      for (const x of [-6, -2, 2, 6]) h.fill(ellipse(x, -12.6, 0.5, 0.9), '#1a1a22', { lod: 1 });
       h.stroke(polyline([[4, -32], [4, -16]]), GOLD, 0.6, { lod: 1 });
     });
   });

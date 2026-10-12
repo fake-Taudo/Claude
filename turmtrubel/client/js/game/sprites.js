@@ -85,6 +85,11 @@ function drawSkinImage(ctx, src, x, y, h, alpha = 1) {
   return true;
 }
 
+/** Eigenes Bild aus skin.json (look.image), Fußpunkt (x, y), Höhe h. false, solange es lädt oder keins gesetzt ist. */
+export function drawLookImage(ctx, look, x, y, h, alpha = 1) {
+  return !!look?.image && drawSkinImage(ctx, look.image, x, y, h, alpha);
+}
+
 // ───────────── Zeichen-Grundlagen ─────────────
 function ell(c, x, y, rx, ry, rot = 0) {
   c.beginPath();
@@ -1411,7 +1416,10 @@ export function drawCardArt(ctx, db, card, x, y, w, h, opts = {}) {
     // Figur je Pick: skin.json „character“ ersetzt die Figur der eigenen Einheit
     const figOf = (p) => (p.mine && card.character && figureEntry(card.character) ? { figure: card.character } : figureForType(p.type));
     const first = figOf(picks[0]);
-    if (card.type === 'building' && !first) {
+    const ownLook = picks[0].mine ? picks[0].def.look : null;
+    if (ownLook?.image && drawLookImage(ctx, ownLook, cx, y + h * 0.9, h * 0.72)) {
+      // eigenes Bild aus skin.json ersetzt die Figur
+    } else if (card.type === 'building' && !first) {
       // Gebäude ohne Figur (Kanone, Tesla, …) bleiben beim Gebäude-Baukasten
       drawBuilding(ctx, picks[0].def.look || {}, { ...base, x: cx, y: y + h * 0.78, U: Math.min(w, h) * 0.3, aim: -0.4 });
     } else {

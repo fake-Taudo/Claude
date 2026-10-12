@@ -39,7 +39,8 @@ export default function lumberjack(F) {
   };
   const WOOD = '#a8763e';
   const RAGE = '#c45cff';
-  const PANTS = '#4a5266';
+  // Arbeitshose im Schattenton des Hemds: das Grün trägt die Figur auch unter dem Bart
+  const PANTS = '#295441';
   const BOOT = '#5a3a22';
 
   F.rig('biped', {
@@ -100,7 +101,8 @@ export default function lumberjack(F) {
   const leg = (name, foot, x, z) => {
     F.part(name, { bone: name, z, form: 'base' }, (g) => {
       g.mat(limb(x, -41, x * 1.1, -9, 5.2, 4.4), PANTS, 'cloth');
-      g.mat(rrect(x * 1.05 - 3.4, -26, 6.8, 6.4, 1.4), '#7a6a4a', 'cloth', { lod: 1 });
+      // Knieflicken aus Hemdstoff
+      g.mat(rrect(x * 1.05 - 3.6, -27, 7.2, 7.4, 1.4), BASE.shirt, 'cloth', { lod: 1 });
       g.lod(2, (h) => stitches(h, [[x * 1.05 - 3, -26.4], [x * 1.05 + 3, -26.4]], '#c8b890'));
     });
     F.part(foot, { bone: foot, z: z + 1, form: 'base' }, (g) => {
@@ -122,8 +124,9 @@ export default function lumberjack(F) {
 
   // ───────── Hinterer Arm ─────────
   two('armB', { bone: 'armB', z: 10, zb: 42 }, (g, C) => {
+    // lange Hemdsärmel (das Karohemd trägt die Hauptfarbe auch neben dem Bart)
     g.mat(limb(-8, -67, -9, -58, 4.8, 4.6), C.shirt, 'cloth');
-    g.mat(limb(-9, -57, -10, -46, 3.8, 3.4), C.skin, 'skin');
+    g.mat(limb(-9, -57, -10, -47, 4.4, 4), C.shirt, 'cloth');
     g.mat(rrect(-14, -60, 9.6, 4, 1.6), C.shirtD, 'cloth');
   });
   two('handB', { bone: 'handB', z: 11, zb: 43 }, (g, C) => g.mat(circle(-10, -44, 3.4), C.skin, 'skin'));
@@ -133,8 +136,8 @@ export default function lumberjack(F) {
     const t = path([[-10, -67], [-2, -69.6], [7, -69.6], [11, -67], [12, -52], [11, -40], [-10, -40], [-11, -52]]);
     g.mat(t, C.shirt, 'cloth');
     g.clipTo(t, (h) => {
-      for (let x = -10; x < 13; x += 5) h.fill(rrect(x, -70, 2, 32, 0), C.shirtD, { op: 0.6, lod: 1 });
-      for (let y = -68; y < -40; y += 5) h.fill(rrect(-12, y, 26, 2, 0), C.shirtD, { op: 0.45, lod: 1 });
+      for (let x = -10; x < 13; x += 5) h.fill(rrect(x, -70, 2, 32, 0), C.shirtD, { op: 0.22, lod: 1 });
+      for (let y = -68; y < -40; y += 5) h.fill(rrect(-12, y, 26, 2, 0), C.shirtD, { op: 0.16, lod: 1 });
       for (let x = -9; x < 13; x += 5) h.stroke(polyline([[x, -70], [x, -40]]), C.check, 0.4, { lod: 2 });
       for (let y = -66.4; y < -40; y += 5) h.stroke(polyline([[-12, y], [14, y]]), C.check, 0.4, { lod: 2 });
     });
@@ -242,7 +245,7 @@ export default function lumberjack(F) {
   // ───────── Vorderer Arm mit hochgekrempeltem Ärmel ─────────
   two('armF', { bone: 'armF', z: 29, zb: 6 }, (g, C) => {
     g.mat(limb(11, -67, 14, -58, 4.8, 4.6), C.shirt, 'cloth');
-    g.mat(limb(14, -57, 18, -48, 3.8, 3.4), C.skin, 'skin');
+    g.mat(limb(14, -57, 18, -49, 4.4, 4), C.shirt, 'cloth');
     g.mat(rrect(9.6, -61, 9.6, 4, 1.6).rot(18, 14, -59), C.shirtD, 'cloth');
     g.lod(2, (h) => lines(h, [[[15, -54], [16.4, -53]], [[16, -51], [17.4, -50]]], C.skinD, 0.4, 2));
   });

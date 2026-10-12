@@ -267,7 +267,7 @@ Blau (eigene Seite) und Rot (Gegner) liegen **nie über der ganzen Figur**.
 | `data-evo` | `base` (nur ohne Evo) oder `evo` (nur Evo) |
 | `data-form` | gehört zu einer Form (`cannon`, `egg`, `reborn`, `kamikaze`, `ghost`, `decoy`); Teile ohne Angabe gehören zur Grundform |
 | `data-variant` | Schwarm-Variante 0, 1, 2 … |
-| `data-lod` | 0 (immer, Standard), 1 (ab 46 Gerätepixel Figurhöhe), 2 (ab 110 Gerätepixel, feinste Details) |
+| `data-lod` | 0 (immer, Standard), 1 (ab 60 Gerätepixel Figurhöhe), 2 (ab 110 Gerätepixel, feinste Details) |
 | `data-team="1"` | enthält Teamfarben-Platzhalter |
 | `data-team-only` | nur für `blue` oder `red` (Teamsymbol) |
 | `data-sig="1"` | gehört zum Signature-Element (Kleingrößen-Test) |
@@ -386,6 +386,9 @@ Suffix **B** = hinten (weiter vom Betrachter), **F** = vorn.
   - Wechsel zwischen Schleifen (`idle` ↔ `walk`) beginnen in der passenden Phase, damit nichts springt.
   - Ein abgebrochenes Ausholen (Ziel tot) läuft über 0,15 s zurück.
 - **Fortlaufend beim Kopieren (nicht gebacken):** Wippen, Atmen, Squash beim Landen, Rückstoß und Treffer-Aufhellen werden beim Kopieren angewendet. Die Bewegung bleibt so auch zwischen gebackenen Bildern flüssig.
+- **Ruhepose `rest`:** `F.anim({ rest: { knochen: { r|x|y: Wert } } })` addiert eine feste Grundhaltung zu jedem Zustand (z. B. abgespreizte Arme des Riesenskeletts). Die Silhouetten-Prüfung misst diese Pose.
+- **`ground: false`** in einem Zustand heißt: Er verlässt den Boden absichtlich (Eingraben, Sprung). Die Fußprüfung (§10) lässt ihn aus.
+- **Stetigkeit:** Jede Pose ist eine stetige Funktion der Zeit; auch die Landung beim Erscheinen geht in 5 % der Dauer von der Fallpose in die Stauchung über. Schleifen enden mit denselben Werten, mit denen sie beginnen. Das Prüfskript sucht Sprünge einzelner Teile (§10).
 
 ### 9.6 Event-Namen (Hooks für das VFX-System)
 
@@ -419,8 +422,9 @@ Fehlt alles, entsteht kein Effekt. Das Manifest kann pro Figur eigene Zuordnunge
 | `figureForType(typeId, evo)` | Spieltyp → `{ figure, form, evo }` (berücksichtigt `skin.json → character`) |
 | `drawCharacter(ctx, o)` | zeichnet eine Figur. Rückgabe: Bildschirmpunkte für LP-Balken, Trefferpunkt und Mündung. |
 | `CharacterAnimator` | pro Einheit: leitet Zustand und Zeit aus Flags, Ereignissen und Bewegung ab, feuert Events |
-| `bakeTick(budgetMs)` | backt vorgemerkte Bilder innerhalb des Frame-Budgets |
+| `bakeTick()` | zu Beginn jedes Frames: Budget aus der Bildrate bestimmen, vorgemerkte Bilder backen |
 | `characterStats()` | Atlanten, gebackene Bilder, Speicher, Live-Zeichnungen (für Bench und Prüfskript) |
+| `characterFrame(o)`, `figurePose(o)`, `figureParts(id)`, `stateInfo(id, state)` | Prüf-Schnittstellen: ein Bild ohne Atlas backen (mit `u` und `hide: 'sig' \| 'team' \| 'teamOnly'`), Teilboxen einer Pose ohne Rastern, Teile mit Merkmalen, abgespielter Zustand mit Bildzahl |
 
 Optionen von `drawCharacter`:
 
@@ -439,6 +443,11 @@ Optionen von `drawCharacter`:
 2. Fehlt es und ist das Bau-Budget erschöpft, nimmt die Laufzeit das nächstgelegene schon gebackene Bild desselben Zustands, sonst `idle`.
 3. Erst wenn auch das fehlt, zeichnet sie die Figur einmal live aus den Vektorteilen. Eine Figur ist also nie unsichtbar.
 
+**Bau-Budget:**
+- Das Budget der Stufe (§9.8) gilt bei flüssiger Bildrate. Ist der geglättete Frame länger als 19 ms, sinkt es auf 75 %, über 25 ms auf 50 %.
+- Nicht verbrauchtes Budget bleibt bis zu zwei Frames als Guthaben stehen. Zwangsbacken (eine Figur ohne jedes Notbild) läuft über das Budget hinaus und wird in den folgenden Frames abgestottert. Im Mittel backt ein Frame so höchstens sein Budget.
+- Beim ersten Auftauchen eines Zustands werden die übrigen Bilder in Van-der-Corput-Reihenfolge vorgemerkt (Mitte, Viertel, Dreiviertel …). Schon zwei oder drei gebackene Bilder ergeben so eine grobe Bewegung.
+
 ### 9.8 Qualitäts- und Detailstufen
 
 | Stufe | Bilder pro Zustand | Detailstufe | Auflösung | Atlas | Speicherbudget | Bau-Budget pro Frame |
@@ -447,16 +456,32 @@ Optionen von `drawCharacter`:
 | Mittel | mittlerer Wert | bis 2 | 100 % | 512² | 24 MB | 4 ms |
 | Hoch | höchster Wert | bis 2 | 100 % | 512² | 48 MB | 5 ms |
 
+**Detailstufen (LOD):** Stufe 1 ab 60, Stufe 2 ab 110 Gerätepixeln Figurhöhe (`LOD` in `system.mjs`, über das Manifest gelesen). Stufe 0 backt flach (ohne Verläufe, Tiefe, Glanz und Rim-Light) und kostet etwa die Hälfte. In Stufe 1 und 2 bekommen nur Flächen ab etwa 5 × 5 Pixeln Tiefe und Glanz.
+
 **Auflösung und Wechsel:**
 - Gebacken wird für die aktuelle Pixelgröße der Figur (Feldgröße × Höhe × Gerätepixel).
-- Nur die automatische Qualität des Spiels wechselt die Stufe.
+- Nur die automatische Qualität des Spiels wechselt die Stufe: Sie senkt zuerst die Auflösung, dann die Effektmenge, zuletzt die Figuren-Stufe (Hoch → Mittel → Niedrig) und hebt sie bei flüssigem Lauf in umgekehrter Reihenfolge wieder an. Die Stufe ist Teil des Bildschlüssels.
 - Atlanten werden seitenweise nach LRU geleert.
 - Atlasseiten sind bewusst klein (512²): Jedes Schreiben in eine Seite lässt den Browser die ganze Seite neu hochladen. Bei 2048²-Seiten kostete das in der Extremszene 30–60 ms pro Frame (gemessen im Pilot, siehe docs/CHAR_REPORT.md).
-- Fehlt ein Bild, nimmt die Laufzeit zuerst eines derselben Ansicht und Variante, dann eines aus anderer Ansicht oder Variante desselben Teams. Über dem Budget wird pro Frame höchstens ein solches Notbild ersetzt.
+- Fehlt ein Bild, nimmt die Laufzeit zuerst das nächstgelegene desselben Zustands, dann eines derselben Ansicht und Variante, dann eines aus anderer Ansicht oder Variante desselben Teams. Über dem Budget wird pro Frame höchstens ein solches Notbild aus anderer Ansicht ersetzt, und nur bei flüssiger Bildrate.
 
 ## 10. Prüfung
 
 | Werkzeug | Prüft |
 |---|---|
 | `node tools/characters/gen-docs.mjs --check` | Roster vollständig, Matrix-Regel, Signature- und Proportions-Eindeutigkeit, alle Farbregeln |
-| `npm run check:characters` (Phase 6) | Contact Sheet, Silhouetten-IoU, Farbtest, 40-px-Test mit Signature-Fläche, Team-Test (Blau/Rot, Graustufen, Farbenblind-Simulation, Teamfläche ≤ 25 %), Animationstest (Anker, Ränder, Sprünge), Performance (60 Einheiten plus Zauber), Eigenständigkeits-Review |
+| `npm run check:characters` (Phase 6, `tools/characters/check.mjs`) | Contact Sheet, Silhouetten-IoU, Farbtest, 40-px-Test mit Signature-Fläche, Team-Test (Blau/Rot, Graustufen, Farbenblind-Simulation, Teamfläche ≤ 25 %), Animationstest (Anker, Ränder, Sprünge), Performance (60 Einheiten plus Zauber), Eigenständigkeits-Review |
+
+**Schwellen des Prüfskripts** (`CHECK` in `system.mjs`):
+
+| Prüfung | Fehler, wenn … |
+|---|---|
+| Silhouette | IoU zweier unverwandter Figuren im Ruhebild (50 px pro Feld, Fußpunkte deckungsgleich) ≥ 0,80; verwandte Paare (Held ↔ Basis …) ≥ 0,97 (deckungsgleich). Hinweis ab 0,70 bzw. höhennormiert ab 0,85. |
+| Farbe | eine Farbregel aus §5 oder eine Matrix-Regel verletzt ist; gerendert weniger als 15 % der Eigenfarbfläche (ohne Kontur und Teamzonen) nahe der Materialrampe der Hauptfarbe liegen (ΔE2000 ≤ 10). Hinweis unter 1 % Akzentfarbe. |
+| 40 px | eine Figur keine Signature-Teile hat oder deren Ausblenden bei 40 px Höhe auf Arena-Gras weniger als 20 Pixel sichtbar ändert. Hinweis unter 4 % der Figurfläche. |
+| Team | die Teamfläche (Blau ≠ Rot) unter 3 % oder über 25 % liegt; das Teamsymbol im Ruhebild weniger als 8 px hat, sich in Graustufen auf weniger als 8 px unterscheidet oder im Farbenblind-Modus nicht mindestens 1,4-fach wächst; unter Protanopie, Deuteranopie oder Tritanopie (Machado 2009) weniger als 60 % der Teamfläche unterscheidbar bleiben. |
+| Animation | ein gebackenes Bild am Rand deckende Pixel hat; ein Teil zwischen zwei von 64 Posen je Zustand mehr als 6 % der Ruhehöhe wandert und sich bei Halbierung des Abstands nicht unter 4 % beruhigt (Unstetigkeit); die Füße einer Bodenfigur in Ruhe mehr als 6 mu neben dem Fußpunkt liegen, in einem Zustand mehr als 6 mu tiefer sinken oder in Ruhe und beim Laufen nie den Boden berühren. Einstieg aus der Ruhepose > 40 % der Höhe: Hinweis. |
+| Performance | die Szene weniger als 60 Einheiten erreicht, der Desktop (CPU 1×) unter 55 FPS oder das Handy (CPU 4× gedrosselt) unter 30 FPS bleibt, Konsolenfehler auftreten oder die automatische Qualität unter Last nicht absenkt. |
+| Review | – (nur Hinweise: „generisch?“ bei mindestens zwei Nähe-Signalen) |
+
+Ergebnisse: `docs/char_check.md` (lesbar), `docs/char_check.json` (Rohdaten), `docs/char_check/*.png` (Bögen), `docs/contact_sheet.png`. Teilläufe (`--only`, `--ids`, `--skip`) schreiben ins Temp-Verzeichnis, außer mit `--out`.

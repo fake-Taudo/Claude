@@ -10,6 +10,7 @@ import { buildAll } from './build.mjs';
 import { openLab } from './lab.mjs';
 import { figureById } from './figures.mjs';
 import { FAMILIES, STATES, sizeOfHeight } from './system.mjs';
+import { toPngRgb } from './png.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -92,9 +93,9 @@ export async function contactSheet(lab, ids, o = {}) {
         g.beginPath();
         g.rect(X + 4, Y + 34, TW - 8, TH - 38);
         g.clip();
-        draw(g, f, X + 128, Y + 262, Math.min(72, 210 / (e?.height || f.h)));
+        draw(g, f, X + 128, Y + 262, Math.min(62, 210 / (e?.height || f.h)));
         // Spalte: Rot, Rückansicht, Angriff, Evo/Variante
-        const small = 38;
+        const small = 34;
         const evo = !!e?.evo;
         const extra = evo ? { evo: true, label: 'Evo' } : e?.variants > 1 ? { variant: 1, label: 'Variante' } : e?.views?.includes('back') ? { view: 'back', team: 'red', label: 'Rot hinten' } : { state: 'walk', t: 0.25, label: 'Laufen' };
         const hitT = e?.anim?.attack?.hit ?? 0.55;
@@ -155,7 +156,8 @@ export async function contactSheet(lab, ids, o = {}) {
     },
     { tiles, cols: o.cols || 3, title: o.title || 'Turmtrubel – Figuren', stateNames },
   );
-  return Buffer.from(url.split(',')[1], 'base64');
+  // deckendes RGB mit 6 Bit pro Kanal: sichtbar gleich, etwa halbe Dateigröße
+  return toPngRgb(Buffer.from(url.split(',')[1], 'base64'), 6);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -68,7 +68,7 @@ export default function dartGoblin(F) {
     g.mat(path([[-8, -22], [-6, -34], [2, -40], [8, -36], [4, -24], [-2, -20]]), SKIN, 'skin', { hi: 0.4 });
     g.lod(1, (h) => lines(h, [[[-4, -30], [0, -28]], [[-3, -26], [1, -24]]], SKIN_D, 0.6, 1));
   });
-  F.part('loin', { bone: 'hip', z: 21, zb: 21 }, (g) => g.mat(path([[-9, -24], [5, -24], [6, -14], [0, -16], [-4, -12], [-9, -16]]), CLOTH, 'cloth', { hi: 0.4 }));
+  F.part('loin', { bone: 'hip', z: 21, zb: 21 }, (g) => g.mat(path([[-10, -25], [6, -25], [7.6, -11], [0, -13.4], [-5, -9], [-10.6, -13]]), CLOTH, 'cloth', { hi: 0.4 }));
   F.part('collar', { bone: 'torso', z: 22, zb: 22 }, (g) => {
     for (let i = 0; i < 5; i++) g.mat(ellipse(-4 + i * 2.6, -38 + i * 0.6, 1.4, 3.4, -20 + i * 10), i % 2 ? YELLOW : CLOTH, 'cloth');
   });
@@ -135,7 +135,7 @@ export default function dartGoblin(F) {
     g.fill(circle(1, -44, 1), '#1a1a1a');
     g.fill(circle(-3, -42, 0.8), '#1a4aff', { lod: 1 });
   });
-  emblem(F, 'emblem', 'hip', 22, -3, -18, 1.6, { zb: 22 });
+  emblem(F, 'emblem', 'hip', 22, -2, -18.6, 2.3, { zb: 22 });
 
   F.anim({
     // pustet Staub aus dem Rohr, schielt

@@ -112,7 +112,11 @@ export default function megaKnight(F) {
     g.stroke(polyline([[4, -100], [4, -94]]), IRON, 1.6);
     g.mat(circle(4, -92, 3.6), IRON, 'metal');
   });
-  F.part('helmBand', { bone: 'head', z: 30.5, zb: 34.5, team: true }, (g) => g.mat(path([[-16, -110], [24, -110], [25, -105], [-18, -105]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.6 }));
+  F.part('helmBand', { bone: 'head', z: 30.5, zb: 34.5, team: true }, (g) => {
+    g.mat(path([[-17, -112], [25, -112], [26, -103], [-19, -103]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.6 });
+    // Helmbusch-Bänder hinten am Glockenrand
+    g.mat(path([[-17, -110], [-30, -104], [-34, -94], [-26, -97], [-22, -90], [-18, -104]]), P.teamShade, 'cloth', { line: P.teamDeep, lw: 0.5 });
+  });
   F.part('evoBell', { bone: 'hat', z: 33, zb: 35, evo: 'evo' }, (g) => {
     g.mat(path([[-26, -128, 1], [-24, -136], [-18, -142], [-12, -136], [-10, -128, 1]]), BRONZE, 'gold', { hi: 0.9 });
     g.stroke(circle(-18, -144, 2), '#8a5a28', 1);
@@ -142,6 +146,8 @@ export default function megaKnight(F) {
   emblem(F, 'emblem', 'torso', 23, -20, -68, 3.2, { view: 'front' });
 
   F.anim({
+    // Ruhepose: Arme abgespreizt, die Kugelfäuste hängen weit neben dem Körper (breiter Glocken-Umriss)
+    rest: { armF: { r: -12 }, armB: { r: 12 } },
     // lässt die Kugelfäuste aneinanderklacken; die Glocke summt beim Atmen
     idle: { p: { breathe: 0.03, bob: 1.2, sway: 1, tilt: 1 }, keys: { armF: { r: [[0, 0], [0.4, 0], [0.5, 22], [0.6, 0]] }, armB: { r: [[0, 0], [0.4, 0], [0.5, -16], [0.6, 0]] } } },
     // stampfender Gang, der Boden bebt

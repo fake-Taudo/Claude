@@ -178,8 +178,8 @@ npm run cards                     # data/cards.json + TODO_missing_stats.md aus 
 
 `data/skin.json` legt fest, welche Namen, Beschreibungen und Grafiken angezeigt werden:
 
-* `"active": "original"` (Standard): Namen und Aussehen aus `cards.json`, also die echten Kartennamen mit den eigenen prozeduralen Figuren.
-* `"active": "custom"`: eigene Inhalte. Für jede Karte und jedes Token gibt es einen Eintrag mit `name`, `description`, `look` (Baukasten, z. B. `{"cloth": "#2e86c1"}`), optional `image` (eigenes Bild unter `client/`, z. B. `"/img/skin/knight.png"`) sowie `evo`/`ability` mit `name` und `description`. **Leere Felder fallen auf das Original zurück.** Werte (Leben, Schaden …) ändert ein Skin nie.
+* `"active": "original"` (Standard): Namen und Aussehen aus `cards.json`, also die echten Kartennamen mit den eigenen Figuren (Vektor-Modelle, siehe unten „Figuren“).
+* `"active": "custom"`: eigene Inhalte. Für jede Karte und jedes Token gibt es einen Eintrag mit `name`, `description`, optional `character` (eine andere Figur aus dem Figuren-Manifest, z. B. `"valkyrie"`; gilt für Truppen und Gebäude, nicht für Zauber), `look` (Baukasten für Zauber-Icons und Gebäude ohne Figur, z. B. `{"cloth": "#2e86c1"}`), `image` (eigenes Bild unter `client/`, z. B. `"/img/skin/knight.png"`; ersetzt Figur bzw. Icon) sowie `evo`/`ability` mit `name` und `description`. **Leere Felder fallen auf das Original zurück.** Werte (Leben, Schaden …) ändert ein Skin nie.
 
 Umschalten über `active` oder per Umgebungsvariable: `SKIN=custom npm start`.
 
@@ -211,7 +211,20 @@ Nach Änderungen an `data/cards.json`, `data/rules.json` oder `data/skin.json` d
 
 **Fähigkeiten** (`ability`): `name`, `cost`, `uses` (Standard 1), `cooldown`, `castTime` und ein Effekt-Baustein, z. B. `cloak`, `vanish`, `dash`, `burrow`, `guard`, `souls`, `taunt`, `hurl`, `build`, `summon`, `flight`, `banner`, `warp`, `reroll`, `decoy`, `tripleShot`, `paratrooper`, `stance`, `dismount`, `frenzy`, `spin`, `link`, `pulses`, `pancakes`, `summonCharge`.
 
-**Aussehen** (`look`): `body` (`hum`, `imp`, `skel`, `brute`, `golem`, `bot`, `moth`, `bug`, `winged`, `dragon`, `balloon`, `whale`, `spirit`, `rider`, `blob`, `barrel`, `cart`, `ghost`, `hog`, `bush`, `machine`, `wagon` bzw. Gebäude wie `cannon`, `tesla`, `inferno`, `cage`, `drill`, `bombtower` …), `hat`, `weapon`, `shield`, `cape`, `beard`, `mount`, Farben (`skin`, `cloth`, `accent`), `scale`, `hero`; Zauber `icon` + `color`. Fehlt ein Look, zeichnet der Client einen Platzhalter mit dem Kartennamen.
+**Aussehen:** Jede Truppe, jedes Token, jeder Spawner (Hütten, Grabstein, Käfig, Bohrer) und die Turmfiguren haben eine eigene Figur (Abschnitt „Figuren“). `look` beschreibt nur noch Zauber (`icon` + `color`) und Gebäude ohne Figur (`body`: `cannon`, `tesla`, `inferno`, `bombtower`, `mortar`, `ballista`, `pump`, `turret`) und liefert Effektfarben (`accent`). Fehlt beides, zeichnet der Client einen Platzhalter mit dem Kartennamen.
+
+### Figuren
+
+Die 130 Figuren entstehen aus Vektor-Quellen und werden im Spiel je Zustand gebacken (System und Regeln: `docs/CHAR_SYSTEM.md`, Ergebnis: `docs/CHAR_REPORT.md`, alle Figuren: `docs/contact_sheet.png`).
+
+```bash
+node tools/characters/build.mjs [id …]          # Figuren-Quellen (tools/characters/figures/) → client/assets/characters/ + manifest.json
+node tools/characters/gen-docs.mjs              # Matrix, system.json und Design-Briefs aus tools/characters/figures.mjs
+npm run check:characters                        # acht Prüfungen (Silhouette, Farbe, 40 px, Team, Animation, Performance …) → docs/char_check.md
+node tools/characters/check.mjs --only team --ids knight,archers   # Teilprüfung (Ausgabe im Temp-Verzeichnis)
+node tools/characters/lab.mjs knight --states idle,walk,attack --frames 6 --out /tmp/knight.png   # Zustände als Bildbogen
+node tools/characters/contact.mjs knight archers --out /tmp/cs.png   # Contact-Sheet-Kacheln einzelner Figuren
+```
 
 **Regeln** (`data/rules.json`): Spielzeit, Verlängerung, Doppel-Elixier-Phase, Elixierwerte, Turmwerte, `cardLevel`, Code-Gültigkeit (600 s), Reconnect-Fenster (30 s), Countdown, Emote-Abklingzeit, Einheitenlimit. `suddenDeath` steht standardmäßig auf `"firstCrown"` (erster zerstörter Turm gewinnt, wie im Vorbild); mit `"firstHit"` gewinnt der erste Treffer auf einen Kronenturm.
 
@@ -264,7 +277,7 @@ Playwright ist **keine** Projektabhängigkeit (damit `npm install` schlank bleib
 * **Keine Vorhersage beim Platzieren:** Eigene Karten erscheinen erst nach der Server-Bestätigung (Ping + ca. 110 ms Interpolationspuffer). Bis dahin ist eine Vorschau sichtbar.
 * **Netzlast:** Snapshots werden jeden Tick komplett als JSON gesendet (typisch 0,5–6 KB), ohne Delta-Kompression. Das reicht für LAN und normales Internet, ist aber nicht optimiert.
 * **Anti-Cheat** prüft alle Eingaben auf dem Server. Gegen automatisierte Clients (Bots), die gültige Eingaben senden, schützt er nicht.
-* **Grafik vollständig prozedural:** Figuren, Türme, HUD und Effekte sind als Vektorgrafik im Code gezeichnet (Licht-Modell und Regeln in `docs/STYLE_GUIDE.md`) und werden als Sprites gecacht. Auf sehr alten Geräten hilft *Grafikqualität: Niedrig*; die automatische Qualität senkt bei Ruckeln Auflösung und Effektmenge.
+* **Grafik vollständig prozedural:** Figuren sind Vektor-Modelle mit Skelett-Animation (Quellen in `tools/characters/figures/`), die je Zustand in Atlanten gebacken werden; Türme, HUD und Effekte sind als Vektorgrafik im Code gezeichnet (Licht-Modell und Regeln in `docs/STYLE_GUIDE.md`). Auf sehr alten Geräten hilft *Grafikqualität: Niedrig*; die automatische Qualität senkt bei Ruckeln Auflösung, Effektmenge und zuletzt die Figuren-Stufe. Tauchen sehr viele verschiedene Figuren gleichzeitig zum ersten Mal auf, zeigen sie für einige Sekunden weniger Animationsbilder, bis alles gebacken ist (`docs/CHAR_REPORT.md`, Performance).
 * **Audio:** Browser (besonders iOS) starten Ton erst nach der ersten Berührung. Musik und Effekte sind synthetisch.
 * **Oberfläche:** Im Hochformat erscheint der Hinweis-Toast (z. B. „Nicht genug Elixier!“) für 1,4 s am unteren Arenarand über dem eigenen Burgturm. Vibration gibt es nur, wo der Browser `navigator.vibrate` anbietet (nicht auf iOS). Die Performance ist bisher nur in Chromium ohne GPU gemessen (siehe `docs/REPORT.md`, Abschnitt 4).
 * **Designentscheidungen:** Champions und Helden lösen ihre Fähigkeit per Knopf aus. Evo-Karten starten ungeladen (`evo.startCharged` in `rules.json`). Die Turmnamen (Wachturm, Burgturm) sind eigenständig, die Kartennamen kommen aus dem Original (umschaltbar über `skin.json`).

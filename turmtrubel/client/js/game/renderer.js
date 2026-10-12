@@ -1,7 +1,7 @@
 // Zeichnet Arena, Zauberzonen, Einheiten, Projektile, Effekte und Platzierungsvorschau.
 import { ARENA_W, ARENA_H, RIVER_Y0, RIVER_Y1, BRIDGES, TOWER_SLOTS, placementRects } from '/shared/arena.js';
 import { EF, EMOTES } from '/shared/protocol.js';
-import { drawBuilding, drawTower, drawEmoteFace, drawSpellIcon, TEAM, OUTLINE, shade } from './sprites.js';
+import { drawBuilding, drawTower, drawEmoteFace, drawSpellIcon, drawLookImage, TEAM, OUTLINE, shade } from './sprites.js';
 import { FONT, text as ctext, tnum, rr as rrect } from './canvastext.js';
 import { softShadow, softGlow } from '../design/light.js';
 import { LIGHT } from '../design/tokens.js';
@@ -603,7 +603,7 @@ export class Renderer {
     const label = v.info?.label;
     if (v.kind === 'building') {
       // Spawner-Gebäude mit Figur (Hütten, Grabstein, Käfig, Bohrer, Phönix-Ei); Basis wie beim Gebäude-Baukasten
-      if (v.fig) {
+      if (v.fig && !v.look?.image) {
         this.drawFigure(ctx, v, t, team, 0, alpha, v.half * s * 0.35);
         return;
       }
@@ -623,7 +623,10 @@ export class Renderer {
     const landK = t - v.born - 0.28;
     const squash = landK > 0 && landK < 0.2 ? Math.sin((landK / 0.2) * Math.PI) * 0.6 : 0;
     // Neue Figur; solange ihre Vektorquelle lädt, bleibt die Stelle leer (Schatten und Balken stehen schon)
-    if (v.fig) this.drawFigure(ctx, v, t, team, lift, alpha, 0, squash);
+    // eigenes Bild aus skin.json (look.image) ersetzt die Figur
+    if (v.look?.image && drawLookImage(ctx, v.look, v.sx, v.sy - lift, s * 1.9, alpha)) {
+      // gezeichnet
+    } else if (v.fig) this.drawFigure(ctx, v, t, team, lift, alpha, 0, squash);
     if (f & EF.CLONE && quality > 0) {
       ctx.save();
       ctx.globalAlpha = 0.5;

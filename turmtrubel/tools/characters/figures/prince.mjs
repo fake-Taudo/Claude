@@ -94,6 +94,12 @@ export default function prince(F) {
   F.part('neck', { bone: 'body', z: 14, zb: 14 }, (g) => {
     g.mat(path([[16, -66], [26, -84], [36, -98], [46, -96], [42, -84], [36, -64], [30, -52], [18, -54]]), GREY, 'fur', { hi: 0.3 });
   });
+  // Halsplatten im Froschgrün des Helms (Rossharnisch)
+  F.part('crinet', { bone: 'body', z: 14.2, zb: 14.2 }, (g) => {
+    const c = path([[19, -60], [27, -78], [37, -93], [44, -91], [40, -79], [34, -61], [29, -53], [20, -55]]);
+    g.mat(c, FROG, 'metal', { hi: 0.6 });
+    g.clipTo(c, (h) => h.lod(1, (k) => lines(k, [[[22, -66], [36, -70]], [[26, -76], [40, -80]], [[31, -86], [43, -89]]], '#4f6846', 0.8, 1)));
+  });
   F.part('mane', { bone: 'body', z: 14.5, zb: 14.5 }, (g) => {
     const pts = [[18, -68]];
     for (let i = 0; i <= 6; i++) pts.push([20 + i * 3.6 - 2.6, -70 - i * 4.6], [20 + i * 3.6 + 1.6, -66 - i * 4.6, 1]);
@@ -104,6 +110,10 @@ export default function prince(F) {
     g.mat(path([[34, -100], [44, -104], [54, -96], [62, -84], [63, -76], [57, -72], [48, -76], [38, -86]]), GREY, 'fur', { hi: 0.35 });
     g.mat(ellipse(59, -77, 4.4, 4), '#c8c4bc', 'skin', { line: '#8a867e', lw: 0.6 });
     g.fill(ellipse(60.6, -77.4, 1, 1.4), '#4a4440', { lod: 1 });
+  });
+  // Stirnplatte (Chanfron) im Froschgrün mit Goldrand
+  F.part('chanfron', { bone: 'head', z: 20.5, zb: 20.5 }, (g) => {
+    g.mat(path([[39, -97], [47, -102], [55, -93], [59, -82], [54, -79], [45, -88]]), FROG, 'metal', { hi: 0.7, line: '#a8862e' });
   });
   F.part('bridle', { bone: 'head', z: 21, zb: 21 }, (g) => {
     g.stroke(polyline([[42, -98], [52, -78], [60, -80]]), LEATHER, 1.2);

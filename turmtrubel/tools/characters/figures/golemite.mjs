@@ -56,6 +56,8 @@ export default function golemite(F) {
 
   // ───────── Hinterer Steinarm ─────────
   F.part('armB', { bone: 'armB', z: 9, zb: 42, state: LIVE }, (g) => g.mat(limb(-19, -52, -24, -36, 5.4, 5), GRANITE_D, 'stone'));
+  // Armband auch am hinteren Arm (dieselbe Teamzone)
+  F.part('armbandB', { bone: 'armB', z: 9.5, zb: 42.5, team: true, state: LIVE }, (g) => g.mat(path([[-27, -47], [-16.6, -48.6], [-15.8, -41.4], [-26.4, -39.6]]), P.teamShade, 'cloth', { line: P.teamDeep, lw: 0.5 }));
   F.part('handB', { bone: 'handB', z: 10, zb: 43, state: LIVE }, (g) => g.mat(blob([[-30, -36], [-20, -37], [-18, -28], [-24, -24], [-31, -28]], 0.5), GRANITE_D, 'stone', { hi: 0.4 }));
 
   // ───────── Säulenschaft mit Kannelur und Bruchkante unten ─────────
@@ -82,13 +84,13 @@ export default function golemite(F) {
   // ───────── Kapitell-Kopf mit Voluten (Signature), abgebrochene Ecke ─────────
   F.part('capital', { bone: 'head', z: 30, zb: 30, sig: true, state: LIVE }, (g) => {
     // Echinus (Wulst) zwischen den Voluten
-    g.mat(path([[-18, -62, 1], [22, -62, 1], [24, -70], [20, -76], [-16, -76], [-20, -70]]), GRANITE, 'stone', { hi: 0.4 });
-    // Abakus-Platte, hinten abgebrochen
-    const ab = path([[-14, -77, 1], [-10, -84, 1], [-6, -80, 1], [-2, -86, 1], [30, -86, 1], [30, -77, 1]]);
+    g.mat(path([[-20, -62, 1], [24, -62, 1], [28, -70], [24, -76], [-18, -76], [-24, -70]]), GRANITE, 'stone', { hi: 0.4 });
+    // Abakus-Platte, hinten abgebrochen: breiter als der Säulenrumpf (T-Silhouette)
+    const ab = path([[-18, -77, 1], [-13, -85, 1], [-8, -80, 1], [-3, -87, 1], [37, -87, 1], [37, -77, 1]]);
     g.mat(ab, GRANITE_L, 'stone', { hi: 0.5 });
-    g.clipTo(ab, (h) => h.fill(path([[-14, -77], [-10, -84], [-6, -80], [-2, -86], [-4, -77]]), BREAK));
-    volute(g, -18, -70, 7, -1);
-    volute(g, 25, -70, 7, 1);
+    g.clipTo(ab, (h) => h.fill(path([[-18, -77], [-13, -85], [-8, -80], [-3, -87], [-5, -77]]), BREAK));
+    volute(g, -23, -69, 10, -1);
+    volute(g, 31, -69, 10, 1);
     g.lod(1, (h) => lines(h, [[[-12, -64], [18, -64]], [[0, -80], [26, -80]]], GRANITE_D, 0.6, 1));
   });
   F.part('mossTop', { bone: 'head', z: 30.5, zb: 30.5, state: LIVE }, (g) => {

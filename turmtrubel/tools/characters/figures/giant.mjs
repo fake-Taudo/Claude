@@ -148,7 +148,8 @@ export default function giant(F, o = {}) {
       g.mat(path([[-10, -114, 1], [24, -114, 1], [24, -120], [-10, -120]]), '#c8a046', 'cloth', { hi: 0.5 });
       for (let i = 0; i < 7; i++) {
         const x = -8 + i * 5.2;
-        const h = 14 + (i % 2) * 6;
+        // hohe Ährenkrone: steht weit über den Kopf hinaus
+        const h = 22 + (i % 2) * 8;
         g.mat(path([[x - 1.6, -119, 1], [x + 1.6, -119, 1], [x + 2.4, -119 - h * 0.6], [x, -119 - h, 1], [x - 2.4, -119 - h * 0.6]]), '#e8c860', 'cloth', { hi: 0.6 });
         g.lod(1, (k) => {
           for (let j = 0; j < 3; j++) k.stroke(polyline([[x, -121 - j * 4], [x - 2, -124 - j * 4]]), '#b8902e', 0.5);

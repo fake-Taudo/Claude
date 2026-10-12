@@ -155,15 +155,24 @@ export function drawShaded(ctx, it, P, lod) {
   const a0 = ctx.globalAlpha;
   if (it.fop < 1) ctx.globalAlpha = a0 * it.fop;
   ctx.fill(it.path, it.rule);
-  if (lod >= 1 && !K.flat && w > 0 && h > 0) {
+  // Tiefe und Glanz nur für Flächen, die gerastert mindestens ~5 × 5 Pixel groß sind (Clip und Verläufe sind teuer)
+  const m = lod >= 1 ? ctx.getTransform() : null;
+  const px2 = m ? w * h * Math.abs(m.a * m.d - m.b * m.c) : 0;
+  if (lod >= 1 && !K.flat && w > 0 && h > 0 && px2 >= 24) {
     const ao = it.ao ?? K.ao;
     const hi = it.hi ?? K.hi;
     ctx.save();
     ctx.clip(it.path, it.rule);
     if (ao > 0) {
-      const p2 = new Path2D();
-      p2.rect(x - w, y - h, w * 3, h * 3);
-      p2.addPath(it.path, new DOMMatrix([1, 0, 0, 1, -w * K.shift * 0.6, -h * K.shift]));
+      // Schattenform einmal je Element aufbauen und behalten
+      let p2 = it.aoPath;
+      if (!p2 || it.aoShift !== K.shift) {
+        p2 = new Path2D();
+        p2.rect(x - w, y - h, w * 3, h * 3);
+        p2.addPath(it.path, new DOMMatrix([1, 0, 0, 1, -w * K.shift * 0.6, -h * K.shift]));
+        it.aoPath = p2;
+        it.aoShift = K.shift;
+      }
       ctx.globalAlpha = a0 * ao;
       ctx.fillStyle = T.deep;
       ctx.fill(p2, 'evenodd');

@@ -55,6 +55,11 @@ const S = {
 };
 
 const sys = () => S.manifest?.system || {};
+/** Detailstufe nach gerenderter Figurhöhe in Gerätepixeln (Schwellen aus dem Manifest, docs/CHAR_SYSTEM.md §9.8). */
+function lodFor(px) {
+  const L = sys().lod || { 1: 60, 2: 110 };
+  return px >= L[2] ? 2 : px >= L[1] ? 1 : 0;
+}
 const states = () => sys().states || DEF_STATES;
 const qual = () => (sys().quality || DEF_QUALITY)[S.quality] || DEF_QUALITY.high;
 const teams = () => sys().team || DEF_TEAM;
@@ -261,7 +266,8 @@ function bake(model, req) {
   // Außenkontur: Silhouette in Konturfarbe, im Kreis versetzt
   const ink = sys().outline?.ink || '#1c1830';
   const sil = scratch(2, w, h);
-  sil.ctx.drawImage(body, 0, 0);
+  // nur den Bildausschnitt kopieren: die Arbeitsflächen wachsen mit großen Bildern (Kartenbilder) und schrumpfen nie
+  sil.ctx.drawImage(body, 0, 0, w, h, 0, 0, w, h);
   sil.ctx.globalCompositeOperation = 'source-in';
   sil.ctx.fillStyle = ink;
   sil.ctx.fillRect(0, 0, w, h);
@@ -274,7 +280,7 @@ function bake(model, req) {
   if (sel.lod >= 1) {
     const rim = scratch(2, w, h);
     const rc = rim.ctx;
-    rc.drawImage(body, 0, 0);
+    rc.drawImage(body, 0, 0, w, h, 0, 0, w, h);
     rc.globalCompositeOperation = 'source-in';
     rc.fillStyle = 'rgba(255,246,224,0.34)';
     rc.fillRect(0, 0, w, h);
@@ -314,19 +320,31 @@ function bake(model, req) {
   }
   S.stats.copyMs = (S.stats.copyMs || 0) + performance.now() - tCp;
   const dt = performance.now() - t0;
+  if (!req.big) S.avgBake = S.avgBake ? S.avgBake * 0.9 + dt * 0.1 : dt;
   S.used += dt;
   S.stats.baked++;
   S.stats.bakeMs += dt;
   return frame;
 }
 
-/** Zu Beginn jedes Frames: Budget zurücksetzen und vorgemerkte Bilder backen. */
+/**
+ * Zu Beginn jedes Frames: Budget zurücksetzen und vorgemerkte Bilder backen. Das Bau-Budget folgt der Bildrate:
+ * bei langsamen Frames (geglättet > 19 bzw. > 25 ms) wird weniger gebacken, Notbilder überbrücken die Lücke.
+ */
 export function bakeTick() {
-  S.t0 = performance.now();
+  const now = performance.now();
+  const dt = S.t0 ? Math.min(100, now - S.t0) : 16;
+  S.ft = S.ft == null ? dt : S.ft * 0.85 + dt * 0.15;
+  S.t0 = now;
+  const Q = qual();
+  S.budget = Q.bakeMs * (S.ft > 25 ? 0.5 : S.ft > 19 ? 0.75 : 1);
+  // Guthaben: nicht verbrauchtes Budget bleibt (bis 2 Frames) stehen, Zwangsbacken über dem Budget wird abgestottert –
+  // im Mittel backt ein Frame höchstens sein Budget
+  S.bank = Math.min(S.budget * 2, (S.bank ?? 0) - S.used + S.budget);
   S.used = 0;
   S.forced = 0;
-  const Q = qual();
-  while (S.queue.length && S.used < Q.bakeMs * 0.6) {
+  const est = S.avgBake || 2;
+  while (S.queue.length && S.used + est <= S.bank * 0.6) {
     const req = S.queue.shift();
     S.queued.delete(req.key);
     if (S.frames.has(req.key)) continue;
@@ -338,6 +356,25 @@ export function bakeTick() {
   if (S.queue.length > 400) {
     for (const r of S.queue.splice(0, S.queue.length - 400)) S.queued.delete(r.key);
   }
+}
+
+/** Bildindizes ab fi in Van-der-Corput-Reihenfolge (½, ¼, ¾, ⅛ … des Zustands), ohne fi selbst. */
+const spreadCache = new Map();
+function spreadOrder(n, fi) {
+  const k = n * 64 + fi;
+  let out = spreadCache.get(k);
+  if (out) return out;
+  out = [];
+  for (let i = 1; out.length < n - 1 && i < 64; i++) {
+    let v = 0;
+    let b = 0.5;
+    for (let x = i; x; x >>= 1, b /= 2) if (x & 1) v += b;
+    const idx = (fi + Math.round(v * n)) % n;
+    if (idx !== fi && !out.includes(idx)) out.push(idx);
+  }
+  for (let i = 0; i < n; i++) if (i !== fi && !out.includes(i)) out.push(i);
+  spreadCache.set(k, out);
+  return out;
 }
 
 function quantPpm(ppm) {
@@ -374,7 +411,7 @@ export function prebakeCharacter(o) {
   const Q = qual();
   const dpr = o.dpr || 1;
   const ppm = quantPpm(((o.scale || 26) / 50) * dpr * Q.res);
-  const lod = Math.min(Q.maxLod, model.restH * ppm >= 110 ? 2 : model.restH * ppm >= 46 ? 1 : 0);
+  const lod = Math.min(Q.maxLod, lodFor(model.restH * ppm));
   const cb = S.colorblind ? 1 : 0;
   const variant = o.variant || 0;
   const before = S.used;
@@ -424,7 +461,7 @@ export function drawCharacter(ctx, o) {
   const ppmExact = ((o.scale || 26) / 50) * dpr * (o.big ? 1 : Q.res);
   const ppm = quantPpm(ppmExact);
   const H = model.restH * ppm;
-  const lod = Math.min(Q.maxLod, H >= 110 ? 2 : H >= 46 ? 1 : 0);
+  const lod = Math.min(Q.maxLod, lodFor(H));
   const view = o.view === 'back' && model.hasBack ? 'back' : 'front';
   const team = o.team === 'red' ? 'red' : 'blue';
   const variant = o.variant || 0;
@@ -437,15 +474,28 @@ export function drawCharacter(ctx, o) {
   let frame = o.big ? S.big.get(key) : S.frames.get(key);
   const mk = (st, idx, uu) => frameReq(model, o, { team, cb, view, state: st, idx, u: uu, variant, hue, ppm, lod, dpr });
   if (!frame) {
-    const Qb = Q.bakeMs;
-    const exact = S.latest.get(famKey + '|' + name) || S.latest.get(famKey + '|idle');
+    const Qb = S.bank ?? Q.bakeMs;
+    const est = S.avgBake || 2;
+    // Notbild: zuerst das nächstgelegene schon gebackene Bild desselben Zustands (die Animation bleibt grob flüssig)
+    let near = null;
+    for (let d = 1; d <= n >> 1 && !near; d++) {
+      for (const j of [fi - d, fi + d]) {
+        const jj = loop ? (j + n) % n : j;
+        if (jj < 0 || jj >= n) continue;
+        near = S.frames.get(frameKey(o, team, cb, view, name, jj, variant, hue, ppm, lod));
+        if (near) break;
+      }
+    }
+    const exact = near || S.latest.get(famKey + '|' + name) || S.latest.get(famKey + '|idle');
     const fallback = exact || S.latest.get(famKey2 + '|' + name) || S.latest.get(famKey2 + '|idle');
-    // Über dem Budget nur backen, wenn gar kein Notbild existiert oder (einmal pro Frame) nur eins aus anderer Ansicht/Variante
-    if (o.big || S.used < Qb || !fallback || (!exact && S.forced < 1)) {
-      if (S.used >= Qb && fallback) S.forced++;
+    // Über dem Budget nur backen, wenn gar kein Notbild existiert oder – bei flüssiger Bildrate, einmal pro Frame –
+    // nur eins aus anderer Ansicht/Variante
+    const room = S.used + est <= Qb;
+    if (o.big || room || !fallback || (!exact && S.forced < 1 && !(S.ft > 19))) {
+      if (!room && fallback) S.forced++;
+      if (!room && !o.big) S.stats.forced++;
       frame = bake(model, mk(name, fi, uq));
       if (frame.page) S.frames.set(key, frame);
-      if (S.used >= Qb) S.stats.forced++;
     } else {
       frame = fallback;
       S.stats.fallbacks++;
@@ -460,11 +510,11 @@ export function drawCharacter(ctx, o) {
   if (!o.big) {
     S.latest.set(famKey + '|' + name, frame);
     S.latest.set(famKey2 + '|' + name, frame);
-    // übrige Bilder dieses Zustands vormerken
+    // übrige Bilder dieses Zustands vormerken – über den Zustand verteilt (Mitte, Viertel, Achtel …), damit schon
+    // wenige gebackene Bilder eine grobe Bewegung ergeben
     if (n > 1 && !S.queued.has(key + '#all')) {
       S.queued.add(key + '#all');
-      for (let i = 0; i < n; i++) {
-        if (i === fi) continue;
+      for (const i of spreadOrder(n, fi)) {
         const req = mk(name, i, loop ? i / n : i / (n - 1));
         if (S.frames.has(req.key) || S.queued.has(req.key)) continue;
         S.queued.add(req.key);
@@ -569,7 +619,7 @@ export function characterFrame(o) {
   const dpr = o.dpr || 1;
   const ppm = ((o.scale || 26) / 50) * dpr;
   const H = model.restH * ppm;
-  const lod = o.lod ?? (H >= 110 ? 2 : H >= 46 ? 1 : 0);
+  const lod = o.lod ?? lodFor(H);
   const view = o.view === 'back' && model.hasBack ? 'back' : 'front';
   const team = o.team === 'red' ? 'red' : 'blue';
   const req = frameReq(model, { ...o, big: true }, { team, cb: S.colorblind ? 1 : 0, view, state: name, idx: -1, u: o.u || 0, variant: o.variant || 0, hue: 0, ppm, lod, dpr });

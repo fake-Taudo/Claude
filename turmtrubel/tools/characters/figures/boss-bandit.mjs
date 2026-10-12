@@ -66,7 +66,7 @@ export default function bossBandit(F) {
   });
   // Mantel mit Futter (Teamzone)
   F.part('coatBack', { bone: 'cape', z: 4, zb: 40 }, (g) => g.mat(path([[-12, -66], [4, -66], [6, -40], [8, -18], [-6, -20], [-16, -18], [-14, -40]]), VELVET_D, 'cloth', { hi: 0.3 }));
-  F.part('lining', { bone: 'cape', z: 4.5, zb: 40.5, team: true }, (g) => g.mat(path([[-14, -40], [-8, -42], [-6, -20], [-16, -18]]), P.team, 'cloth', { line: P.teamDeep }));
+  F.part('lining', { bone: 'cape', z: 4.5, zb: 40.5, team: true }, (g) => g.mat(path([[-17, -44], [-8, -44], [-6, -18], [-20, -15]]), P.team, 'cloth', { line: P.teamDeep }));
 
   // ───────── Beine: Reiterhose, hohe Stiefel ─────────
   const leg = (name, foot, x, z) => {
@@ -109,7 +109,7 @@ export default function bossBandit(F) {
   });
   // Halstuch (Teamzone)
   F.part('scarf', { bone: 'torso', z: 23, zb: 23, team: true }, (g) => {
-    g.mat(path([[-4, -70], [11, -70], [9, -64], [4, -60, 1], [1, -65], [-4, -66]]), P.team, 'cloth', { line: P.teamDeep });
+    g.mat(path([[-5, -71], [12, -71], [10, -63], [4, -56, 1], [0.4, -64], [-5, -65]]), P.team, 'cloth', { line: P.teamDeep });
   });
   // riesiger Silberfuchs-Kragen
   F.part('foxCollar', { bone: 'torso', z: 26, zb: 38 }, (g) => {

@@ -98,7 +98,7 @@ export const TEAM = {
 };
 
 /** Lesbarkeit: Detailstufen nach gerenderter Figurhöhe in Gerätepixeln. */
-export const LOD = { 1: 46, 2: 110 };
+export const LOD = { 1: 60, 2: 110 };
 
 /**
  * Animationszustände. frames = gebackene Bilder je Qualitätsstufe [niedrig, mittel, hoch].

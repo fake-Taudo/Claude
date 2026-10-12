@@ -33,21 +33,21 @@ export default function goblinsteinMonster(F) {
 
   // ───────── Akku mit Kurbel (Signature) und Kabel zu den Halsklemmen ─────────
   F.part('battery', { bone: 'back', z: 3, zb: 46, sig: true }, (g) => {
-    // hoher Rücken-Akku: überragt den Kopf, oben zwei Polköpfe
-    g.mat(rrect(-52, -132, 32, 68, 4), BATT, 'metal', { hi: 0.6 });
-    g.mat(rrect(-50, -142, 10, 10, 2), '#c84a3a', 'metal');
-    g.mat(rrect(-32, -142, 10, 10, 2), '#4a4a52', 'metal');
+    // breiter Rücken-Akku auf dem Kreuz, oben zwei Polköpfe
+    g.mat(rrect(-58, -108, 38, 50, 4), BATT, 'metal', { hi: 0.6 });
+    g.mat(rrect(-54, -116, 10, 8, 2), '#c84a3a', 'metal');
+    g.mat(rrect(-34, -116, 10, 8, 2), '#4a4a52', 'metal');
     g.lod(1, (h) => {
-      rivets(h, [[-49, -128], [-23, -128], [-49, -68], [-23, -68]], 1, '#8a909c');
-      for (const y of [-118, -106, -94]) h.fill(rrect(-45, y, 18, 4, 1), '#7cff8a', { op: 0.9 });
+      rivets(h, [[-55, -104], [-23, -104], [-55, -62], [-23, -62]], 1, '#8a909c');
+      for (const y of [-96, -86]) h.fill(rrect(-50, y, 22, 4, 1), '#7cff8a', { op: 0.9 });
     });
     // Kurbel
     g.stroke(polyline([[-46, -84], [-54, -84], [-54, -76]]), '#9aa3ad', 1.8);
     g.mat(rrect(-57, -78, 6, 4, 1.4), '#c84a3a', 'wood');
   });
   F.part('cables', { bone: 'back', z: 3.5, zb: 45 }, (g) => {
-    g.stroke(spline([[-45, -142], [-30, -150], [-4, -124], [2, -100]]), '#1e1e22', 2.2);
-    g.stroke(spline([[-27, -142], [-12, -146], [10, -116], [16, -100]]), '#1e1e22', 2.2);
+    g.stroke(spline([[-49, -116], [-36, -126], [-10, -112], [-8, -97]]), '#1e1e22', 2.2);
+    g.stroke(spline([[-29, -116], [-12, -122], [30, -112], [34, -97]]), '#1e1e22', 2.2);
   });
   F.part('sparks', { bone: 'back', z: 46, state: ['spark', 'hit', 'spawn'], glow: true }, (g) => {
     for (const [x, y] of [[0, -102], [18, -102], [-6, -110]]) g.stroke(polyline([[x - 3, y - 2], [x, y + 1], [x + 3, y - 3], [x + 5, y]]), '#7cff8a', 1.2);
@@ -118,9 +118,10 @@ export default function goblinsteinMonster(F) {
   });
   // Kupferklemmen am Hals
   F.part('clamps', { bone: 'head', z: 34.5, zb: 33 }, (g) => {
-    for (const x of [4, 22]) {
-      g.mat(rrect(x - 3, -96, 6, 6, 1.4), COPPER, 'metal', { hi: 0.8 });
-      g.mat(rrect(x - 1, -100, 2, 4, 0.6), '#9aa3ad', 'metal');
+    // Halsbolzen stehen weit zur Seite ab
+    for (const [x, dir] of [[2, -1], [24, 1]]) {
+      g.mat(rrect(dir < 0 ? x - 14 : x, -99, 14, 5, 1.6), '#9aa3ad', 'metal', { hi: 0.8 });
+      g.mat(rrect(dir < 0 ? x - 18 : x + 12, -102, 6, 11, 1.6), COPPER, 'metal', { hi: 0.8 });
     }
   });
 
@@ -131,8 +132,9 @@ export default function goblinsteinMonster(F) {
   });
   F.part('armband', { bone: 'armF', z: 29.5, zb: 10.5, team: true }, (g) => g.mat(rrect(26, -86, 26, 8, 3).rot(10, 39, -82), P.team, 'cloth', { line: P.teamDeep }));
   F.part('handF', { bone: 'handF', z: 41, zb: 11 }, (g) => {
-    g.mat(blob([[24, -40], [36, -52], [56, -48], [62, -30], [52, -16], [30, -16], [22, -26]], 0.7), SKIN, 'skin', { hi: 0.4 });
-    g.lod(1, (h) => lines(h, [[[34, -26], [36, -16]], [[42, -26], [44, -16]], [[50, -26], [51, -17]]], SKIN_D, 1, 1));
+    // Riesenhand hängt bis auf den Boden
+    g.mat(blob([[22, -40], [36, -54], [60, -50], [70, -28], [64, -4], [30, -4], [20, -22]], 0.7), SKIN, 'skin', { hi: 0.4 });
+    g.lod(1, (h) => lines(h, [[[34, -18], [36, -4]], [[44, -18], [46, -4]], [[54, -18], [56, -5]]], SKIN_D, 1, 1));
     g.mat(rrect(26, -48, 30, 6, 2).rot(-10, 41, -45), COPPER, 'metal', { hi: 0.8 });
   });
   emblem(F, 'emblem', 'torso', 23, 18, -80, 2.8, { view: 'front' });

@@ -6,6 +6,7 @@
 //   node tools/characters/check.mjs --ids knight,archers    nur diese Figuren (Paare und Review nur untereinander)
 //   node tools/characters/check.mjs --skip perf             ohne Performance-Messung
 //   node tools/characters/check.mjs --before <Ordner>       Performance zusätzlich mit einem älteren Stand des Spiels
+//   node tools/characters/check.mjs --md                    nur docs/char_check.md aus docs/char_check.json neu schreiben
 //
 // Prüfungen: contact (Contact Sheet), silhouette (IoU aller Paare), color (CIEDE2000-Regeln und gerenderte Farben),
 // small (40-px-Test mit Signature-Fläche), team (Blau/Rot, Graustufen, Fehlsichtigkeit, Emblem), anim (alle Zustände:
@@ -18,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { buildAll } from './build.mjs';
 import { openLab, startServer } from './lab.mjs';
 import { contactSheet, figureIds, displayName } from './contact.mjs';
+import { toPngRgb } from './png.mjs';
 import { figureById } from './figures.mjs';
 import { CHECK, FAMILIES, OUTLINE, colorViolations, matrixViolations, isRelated, materialTones, schemeDistance, sizeOfHeight } from './system.mjs';
 
@@ -46,7 +48,7 @@ const nameOf = (id) => {
 const row = (id) => figureById.get(id) || { id, fam: '', main: '#888888', acc: '#888888', sig: '', over: '', mood: '' };
 const pct = (v) => (v * 100).toFixed(1).replace('.', ',') + ' %';
 const num = (v, d = 2) => (v == null ? '–' : v.toFixed(d).replace('.', ','));
-const savePng = (file, url) => fs.writeFileSync(file, Buffer.from(url.split(',')[1], 'base64'));
+const savePng = (file, url) => fs.writeFileSync(file, toPngRgb(Buffer.from(url.split(',')[1], 'base64'), 6));
 
 const results = { date: new Date().toISOString(), limits: CHECK, checks: {} };
 const log = (...a) => console.log(...a);
@@ -60,6 +62,12 @@ function verdict(name, fails, warns, data) {
 }
 
 // ───────────── Hauptprogramm ─────────────
+if (argv.includes('--md')) {
+  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/char_check.json'), 'utf8'));
+  fs.writeFileSync(path.join(ROOT, 'docs/char_check.md'), markdown(json));
+  log('docs/char_check.md neu geschrieben');
+  process.exit(0);
+}
 const ids = idsArg || figureIds();
 await buildAll(idsArg || undefined);
 const lab = await openLab();
@@ -259,14 +267,15 @@ if (t.emblem >= L.emblem && t.gray < L.emblem) fails.push(`${id}: in Graustufen 
         if (!nc || s < nc.s) nc = { id: o.id, s };
       }
       const sigPx = small?.[r.id];
-      // Nähe-Signale: Silhouette, Farbe und Familie zum selben Nachbarn, schwache Signature bei 40 px
+      // Nähe-Signale: ähnliche Silhouette, dazu ähnliche Farben wie derselbe Nachbar oder schwache Signature bei 40 px.
+      // Die Familie allein zählt nicht: Familien teilen ihre Grundform absichtlich (docs/CHAR_SYSTEM.md §2).
       const sameNeighbour = ns && row(ns.id);
       const signals = [];
-      if (ns && ns.iou >= CHECK.silhouette.warn) signals.push(`Silhouette wie ${nameOf(ns.id)} (IoU ${num(ns.iou)})`);
-      if (sameNeighbour && sameNeighbour.fam === r.fam && ns.iou >= CHECK.silhouette.warn - 0.1) signals.push(`gleiche Familie wie ${nameOf(ns.id)}`);
+      const silClose = ns && ns.iou >= CHECK.silhouette.warn;
+      if (silClose) signals.push(`Silhouette wie ${nameOf(ns.id)} (IoU ${num(ns.iou)}${sameNeighbour.fam === r.fam ? ', gleiche Familie' : ''})`);
       if (sameNeighbour && schemeDistance(r, sameNeighbour) < 15) signals.push(`ähnliche Farben wie ${nameOf(ns.id)} (Schema ${num(schemeDistance(r, sameNeighbour), 1)})`);
       if (sigPx && sigPx.sig < CHECK.small.sig) signals.push(`Signature bei 40 px schwach (${pct(sigPx.sig)})`);
-      const generic = signals.length >= 2;
+      const generic = !!silClose && signals.length >= 2;
       const fam = FAMILIES[r.fam]?.name || r.fam;
       const sentence = `${nameOf(r.id)} (${fam}, ${sizeOfHeight(r.h || 1.5).id}): ${r.sig}; übertrieben: ${r.over}; ${r.mood}.`;
       review.push({ id: r.id, name: nameOf(r.id), sentence, nearest: ns ? { id: ns.id, iou: ns.iou } : null, color: nc ? { id: nc.id, scheme: +nc.s.toFixed(1) } : null, sig: sigPx?.sig ?? null, signals, generic });
@@ -353,7 +362,7 @@ function markdown(r) {
     p('| Stand | Profil | FPS | p95 | schlechtester Frame | Long Tasks | automatische Qualität am Ende |', '|---|---|---|---|---|---|---|');
     for (const [label, R] of [['vorher', K.before], ['nachher', K.after]]) {
       if (!R) continue;
-      for (const [k, v] of Object.entries(R.profiles)) p(`| ${label} | ${k} (CPU ${v.cpu}×) | ${v.fps} | ${v.p95ms} ms | ${v.worstMs} ms | ${v.longTasks} | ${v.autoQuality ? `DPR ${v.autoQuality.dynDpr ?? 'voll'}, Effekte ${num(v.autoQuality.fxLoad ?? 1, 1)}, Figuren ${v.autoQuality.chars ?? '–'}, Absenkungen ${v.autoQuality.downs}` : '–'} |`);
+      for (const [k, v] of Object.entries(R.profiles)) p(`| ${label} | ${k} (CPU ${v.cpu}×) | ${v.fps} | ${v.p95ms} ms | ${v.worstMs} ms | ${v.longTasks} | ${v.autoQuality ? `DPR ${v.autoQuality.dynDpr ?? 'voll'}, Effekte ${num(v.autoQuality.fxLoad ?? 1, 1)}, Figuren ${v.autoQuality.chars ?? '–'}, Absenkungen ${v.autoQuality.chars == null ? '– (kein Zähler)' : v.autoQuality.downs}` : '–'} |`);
     }
     if (K.after.autoDown) p('', `Lasttest der automatischen Qualität (CPU ${K.after.autoDown.cpu}×): ${K.after.autoDown.fps} FPS, ${K.after.autoDown.downs} Absenkungen, Ende: DPR ${K.after.autoDown.dynDpr ?? 'voll'}, Effekte ${num(K.after.autoDown.fxLoad ?? 1, 1)}, Figuren ${K.after.autoDown.chars}.`);
     p('');
@@ -361,7 +370,7 @@ function markdown(r) {
   }
   if (C.review) {
     const K = C.review;
-    p('## 8. Eigenständigkeits-Review', '', 'Ein Satz pro Figur aus Brief und Matrix, dazu der nächste unverwandte Nachbar nach Silhouette und Farbe. **generisch?** heißt: mindestens zwei Nähe-Signale (Silhouette, Familie, Farbe, schwache Signature bei 40 px).', '');
+    p('## 8. Eigenständigkeits-Review', '', `Ein Satz pro Figur aus Brief und Matrix, dazu der nächste unverwandte Nachbar nach Silhouette und Farbe. **generisch?** heißt: Die Silhouette liegt nah an einer anderen Figur (IoU ≥ ${num(CHECK.silhouette.warn)}) und zusätzlich sind die Farben ähnlich (Schema < 15) oder die Signature ist bei 40 px schwach. Die gleiche Familie allein zählt nicht, Familien teilen ihre Grundform absichtlich.`, '');
     p('| Figur | Satz | nächste Silhouette | nächstes Farbschema | Markierung |', '|---|---|---|---|---|');
     for (const x of K.review) p(`| ${x.name} | ${x.sentence} | ${x.nearest ? `${nameOf(x.nearest.id)} (${num(x.nearest.iou)})` : '–'} | ${x.color ? `${nameOf(x.color.id)} (${num(x.color.scheme, 1)})` : '–'} | ${x.generic ? '**generisch?** ' + x.signals.join('; ') : x.signals.join('; ')} |`);
     p('');

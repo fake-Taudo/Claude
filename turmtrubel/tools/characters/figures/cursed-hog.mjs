@@ -102,21 +102,34 @@ export default function cursedHog(F) {
       { hi: 0.5 },
     );
   });
-  F.part("hatBand", { bone: "hat", z: 34.5, zb: 34.5, team: true }, (g) =>
+  F.part("hatBand", { bone: "hat", z: 34.5, zb: 34.5, team: true }, (g) => {
+    // breites Hutband mit flatterndem Bandende
     g.mat(
       path([
-        [8.6, -42],
-        [17.6, -42.6],
-        [18, -40],
-        [8.2, -39.6],
+        [-1, -47],
+        [7, -45.4],
+        [6.4, -42],
+        [1.6, -42.6],
+        [-3, -39.4],
+      ]),
+      P.teamShade,
+      "cloth",
+      { line: P.teamDeep, lw: 0.4 },
+    );
+    g.mat(
+      path([
+        [6.8, -45.6],
+        [18.6, -46.4],
+        [19, -40.4],
+        [6.2, -40],
       ]),
       P.team,
       "cloth",
       { line: P.teamDeep, lw: 0.4 },
-    ),
-  );
+    );
+  });
   F.part("buckle", { bone: "hat", z: 34.8, zb: 34.8, lod: 1 }, (g) =>
-    g.mat(rrect(12, -42.4, 2.6, 2.6, 0.4), "#d8c060", "gold", { hi: 0.8 }),
+    g.mat(rrect(11.4, -44.6, 3.4, 3.4, 0.5), "#d8c060", "gold", { hi: 0.8 }),
   );
 
   // ───────── Kreisende Fluchsternchen ─────────

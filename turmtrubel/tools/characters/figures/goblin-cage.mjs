@@ -23,10 +23,10 @@ export default function goblinCage(F) {
 
   // ───────── Runder Sockel ─────────
   F.part('pedestal', { bone: 'base', z: 2 }, (g) => {
-    const s = path([[-30, -14, 1], [30, -14, 1], [34, 0, 1], [-34, 0, 1]]);
+    const s = path([[-24, -14, 1], [24, -14, 1], [28, 0, 1], [-28, 0, 1]]);
     g.mat(s, STONE, 'stone', { hi: 0.4 });
-    g.lod(1, (h) => bricks(h, s, [-34, -14, 34, 0], 4.6, 10, '#6a6458', { lw: 0.6 }));
-    g.mat(ellipse(0, -14, 31, 5), '#a8a294', 'stone');
+    g.lod(1, (h) => bricks(h, s, [-28, -14, 28, 0], 4.6, 10, '#6a6458', { lw: 0.6 }));
+    g.mat(ellipse(0, -14, 25, 4.6), '#a8a294', 'stone');
   });
   // ───────── Der Raufbold im Käfig (rüttelt an den Stäben) ─────────
   F.part('brawler', { bone: 'crew', z: 4 }, (g) => {
@@ -38,7 +38,7 @@ export default function goblinCage(F) {
     g.mat(path([[-7, -57], [-16, -60, 1], [-8, -53]]), SKIN_D, 'skin');
     g.mat(path([[9, -57], [18, -60, 1], [10, -53]]), SKIN_D, 'skin');
     // Fäuste an den Stäben
-    for (const x of [-16, 16]) g.mat(circle(x, -40, 4.4), SKIN, 'skin', { hi: 0.4 });
+    for (const x of [-14, 14]) g.mat(circle(x, -40, 4.4), SKIN, 'skin', { hi: 0.4 });
   });
   F.part('brawlerFace', { bone: 'crew', z: 4.5, expr: ['idle', 'attack', 'hurt', 'stun', 'sleep', 'ability'] }, (g) => {
     for (const x of [-2.6, 4.6]) g.fill(ellipse(x, -56, 1.3, 1.5), '#e83a2a');
@@ -53,29 +53,30 @@ export default function goblinCage(F) {
   });
   // ───────── Goldener Vogelkäfig (Signature) mit Kuppel, Ring und Vorhängeschloss ─────────
   F.part('bars', { bone: 'door', z: 6, sig: true }, (g) => {
+    // hoher, schmaler Vogelkäfig (deutlich schlanker als Grabmal und Hütten)
     for (let i = 0; i <= 8; i++) {
-      const x = -26 + i * 6.5;
-      const top = -70 + Math.pow((x / 26), 2) * 10;
+      const x = -20 + i * 5;
+      const top = -76 + Math.pow(x / 20, 2) * 12;
       g.mat(path([[x - 0.9, -14, 1], [x + 0.9, -14, 1], [x + 0.9, top, 1], [x - 0.9, top, 1]]), GOLD, 'gold', { hi: 0.8 });
     }
     // verbogener Stab
     g.lod(1, (h) => h.stroke(spline([[13, -14], [15, -36], [11, -50], [13, -64]]), '#a8862a', 0.6));
-    g.mat(rrect(-28, -32, 56, 3, 1.2), GOLD, 'gold', { hi: 0.8 });
-    g.mat(rrect(-28, -17, 56, 3, 1.2), GOLD, 'gold');
+    g.mat(rrect(-22, -32, 44, 3, 1.2), GOLD, 'gold', { hi: 0.8 });
+    g.mat(rrect(-22, -17, 44, 3, 1.2), GOLD, 'gold');
     // Zierranken
     g.lod(2, (h) => {
-      for (const x of [-20, 0, 20]) h.stroke(spline([[x - 4, -30], [x - 2, -27], [x, -30], [x + 2, -27], [x + 4, -30]]), '#f0d070', 0.5);
+      for (const x of [-14, 0, 14]) h.stroke(spline([[x - 4, -30], [x - 2, -27], [x, -30], [x + 2, -27], [x + 4, -30]]), '#f0d070', 0.5);
     });
   });
   F.part('dome', { bone: 'roof', z: 7 }, (g) => {
-    const d = arc(0, -60, 28, 22, 180, 360, 14);
-    g.mat(path([[-28, -60, 1], ...d.slice(1, -1), [28, -60, 1], [26, -57, 1], [-26, -57, 1]]), GOLD, 'gold', { hi: 0.9 });
-    g.clipTo(path([[-28, -60], ...d]), (h) => {
-      for (let i = -3; i <= 3; i++) h.stroke(polyline([[i * 8, -60], [i * 3, -82]]), '#a8862a', 0.8);
+    const d = arc(0, -64, 22, 26, 180, 360, 14);
+    g.mat(path([[-22, -64, 1], ...d.slice(1, -1), [22, -64, 1], [20, -61, 1], [-20, -61, 1]]), GOLD, 'gold', { hi: 0.9 });
+    g.clipTo(path([[-22, -64], ...d]), (h) => {
+      for (let i = -3; i <= 3; i++) h.stroke(polyline([[i * 6, -64], [i * 2.4, -90]]), '#a8862a', 0.8);
     });
     // Aufhängering mit Haken
-    g.stroke(circle(0, -91, 7), GOLD, 2.4);
-    g.stroke(spline([[0, -98], [0, -104], [6, -106], [8, -101]]), '#a8862a', 1.6);
+    g.stroke(circle(0, -97, 7), GOLD, 2.4);
+    g.stroke(spline([[0, -104], [0, -110], [6, -112], [8, -107]]), '#a8862a', 1.6);
   });
   // riesiges Vorhängeschloss: hängt außen an der Tür über den Käfigrand hinaus
   F.part('padlock', { bone: 'door', z: 8 }, (g) => {
@@ -96,15 +97,15 @@ export default function goblinCage(F) {
   });
   // ───────── Evo: Rankenstäbe, Dornenkuppel, grünes Leuchten ─────────
   F.part('evoVines', { bone: 'door', z: 6.5, evo: 'evo' }, (g) => {
-    for (const x of [-20, -6, 8, 22]) g.stroke(spline([[x, -14], [x + 3, -30], [x - 2, -46], [x + 2, -62]]), VINE, 1.6);
-    for (const [x, y] of [[-17, -30], [-4, -46], [10, -30], [24, -52]]) g.mat(ellipse(x, y, 2.4, 1.2, 30), '#6aca4a', 'cloth');
+    for (const x of [-16, -5, 6, 17]) g.stroke(spline([[x, -14], [x + 3, -30], [x - 2, -46], [x + 2, -64]]), VINE, 1.6);
+    for (const [x, y] of [[-13, -30], [-3, -46], [8, -30], [19, -54]]) g.mat(ellipse(x, y, 2.4, 1.2, 30), '#6aca4a', 'cloth');
   });
   F.part('evoThorns', { bone: 'roof', z: 7.5, evo: 'evo' }, (g) => {
     for (const a of [200, 225, 250, 275, 300, 325, 350]) {
       const r = (a * Math.PI) / 180;
-      const x = Math.cos(r) * 28;
-      const y = -60 + Math.sin(r) * 22;
-      g.mat(poly([[x - 1.6, y], [x * 1.18, -60 + Math.sin(r) * 28], [x + 1.6, y]], 0.2), VINE, 'wood');
+      const x = Math.cos(r) * 22;
+      const y = -64 + Math.sin(r) * 26;
+      g.mat(poly([[x - 1.6, y], [x * 1.18, -64 + Math.sin(r) * 32], [x + 1.6, y]], 0.2), VINE, 'wood');
     }
   });
   F.part('evoGlow', { bone: 'glow', z: 3, evo: 'evo', glow: true }, (g) => g.fill(ellipse(0, -40, 24, 26), '#7cff8a', { op: 0.25 }));

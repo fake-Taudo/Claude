@@ -155,7 +155,7 @@ export default function lavaPup(F) {
         g.fill(circle(x, y, r), EMBER);
     },
   );
-  emblem(F, "emblem", "body", 19, -4, -18, 1.4, { zb: 19, state: LIVE });
+  emblem(F, "emblem", "body", 19, -4, -18, 2.2, { zb: 19, state: LIVE });
 
   // ───────── Kopf: riesige Welpenaugen, Stupsnase, Zünglein; Halsband (Teamzone) ─────────
   F.part("ears", { bone: "crest", z: 29, zb: 33, state: LIVE }, (g) => {
