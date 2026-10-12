@@ -535,6 +535,8 @@ export class Renderer {
         ctx.drawImage(img, x - w / 2 + r * ox, y + fy - h / 2 + r * oy, w, h);
         if (v.flying) ctx.globalAlpha = 1;
       }
+      // 2 gegen 2: Einheiten des Teamkollegen mit gestricheltem Ring (zusätzlich zur Teamfarbe)
+      if (v.ally && !(v.flags & EF.UNDER)) this.allyRing(ctx, x, y + s * 0.05, r, t, v.seed);
       // Champions und Helden: pulsierender Goldring am Boden
       if (v.cls === 'champion' || v.cls === 'hero') {
         const g = softGlow(v.cls === 'hero' ? '#ff9a7a' : '#ffd84d', r * 1.3 * dpr, 0.55);
@@ -1297,7 +1299,10 @@ export class Renderer {
       const A = view.rect(0, 0, ARENA_W, ARENA_H);
       let cx = kx + dir * (s * 2.3 + bw / 2);
       cx = Math.max(A.x + bw / 2 + 4, Math.min(A.x + A.w - bw / 2 - 4, cx));
-      const cy = Math.max(A.y + bh / 2 + 2, Math.min(A.y + A.h - bh / 2 - 2, ky - s * 0.9));
+      // 2 gegen 2: zweiter Spieler eines Teams eine Blase weiter zur Arena-Mitte, mit Namen darüber
+      const second = e.name != null && this.game.teams.indexOf(e.owner) !== e.pl;
+      const shift = second ? (mine ? -1 : 1) * (bh + s * 0.9) : 0;
+      const cy = Math.max(A.y + bh / 2 + 2 + (e.name ? s * 0.6 : 0), Math.min(A.y + A.h - bh / 2 - 2, ky - s * 0.9 + shift));
       ctx.save();
       ctx.globalAlpha = fade;
       ctx.fillStyle = '#ffffff';
@@ -1317,6 +1322,70 @@ export class Renderer {
       ctx.fillRect(tx - (dir > 0 ? 0 : 3), cy - s * 0.3 + 2, 3, s * 0.6 - 4);
       drawEmoteFace(ctx, emo.face, cx, cy - bh / 2 + R * 0.95 + s * 0.1, R * 0.85, now);
       ctext(ctx, emo.text, cx, cy + bh / 2 - s * 0.45, fs, mine ? TEAM.blue.dark : TEAM.red.dark, 'center', 0);
+      if (e.name) ctext(ctx, e.name, cx, cy - bh / 2 - s * 0.32, Math.max(11, Math.round(s * 0.42)), '#ffffff', 'center', 3);
+      ctx.restore();
+    }
+  }
+
+  /** Gestrichelter, langsam drehender Ring unter Einheiten des Teamkollegen. */
+  allyRing(ctx, x, y, r, t, seed = 0) {
+    const s = this.game.view.s;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(1, 0.45);
+    ctx.lineWidth = Math.max(3, s * 0.14);
+    ctx.setLineDash([s * 0.3, s * 0.16]);
+    ctx.lineDashOffset = -(t * s * 0.6 + seed * 10);
+    ctx.strokeStyle = 'rgba(28,24,48,0.85)';
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 1.18 + 1.5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = '#9ff0ff';
+    ctx.lineWidth = Math.max(1.6, s * 0.08);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /** Zeichen des Teamkollegen: pulsierende Ringe, Ausrufezeichen und Name (3 s). */
+  drawPings(ctx, pings, now) {
+    const view = this.game.view;
+    const s = view.s;
+    for (const p of pings) {
+      const age = now - p.at;
+      if (age < 0 || age > 3) continue;
+      const [x, y] = view.toScreen(p.x, p.y);
+      const fade = age > 2.4 ? 1 - (age - 2.4) / 0.6 : 1;
+      ctx.save();
+      ctx.globalAlpha = fade;
+      for (let k = 0; k < 2; k++) {
+        const q = ((age * 1.4 + k * 0.5) % 1 + 1) % 1;
+        ctx.globalAlpha = fade * (1 - q);
+        ctx.strokeStyle = '#ffe680';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(x, y, s * (0.5 + q * 1.6), s * (0.25 + q * 0.8), 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = fade;
+      const pop = Math.min(1, age / 0.2);
+      const by = y - s * (1.4 + 0.15 * Math.sin(age * 8)) * pop;
+      const R = s * 0.55;
+      ctx.fillStyle = '#ffd84d';
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y - s * 0.2);
+      ctx.lineTo(x - R * 0.5, by + R * 0.6);
+      ctx.lineTo(x + R * 0.5, by + R * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, by, R, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctext(ctx, '!', x, by + 1, Math.round(R * 1.4), OUTLINE, 'center', 0);
+      if (p.name) ctext(ctx, p.mine ? 'Du' : p.name, x, by - R - s * 0.35, Math.max(11, Math.round(s * 0.42)), '#ffffff', 'center', 3);
       ctx.restore();
     }
   }
@@ -1334,7 +1403,7 @@ export class Renderer {
       ctx.save();
       ctx.globalAlpha = Math.min(1, (1.3 - age) / 0.4);
       const yy = y - s * 1.2 - h - Math.min(age, 0.3) * s;
-      ctx.fillStyle = m.owner === this.game.side ? TEAM.blue.main : TEAM.red.main;
+      ctx.fillStyle = m.ally ? '#9ff0ff' : m.owner === this.game.side ? TEAM.blue.main : TEAM.red.main;
       ctx.strokeStyle = OUTLINE;
       ctx.lineWidth = 2.5;
       ctx.beginPath();

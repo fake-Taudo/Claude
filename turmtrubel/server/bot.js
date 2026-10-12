@@ -247,15 +247,38 @@ export class Bot {
     const hand = this.playable();
     if (!hand.length) return;
     const foes = this.visibleFoes();
-    const threats = foes.filter((e) => e.kind === 'unit' && this.depth(e.y) > -2.5);
+    // Gebäudejäger früh abfangen (noch vor der Brücke), sonst erst auf der eigenen Hälfte verteidigen
+    const threats = foes.filter((e) => e.kind === 'unit' && (this.depth(e.y) > -2.5 || (e.def.targets === 'buildings' && this.depth(e.y) > -6)));
     if (threats.length && this.defendHard(threats, hand, foes)) return;
     if (this.finisher(hand)) return;
     if (this.supportPush(hand)) return;
     const leak = p.elixir >= 9.4;
     const surge = m.elixirMultiplier() > 1 && p.elixir >= 6;
-    if (leak || surge || p.elixir >= 8) {
+    // Gegner hat gerade viel ausgegeben (sichtbar über gespielte Karten) → Gegenangriff in die andere Lane
+    const punish = this.oppSpentRecently() >= 6 && p.elixir >= 5;
+    if (leak || surge || punish || p.elixir >= 7.5) {
+      if (punish) this.lane = this.lastOppLane == null ? this.lane : 1 - this.lastOppLane;
       if (this.startPush(hand, leak)) return;
+      // kein Tank/Win-Condition auf der Hand: Standard-Angriff (Truppen an die Brücke), damit Druck bleibt
+      if ((leak || p.elixir >= 8.5) && this.attack(hand)) return;
     }
+  }
+
+  /** Elixier, das der Gegner in den letzten 4 s sichtbar ausgegeben hat (über das Ausspiel-Ereignis). */
+  oppSpentRecently() {
+    const m = this.m;
+    if (!this.seenPlays) this.seenPlays = [];
+    for (const e of m.entities) {
+      if (e.owner === this.team || e.kind === 'tower' || !e.cardId || this.seenGroups?.has(e.groupId)) continue;
+      (this.seenGroups ||= new Set()).add(e.groupId);
+      const c = m.db.card(e.cardId);
+      if (c) {
+        this.seenPlays.push([m.time, c.elixir || 0]);
+        this.lastOppLane = e.x < 9 ? 0 : 1;
+      }
+    }
+    this.seenPlays = this.seenPlays.filter(([t]) => m.time - t < 4);
+    return this.seenPlays.reduce((a, [, c]) => a + c, 0);
   }
 
   unitScore(h, group, hpSum, flying) {
@@ -332,10 +355,17 @@ export class Bot {
     return false;
   }
 
-  /** Eigene Tanks/Win-Conditions auf dem Weg zur Brücke mit Unterstützung versorgen. */
+  /** Eigene Tanks/Win-Conditions (oder überlebende Verteidiger) auf dem Weg zur Brücke unterstützen – Gegenangriff. */
   supportPush(hand) {
     const m = this.m;
-    const lead = m.entities.find((e) => !e.dead && e.pl === this.side && e.kind === 'unit' && (e.def.targets === 'buildings' || e.hp >= 2000) && this.depth(e.y) > -4 && this.depth(e.y) < 8);
+    const mine = m.entities.filter((e) => !e.dead && e.owner === this.team && e.kind === 'unit' && this.depth(e.y) > -4 && this.depth(e.y) < 8);
+    let lead = mine.find((e) => e.pl === this.side && (e.def.targets === 'buildings' || e.hp >= 2000));
+    // Gegenangriff: Verteidiger mit viel Leben stehen noch → mit Fernkampf dahinter nachlegen
+    if (!lead) {
+      const group = mine.filter((e) => this.depth(e.y) < 3);
+      const hp = group.reduce((a, e) => a + e.hp, 0);
+      if (hp >= 900 && m.players[this.side].elixir >= 6) lead = group.reduce((a, b) => (this.depth(b.y) < this.depth(a.y) ? b : a));
+    }
     if (!lead || m.players[this.side].elixir < 4) return false;
     const support = hand
       .filter((h) => h.card.type === 'troop' && !h.card.forms)

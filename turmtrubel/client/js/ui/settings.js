@@ -14,7 +14,7 @@ function toggle(on, label, onChange) {
   return b;
 }
 
-function seg(options, value, label, onChange) {
+export function seg(options, value, label, onChange) {
   const root = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': label });
   for (const [k, text] of options) {
     const b = h('button', { class: k === value ? 'on' : '', role: 'radio', 'aria-checked': k === value ? 'true' : 'false' }, text);

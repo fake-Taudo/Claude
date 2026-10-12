@@ -6,13 +6,17 @@ import { AudioSys } from './audio.js';
 import { Store } from './store.js';
 import { installIcons, icon } from './ui/icons.js';
 import { $, h, ico, showScreen, currentScreen, toast, modal, confirmDialog, fmtTime } from './ui/dom.js';
-import { cardEl } from './ui/cardview.js';
+import { cardEl, openCardDetail } from './ui/cardview.js';
 import { prerenderAll, cardArt, cardArtGray } from './ui/art.js';
 import { loadPresets } from './vfx/presets.js';
 import { drawTower } from './game/sprites.js';
 import { DeckBuilder } from './ui/deckbuilder.js';
 import { openSettings } from './ui/settings.js';
 import { showUpdates, updatesPending } from './ui/updates.js';
+import { renderModes, showModeRules, modeBadge } from './ui/modes.js';
+import { DraftUI } from './ui/draft.js';
+import { t } from './lang/de.js';
+import { createModes } from '/shared/modes.js';
 import { applyBodyFlags, reducedMotion } from './ui/tokens.js';
 import { Game } from './game/game.js';
 import { initCharacters, prefetchAllFigures } from './characters/index.js';
@@ -74,12 +78,13 @@ class App {
     const bar = $('#boot-bar');
     const txt = $('#boot-text');
     try {
-      const [cards, rules, skin] = await Promise.all(
-        ['/data/cards.json', '/data/rules.json', '/data/skin.json'].map((u) => fetch(u).then((r) => (r.ok ? r.json() : null))),
+      const [cards, rules, skin, modes] = await Promise.all(
+        ['/data/cards.json', '/data/rules.json', '/data/skin.json', '/data/modes.json'].map((u) => fetch(u).then((r) => (r.ok ? r.json() : null))),
       );
       // Gleiche Datenbank wie der Server: Level aus rules.json, Namen/Grafik aus skin.json
       this.db = createDb(cards, { level: rules.cardLevel, skin, skinName: rules.skin });
       this.rules = rules;
+      this.modes = createModes(modes);
     } catch (e) {
       txt.textContent = 'Die Spieldaten konnten nicht geladen werden. Läuft der Server?';
       console.error(e);
@@ -190,6 +195,7 @@ class App {
     $('#btn-create').addEventListener('click', () => this.createRoom());
     $('#btn-join').addEventListener('click', () => this.openJoin());
     $('#btn-training').addEventListener('click', () => this.startTraining());
+    this.draftUI = new DraftUI(this);
 
     $('#lobby-copy').addEventListener('click', () => this.copyCode(false));
     $('#lobby-share').addEventListener('click', () => this.copyCode(true));
@@ -244,6 +250,7 @@ class App {
       return b;
     };
     const training = !!this.game.training;
+    const team = !!this.game.teamMode;
     const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
     const key = (k) => h('kbd', { class: 'key' }, k);
     const body = h(
@@ -266,11 +273,13 @@ class App {
           id: 'gm-surrender',
           onclick: async () => {
             m.close();
-            if (await confirmDialog('Wirklich aufgeben?', 'Der Gegner gewinnt sofort mit 3 Kronen.', 'Aufgeben', true)) this.net.send(C2S.SURRENDER);
+            if (team) {
+              if (await confirmDialog(t('leaveTeam') + '?', t('leaveTeamText'), t('leaveTeam'), true)) this.net.send(C2S.SURRENDER);
+            } else if (await confirmDialog('Wirklich aufgeben?', 'Der Gegner gewinnt sofort mit 3 Kronen.', 'Aufgeben', true)) this.net.send(C2S.SURRENDER);
           },
         },
         ico('flag'),
-        'Aufgeben',
+        team ? t('leaveTeam') : 'Aufgeben',
       ),
       fine
         ? h(
@@ -331,6 +340,7 @@ class App {
       if (this.game) this.game.ping = rtt;
     });
     n.on(S2C.ERROR, (m) => {
+      if (m.code === 'OUTDATED') return this.showOutdated();
       if (m.code === 'ALREADY_IN_ROOM') {
         // Statt Verweis auf die Einstellungen: Banner mit direktem „Raum verlassen“
         this.serverInRoom = true;
@@ -346,7 +356,7 @@ class App {
       }
       toast(m.message, 'error', 3500);
     });
-    n.on(S2C.NOTICE, (m) => toast(m.message, 'info', 3000));
+    n.on(S2C.NOTICE, (m) => toast(m.message, m.takenOver ? 'warn' : 'info', m.takenOver ? 6000 : 3000));
     n.on(S2C.WELCOME, (m) => {
       this.serverInRoom = !!m.inRoom;
       if (this.pendingLeave) {
@@ -370,8 +380,17 @@ class App {
     n.on(S2C.REJECT, (m) => this.game?.onReject(m));
     n.on(S2C.MATCH_END, roomMsg((m) => this.onMatchEnd(m)));
     n.on(S2C.REMATCH, roomMsg((m) => this.onRematchState(m)));
+    n.on(S2C.DRAFT, roomMsg((m) => this.draftUI.update(m)));
+    n.on(S2C.DRAFT_REVEAL, roomMsg((m) => setTimeout(() => this.draftUI.reveal(m), reducedMotion() ? 0 : 650)));
+    n.on(S2C.TEAM_PING, (m) => this.game?.onTeamPing(m));
+    n.on(S2C.TAKEOVER, (m) => this.game?.onTakeover(m));
     n.on(S2C.PRESENCE, (m) => {
       if (this.game && !this.game.ended) {
+        if (this.game.teamMode) {
+          this.game.setPresence(m.side, m.connected);
+          toast(m.connected ? t('presenceBack', { name: m.name }) : t('presenceGone', { name: m.name, s: m.graceLeft }), m.connected ? 'ok' : 'warn', 3500);
+          return;
+        }
         this.game.oppDisconnected = !m.connected;
         toast(m.connected ? 'Dein Gegner ist wieder verbunden.' : `Gegner getrennt – wartet bis zu ${m.graceLeft} s auf Rückkehr …`, m.connected ? 'ok' : 'warn', 3500);
       }
@@ -389,8 +408,19 @@ class App {
     });
   }
 
+  /** Server ist neuer als diese Seite: dauerhafter Hinweis mit „Neu laden“. */
+  showOutdated() {
+    if (this.outdatedShown) return;
+    this.outdatedShown = true;
+    const banner = $('#conn-banner');
+    banner.hidden = false;
+    banner.replaceChildren(h('span', {}, t('outdated') + ' '), h('button', { class: 'btn btn-small btn-primary', onclick: () => location.reload() }, ico('refresh'), t('reload')));
+    toast(ERRORS.OUTDATED, 'warn', 8000);
+  }
+
   resetRoomState() {
     this.room = null;
+    this.draftUI?.destroy();
     clearInterval(this.expiryTimer);
     clearInterval(this.tipTimer);
     this.resetCountdown();
@@ -407,6 +437,7 @@ class App {
     $('#menu-name').textContent = this.store.name;
     $('#menu-rename').title = `${this.store.name} – Namen ändern`;
     this.renderMenuDeck();
+    renderModes(this);
     showScreen('s-menu');
     this.drawMenuStage();
     this.audio.music('menu');
@@ -473,26 +504,37 @@ class App {
     );
   }
 
-  requireReady() {
+  requireReady({ deck = true } = {}) {
     if (!this.net.welcomed) {
       toast('Keine Verbindung zum Server.', 'error');
       return false;
     }
-    if (!this.store.deckValid()) {
+    if (deck && !this.store.deckValid()) {
       toast('Dein aktives Deck ist unvollständig – bau es im Deck-Bauer fertig.', 'warn', 3500);
       return false;
     }
     return true;
   }
 
-  createRoom() {
-    if (!this.requireReady()) return;
-    this.net.send(C2S.CREATE, { deck: this.store.activeDeck().slots });
+  modeOf(id) {
+    return this.modes.get(id || this.modes.defaultId) || this.modes.get(this.modes.defaultId);
   }
 
-  startTraining() {
-    if (!this.requireReady()) return;
-    this.net.send(C2S.TRAINING, { deck: this.store.activeDeck().slots });
+  /** Freundschaftskampf im gewählten Modus erstellen (Regel-Hinweis beim ersten Mal). */
+  async createRoom(modeId) {
+    const mode = this.modeOf(modeId);
+    if (!this.requireReady({ deck: mode.deckSource !== 'draft' })) return;
+    await showModeRules(this, mode);
+    this.net.send(C2S.CREATE, { deck: this.store.activeDeck().slots, mode: mode.id });
+  }
+
+  /** Einzelspieler gegen einen Bot (Stärke aus dem Menü). */
+  async startTraining(modeId) {
+    const mode = this.modeOf(modeId);
+    if (!mode.botsAllowed) return toast(t('onlyMultiplayerTip'), 'warn');
+    if (!this.requireReady({ deck: mode.deckSource !== 'draft' })) return;
+    await showModeRules(this, mode);
+    this.net.send(C2S.TRAINING, { deck: this.store.activeDeck().slots, mode: mode.id, difficulty: this.settings.botDifficulty || 'medium' });
   }
 
   /** Beitreten: 6 Felder mit Auto-Weiter, Einfügen aus der Zwischenablage und klarem Fehlerzustand. */
@@ -520,7 +562,8 @@ class App {
     const submit = () => {
       const code = normalizeCode(value());
       if (!isValidCodeFormat(code)) return markError(ERRORS.INVALID_CODE);
-      if (!this.requireReady()) return;
+      // Deck prüft der Server je nach Modus (Draft-Räume brauchen keins)
+      if (!this.requireReady({ deck: false })) return;
       err.textContent = '';
       this.net.send(C2S.JOIN, { code, deck: this.store.activeDeck().slots });
     };
@@ -622,18 +665,39 @@ class App {
   // ───────────── Lobby ─────────────
   onLobby(m) {
     this.closeJoin();
+    const firstOfRoom = !this.room || this.room.code !== m.code;
     this.room = m;
     if (m.state !== 'lobby' && m.state !== 'countdown') return;
     if (currentScreen() !== 's-lobby') {
+      this.draftUI.destroy();
       showScreen('s-lobby');
       this.audio.music('menu');
     }
-    $('#lobby-title').textContent = m.training ? 'Training gegen Bot' : 'Freundschaftskampf';
+    const mode = this.modeOf(m.mode?.id);
+    const classic = mode.id === this.modes.defaultId;
+    const team = m.players.length > 2;
+    const draft = mode.deckSource === 'draft';
+    $('#lobby-title').textContent = m.training ? `Training gegen ${m.players.find((p) => p?.bot)?.name || 'Bot'}` : 'Freundschaftskampf';
     $('#lobby-codebox').hidden = !!m.training;
+    // Modus und Regeln (Beitritt per Code zeigt den gewählten Modus automatisch)
+    const modeBox = $('#lobby-mode');
+    modeBox.hidden = classic && !m.training;
+    if (!modeBox.hidden) {
+      modeBox.replaceChildren(
+        h('span', { class: 'lobby-mode-label' }, t('modeLabel')),
+        modeBadge(mode),
+        h('button', { class: 'btn btn-small btn-ghost lobby-rules-btn', onclick: () => showModeRules(this, mode, { force: true }) }, ico('search'), t('rulesButton')),
+      );
+    }
+    // Gast im Nicht-Standard-Modus: Regeln beim ersten Mal zeigen
+    if (firstOfRoom && !classic && m.host !== m.you && !m.training) showModeRules(this, mode);
     // Code als einzelne Kacheln (textContent bleibt der Code → Kopieren/Markieren funktioniert weiter)
     const codeEl = $('#lobby-code');
     if (codeEl.textContent !== m.code) codeEl.replaceChildren(...[...m.code].map((ch, i) => h('span', { class: 'code-ch', style: { '--i': i } }, ch)));
     this.fillDeckSelect($('#lobby-deck-select'));
+    $('#lobby-deck').hidden = draft;
+    $('#lobby-draft-note').hidden = !draft;
+    $('#lobby-draft-note').textContent = draft ? t('draftDeckNote') : '';
     const render = (el, p, side) => {
       el.className = `player-card ${side === 0 ? 'blue' : 'red'}${p ? '' : ' empty'}`;
       if (!p) {
@@ -642,12 +706,19 @@ class App {
       }
       el.replaceChildren(
         h('span', { class: 'pname' }, p.name + (side === m.you ? ' (du)' : '')),
-        h('span', { class: 'pinfo' }, p.deckOk ? [icon('check'), `Deck bereit · Ø ${String(p.avg).replace('.', ',')} Elixier`] : [icon('cross'), 'Deck unvollständig']),
+        draft
+          ? h('span', { class: 'pinfo' }, ico('cards'), mode.draft === 'mega' || m.mode?.draft === 'mega' ? 'Deck aus dem Mega Draft' : 'Deck aus dem Draft')
+          : h('span', { class: 'pinfo' }, p.deckOk ? [icon('check'), `Deck bereit · Ø ${String(p.avg).replace('.', ',')} Elixier`] : [icon('cross'), 'Deck unvollständig']),
         h('span', { class: `pready${p.ready ? ' ok' : ''}` }, !p.connected ? 'getrennt …' : p.ready ? 'BEREIT' : 'wählt noch …'),
       );
     };
-    render($('#lobby-p0'), m.players[0], 0);
-    render($('#lobby-p1'), m.players[1], 1);
+    $('#lobby-versus').hidden = team;
+    $('#lobby-teams').hidden = !team;
+    if (team) this.renderTeamLobby(m, draft);
+    else {
+      render($('#lobby-p0'), m.players[0], 0);
+      render($('#lobby-p1'), m.players[1], 1);
+    }
     const me = m.players[m.you];
     const btn = $('#lobby-ready');
     const counting = m.state === 'countdown';
@@ -657,24 +728,101 @@ class App {
     $('#lobby-copy').disabled = counting;
     $('#lobby-share').disabled = counting;
     $('.lobby-panel').classList.toggle('is-counting', counting);
-    const opp = m.players[1 - m.you];
-    $('#lobby-note').textContent = counting ? 'Gleich geht’s los …' : !opp ? '' : me?.ready && !opp.ready ? `Warte, bis ${opp.name} bereit ist …` : !me?.ready && opp.ready ? `${opp.name} ist bereit – du auch?` : '';
+    $('.lobby-panel').classList.toggle('is-team', team);
+    const others = m.players.filter((p, i) => p && i !== m.you);
+    const free = m.players.filter((p) => !p).length;
+    let note = '';
+    if (counting) note = 'Gleich geht’s los …';
+    else if (team) {
+      const waiting = others.filter((p) => !p.ready).map((p) => p.name);
+      note = free ? (free === 1 ? t('seatsFree.1') : t('seatsFree.n', { n: free })) : waiting.length ? t('notReady', { list: waiting.join(', ') }) : me?.ready ? '' : t('allReady4');
+    } else {
+      const opp = others[0];
+      note = !opp ? '' : me?.ready && !opp.ready ? `Warte, bis ${opp.name} bereit ist …` : !me?.ready && opp.ready ? `${opp.name} ist bereit – du auch?` : '';
+    }
+    $('#lobby-note').textContent = note;
     if (!counting) this.resetCountdown();
     clearInterval(this.expiryTimer);
-    const full = m.players[0] && m.players[1];
+    const full = !free;
     const end = Date.now() + m.expiresIn * 1000;
     const upd = () => {
       const left = Math.max(0, (end - Date.now()) / 1000);
-      $('#lobby-expiry').textContent = full ? 'Beide Spieler sind da – drückt auf „Bereit!“' : left > 0 ? `Code gültig noch ${fmtTime(left)}` : 'Code abgelaufen';
+      $('#lobby-expiry').textContent = full ? (team ? t('allReady4') : 'Beide Spieler sind da – drückt auf „Bereit!“') : left > 0 ? `Code gültig noch ${fmtTime(left)}` : 'Code abgelaufen';
     };
     upd();
     this.expiryTimer = setInterval(upd, 1000);
   }
 
+  /** 2 gegen 2: zwei Teamspalten mit je zwei Plätzen; Platz wählen, Gastgeber verschiebt/entfernt. */
+  renderTeamLobby(m, draft) {
+    const root = $('#lobby-teams');
+    const isHost = m.host === m.you;
+    const seats = m.players.map((p, i) => ({ p, i, team: m.teams[i] }));
+    const otherTeamSeat = (seat) => {
+      const target = 1 - m.teams[seat];
+      const cand = seats.filter((x) => x.team === target);
+      return (cand.find((x) => !x.p) || cand[0]).i;
+    };
+    const seatCard = ({ p, i, team }) => {
+      const cls = `player-card seat ${team === 0 ? 'blue' : 'red'}${p ? '' : ' empty'}${i === m.you ? ' me' : ''}`;
+      if (!p) {
+        return h(
+          'div',
+          { class: cls },
+          h('span', { class: 'pname' }, t('freeSeat')),
+          m.state === 'lobby' ? h('button', { class: 'btn btn-small btn-secondary seat-take', onclick: () => this.net.send(C2S.SEAT, { seat: i }) }, ico('boot'), t('takeSeat')) : null,
+        );
+      }
+      const hostCtl =
+        isHost && m.state === 'lobby'
+          ? h(
+              'div',
+              { class: 'seat-ctl' },
+              h('button', { class: 'icon-btn small', title: t('moveTeam'), 'aria-label': `${p.name}: ${t('moveTeam')}`, onclick: () => this.net.send(C2S.MOVE, { from: i, to: otherTeamSeat(i) }) }, ico('shuffle')),
+              i !== m.you
+                ? h(
+                    'button',
+                    {
+                      class: 'icon-btn small danger',
+                      title: t('kick'),
+                      'aria-label': `${p.name}: ${t('kick')}`,
+                      onclick: async () => {
+                        if (await confirmDialog(t('kick'), t('kickConfirm', { name: p.name }), t('kick'), true)) this.net.send(C2S.KICK, { seat: i });
+                      },
+                    },
+                    ico('close'),
+                  )
+                : null,
+            )
+          : null;
+      return h(
+        'div',
+        { class: cls },
+        hostCtl,
+        h('span', { class: 'pname' }, p.name, i === m.you ? ` (${t('you')})` : '', i === m.host ? h('span', { class: 'host-tag', title: t('host') }, ico('crown')) : null),
+        draft ? null : h('span', { class: 'pinfo' }, p.deckOk ? [icon('check'), `Ø ${String(p.avg).replace('.', ',')} Elixier`] : [icon('cross'), 'Deck unvollständig']),
+        h('span', { class: `pready${p.ready ? ' ok' : ''}` }, !p.connected ? 'getrennt …' : p.ready ? 'BEREIT' : 'wählt noch …'),
+      );
+    };
+    root.replaceChildren(
+      ...[0, 1].map((team) =>
+        h(
+          'section',
+          { class: `team-col ${team === 0 ? 'blue' : 'red'}`, 'aria-label': team === 0 ? t('teamBlue') : t('teamRed') },
+          h('h3', { class: 'team-title' }, ico('shield'), team === 0 ? t('teamBlue') : t('teamRed')),
+          seats.filter((x) => x.team === team).map(seatCard),
+        ),
+      ),
+    );
+    root.append(h('div', { class: 'vs team-vs', id: 'lobby-vs-team', 'aria-hidden': 'true' }, h('span', {}, 'VS')));
+  }
+
   /** Countdown ersetzt das „VS“ zwischen den Spielerkarten – verdeckt nichts (B-04). */
   onCountdown(m) {
+    // Countdown nach dem Draft-Reveal läuft auf dem Draft-Screen
+    if (currentScreen() === 's-draft') return m.n >= 0 && this.draftUI.countdown(m.n);
     if (m.n < 0) return this.resetCountdown();
-    const vs = $('#lobby-vs');
+    const vs = this.room?.players?.length > 2 ? $('#lobby-vs-team') || $('#lobby-vs') : $('#lobby-vs');
     vs.classList.add('counting');
     $('.lobby-panel')?.classList.add('is-counting');
     vs.replaceChildren(h('span', { class: 'count-num' }, m.n > 0 ? String(m.n) : 'Los!'));
@@ -682,10 +830,11 @@ class App {
   }
 
   resetCountdown() {
-    const vs = $('#lobby-vs');
-    if (!vs) return;
-    vs.classList.remove('counting');
-    vs.replaceChildren(h('span', {}, 'VS'));
+    for (const vs of [$('#lobby-vs'), $('#lobby-vs-team')]) {
+      if (!vs) continue;
+      vs.classList.remove('counting');
+      vs.replaceChildren(h('span', {}, 'VS'));
+    }
     $('.lobby-panel')?.classList.remove('is-counting');
   }
 
@@ -724,10 +873,21 @@ class App {
     this.result = null;
     this.game = new Game(this, m);
     this.game.ping = this.net.rtt;
+    this.draftUI.destroy();
     if (m.resume) return;
     showScreen('s-loading');
-    $('#load-me').textContent = m.names[m.side];
-    $('#load-opp').textContent = m.names[1 - m.side];
+    // Teamnamen (2 gegen 2: „Anna & Cleo“), eigener Name zuerst
+    const me = m.me ?? m.side;
+    const teams = m.teams || [0, 1];
+    const teamNames = (team) =>
+      teams
+        .map((tm, i) => [tm, i])
+        .filter(([tm]) => tm === team)
+        .sort((a, b) => (b[1] === me) - (a[1] === me))
+        .map(([, i]) => m.names[i])
+        .join(' & ');
+    $('#load-me').textContent = teamNames(m.side);
+    $('#load-opp').textContent = teamNames(1 - m.side);
     this.drawVsTowers();
     this.startTips();
     this.loadMatch(this.game, m);
@@ -895,18 +1055,31 @@ class App {
       this.game.destroy();
       this.game = null;
     }
-    const you = m.you;
+    const you = m.you; // Team
+    const me = m.me ?? m.you; // Sitz
     const opp = 1 - you;
+    const teams = m.teams || [0, 1];
+    const team = teams.length > 2;
     const win = m.winner === you;
     const draw = m.winner == null;
     const title = $('#res-title');
-    title.textContent = draw ? 'Unentschieden' : win ? 'Sieg!' : 'Niederlage';
+    title.textContent = draw ? 'Unentschieden' : win ? (team ? t('teamWin') : 'Sieg!') : team ? t('teamLose') : 'Niederlage';
     title.className = `result-title${draw ? ' draw' : win ? '' : ' lose'}`;
     $('#res-reason').textContent = m.reasonText + (m.training ? ' · Training' : '');
     $('#res-sub').textContent = draw ? 'Gleichstand – Zeit für eine Revanche?' : win ? 'Stark gespielt!' : 'Knapp daneben – beim nächsten Mal klappt’s!';
     $('#s-result').dataset.outcome = draw ? 'draw' : win ? 'win' : 'lose';
-    $('#res-me').textContent = m.names[you] + ' (du)';
-    $('#res-opp').textContent = m.names[opp];
+    // Namen pro Team (2 gegen 2: alle vier Namen, Bots gekennzeichnet)
+    const label = (i) => m.names[i] + (i === me ? ' (du)' : m.bots?.[i] && !m.training && !/^Bot\b/.test(m.names[i]) ? ' (Bot)' : '');
+    const teamLabel = (tm) =>
+      teams
+        .map((x, i) => [x, i])
+        .filter(([x]) => x === tm)
+        .sort((a, b) => (b[1] === me) - (a[1] === me))
+        .map(([, i]) => label(i))
+        .join(' & ');
+    $('#res-me').textContent = teamLabel(you);
+    $('#res-opp').textContent = teamLabel(opp);
+    if (m.mode && m.mode.id !== this.modes.defaultId) $('#res-reason').textContent += ` · ${m.mode.name}`;
     // Krone auf einem Kissen; gewonnene Kronen springen gestaffelt ein (CSS crown-drop)
     const crownSvg = (on, delay) => h('span', { class: `res-crown${on ? ' on' : ''}`, style: { animationDelay: `${delay}s` } }, icon(on ? 'crown-3d' : 'crown-empty'));
     let d = 0.5;
@@ -925,17 +1098,99 @@ class App {
     crowns(m.crowns[you], $('#res-crowns-me'));
     document.querySelector('.res-side.red').classList.toggle('winner', m.winner === opp);
     document.querySelector('.res-side.blue').classList.toggle('winner', m.winner === you);
-    const st = m.stats?.[you] || {};
+    const st = m.stats?.[me] || {};
     const stat = (v, label) => h('div', { class: 'res-stat' }, h('b', { class: 'num', dataset: { to: String(Math.round(v ?? 0)) } }, reducedMotion() ? Math.round(v ?? 0) : 0), label);
     $('#res-stats').replaceChildren(stat(st.played, 'Karten gespielt'), stat(st.spent, 'Elixier ausgegeben'), stat(st.towerDamage, 'Turmschaden'));
     if (!reducedMotion()) this.countUp($('#res-stats'), 600, d * 1000 + 200);
     const btn = $('#res-rematch');
     btn.disabled = !m.rematchAvailable;
     btn.replaceChildren(ico('refresh'), 'Rematch');
-    $('#res-rematch-status').textContent = m.rematchAvailable ? (m.training ? 'Der Bot ist jederzeit bereit.' : 'Beide müssen zustimmen.') : 'Dein Gegner hat den Raum verlassen.';
+    $('#res-rematch-status').textContent = m.rematchAvailable
+      ? m.training
+        ? 'Der Bot ist jederzeit bereit.'
+        : team
+          ? t('rematchAll')
+          : 'Beide müssen zustimmen.'
+      : team && m.bots?.some(Boolean)
+        ? t('rematchNoTakeover')
+        : 'Dein Gegner hat den Raum verlassen.';
+    this.renderResultDecks(m, me);
     showScreen('s-result');
     // Konfetti nur bei Sieg, ab Qualität „Mittel“ und ohne reduzierte Bewegung
     if (win && this.settings.quality !== 'low' && !this.settings.reduceFx && !reducedMotion()) this.confetti();
+  }
+
+  /** Draft-Modi: beide Decks nach dem Kampf anschauen, das eigene auf Wunsch speichern. */
+  renderResultDecks(m, me) {
+    const root = $('#res-decks');
+    if (!m.decks) {
+      root.hidden = true;
+      root.replaceChildren();
+      return;
+    }
+    root.hidden = false;
+    const row = (deck, i) =>
+      h(
+        'div',
+        { class: `res-deck ${(m.teams || [0, 1])[i] === 0 ? 'blue' : 'red'}` },
+        h('span', { class: 'res-deck-name' }, m.names[i] + (i === me ? ' (du)' : '')),
+        h('div', { class: 'res-deck-cards' }, deck.map((id) => cardEl(this.db, id, { mini: true, onClick: () => openCardDetail(this, id) }))),
+      );
+    root.replaceChildren(
+      h('h2', { class: 'res-decks-title' }, ico('cards'), t('draftDecks')),
+      ...m.decks.map(row),
+      h('button', { class: 'btn btn-accent res-save-deck', onclick: () => this.saveDraftDeck(m.decks[me]) }, ico('star'), t('saveDeck')),
+    );
+  }
+
+  saveDraftDeck(slots) {
+    const valid = validateDeck(this.db, slots).ok;
+    const date = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    const body = h(
+      'div',
+      { class: 'save-deck' },
+      h('p', {}, t('saveDeckText')),
+      valid ? null : h('p', { class: 'hint small' }, t('saveDeckInvalid')),
+      h(
+        'div',
+        { class: 'save-deck-slots' },
+        this.store.decks.map((d, i) =>
+          h(
+            'button',
+            {
+              class: 'btn btn-secondary',
+              onclick: () => {
+                this.store.decks[i] = { name: t('savedName', { date }), slots: slots.slice() };
+                this.store.save();
+                toast(t('saveDeckDone', { name: this.store.decks[i].name }), 'ok', 2600);
+                md.close();
+              },
+            },
+            ico('cards'),
+            `${i + 1}: ${d.name}`,
+          ),
+        ),
+      ),
+    );
+    const md = modal(t('saveDeckTitle'), body);
+  }
+
+  onTeamRematch(m) {
+    const me = this.result.me ?? this.result.you;
+    const btn = $('#res-rematch');
+    const status = $('#res-rematch-status');
+    if (!m.available) {
+      btn.disabled = true;
+      status.textContent = t('rematchNoTakeover');
+      return;
+    }
+    const n = m.want.filter(Boolean).length;
+    if (n === m.want.length) status.textContent = 'Rematch! Es geht gleich los …';
+    else if (m.want[me]) status.textContent = t('rematchWaitAll', { n, max: m.want.length });
+    else if (n) {
+      status.replaceChildren(icon('fire'), t('rematchWaitAll', { n, max: m.want.length }));
+      this.audio.sfx('emote');
+    }
   }
 
   /** Zahlen von 0 hochzählen (tabellarische Ziffern, 600 ms). */
@@ -955,6 +1210,7 @@ class App {
     // Kommt vor dem Ergebnis-Screen an (z. B. Gegner verlässt den Kampf) → fürs Anzeigen merken
     if (this.result && !m.available) this.result.rematchAvailable = false;
     if (currentScreen() !== 's-result' || !this.result) return;
+    if (m.want.length > 2) return this.onTeamRematch(m);
     const you = this.result.you;
     const btn = $('#res-rematch');
     const status = $('#res-rematch-status');

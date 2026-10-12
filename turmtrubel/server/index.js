@@ -123,8 +123,10 @@ function makeLimiter(rate = 30, burst = 60) {
  * timeScale > 1 lässt die Tick-Schleife schneller als Echtzeit laufen (nur für automatisierte
  * Ende-zu-Ende-Tests mit Test-Clients; Regeln und Protokoll bleiben gleich).
  */
-export function startServer({ port = Number(process.env.PORT) || 3000, host = process.env.HOST || '0.0.0.0', quiet = false, timeScale = 1 } = {}) {
+export function startServer({ port = Number(process.env.PORT) || 3000, host = process.env.HOST || '0.0.0.0', quiet = false, timeScale = 1, rulesOverride = null } = {}) {
   const data = loadData();
+  // Nur für automatisierte Tests: einzelne Regelwerte überschreiben (z. B. kurze Reconnect-Frist)
+  if (rulesOverride) for (const [k, v] of Object.entries(rulesOverride)) data.rules[k] = v && typeof v === 'object' && !Array.isArray(v) ? { ...data.rules[k], ...v } : v;
   const mgr = new RoomManager({ db: data.db, rules: data.rules, modes: data.modes });
   const server = http.createServer(makeStaticHandler(data));
   const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });

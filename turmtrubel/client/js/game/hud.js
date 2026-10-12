@@ -489,6 +489,7 @@ export class Hud {
     this.drawPing(ctx);
     this.drawEmoteButton(ctx, now);
     if (L.abilityBtn) me?.ab ? this.drawAbility(ctx, me.ab, now) : this.drawAbilitySlot(ctx);
+    if (g.teamMode) this.drawMates(ctx, now);
     this.drawBanners(ctx, now);
     this.drawCrownFlights(ctx, now);
     this.drawEmoteMenu(ctx, now);
@@ -912,9 +913,16 @@ export class Hud {
       while (this.crownSeen[k] < c) this.crownPop[k][this.crownSeen[k]++] = now + flightDelay(k === 0);
       this.crownSeen[k] = Math.min(this.crownSeen[k], c);
     }
-    const full = g.names[opp] || 'Gegner';
+    // Gegnername; im 2 gegen 2 beide Gegner („Ben & Dan“)
+    const full = g.teamMode ? g.teams.map((tm, i) => (tm === opp ? g.names[i] : null)).filter(Boolean).join(' & ') : g.names[opp] || 'Gegner';
     this.drawGroup(ctx, this.L.oppGroup, 'red', full, g.crowns[opp] || 0, 1, now, true);
-    this.drawGroup(ctx, this.L.meGroup, 'blue', this.L.meGroup.label || '', g.crowns[g.side] || 0, 0, now, false);
+    let meLabel = this.L.meGroup.label || '';
+    // 2 gegen 2: „Du & Dan“, wenn das Label sichtbar ist
+    if (g.teamMode && meLabel) {
+      const mate = g.teams.findIndex((tm, i) => tm === g.side && i !== g.seat);
+      if (mate >= 0) meLabel = `${meLabel} & ${g.names[mate]}`;
+    }
+    this.drawGroup(ctx, this.L.meGroup, 'blue', meLabel, g.crowns[g.side] || 0, 0, now, false);
   }
 
   drawGroup(ctx, r, team, label, count, k, now, isOpp) {
@@ -978,7 +986,7 @@ export class Hud {
     const ty = two ? r.y + r.h * 0.32 : r.y + r.h / 2 + 1;
     if (label && tMax > 14) {
       let dx = 0;
-      if (isOpp && g.oppDisconnected) {
+      if (isOpp && (g.oppDisconnected || (g.teamMode && g.teams.some((tm, i) => tm !== g.side && g.away.has(i))))) {
         warnIcon(ctx, tx + 7, ty, size);
         dx = 16;
       }
@@ -991,6 +999,93 @@ export class Hud {
       text(ctx, e.str, tx + dx, ty, size, '#ffffff', 'left', 3);
     }
     ctx.restore();
+  }
+
+  /**
+   * 2 gegen 2: kompakte Anzeige des Teamkollegen in der unteren linken Arena-Ecke (eigene Hälfte, dort steht
+   * selten etwas): Name, kleine Elixierleiste, zuletzt gespielte Karte; getrennt/Bot wird markiert.
+   */
+  drawMates(ctx, now) {
+    const g = this.game;
+    const A = this.L.arena;
+    if (!A || !g.mates.length) return;
+    const s = g.view.s;
+    let h = clamp(s * 1.9, 34, 52);
+    let w = clamp(s * 6.6, 120, 210);
+    // Seitenpanel (Querformat): unter der eigenen Kronengruppe; hochkant: untere linke Arena-Ecke (eigene Hälfte)
+    const G = this.L.meGroup;
+    const inPanel = G && G.x > A.x + A.w - 4;
+    let x = A.x + 6;
+    let y = A.y + A.h - h - 6;
+    if (inPanel) {
+      w = G.w;
+      h = clamp(G.h * 1.15, 38, 50);
+      x = G.x;
+      y = G.y + G.h + 10;
+    }
+    const cardW = h * 0.62;
+    for (const m of g.mates) {
+      const away = g.away.has(m.seat);
+      const bot = g.bots[m.seat];
+      ctx.save();
+      ctx.globalAlpha = away ? 0.6 : 0.94;
+      ctx.fillStyle = 'rgba(16,22,64,0.82)';
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = 2.5;
+      rr(ctx, x, y, w, h, h * 0.3);
+      ctx.fill();
+      ctx.stroke();
+      // Ally-Kennung: gestrichelter Kreis wie unter den Einheiten
+      const cx = x + h * 0.5;
+      const cy = y + h * 0.5;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = '#9ff0ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, h * 0.32, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      text(ctx, (g.names[m.seat] || '?').slice(0, 1).toUpperCase(), cx, cy + 1, Math.round(h * 0.36), '#ffffff', 'center', 3);
+      // Name + Status
+      const tx = x + h * 0.95;
+      const tMax = w - h * 0.95 - cardW - 10;
+      const name = (away ? '⚠ ' : '') + (g.names[m.seat] || '') + (bot ? ' (Bot)' : '');
+      const e = ellipsize(ctx, name, Math.round(h * 0.3), tMax);
+      text(ctx, e.str, tx, y + h * 0.32, Math.round(h * 0.3), '#ffffff', 'left', 3);
+      // Elixier: 10 Segmente
+      const bw = tMax;
+      const bh = Math.max(6, h * 0.18);
+      const by = y + h * 0.62;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      rr(ctx, tx, by, bw, bh, bh / 2);
+      ctx.fill();
+      const k = clamp(m.el / 10, 0, 1);
+      if (k > 0) {
+        ctx.fillStyle = '#e45ce6';
+        rr(ctx, tx, by, Math.max(bh, bw * k), bh, bh / 2);
+        ctx.fill();
+      }
+      ctx.strokeStyle = OUTLINE;
+      ctx.lineWidth = 1.5;
+      rr(ctx, tx, by, bw, bh, bh / 2);
+      ctx.stroke();
+      text(ctx, String(Math.floor(m.el)), tx + bw + 1, by + bh / 2 + 0.5, Math.round(h * 0.24), '#ffd6fb', 'left', 2);
+      // Zuletzt gespielte Karte
+      const kx = x + w - cardW - 5;
+      const ky = y + (h - cardW * 1.25) / 2;
+      if (m.lp) {
+        ctx.drawImage(cardArt(g.db, m.lp, false), kx, ky, cardW, cardW * 1.25);
+        ctx.strokeStyle = OUTLINE;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(kx, ky, cardW, cardW * 1.25);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillRect(kx, ky, cardW, cardW * 1.25);
+      }
+      ctx.restore();
+      y += inPanel ? h + 6 : -(h + 6);
+    }
+    void now;
   }
 
   drawPing(ctx) {

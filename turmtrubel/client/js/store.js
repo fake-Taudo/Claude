@@ -22,6 +22,9 @@ export const DEFAULT_SETTINGS = Object.freeze({
   reduceFx: false, // weniger Partikel, gedämpfte Blitze
   autoQuality: true, // Auflösung/Effektmenge bei Ruckeln automatisch senken
   colorblind: false, // Gegner zusätzlich über Form (Schild-Abzeichen) und Streifen markieren
+  // Spielmodi
+  botDifficulty: 'medium', // Bot-Stärke: easy | medium | hard
+  hideModeInfo: {}, // Modus-ID → true: Regel-Hinweis nicht mehr anzeigen
 });
 
 

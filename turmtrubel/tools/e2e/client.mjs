@@ -55,8 +55,12 @@ export class TestClient {
     this.nextAbility = 0;
     this.seq = 0;
     this.pending = new Map(); // seq → Karte
-    this.side = -1;
+    this.side = -1; // Team (Spielhälfte)
+    this.seat = -1; // eigener Platz (Spielerindex)
     this.types = [];
+    this.aggressive = false; // Massen-Platzierung (Lasttest): jede Gelegenheit nutzen
+    this.draftPicks = 0;
+    this.autoDraft = true;
   }
 
   connect() {
@@ -96,14 +100,28 @@ export class TestClient {
     }
     if (m.type === 'matchInit') {
       this.side = m.side;
+      this.seat = m.me ?? m.side;
       this.types = m.types;
       this.send({ type: 'loaded' });
     } else if (m.type === 's') this.onSnapshot(m);
+    else if (m.type === 'draft' && this.autoDraft) this.onDraft(m);
     else if (m.type === 'reject') {
       this.rejects.set(m.code, (this.rejects.get(m.code) || 0) + 1);
       const card = this.pending.get(m.seq);
       if (card && m.code === 'PLACEMENT') this.spotIdx.set(card, (this.spotIdx.get(card) || 0) + 1);
     }
+  }
+
+  /** Draft: zufällige erlaubte Karte wählen (Triple: aus dem Angebot, Mega: wenn man dran ist). */
+  onDraft(m) {
+    if (m.done) return;
+    let pick = null;
+    if (m.kind === 'triple' && !m.chosen && m.offer.length) pick = m.offer[Math.floor(this.rand() * m.offer.length)];
+    if (m.kind === 'mega' && m.turn === m.you && m.allowed.length) pick = m.allowed[Math.floor(this.rand() * m.allowed.length)];
+    if (!pick || this.lastDraftPick === `${m.round ?? ''}:${m.picks?.length}:${pick}`) return;
+    this.lastDraftPick = `${m.round ?? ''}:${m.picks?.length}:${pick}`;
+    this.draftPicks++;
+    setTimeout(() => this.send({ type: 'draftPick', card: pick }), 20 + Math.floor(this.rand() * 60));
   }
 
   /** Spiegelt eine Position aus Sicht von Spieler 0 auf die eigene Seite (gleiche Lane, damit sich die Truppen begegnen). */
@@ -131,11 +149,11 @@ export class TestClient {
   onSnapshot(s) {
     // Eigene Ausspiel-/Fähigkeits-Ereignisse mitzählen (so, wie der Server sie bestätigt)
     for (const ev of s.ev || []) {
-      if (ev[0] === 'pl' && ev[1] === this.side) {
+      if (ev[0] === 'pl' && ev[1] === this.seat) {
         const id = this.types[ev[2]];
         this.played.set(id, (this.played.get(id) || 0) + 1);
         if (ev[5]) this.evoPlayed.add(id);
-      } else if (ev[0] === 'ab' && ev[2] === this.side) {
+      } else if (ev[0] === 'ab' && ev[2] === this.seat) {
         this.abilities.add(this.types[ev[4]]);
       }
     }
@@ -146,6 +164,21 @@ export class TestClient {
       this.send({ type: 'ability', seq: ++this.seq });
       this.nextAbility = s.t + 2;
       this.nextAct = s.t + 0.4;
+      return;
+    }
+    // Lasttest: blind jede Gelegenheit nutzen – auch ohne Elixier/Bereitschaft (der Server muss ablehnen)
+    if (this.aggressive) {
+      const i = Math.floor(this.rand() * me.h.length);
+      const card = this.db.card(me.h[i]);
+      const eff = card?.elixirRule === 'mirror' ? this.db.card(me.lp) : card;
+      if (eff) {
+        const [x, y] = this.spotFor(eff);
+        const seq = ++this.seq;
+        this.pending.set(seq, eff.id);
+        this.send({ type: 'play', slot: i, card: me.h[i], x, y, seq });
+      }
+      // spamGap in Sim-Sekunden: schneller als das Spiel-Limit, aber unter dem Verbindungs-Limit (30 Nachrichten/s)
+      this.nextAct = s.t + (this.spamGap ?? 0.3);
       return;
     }
     // Karte wählen: zuerst noch nie gespielte (notfalls Elixier dafür sparen), sonst zufällig unter den bezahlbaren
@@ -177,7 +210,7 @@ export class TestClient {
     const seq = ++this.seq;
     this.pending.set(seq, pick.eff.id);
     this.send({ type: 'play', slot: pick.i, card: pick.id, x, y, seq });
-    this.nextAct = s.t + 0.6 + this.rand() * 1.2;
+    this.nextAct = this.aggressive ? s.t : s.t + 0.6 + this.rand() * 1.2;
   }
 
   summary() {

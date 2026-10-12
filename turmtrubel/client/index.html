@@ -78,6 +78,16 @@
           <button class="btn btn-accent deck-cta" id="btn-deckbuilder"><span class="ico" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-cards"/></svg></span> Deck-Bauer</button>
         </div>
       </main>
+      <section class="panel menu-modes" id="menu-modes" aria-labelledby="modes-title">
+        <div class="modes-head">
+          <div class="modes-titles">
+            <h2 class="panel-title" id="modes-title">Spielmodi</h2>
+            <p class="hint small">Wähle einen Modus – mit Freunden per Code oder gegen einen Bot.</p>
+          </div>
+          <div class="mode-difficulty" id="mode-difficulty"></div>
+        </div>
+        <div class="mode-grid" id="mode-grid"></div>
+      </section>
     </section>
 
     <!-- Deck-Bauer -->
@@ -136,6 +146,7 @@
       <div class="center-col">
         <div class="panel lobby-panel">
           <h2 class="panel-title" id="lobby-title">Freundschaftskampf</h2>
+          <div class="lobby-mode" id="lobby-mode" hidden></div>
           <div class="code-box" id="lobby-codebox">
             <span class="code-label">Einladungscode</span>
             <span class="code" id="lobby-code">------</span>
@@ -145,14 +156,16 @@
             </div>
             <span class="hint small" id="lobby-expiry"></span>
           </div>
-          <div class="versus">
+          <div class="versus" id="lobby-versus">
             <div class="player-card blue" id="lobby-p0"></div>
             <div class="vs" id="lobby-vs" aria-live="assertive"><span>VS</span></div>
             <div class="player-card red" id="lobby-p1"></div>
           </div>
-          <label class="lobby-deck"><span>Dein Deck</span>
+          <div class="team-lobby" id="lobby-teams" hidden></div>
+          <label class="lobby-deck" id="lobby-deck"><span>Dein Deck</span>
             <select id="lobby-deck-select" class="select"></select>
           </label>
+          <p class="hint small lobby-draft-note" id="lobby-draft-note" hidden></p>
           <div class="row wrap lobby-actions">
             <button class="btn btn-success btn-big" id="lobby-ready">Bereit!</button>
             <button class="btn btn-ghost btn-ghost-danger" id="lobby-leave">Verlassen</button>
@@ -162,6 +175,9 @@
       </div>
       <div class="countdown" id="countdown" hidden></div>
     </section>
+
+    <!-- Draft (Triple/Mega) und Deck-Reveal – Inhalt baut client/js/ui/draft.js -->
+    <section class="screen" id="s-draft" aria-label="Draft"></section>
 
     <!-- Ladebildschirm vor dem Kampf -->
     <section class="screen" id="s-loading" aria-label="Kampf wird geladen">
@@ -210,6 +226,7 @@
           <div class="res-side blue"><span class="res-name" id="res-me"></span><div class="res-crowns" id="res-crowns-me"></div></div>
         </div>
         <div class="res-stats" id="res-stats"></div>
+        <div class="res-decks" id="res-decks" hidden></div>
         <p class="rematch-status" id="res-rematch-status"></p>
         <div class="row">
           <button class="btn btn-primary btn-big" id="res-rematch"><span class="ico" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg></span>Rematch</button>

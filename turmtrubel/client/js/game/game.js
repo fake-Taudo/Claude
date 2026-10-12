@@ -6,6 +6,7 @@ import { Hud } from './hud.js';
 import { Vfx } from '../vfx/engine.js';
 import { text as ctext } from './canvastext.js';
 import { cardArt } from '../ui/art.js';
+import { t } from '../lang/de.js';
 import { safeInsets, reducedMotion } from '../ui/tokens.js';
 import { sprites } from '../design/spritecache.js';
 import { drawTower } from './sprites.js';
@@ -46,7 +47,12 @@ export class Game {
     this.db = app.db;
     this.net = app.net;
     this.audio = app.audio;
-    this.side = init.side;
+    this.side = init.side; // Team (Spielhälfte, Teamfarbe)
+    this.seat = init.me ?? init.side; // eigener Platz = Spielerindex der Simulation
+    this.teams = init.teams || [0, 1];
+    this.teamMode = this.teams.length > 2;
+    this.mode = init.mode || null;
+    this.bots = init.bots || [];
     this.names = init.names;
     this.types = init.types;
     this.rules = init.rules;
@@ -87,7 +93,12 @@ export class Game {
     this.clock = performance.now() / 1000;
     this.crowns = [0, 0];
     this.phase = 'r';
-    this.snapMult = 1;
+    // Grund-Faktor des Modus (Unendlich-Elixier: 7) – sonst würde schon der erste Snapshot „Doppeltes Elixier“ melden
+    this.baseMult = init.rules?.elixir?.rate ?? 1;
+    this.snapMult = this.baseMult;
+    this.pings = [];
+    this.mates = []; // [{ seat, el, lp, at }] Teamkollegen (2 gegen 2)
+    this.away = new Set(); // getrennte Mitspieler (Sitze)
     this.ended = false;
     this.ping = null;
     this.oppDisconnected = false;
@@ -282,15 +293,26 @@ export class Game {
     this.latest = s;
     this.latestAt = now;
     this.me = s.me;
+    if (s.me?.tm) this.mates = s.me.tm.map(([seat, el, lp]) => ({ seat, el, lp }));
     this.crowns = s.cr;
     this.phase = s.ph;
     // Kampfbeginn: „Kampf!“-Banner (nur am Anfang, nicht beim Wiederverbinden mitten im Kampf)
     if (!this.startShown) {
       this.startShown = true;
-      if (s.t < 3) this.hud.banner('Kampf!', '#ffffff', '', { kind: 'phase', base: '#f5a623', onShow: () => this.phaseFx('phase.start') });
+      if (s.t < 3) {
+        this.hud.banner('Kampf!', '#ffffff', '', { kind: 'phase', base: '#f5a623', onShow: () => this.phaseFx('phase.start') });
+        // Modus-Banner direkt danach (Unendlich-Elixier, 2 gegen 2)
+        if (this.baseMult > 1)
+          this.hud.banner(t('infiniteBanner'), '#ffe9fd', t('infiniteSub'), { kind: 'phase', base: '#c43cf0', drop: '×' + this.baseMult, onShow: () => this.audio.sfx('double') });
+        if (this.teamMode) {
+          const mate = this.teams.findIndex((tm, i) => tm === this.side && i !== this.seat);
+          this.hud.banner(t('teamBanner'), '#ffffff', t('teamSub', { name: this.names[mate] || '' }), { kind: 'phase', base: '#2f7de0' });
+          this.app.toast(t('pingHint'), 'info', 4200);
+        }
+      }
     }
     if (s.em !== this.snapMult) {
-      if (this.snapMult != null && s.em > this.snapMult && s.em >= 2) {
+      if (this.snapMult != null && s.em > this.snapMult && s.em >= 2 && s.em > this.baseMult) {
         const triple = s.em >= 3;
         this.hud.banner(triple ? 'Dreifaches Elixier!' : 'Doppeltes Elixier!', '#ffe9fd', triple ? 'Elixier fließt 3× so schnell' : 'Letzte Minute', {
           kind: 'phase',
@@ -461,6 +483,7 @@ export class Game {
       if (e[8] > (v.maxShield || 0)) v.maxShield = e[8];
       v.target = e[9];
       v.aux = e[11];
+      v.ally = this.teamMode && v.owner === this.side && e[12] !== this.seat;
       v.hpDisp += (v.hp - v.hpDisp) * Math.min(1, dt * 12);
       if (Math.abs(v.hpDisp - v.hp) < 1) v.hpDisp = v.hp;
       // LP-Nachlauf: verlorener Anteil bleibt kurz stehen und läuft dann sanft ab
@@ -565,6 +588,7 @@ export class Game {
       id: e[0],
       type: e[1],
       owner: e[2],
+      pl: e[12] ?? e[2],
       x: e[3],
       y: e[4],
       hp: e[5],
@@ -633,6 +657,43 @@ export class Game {
   }
 
   // ───────────── Ereignisse → Effekte ─────────────
+  /** Team eines Spielers (Sitz); klassisch ist Sitz = Team. */
+  teamOfPl(pl) {
+    return this.teams[pl] ?? pl;
+  }
+
+  /** Einheit eines Teamkollegen (2 gegen 2)? */
+  isAlly(v) {
+    return this.teamMode && v.owner === this.side && v.pl != null && v.pl !== this.seat;
+  }
+
+  onTeamPing(m) {
+    const now = this.clock;
+    this.pings = this.pings.filter((p) => now - p.at < 3);
+    this.pings.push({ x: m.x, y: m.y, seat: m.seat, name: m.name, at: now, mine: m.seat === this.seat });
+    if (m.seat !== this.seat) {
+      this.app.toast(t('pingFrom', { name: m.name }), 'info', 1600);
+      this.audio.sfx('emote', 0.8);
+      this.app.haptic([10, 40, 10]);
+    } else this.audio.sfx('select', 0.6);
+  }
+
+  onTakeover(m) {
+    this.bots[m.seat] = true;
+    this.away.delete(m.seat);
+    this.names[m.seat] = m.bot || this.names[m.seat];
+  }
+
+  setPresence(seat, connected) {
+    if (connected) this.away.delete(seat);
+    else this.away.add(seat);
+  }
+
+  sendPing(wx, wy) {
+    if (!this.teamMode || this.ended) return;
+    this.net.send(C2S.MAP_PING, { x: Math.round(wx * 10) / 10, y: Math.round(wy * 10) / 10 });
+  }
+
   teamOf(owner) {
     return owner === this.side ? 'blue' : 'red';
   }
@@ -803,7 +864,7 @@ export class Game {
         case 'el': {
           const [, owner, x, y] = ev;
           fx.emit('elixir.collect', { x, y });
-          if (owner === this.side) {
+          if (owner === this.seat) {
             fx.text(x, y, '+1', '#ff9af0', 0.6, 1, 2, 0.8);
             A.sfx('elixir', 0.5);
           }
@@ -929,17 +990,20 @@ export class Game {
           if (v) fx.emit('blast.gold', { x: v.x, y: v.y, r: 1.2 });
           break;
         }
-        case 'em':
-          if (ev[1] !== this.side && this.app.settings.muteEmotes) break;
-          this.emotes = this.emotes.filter((e) => e.owner !== ev[1]);
-          this.emotes.push({ owner: ev[1], index: ev[2], at: now });
+        case 'em': {
+          // ev[1] = Spieler (Sitz); Position der Sprechblase hängt am Team, im 2v2 mit Namen
+          const team = this.teamOfPl(ev[1]);
+          if (ev[1] !== this.seat && team !== this.side && this.app.settings.muteEmotes) break;
+          this.emotes = this.emotes.filter((e) => e.pl !== ev[1]);
+          this.emotes.push({ owner: team, pl: ev[1], name: this.teamMode ? this.names[ev[1]] : null, index: ev[2], at: now });
           A.sfx('emote');
           break;
+        }
         case 'ab': {
           const v = this.vis.get(ev[1]);
           const info = this.typeInfo(ev[3], false);
           const card = this.db.card(info.cardId || info.key);
-          const mine = ev[2] === this.side;
+          const mine = this.teamOfPl(ev[2]) === this.side;
           v?.anim?.ability(now);
           // Figuren mit Formwechsel nach der Fähigkeit (z. B. Dunkler Prinz als Held springt ab und läuft zu Fuß)
           const after = v?.fig ? figureEntry(v.fig)?.afterAbility : null;
@@ -953,9 +1017,11 @@ export class Game {
           break;
         }
         case 'pl': {
-          const [, owner, type, x, y, evo] = ev;
+          const [, pl, type, x, y, evo] = ev;
+          const owner = this.teamOfPl(pl); // Team des Spielers
           const key = this.types[type];
-          if (owner !== this.side) this.markers.push({ owner, cardId: key, x, y, evo: !!evo, at: now });
+          // Karten von Gegnern (und im 2v2 vom Teamkollegen) als kurzer Hinweis über dem Platzierungsort
+          if (pl !== this.seat) this.markers.push({ owner, pl, ally: owner === this.side, cardId: key, x, y, evo: !!evo, at: now });
           else this.ghosts = this.ghosts.filter((g) => !(g.card === key && Math.hypot(g.x - x, g.y - y) < 0.1));
           const card = this.db.card(key);
           if (card?.type !== 'spell') A.sfx('deploy', owner === this.side ? 0.7 : 0.4);
@@ -1060,6 +1126,16 @@ export class Game {
         if (this.sel >= 0) {
           const [wx, wy] = this.view.toWorld(p.x, p.y);
           if (this.tryPlay(wx, wy)) this.sel = -1;
+        } else if (this.teamMode) {
+          // Tippen und halten → Zeichen für den Teamkollegen
+          clearTimeout(this.pingHold);
+          const start = p;
+          this.pingStart = start;
+          this.pingHold = setTimeout(() => {
+            if (this.pingStart !== start) return;
+            const [wx, wy] = this.view.toWorld(start.x, start.y);
+            this.sendPing(wx, wy);
+          }, 450);
         }
         break;
       default:
@@ -1070,6 +1146,7 @@ export class Game {
   pointerMove(e) {
     const p = this.cssPoint(e);
     this.pointer = p;
+    if (this.pingStart && Math.hypot(p.x - this.pingStart.x, p.y - this.pingStart.y) > 12) this.pingStart = null;
     if (e.pointerType === 'mouse' && this.hud.L) {
       const hit = this.hud.hit(p.x, p.y);
       const t = this.hud.oppCut && hit.type === 'oppName' ? this.hud.oppFull : '';
@@ -1081,6 +1158,8 @@ export class Game {
   }
 
   pointerUp(e) {
+    this.pingStart = null;
+    clearTimeout(this.pingHold);
     const d = this.drag;
     if (!d) return;
     this.drag = null;
@@ -1490,6 +1569,10 @@ export class Game {
     if (preview) R.drawGhost(ctx, preview, now);
     this.markers = this.markers.filter((m) => now - m.at < 1.3);
     R.drawPlayedMarkers(ctx, this.markers, now, (id, evo) => cardArt(this.db, id, evo));
+    if (this.pings.length) {
+      this.pings = this.pings.filter((p) => now - p.at < 3);
+      R.drawPings(ctx, this.pings, now);
+    }
     this.emotes = this.emotes.filter((e) => now - e.at < 2.6);
     R.drawEmotes(ctx, this.emotes, now);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
