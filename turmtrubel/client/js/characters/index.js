@@ -230,6 +230,8 @@ function paintContext(model, sel) {
     innerMu: tier.innerMu ?? 1.8,
     hue: sel.hue || 0,
     hueSet: model.hueSet,
+    // Farbenblind-Modus: Teamsymbol größer (docs/CHAR_SYSTEM.md §6)
+    emblemScale: sel.cb ? (teams().colorblind?.emblemScale ?? 1.5) : 1,
   };
 }
 
@@ -343,7 +345,8 @@ function quantPpm(ppm) {
 }
 
 function frameKey(o, team, cb, view, state, idx, variant, hue, ppm, lod) {
-  return `${o.figure}|${o.form || ''}|${o.evo ? 1 : 0}|${team}${cb}|${view}|${state}|${idx}|${variant}|${hue}|${ppm.toFixed(4)}|${lod}`;
+  // Stufe im Schlüssel: Bildzahl pro Zustand hängt von ihr ab (Bild 3 von 6 ≠ Bild 3 von 8)
+  return `${o.figure}|${o.form || ''}|${o.evo ? 1 : 0}|${team}${cb}|${view}|${state}|${idx}|${variant}|${hue}|${ppm.toFixed(4)}|${lod}|${S.quality[0]}${o.hide ? '|-' + o.hide : ''}`;
 }
 function frameReq(model, o, p) {
   const Q = qual();
@@ -357,7 +360,7 @@ function frameReq(model, o, p) {
     ppm: p.ppm,
     big: !!o.big,
     outlinePx: tier.px * zoom * p.dpr * (o.big ? 1 : Q.res),
-    sel: { view: p.view, evo: !!o.evo, form: o.form || null, variant: p.variant, lod: p.lod, team: p.team, state: p.state, hue: p.hue, cb: p.cb },
+    sel: { view: p.view, evo: !!o.evo, form: o.form || null, variant: p.variant, lod: p.lod, team: p.team, state: p.state, hue: p.hue, cb: p.cb, hide: o.hide || null },
   };
 }
 
@@ -506,6 +509,75 @@ export function drawCharacter(ctx, o) {
   ctx.restore();
   const top = o.y - lift + frame.top * frame.ppm * k * sy;
   return { top, bottom: o.y - lift + frame.bottom * frame.ppm * k };
+}
+
+/** Zustand, wie die Laufzeit ihn abspielt: { name (nach Ersatzregeln), frames (Qualität Hoch), loop, dur }. */
+export function stateInfo(figure, state) {
+  const model = S.models.get(figure);
+  if (!model) return null;
+  const { name, entry } = stateEntry(model, state);
+  const f = entry.frames || states()[name]?.frames || DEF_STATES[name]?.frames || [2, 4, 6];
+  return { name, frames: f[f.length - 1], loop: entry.loop ?? states()[name]?.loop ?? false, dur: entry.dur ?? states()[name]?.dur ?? 1 };
+}
+
+/**
+ * Pose ohne Rastern (Prüfskript): Weltboxen (mu) der sichtbaren Teile für Zustand und normierte Zeit u.
+ * Rückgabe: { state, alpha, parts: [{ name, pass, box: [x0, y0, x1, y1] }] }.
+ */
+export function figurePose(o) {
+  const model = S.models.get(o.figure);
+  if (!model) return null;
+  const { name, entry } = stateEntry(model, o.state || 'idle');
+  const pose = evalPose(entry, o.u || 0);
+  const sel = { view: o.view || 'front', evo: !!o.evo, form: o.form || null, variant: o.variant || 0, lod: 2, team: 'blue', state: name, hide: o.hide || null };
+  const mats = model.matrices(pose);
+  const parts = [];
+  for (const pass of ['body', 'over', 'glow']) {
+    for (const p of model.visible(sel, pose, pass)) {
+      if (!p.bb) continue;
+      const m = mats[model.boneIdx.get(p.bone) ?? 0];
+      const [x, y, w, h] = p.bb;
+      const b = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const [px, py] of [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]) {
+        const tx = m[0] * px + m[2] * py + m[4];
+        const ty = m[1] * px + m[3] * py + m[5];
+        b[0] = Math.min(b[0], tx);
+        b[1] = Math.min(b[1], ty);
+        b[2] = Math.max(b[2], tx);
+        b[3] = Math.max(b[3], ty);
+      }
+      parts.push({ name: p.name, pass, box: b });
+    }
+  }
+  return { state: name, alpha: pose.alpha ?? 1, parts };
+}
+
+/** Teile einer Figur mit ihren Merkmalen (Prüfskript). */
+export function figureParts(figure) {
+  const model = S.models.get(figure);
+  return model ? model.parts.map((p) => ({ name: p.name, sig: !!p.sig, team: !!p.team, teamOnly: p.teamOnly, state: p.state || null, form: p.form || null, evo: p.evo || null, view: p.view || null })) : null;
+}
+
+/**
+ * Ein Bild backen, ohne Atlas und ohne Bau-Budget (Prüfskript). o wie drawCharacter, dazu u (0–1, normierte Zeit)
+ * und hide ('sig' | 'team'). Rückgabe: { src (Canvas), w, h, ax, ay (Fußpunkt im Bild), ppm, top, bottom, alpha }.
+ */
+export function characterFrame(o) {
+  const model = S.models.get(o.figure);
+  if (!model) return null;
+  const { name } = stateEntry(model, o.state || 'idle');
+  const dpr = o.dpr || 1;
+  const ppm = ((o.scale || 26) / 50) * dpr;
+  const H = model.restH * ppm;
+  const lod = o.lod ?? (H >= 110 ? 2 : H >= 46 ? 1 : 0);
+  const view = o.view === 'back' && model.hasBack ? 'back' : 'front';
+  const team = o.team === 'red' ? 'red' : 'blue';
+  const req = frameReq(model, { ...o, big: true }, { team, cb: S.colorblind ? 1 : 0, view, state: name, idx: -1, u: o.u || 0, variant: o.variant || 0, hue: 0, ppm, lod, dpr });
+  const before = S.used;
+  const f = bake(model, req);
+  S.used = before;
+  S.big.delete(req.key);
+  return { ...f, state: name };
 }
 
 /** Vektor-Ansicht ohne Atlas (Prüfskript, Kartenbilder in großer Auflösung). */

@@ -171,6 +171,29 @@ export const COLOR_RULES = {
   accentWeight: 0.6, // Schema = √(ΔE_Haupt² + (0,6 · ΔE_Akzent)²)
 };
 
+/**
+ * Schwellen des Prüfskripts (tools/characters/check.mjs, npm run check:characters). Maße in Pixeln des jeweiligen
+ * Maßstabs; mu = Modell-Einheiten (1 Feld = 50 mu); Höhe = Ruhehöhe der Figur.
+ */
+export const CHECK = {
+  // Silhouette: Ruhebild, Fußpunkt deckungsgleich; Spielmaßstab (50 px pro Feld) und höhennormiert (150 px hoch)
+  silhouette: { scale: 50, normPx: 150, fail: 0.8, warn: 0.7, normWarn: 0.85, relatedMax: 0.97 },
+  // Farbe: Anteil der Eigenfarbfläche (ohne Kontur und Teamzonen) nahe der Haupt- bzw. Akzentrampe (ΔE2000 ≤ tol)
+  color: { scale: 60, tol: 10, main: 0.15, acc: 0.01 },
+  // 40-px-Test: Signature-Teile ausgeblendet → sichtbar veränderte Fläche (ΔE76 > de) im Verhältnis zur Figur
+  small: { px: 40, de: 12, sig: 0.04, abs: 20 },
+  // Team: Teamfläche (Blau ≠ Rot) 3–25 %; Teamsymbol sichtbar (px) und in Graustufen unterscheidbar (Blau und Rot
+  // haben fast dieselbe Helligkeit, die Form trägt die Information); unter Fehlsichtigkeit unterscheidbar
+  team: { scale: 52, de: 8, maxArea: 0.25, minArea: 0.03, cvd: 0.6, emblem: 8, cbGrow: 1.4 },
+  // Animation: Pose in fine Schritte je Zustand geteilt; Schritte mit mehr als coarse × Ruhehöhe Versatz eines Teils
+  // werden per Halbierung eingegrenzt. Bleibt dort mehr als jump × Ruhehöhe: Unstetigkeit (Sprung). Einstieg = Abstand
+  // zur Ruhepose (Hinweis). Füße (mu): Ruhe am Fußpunkt (± feetRest), kein Zustand tiefer als Ruhe + sink, Ruhe und
+  // Laufen berühren den Boden (tiefster Fuß höchstens float über der Ruhe).
+  anim: { fine: 64, coarse: 0.06, jump: 0.04, enter: 0.4, feetRest: 6, sink: 6, float: 4, contact: 15 },
+  // Performance: 60 Einheiten plus Zauber; Desktop 60 FPS (Mittel ≥ 55), Handy CPU 4× gedrosselt ≥ 30
+  perf: { units: 60, seconds: 14, desktopFps: 55, throttledFps: 30, cpu: 4 },
+};
+
 export const RELATED = [
   ['golem', 'golemite'],
   ['elixir-golem', 'elixir-golemite'],

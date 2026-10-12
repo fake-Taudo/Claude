@@ -221,8 +221,8 @@ export default function bats(F) {
   tooth(3.2, 'toothL', 2);
 
   // ───────── Teamsymbol auf der Brust ─────────
-  emblem(F, 'emblem', 'body', 12, -6.4, -13.6, 1.7, { lod: 1, view: 'front' });
-  emblem(F, 'emblemBack', 'body', 13, 0, -14, 1.9, { lod: 1, view: 'back' });
+  emblem(F, 'emblem', 'body', 12, -6.4, -13.6, 1.7, { view: 'front' });
+  emblem(F, 'emblemBack', 'body', 13, 0, -14, 1.9, { view: 'back' });
 
   // ───────── Evolution: Vampir mit Mini-Umhang, leuchtendem Zahn und Herzpunkten ─────────
   F.part('evoCape', { bone: 'body', z: 7, zb: 14, evo: 'evo' }, (g) => {

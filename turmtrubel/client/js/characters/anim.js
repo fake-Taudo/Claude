@@ -156,11 +156,15 @@ function bipedSpawn(u, p, P) {
     P.r('cape', -25);
   } else {
     const k = (u - land) / (1 - land);
+    // Aufprall: in 5 % der Erscheinzeit von der Fallpose in die Stauchung (stetig, kein Sprung zwischen Bildern)
+    const b = EASE.out(clamp01((u - land) / 0.05));
     const sq = key([[0, 0.22], [0.25, 0.26, 'out'], [0.6, -0.06, 'io'], [1, 0, 'io']], k);
-    P.s('root', 1 + sq * 0.6, 1 - sq);
-    P.r('armF', -20 * (1 - k));
-    P.r('armB', 20 * (1 - k));
-    P.r('cape', 18 * (1 - k));
+    P.s('root', 0.95 + (sq * 0.6 + 0.05) * b, 1.07 - (sq + 0.07) * b);
+    P.r('armF', -(p.armUp ?? 70) * 0.7 * (1 - b) - 20 * (1 - k) * b);
+    P.r('armB', (p.armUpB ?? 60) * 0.7 * (1 - b) + 20 * (1 - k) * b);
+    P.r('legF', -16 * (1 - b));
+    P.r('legB', 14 * (1 - b));
+    P.r('cape', -25 * (1 - b) + 18 * (1 - k) * b);
   }
 }
 function bipedDeath(u, p, P) {
@@ -482,8 +486,14 @@ function quadSpawn(u, p, P) {
     P.r('legBn', 30);
     P.r('legBf', 24);
   } else {
+    // Aufprall stetig (siehe bipedSpawn)
+    const b = EASE.out(clamp01((u - land) / 0.05));
     const sq = key([[0, 0.18], [0.3, 0.2, 'out'], [0.65, -0.05], [1, 0]], k);
-    P.s('root', 1 + sq * 0.5, 1 - sq);
+    P.r('legFn', -30 * (1 - b));
+    P.r('legFf', -24 * (1 - b));
+    P.r('legBn', 30 * (1 - b));
+    P.r('legBf', 24 * (1 - b));
+    P.s('root', 1 + sq * 0.5 * b, 1 - sq * b);
   }
 }
 

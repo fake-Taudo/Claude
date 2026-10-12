@@ -16,6 +16,8 @@ function partMatches(p, sel, exprActive, pose) {
   if (p.variant && !p.variant.includes(sel.variant || 0)) return false;
   if (p.lod > sel.lod) return false;
   if (p.teamOnly && p.teamOnly !== sel.team) return false;
+  // Prüfskript: Signature- oder Teamteile ausblenden (sel.hide = 'sig' | 'team')
+  if (sel.hide && p[sel.hide]) return false;
   if (p.expr && !p.expr.includes(exprActive)) return false;
   if (p.state && !p.state.some((s) => s === sel.state || pose.show.has(s))) return false;
   return true;
@@ -135,7 +137,14 @@ export class FigureModel {
     const env = { sel, pose, ex, P, lod: sel.lod, clips: this.clips, state: sel.state };
     for (const p of this.visible(sel, pose, pass)) {
       const m = mats[this.boneIdx.get(p.bone) ?? 0];
-      const t = mul(base, m);
+      let t = mul(base, m);
+      // Teamsymbol im Farbenblind-Modus um seine Mitte vergrößern
+      const k = p.teamOnly && p.bb ? P.emblemScale || 1 : 1;
+      if (k !== 1) {
+        const cx = p.bb[0] + p.bb[2] / 2;
+        const cy = p.bb[1] + p.bb[3] / 2;
+        t = mul(t, [k, 0, 0, k, cx * (1 - k), cy * (1 - k)]);
+      }
       ctx.setTransform(t[0], t[1], t[2], t[3], t[4], t[5]);
       drawItems(ctx, p.items, env);
     }

@@ -1,4 +1,5 @@
-// Contact Sheet: eine Kachel pro Figur mit Heldenbild, Team Rot, Rückansicht, Angriff, Evo und 40-px-Test samt Silhouette.
+// Contact Sheet: eine Kachel pro Figur mit Heldenbild, Team Rot, Rückansicht, Angriff, Evo, 40-px-Test samt Silhouette
+// und allen Zuständen in Spielgröße (26 px pro Feld).
 //
 //   node tools/characters/contact.mjs                    → alle gebauten Figuren nach docs/contact_sheet.png
 //   node tools/characters/contact.mjs knight bats --out docs/contact_sheet_pilot.png --cols 3
@@ -8,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { buildAll } from './build.mjs';
 import { openLab } from './lab.mjs';
 import { figureById } from './figures.mjs';
-import { FAMILIES, sizeOfHeight } from './system.mjs';
+import { FAMILIES, STATES, sizeOfHeight } from './system.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -20,7 +21,7 @@ export function figureIds() {
     .sort();
 }
 
-function displayName(id) {
+export function displayName(id) {
   const cards = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/cards.json'), 'utf8'));
   const list = cards.cards || cards;
   const c = list.find((x) => x.id === id);
@@ -39,12 +40,13 @@ export async function contactSheet(lab, ids, o = {}) {
     const fam = FAMILIES[row.fam] || {};
     return { id, name: displayName(id), fam: fam.name || row.fam || '', size: row.h ? sizeOfHeight(row.h).id : '', h: row.h || 1.5 };
   });
+  const stateNames = Object.fromEntries(Object.entries(STATES).map(([k, v]) => [k, v.name]));
   const url = await lab.page.evaluate(
-    async ({ tiles, cols, title }) => {
+    async ({ tiles, cols, title, stateNames }) => {
       const CH = window.CH;
       await CH.loadFigures(tiles.map((t) => t.id));
       const TW = 700;
-      const TH = 300;
+      const TH = 380;
       const HEAD = 64;
       const rows = Math.ceil(tiles.length / cols);
       const c = document.createElement('canvas');
@@ -58,7 +60,7 @@ export async function contactSheet(lab, ids, o = {}) {
       g.fillText(title, 16, 38);
       g.font = '14px sans-serif';
       g.fillStyle = '#c8d8c0';
-      g.fillText('Heldenbild Blau · Team Rot · Rückansicht · Angriff (Trefferbild) · Evo/Variante · 40-px-Test mit Silhouette', 16, 58);
+      g.fillText('Heldenbild Blau · Team Rot · Rückansicht · Angriff (Trefferbild) · Evo/Variante · 40-px-Test mit Silhouette · alle Zustände in Spielgröße (26 px pro Feld)', 16, 58);
       const tmp = document.createElement('canvas');
       const tg = tmp.getContext('2d', { willReadFrequently: true });
       const draw = (ctx, f, x, y, scale, opt = {}) => {
@@ -90,7 +92,7 @@ export async function contactSheet(lab, ids, o = {}) {
         g.beginPath();
         g.rect(X + 4, Y + 34, TW - 8, TH - 38);
         g.clip();
-        draw(g, f, X + 128, Y + TH - 30, 72);
+        draw(g, f, X + 128, Y + 262, Math.min(72, 210 / (e?.height || f.h)));
         // Spalte: Rot, Rückansicht, Angriff, Evo/Variante
         const small = 38;
         const evo = !!e?.evo;
@@ -104,18 +106,33 @@ export async function contactSheet(lab, ids, o = {}) {
         ];
         cells.forEach((cc, k) => {
           const cx = X + 300 + k * 100;
-          draw(g, f, cx, Y + 210, small, cc);
+          draw(g, f, cx, Y + 200, small, cc);
           g.fillStyle = '#fff';
           g.font = '11px sans-serif';
           g.textAlign = 'center';
-          g.fillText(cc.label, cx, Y + 228);
+          g.fillText(cc.label, cx, Y + 216);
           g.textAlign = 'left';
         });
         g.restore();
+        // alle Zustände in Spielgröße (Ruhe und Laufen bei ¼, Angriff am Trefferbild, sonst Mitte)
+        g.fillStyle = 'rgba(0,0,0,0.14)';
+        g.fillRect(X + 4, Y + 272, TW - 8, TH - 276);
+        const order = ['idle', 'walk', 'attack', 'hit', 'spawn', 'death', 'ability', 'charge', 'spawnUnit', 'stun', 'sleep'];
+        const st = order.filter((k) => e?.anim?.[k]);
+        st.forEach((k, j) => {
+          const cx = X + 36 + j * Math.min(76, (TW - 44) / st.length);
+          const at = k === 'attack' ? hitT : k === 'idle' || k === 'walk' ? 0.25 : k === 'spawn' ? 0.7 : 0.5;
+          draw(g, f, cx, Y + TH - 22, 26, { state: k, t: at, noLift: false });
+          g.fillStyle = '#fff';
+          g.font = '10px sans-serif';
+          g.textAlign = 'center';
+          g.fillText(stateNames[k] || k, cx, Y + TH - 8);
+          g.textAlign = 'left';
+        });
         // 40-px-Test: echte Größe + Silhouette
-        const by = Y + TH - 14;
+        const by = Y + 264;
         g.fillStyle = 'rgba(0,0,0,0.18)';
-        g.fillRect(X + 252, Y + 236, TW - 260, TH - 244);
+        g.fillRect(X + 252, Y + 220, TW - 260, 50);
         const s40 = 40 / (e?.height || f.h);
         draw(g, f, X + 300, by, s40, { noLift: true });
         draw(g, f, X + 360, by, s40, { team: 'red', noLift: true });
@@ -136,7 +153,7 @@ export async function contactSheet(lab, ids, o = {}) {
       });
       return c.toDataURL('image/png');
     },
-    { tiles, cols: o.cols || 3, title: o.title || 'Turmtrubel – Figuren' },
+    { tiles, cols: o.cols || 3, title: o.title || 'Turmtrubel – Figuren', stateNames },
   );
   return Buffer.from(url.split(',')[1], 'base64');
 }

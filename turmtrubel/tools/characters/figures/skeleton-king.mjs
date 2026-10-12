@@ -147,7 +147,7 @@ export default function skeletonKing(F) {
     // stützt sich auf die Keule, Seelenlichter kreisen
     idle: { p: { breathe: 0.02, bob: 1, sway: 1, tilt: 2 }, keys: { buddy: { r: [[0, 0], [1, 360]] }, jaw: { r: [[0, 0], [0.6, 0], [0.65, 10], [0.7, 0], [0.75, 10], [0.8, 0]] } } },
     // schwerer Schritt, die Robe schleift
-    walk: { p: { stride: 6, bob: 3, armSwing: 4, skirt: 4 }, keys: { buddy: { r: [[0, 0], [1, 180]] } }, ev: { step: [0.25, 0.75] } },
+    walk: { p: { stride: 6, bob: 3, armSwing: 4, skirt: 4 }, keys: { buddy: { r: [[0, 0], [1, 360]] } }, ev: { step: [0.25, 0.75] } },
     // Keule über den Kopf, Flächenschlag
     attack: { prog: 'atk.swing', hit: 0.55, p: { wind: -170, strike: -40, over: 10, lean: 10, lunge: 12 }, keys: { jaw: { r: [[0, 0], [0.5, 14], [0.8, 0]] } }, ev: { strike: 0.55 } },
     // Geweih wackelt

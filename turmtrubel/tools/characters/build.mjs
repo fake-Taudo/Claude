@@ -176,7 +176,7 @@ export async function buildAll(only) {
     version: 1,
     muPerTile: SYS.MU_PER_TILE,
     system: {
-      team: { blue: SYS.TEAM.blue, red: SYS.TEAM.red, placeholders: SYS.TEAM.placeholders },
+      team: { blue: SYS.TEAM.blue, red: SYS.TEAM.red, placeholders: SYS.TEAM.placeholders, colorblind: SYS.TEAM.colorblind },
       outline: SYS.OUTLINE,
       lod: SYS.LOD,
       states: SYS.STATES,

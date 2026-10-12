@@ -136,7 +136,7 @@ export default function towerGuard(F) {
       ev: { release: 0.6 },
     },
     // duckt sich hinter die Zinne
-    hit: { keys: { root: { y: [[0, 0], [0.2, 6], [1, 0]] } } },
+    hit: { keys: { root: { y: [[0, 0], [0.2, 4], [1, 0]] } } },
     spawn: { keys: { armF: { r: [[0, 0], [0.6, 0], [0.75, -150], [0.9, -150], [1, 0]] } } },
     // springt mit einem Hornstoß hinab
     death: { prog: 'still', keys: { expr: [[0, 1, 'death']], root: { y: [[0, 0], [0.2, -8, 'out'], [1, 30, 'in']], r: [[0, 0], [1, 30]] }, alpha: [[0, 1], [0.6, 1], [1, 0]] } },

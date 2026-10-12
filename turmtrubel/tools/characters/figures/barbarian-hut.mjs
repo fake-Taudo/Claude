@@ -106,7 +106,7 @@ export default function barbarianHut(F) {
 
   F.anim({
     // Rauch steigt, Behang weht, Fahne flattert
-    idle: { prog: 'building.idle', p: { flag: 10, door: 3 }, keys: { chimney: { y: [[0, 0], [1, -6]], sy: [[0, 1], [0.5, 1.1], [1, 1]] } } },
+    idle: { prog: 'building.idle', p: { flag: 10, door: 3 }, keys: { chimney: { y: [[0, 0], [0.5, -6], [1, 0]], sy: [[0, 1], [0.5, 1.1], [1, 1]] } } },
     // Tor fliegt auf, Staub, Barbaren rennen heraus
     spawnUnit: { prog: 'building.spawnUnit', p: { open: 0 }, keys: { door: { sy: [[0, 1], [0.15, 0.2, 'out'], [0.7, 0.2], [1, 1]] } }, ev: { spawnUnit: 0.25 } },
     attack: { prog: 'building.spawnUnit', p: { open: 0 }, hit: 0.3, keys: { door: { sy: [[0, 1], [0.15, 0.2, 'out'], [0.7, 0.2], [1, 1]] } } },

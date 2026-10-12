@@ -208,7 +208,7 @@ export default function barbarians(F) {
   }
   arm('armF', 'handF', 1, 15, 40, 6, false);
 
-  emblem(F, 'emblem', 'hip', 24, 3, -30.4, 1.6, { lod: 1, zb: 24 });
+  emblem(F, 'emblem', 'hip', 24, 3, -30.4, 1.6, { zb: 24 });
 
   // ───────── Evolution (Rasend): glühende Wolfsaugen, Kriegsbemalung ─────────
   F.part('evoEyes', { bone: 'head', z: 35.5, evo: 'evo', glow: true }, (g) => {

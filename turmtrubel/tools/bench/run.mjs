@@ -29,7 +29,7 @@ export const PROFILES = [
   { name: 'phone-844x390', width: 844, height: 390, dpr: 2, cpu: 4, touch: true },
 ];
 
-async function loadPlaywright() {
+export async function loadPlaywright() {
   for (const t of ['playwright', '@playwright/test']) {
     try {
       return await import(t);
@@ -54,9 +54,9 @@ function freePort() {
   });
 }
 
-async function startServer() {
+export async function startServer(root = ROOT) {
   const port = await freePort();
-  const proc = spawn(process.execPath, ['server/index.js'], { cwd: ROOT, env: { ...process.env, PORT: String(port), HOST: '127.0.0.1' }, stdio: 'ignore' });
+  const proc = spawn(process.execPath, ['server/index.js'], { cwd: root, env: { ...process.env, PORT: String(port), HOST: '127.0.0.1' }, stdio: 'ignore' });
   const url = `http://127.0.0.1:${port}/`;
   for (let i = 0; i < 100; i++) {
     try {
@@ -128,7 +128,7 @@ async function startReplay(page, replay, quality = 'high') {
   );
 }
 
-async function measure(browser, url, prof, replay, cdpRate) {
+export async function measure(browser, url, prof, replay, cdpRate) {
   const { ctx, page, errors } = await openGame(browser, url, prof);
   const cdp = await ctx.newCDPSession(page);
   if (cdpRate > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: cdpRate });
@@ -173,6 +173,8 @@ async function measure(browser, url, prof, replay, cdpRate) {
       // Spielinterne Aufteilung der langsamsten Frames (JS-Anteil; Rasterung kommt danach)
       slowFrames: (window.turmtrubel.game?.prof?.slow || []).slice(0, 5).map((c) => Object.fromEntries(Object.entries(c).map(([k, v]) => [k, typeof v === 'number' ? Math.round(v * 10) / 10 : v]))),
       battle: { worstMs: Math.round(bf.at(-1) || 0), p99ms: Math.round(bf[Math.floor(bf.length * 0.99)] || 0), longTasks: bl.length, longMaxMs: Math.round(Math.max(0, ...bl)) },
+      // Stand der automatischen Qualität am Ende (Auflösung, Effektmenge, Figuren-Stufe)
+      autoQuality: ((g) => g && { dynDpr: g.dynDpr ?? null, fxLoad: g.fx?.loadScale ?? null, chars: g.charQuality ?? null, downs: g.autoDowns ?? 0 })(window.turmtrubel.game),
     };
   });
   r.errors = errors.slice(0, 5);

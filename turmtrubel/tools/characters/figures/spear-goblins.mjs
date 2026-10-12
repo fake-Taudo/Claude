@@ -142,7 +142,7 @@ export default function spearGoblins(F) {
   });
   F.part('armF', { bone: 'armF', z: 40, zb: 6 }, (g) => g.mat(limb(8, -34, 10.6, -25, 3.6, 3.2), SKIN, 'skin'));
   F.part('handF', { bone: 'handF', z: 41, zb: 7 }, (g) => g.mat(circle(11, -23.4, 2.6), SKIN, 'skin'));
-  emblem(F, 'emblem', 'torso', 24, 0, -27, 1.8, { zb: 24, lod: 1 });
+  emblem(F, 'emblem', 'torso', 24, 0, -27, 1.8, { zb: 24 });
 
   F.anim({
     // zählen die Speere im Bündel

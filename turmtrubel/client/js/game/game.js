@@ -15,6 +15,7 @@ import { figureForType, figureEntry, loadFigure, loadFigures, prebakeCharacter, 
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const QUALITY_LEVEL = { low: 0, medium: 1, high: 2 };
+const CHAR_QUALITY = ['low', 'medium', 'high'];
 // Zauber-Effektnamen (cards.json → spell.fx) → VFX-Preset, wo der Name abweicht
 const SPELL_PRESET = { barrelRoll: 'spell.log', log: 'spell.log' };
 const SPELL_SFX = { arrows: 'arrows', fire: 'boom', comet: 'bigBoom', shock: 'zap', frost: 'freeze', poison: 'poison', heal: 'heal', rage: 'rage', barrel: 'barrel', grave: 'spooky', log: 'roll', barrelRoll: 'roll', quake: 'crumble', snow: 'splat', tornado: 'whoosh', curse: 'spooky', clone: 'cast', crate: 'barrel', vines: 'splat', void: 'spooky' };
@@ -200,6 +201,8 @@ export class Game {
     if (this.app.settings.autoQuality === false) {
       this.dynDpr = null;
       this.fx.loadScale = 1;
+      this.charDrop = 0;
+      this.applyCharQuality();
     }
     this.needResize = true;
   }
@@ -208,9 +211,16 @@ export class Game {
   applyFxSettings() {
     const st = this.app.settings;
     this.fx.setQuality(st.quality);
-    setCharacterQuality(st.quality || 'high');
+    this.applyCharQuality();
     setCharacterColorblind(!!st.colorblind);
     this.fx.setOptions({ shake: st.shake ?? 1, reducedMotion: reducedMotion(), reduceEffects: !!st.reduceFx });
+  }
+
+  /** Figuren-Stufe: Grafik-Einstellung, von der automatischen Qualität um charDrop Stufen gesenkt. */
+  applyCharQuality() {
+    const base = QUALITY_LEVEL[this.app.settings.quality] ?? 2;
+    this.charQuality = CHAR_QUALITY[Math.max(0, base - (this.charDrop || 0))];
+    setCharacterQuality(this.charQuality);
   }
 
   /** Werte für das Debug-Overlay und den Benchmark. */
@@ -1359,15 +1369,23 @@ export class Game {
     const cur = this.dynDpr || 99;
     if (this.slowT > 1.2) {
       this.slowT = 0;
+      this.autoDowns = (this.autoDowns || 0) + 1;
       const next = steps.find((v) => v < Math.min(cur, this.dpr));
       if (next) {
         this.dynDpr = next;
         this.needResize = true;
+      } else if ((this.fx.loadScale ?? 1) <= 0.4 && (this.charDrop || 0) < 2) {
+        // Auflösung und Effektmenge schon unten: Figuren mit weniger Bildern pro Zustand und kleinerem Bau-Budget
+        this.charDrop = (this.charDrop || 0) + 1;
+        this.applyCharQuality();
       }
       this.fx.loadScale = Math.max(0.4, (this.fx.loadScale ?? 1) - 0.2);
     } else if (this.fastT > 5) {
       this.fastT = 0;
-      if (this.fx.loadScale < 1) this.fx.loadScale = Math.min(1, this.fx.loadScale + 0.2);
+      if (this.charDrop > 0) {
+        this.charDrop--;
+        this.applyCharQuality();
+      } else if (this.fx.loadScale < 1) this.fx.loadScale = Math.min(1, this.fx.loadScale + 0.2);
       else if (this.dynDpr) {
         const i = steps.indexOf(this.dynDpr);
         this.dynDpr = i > 0 ? steps[i - 1] : null;

@@ -176,7 +176,7 @@ export default function mightyMiner(F) {
     // Bohrer setzt an und bohrt mit steigender Drehzahl
     attack: { prog: 'atk.thrust', hit: 0.5, p: { wind: 18, strike: -30, pull: 4, reach: 10, lunge: 10 }, keys: { show: spin(18), prop: { x: [[0, 0], [0.5, 2], [0.55, 0], [0.6, 2], [0.65, 0], [0.7, 2], [0.8, 0]] } } },
     // Explosive Flucht: bohrt sich ein (Bohrer nach unten)
-    ability: { prog: 'biped.idle', keys: { show: spin(18), armF: { r: [[0, 0], [0.3, 70, 'out'], [1, 70]] }, root: { y: [[0, 0], [0.4, 0], [1, 40, 'in']] }, alpha: [[0, 1], [0.7, 1], [1, 0]] }, ev: { ability: 0.6 } },
+    ability: { prog: 'biped.idle', ground: false, keys: { show: spin(18), armF: { r: [[0, 0], [0.3, 70, 'out'], [1, 70]] }, root: { y: [[0, 0], [0.4, 0], [1, 40, 'in']] }, alpha: [[0, 1], [0.7, 1], [1, 0]] }, ev: { ability: 0.6 } },
     hit: { p: { knock: 2, recoil: 4 }, keys: { hat: { r: [[0, 0], [0.15, -10], [0.4, 6], [1, 0]] } } },
     spawn: { ev: { land: 0.55 } },
     // Bohrer stoppt, er kippt um

@@ -142,7 +142,7 @@ export default function megaKnight(F) {
     // stampfender Gang, der Boden bebt
     walk: { p: { stride: 14, bob: 5, squash: 0.06, armSwing: 10, lean: 3 }, ev: { step: [0.25, 0.75] } },
     // Sprung: Knie tief, Sprung mit Stretch, Landung mit Glockenläuten
-    charge: { prog: 'still', keys: { root: { sy: [[0, 0.8], [0.3, 1.2], [0.7, 1.1], [1, 0.85]], sx: [[0, 1.12], [0.3, 0.9], [1, 1.1]] }, armF: { r: [[0, 20], [0.3, -150], [1, -40]] }, armB: { r: [[0, 20], [0.3, -150], [1, -40]] }, show: { ring: [[0.9, 1]] } } },
+    charge: { prog: 'still', keys: { root: { sy: [[0, 0.8], [0.3, 1.2], [0.7, 1.1], [1, 0.8]], sx: [[0, 1.12], [0.3, 0.9], [1, 1.12]] }, armF: { r: [[0, 20], [0.3, -150], [0.75, -40], [1, 20]] }, armB: { r: [[0, 20], [0.3, -150], [0.75, -40], [1, 20]] }, show: { ring: [[0.9, 1]] } } },
     // beide Fäuste hoch, Doppelhammer nach unten
     attack: { prog: 'atk.slam', hit: 0.6, p: { wind: -170, windB: -160, strike: -40, strikeB: -30, over: 10, lean: 12, lunge: 14 }, ev: { strike: 0.6 } },
     // Glocke dröhnt kurz, Körper schwankt
