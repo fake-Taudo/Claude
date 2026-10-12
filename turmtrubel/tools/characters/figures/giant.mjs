@@ -163,16 +163,17 @@ export default function giant(F, o = {}) {
     });
     // Steppdecken-Umhang (Teamzone)
     F.part('quilt', { bone: 'torso', z: 4, zb: 46, team: true }, (g) => {
-      const q = path([[-34, -108], [20, -110], [24, -80], [10, -30], [-40, -24], [-50, -60]]);
+      // weht weit nach hinten aus: der Umhang macht die Heldensilhouette breiter als den Riesen
+      const q = path([[-34, -108], [20, -110], [24, -80], [10, -30], [-36, -18], [-58, -24], [-74, -42], [-68, -70], [-52, -98]]);
       g.mat(q, P.team, 'cloth', { line: P.teamDeep, hi: 0.3 });
       g.clipTo(q, (h) => {
-        for (let x = -50; x < 30; x += 10) h.stroke(polyline([[x, -112], [x + 10, -20]]), P.teamShade, 0.9);
-        for (let y = -104; y < -20; y += 10) h.stroke(polyline([[-52, y], [30, y - 4]]), P.teamShade, 0.9);
+        for (let x = -80; x < 30; x += 10) h.stroke(polyline([[x, -112], [x + 10, -14]]), P.teamShade, 0.9);
+        for (let y = -104; y < -14; y += 10) h.stroke(polyline([[-80, y], [30, y - 4]]), P.teamShade, 0.9);
         h.lod(1, (k) => {
-          for (const [x, y] of [[-30, -90], [-10, -70], [-34, -50], [6, -94]]) k.fill(rrect(x, y, 8, 8, 1), '#c86a4a', { op: 0.8 });
+          for (const [x, y] of [[-30, -90], [-10, -70], [-34, -50], [6, -94], [-60, -56], [-50, -34]]) k.fill(rrect(x, y, 8, 8, 1), '#c86a4a', { op: 0.8 });
         });
       });
-      g.lod(1, (h) => lines(h, [[[-40, -26], [-36, -18]], [[-20, -28], [-22, -20]]], '#e8c860', 0.7, 1));
+      g.lod(1, (h) => lines(h, [[[-58, -24], [-60, -16]], [[-36, -18], [-34, -10]], [[-74, -42], [-80, -38]]], '#e8c860', 0.7, 1));
     });
   } else {
     F.part('beanie', { bone: 'head', z: 35, zb: 38, sig: true }, (g) => {

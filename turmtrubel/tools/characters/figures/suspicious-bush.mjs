@@ -103,13 +103,24 @@ export default function suspiciousBush(F) {
             [fx + 5, -3],
           ]),
           P.team,
-          1,
+          1.5,
         );
+        // große Schnürsenkel-Schleife
         g.mat(
           path([
             [fx + 2, -7.6],
-            [fx - 2, -11, 1],
-            [fx + 1, -8],
+            [fx - 4.4, -13.4, 1],
+            [fx + 0.4, -8],
+          ]),
+          P.team,
+          "cloth",
+          { line: P.teamDeep, lw: 0.3 },
+        );
+        g.mat(
+          path([
+            [fx + 2.4, -7.8],
+            [fx + 7.4, -13, 1],
+            [fx + 3.8, -7.8],
           ]),
           P.team,
           "cloth",

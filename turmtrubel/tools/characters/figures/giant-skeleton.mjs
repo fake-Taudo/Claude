@@ -156,6 +156,8 @@ export default function giantSkeleton(F) {
   emblem(F, 'emblem', 'torso', 23, -16, -46, 2.6);
 
   F.anim({
+    // Ruhepose: Knochenarme hängen abgespreizt, zwischen Arm und Brustkorb bleibt Luft (hagere Skelett-Silhouette)
+    rest: { armF: { r: -16 }, armB: { r: 15 } },
     // Kiefer klappert, die Bombe tickt
     idle: { p: { breathe: 0.02, bob: 1.2, sway: 2, tilt: 2 }, keys: { jaw: { r: [[0, 0], [0.1, 10], [0.2, 0], [0.3, 10], [0.4, 0]] } } },
     // schwerer Gang, Knochen klappern

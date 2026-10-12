@@ -34,8 +34,10 @@ export default function bowler(F, o = {}) {
 
   // ───────── Moosbuckel ─────────
   F.part('hump', { bone: 'back', z: 3, zb: 44 }, (g) => {
-    g.mat(blob([[-38, -70], [-32, -100], [-10, -112], [14, -108], [10, -84], [-14, -64]], 0.7), MOSS, 'fur', { hi: 0.4 });
-    g.lod(1, (h) => furEdge(h, [[-38, -70], [-32, -100], [-10, -112], [14, -108]], 2.6, H ? '#a8a49a' : '#5a7a44', { side: -1 }));
+    // Steintroll-Buckel: ragt hinten über den Kopf hinaus, mit Moosbüscheln als Zacken
+    g.mat(blob([[-48, -60], [-48, -98], [-26, -126], [2, -128], [14, -110], [10, -84], [-16, -56]], 0.7), MOSS, 'fur', { hi: 0.4 });
+    for (const [x, y, a] of [[-46, -96, -50], [-34, -116, -25], [-14, -127, 0], [6, -124, 25]]) g.mat(path([[x - 4, y + 3], [x + Math.sin((a * Math.PI) / 180) * 9, y - Math.cos((a * Math.PI) / 180) * 9], [x + 4, y + 3]]), MOSS, 'fur', { hi: 0.3 });
+    g.lod(1, (h) => furEdge(h, [[-48, -60], [-48, -98], [-26, -126], [2, -128]], 2.6, H ? '#a8a49a' : '#5a7a44', { side: -1 }));
     if (!H) g.lod(1, (h) => {
       for (const [x, y] of [[-24, -96], [-8, -104], [-30, -80]]) h.fill(circle(x, y, 1.6), '#c8e070');
     });
@@ -116,9 +118,9 @@ export default function bowler(F, o = {}) {
 
   // ───────── Runenkugel und vorderer Arm ─────────
   F.part('ball', { bone: 'prop', z: 40, zb: 4, state: ['loaded', 'walk', 'hit', 'spawn', 'stun', 'sleep', 'charge', 'death', ...(H ? [] : ['idle'])] }, (g) => {
-    g.mat(circle(46, -30, 14), BALL, 'stone', { hi: 0.8 });
-    for (const [x, y] of [[42, -36], [48, -37], [45, -31]]) g.fill(circle(x, y, 1.8), '#2a3038');
-    g.lod(1, (h) => h.stroke(polyline([[40, -24], [44, -20], [50, -26], [54, -22]]), RUNE, 1.2));
+    g.mat(circle(50, -30, 18), BALL, 'stone', { hi: 0.8 });
+    for (const [x, y] of [[45, -38], [52, -39], [48, -32]]) g.fill(circle(x, y, 2.2), '#2a3038');
+    g.lod(1, (h) => h.stroke(polyline([[40, -22], [46, -17], [53, -24], [60, -19]]), RUNE, 1.4));
   });
   if (H) {
     F.part('boulder', { bone: 'prop', z: 40.5, zb: 4.5, state: 'ability' }, (g) => g.mat(blob([[28, -50], [36, -66], [52, -70], [62, -56], [56, -42], [38, -40]], 0.7), '#8a8478', 'stone', { hi: 0.6 }));

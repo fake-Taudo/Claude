@@ -120,7 +120,7 @@ export default function golemite(F) {
 
   // ───────── Vorderer Steinarm mit Armband (Teamzone) ─────────
   F.part('armF', { bone: 'armF', z: 33, zb: 6, state: LIVE }, (g) => g.mat(limb(21, -52, 27, -36, 5.8, 5.2), GRANITE, 'stone', { hi: 0.4 }));
-  F.part('armband', { bone: 'armF', z: 33.5, zb: 6.5, team: true, state: LIVE }, (g) => g.mat(path([[19.4, -45], [29.4, -46.6], [30, -42.6], [20.4, -41]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.5 }));
+  F.part('armband', { bone: 'armF', z: 33.5, zb: 6.5, team: true, state: LIVE }, (g) => g.mat(path([[19, -46.6], [30, -48.6], [30.8, -41.4], [20, -39.6]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.5 }));
   F.part('handF', { bone: 'handF', z: 41, zb: 8, state: LIVE }, (g) => {
     g.mat(blob([[22, -36], [33, -37], [35, -28], [29, -23], [22, -27]], 0.5), GRANITE, 'stone', { hi: 0.5 });
     g.lod(1, (h) => lines(h, [[[30, -33], [34, -32]], [[29, -29], [33, -28]]], GRANITE_D, 0.6, 1));

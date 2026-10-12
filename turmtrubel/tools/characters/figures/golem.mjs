@@ -52,7 +52,7 @@ export default function golem(F) {
     g.mat(ellipse(-24, -160, 8, 3.4), '#8a6a3a', 'wood');
   });
   F.part('cloth', { bone: 'back', z: 3.5, zb: 46.5, team: true }, (g) => {
-    g.mat(path([[-23, -138], [-12, -136], [-16, -132], [-10, -128], [-22, -130]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.6 });
+    g.mat(path([[-25, -140], [-6, -138], [-11, -131], [-4, -121], [-23, -127]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.6 });
   });
   F.part('bird', { bone: 'bird', z: 4, zb: 47 }, (g) => {
     g.mat(blob([[-30, -164], [-26, -170], [-20, -169], [-19, -164], [-26, -161]], 0.7), BIRD, 'cloth', { hi: 0.5 });
@@ -115,7 +115,7 @@ export default function golem(F) {
 
   // ───────── Vorderer Arm, Armband (Teamzone), Felsfaust ─────────
   F.part('armF', { bone: 'armF', z: 29, zb: 10 }, (g) => g.mat(blob([[30, -116], [58, -112], [64, -86], [58, -60], [40, -66], [32, -90]], 0.5), GRANITE, 'stone', { hi: 0.5 }));
-  F.part('armband', { bone: 'armF', z: 29.5, zb: 10.5, team: true }, (g) => g.mat(rrect(36, -80, 28, 9, 3).rot(8, 50, -76), P.team, 'cloth', { line: P.teamDeep }));
+  F.part('armband', { bone: 'armF', z: 29.5, zb: 10.5, team: true }, (g) => g.mat(rrect(35, -82, 30, 13, 3).rot(8, 50, -76), P.team, 'cloth', { line: P.teamDeep }));
   F.part('handF', { bone: 'handF', z: 41, zb: 11 }, (g) => fist(g, 56, -40, GRANITE));
   F.part('knuckleGlowF', { bone: 'handF', z: 41.5, zb: 11.5, glow: true }, (g) => g.stroke(polyline([[46, -54], [54, -48], [62, -54], [70, -48]]), CORE, 1.4));
   emblem(F, 'emblem', 'torso', 23, -28, -70, 3.4, { view: 'front' });

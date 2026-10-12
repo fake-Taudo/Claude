@@ -107,25 +107,25 @@ export default function ronin(F) {
   });
   // tiefer Strohhut (Signature): Krempe breiter als die Schultern, Flechtmuster
   F.part('hat', { bone: 'hat', z: 36, zb: 36, sig: true }, (g) => {
-    const brim = path([[-24, -71, 1], [-8, -84], [3, -94, 1], [14, -84], [30, -71, 1], [14, -74.6], [3, -76], [-8, -74.6]]);
+    const brim = path([[-33, -70, 1], [-11, -84], [3, -95, 1], [17, -84], [39, -70, 1], [17, -74.6], [3, -76], [-11, -74.6]]);
     g.mat(brim, STRAW, 'wood', { hi: 0.35 });
     g.clipTo(brim, (h) => {
-      for (let i = -6; i <= 6; i++) h.stroke(polyline([[3, -94], [3 + i * 5, -70]]), '#b8964e', 0.6, { lod: 1 });
-      for (const k of [0.35, 0.65]) h.stroke(spline([[-24 + 27 * k, -71 - 23 * k], [3, -94 + 18 * (1 - k)], [30 - 27 * k, -71 - 23 * k]]), '#b8964e', 0.5, { lod: 2 });
+      for (let i = -7; i <= 7; i++) h.stroke(polyline([[3, -95], [3 + i * 5.6, -70]]), '#b8964e', 0.6, { lod: 1 });
+      for (const k of [0.35, 0.65]) h.stroke(spline([[-33 + 36 * k, -70 - 25 * k], [3, -95 + 19 * (1 - k)], [39 - 36 * k, -70 - 25 * k]]), '#b8964e', 0.5, { lod: 2 });
     });
   });
   // Papiersiegel an einem Band (Band = Teamzone)
   F.part('seal', { bone: 'hat', z: 37, zb: 37 }, (g) => {
-    g.mat(path([[24, -72], [29, -72], [29.6, -56], [27, -54, 1], [24.4, -56]]), PAPER, 'cloth', { hi: 0.4 });
+    g.mat(path([[31, -71], [36, -71], [36.6, -55], [34, -53, 1], [31.4, -55]]), PAPER, 'cloth', { hi: 0.4 });
     g.lod(1, (h) => {
-      h.stroke(polyline([[25.4, -68], [28, -68]]), '#c83a2a', 0.8);
-      h.stroke(polyline([[26.6, -66], [26.8, -59]]), '#3a2a20', 0.7);
-      h.stroke(polyline([[25.4, -62.6], [28.2, -63]]), '#3a2a20', 0.6);
+      h.stroke(polyline([[32.4, -67], [35, -67]]), '#c83a2a', 0.8);
+      h.stroke(polyline([[33.6, -65], [33.8, -58]]), '#3a2a20', 0.7);
+      h.stroke(polyline([[32.4, -61.6], [35.2, -62]]), '#3a2a20', 0.6);
     });
   });
   F.part('sealBand', { bone: 'hat', z: 36.8, zb: 36.8, team: true }, (g) => {
-    g.mat(path([[24.6, -73.6], [28.6, -73.6], [28, -70.6], [25, -70.6]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.5 });
-    g.stroke(polyline([[26.6, -76], [26.6, -73]]), P.teamShade, 0.8);
+    g.mat(path([[31.6, -72.6], [35.6, -72.6], [35, -69.6], [32, -69.6]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.5 });
+    g.stroke(polyline([[33.6, -75], [33.6, -72]]), P.teamShade, 0.8);
   });
 
   // ───────── Langschwert (gezogen im Angriff) und vorderer Arm ─────────

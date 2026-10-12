@@ -27,7 +27,7 @@ Die Flammenband-Schleppfedern und der Flammenkamm sind einmalig; drei Formen (Vo
 | Schatten | `#b78339` · Tiefe `#806241` | Hauptfarbe unten rechts, Falten (Akzent: `#a22c65`) |
 | Licht · Glanz | `#ffc767` · `#ffeac9` | Flächen oben links, Spitzlichter |
 | Kontur | `#1c1830` außen · `#77552f` innen | Stufe 2 |
-| Teamzone | Blau `#3d8bff` / Rot `#ff4d57` | Fußring; Bodenring Kreis/Zacken, Emblem Kreis/Dreieck |
+| Teamzone | Blau `#3d8bff` / Rot `#ff4d57` | Fußring mit Bändern; Bodenring Kreis/Zacken, Emblem Kreis/Dreieck |
 | Schnabel | `#f0c040` | Materialfarbe |
 
 ## Signature-Element

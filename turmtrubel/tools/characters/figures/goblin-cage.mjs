@@ -73,12 +73,17 @@ export default function goblinCage(F) {
     g.clipTo(path([[-28, -60], ...d]), (h) => {
       for (let i = -3; i <= 3; i++) h.stroke(polyline([[i * 8, -60], [i * 3, -82]]), '#a8862a', 0.8);
     });
-    g.stroke(circle(0, -88, 4), GOLD, 1.6);
+    // Aufhängering mit Haken
+    g.stroke(circle(0, -91, 7), GOLD, 2.4);
+    g.stroke(spline([[0, -98], [0, -104], [6, -106], [8, -101]]), '#a8862a', 1.6);
   });
+  // riesiges Vorhängeschloss: hängt außen an der Tür über den Käfigrand hinaus
   F.part('padlock', { bone: 'door', z: 8 }, (g) => {
-    g.stroke(spline([[-4, -30], [-4, -36], [0, -38], [4, -36], [4, -30]]), IRON, 1.4);
-    g.mat(rrect(-6, -30, 12, 10, 2), IRON, 'metal', { hi: 0.7 });
-    g.fill(circle(0, -26, 1.2), '#1a1a1e');
+    g.stroke(spline([[22, -34], [22, -46], [30, -50], [38, -46], [38, -34]]), IRON, 3);
+    g.mat(rrect(16, -36, 28, 22, 4), IRON, 'metal', { hi: 0.7 });
+    g.mat(rrect(18, -33, 24, 4, 1.4), '#8a8f99', 'metal', { lod: 1 });
+    g.fill(circle(30, -24, 2.4), '#1a1a1e');
+    g.fill(path([[29, -24], [31, -24], [31.6, -18], [28.4, -18]]), '#1a1a1e');
   });
   // Käfigschild (Teamzone) und Wimpel (Teamzone)
   F.part('sign', { bone: 'base', z: 9, team: true }, (g) => {

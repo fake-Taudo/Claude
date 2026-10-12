@@ -122,13 +122,15 @@ export default function runeGiant(F) {
   F.part('handF', { bone: 'handF', z: 41, zb: 11 }, (g) => g.mat(circle(44, -57, 8), SKIN, 'stone', { hi: 0.4 }));
 
   // ───────── Runentafel (Signature) – drei Zeilen leuchten einzeln ─────────
-  const slab = path([[8, -94, 1], [48, -96, 1], [50, -18, 1], [10, -16, 1]]);
+  // hohe Stele mit Rundbogen: ragt über den Kopf hinaus
+  const slab = path([[8, -106, 1], [16, -124, 1], [30, -130], [44, -124, 1], [50, -108, 1], [51, -18, 1], [10, -16, 1]]);
   F.part('tablet', { bone: 'handB', z: 60, zb: 8, sig: true, state: ['idle', 'walk', 'attack', 'hit', 'spawn', 'stun', 'ability', 'sleep', 'charge'] }, (g) => {
     g.mat(slab, SLAB, 'stone', { hi: 0.5 });
     g.clipTo(slab, (h) => {
-      h.fill(path([[40, -96], [50, -96], [50, -86]]), '#5a5c64');
-      h.lod(1, (k) => lines(k, [[[12, -70], [46, -71]], [[12, -46], [46, -47]]], '#5a5c64', 0.8, 1));
+      h.fill(path([[40, -128], [52, -116], [52, -100]]), '#5a5c64');
+      h.lod(1, (k) => lines(k, [[[12, -96], [47, -97]], [[12, -70], [46, -71]], [[12, -46], [46, -47]]], '#5a5c64', 0.8, 1));
     });
+    glyph(g, 30, -110, 6, '#4a4c54', 1.6);
     for (const [row, y] of [[0, -82], [1, -58], [2, -34]]) for (let i = 0; i < 4; i++) glyph(g, 16 + i * 8.6, y, 4.4, '#4a4c54', 1.4);
   });
   for (const [i, y] of [[0, -82], [1, -58], [2, -34]]) {

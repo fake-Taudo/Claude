@@ -71,8 +71,8 @@ export default function spiritEmpressAir(F) {
   empressUpper(F, { dy: DY, z: 10, n: { torso: 'rTorso', head: 'rHead', hat: 'rHat', armB: 'rArmB', handB: 'rHandB', armF: 'rArmF', handF: 'rHandF', prop: 'rProp' } });
   // Zügelband aus Seide (Teamzone) zur Drachenmähne
   F.part('rein', { bone: 'rHandF', z: 52, team: true }, (g) => {
-    g.stroke(spline([[17, -45 + DY], [28, -70], [38, -74]]), P.team, 1.4);
-    g.stroke(spline([[17, -45 + DY], [28, -70], [38, -74]]), P.teamLight, 0.4, { lod: 1 });
+    g.stroke(spline([[17, -45 + DY], [28, -70], [38, -74]]), P.team, 2.6);
+    g.stroke(spline([[17, -45 + DY], [28, -70], [38, -74]]), P.teamLight, 0.7, { lod: 1 });
   });
 
   // ───────── Drachenkopf mit Bartfäden ─────────
@@ -99,7 +99,7 @@ export default function spiritEmpressAir(F) {
     for (const [r, op] of [[8, 0.5], [13, 0.3]]) g.stroke(spline([[60, -66 - r], [60 + r * 0.6, -62], [60, -58 + r]]), '#ffd8f8', 2, { op });
     g.fill(circle(60, -62, 4), '#fff4fb', { op: 0.8 });
   });
-  emblem(F, 'emblem', 'seg3', 6.5, -8, -42, 3);
+  emblem(F, 'emblem', 'seg4', 9.5, -22, -50, 2.8);
 
   F.anim({
     // Leib wogt in Wellen

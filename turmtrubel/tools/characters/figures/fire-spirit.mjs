@@ -122,7 +122,7 @@ export default function fireSpirit(F) {
       });
     },
   );
-  emblem(F, "emblem", "body", 19.5, -4, -6, 1.2, { zb: 19.5, state: LIVE });
+  emblem(F, "emblem", "body", 19.5, -3, -6.2, 2.5, { zb: 19.5, state: LIVE });
   F.part(
     "face.idle",
     {

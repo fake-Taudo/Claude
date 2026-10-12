@@ -162,7 +162,7 @@ export default function goblins(F, o = {}) {
   });
   F.part('armF', { bone: 'armF', z: 29, zb: 6 }, (g) => g.mat(limb(5, -31, 10, -22, 2.2, 1.9), SKIN, 'skin'));
   F.part('handF', { bone: 'handF', z: 41, zb: 7 }, (g) => g.mat(circle(10, -21, 2.6), SKIN, 'skin'));
-  emblem(F, 'emblem', 'torso', 25, -3, -28, 1.7, { zb: 25 });
+  emblem(F, 'emblem', 'torso', 25, -2.4, -25.6, 2.1, { zb: 25 });
 
   F.anim({
     // hüpfen von Fuß zu Fuß, lecken am Löffel

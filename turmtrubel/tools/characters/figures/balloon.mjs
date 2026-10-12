@@ -375,6 +375,29 @@ export default function balloon(F, o = {}) {
         ROPE,
         0.6,
       );
+      // gepacktes Fallschirmbündel am Ende des Auslegers
+      const pack = blob(
+        [
+          [-33, -30],
+          [-27, -33],
+          [-21, -29],
+          [-22, -19],
+          [-29, -16],
+          [-35, -21],
+        ],
+        0.7,
+      );
+      g.mat(pack, CLOTH_L, "cloth", { hi: 0.5 });
+      g.clipTo(pack, (h) =>
+        h.stroke(
+          polyline([
+            [-36, -24],
+            [-20, -24],
+          ]),
+          "#6a4a2a",
+          1.2,
+        ),
+      );
     });
   }
   F.part("basketFront", { bone: "body", z: 23, zb: 19.8 }, (g) => {

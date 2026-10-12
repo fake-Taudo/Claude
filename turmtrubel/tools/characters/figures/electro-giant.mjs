@@ -32,18 +32,19 @@ export default function electroGiant(F) {
   });
 
   // Teslaspule mit Kugelkappe (Signature)
+  // hohe Doppeltürme über den Schultern: die Silhouette endet oben in zwei Kugeln
   const coil = (g, x, y) => {
-    g.mat(rrect(x - 6, y - 26, 12, 26, 3), '#5a4a3a', 'wood');
-    g.clipTo(rrect(x - 6, y - 26, 12, 26, 3), (h) => {
-      for (let yy = y - 24; yy < y; yy += 2.6) h.stroke(polyline([[x - 7, yy], [x + 7, yy + 1]]), COPPER, 1.6);
+    g.mat(rrect(x - 7, y - 40, 14, 40, 3), '#5a4a3a', 'wood');
+    g.clipTo(rrect(x - 7, y - 40, 14, 40, 3), (h) => {
+      for (let yy = y - 38; yy < y; yy += 2.6) h.stroke(polyline([[x - 8, yy], [x + 8, yy + 1]]), COPPER, 1.6);
     });
-    g.mat(rrect(x - 8, y - 3, 16, 5, 2), '#8a8f99', 'metal');
-    g.mat(circle(x, y - 31, 6.4), '#c8ccd4', 'metal', { hi: 0.95 });
+    g.mat(rrect(x - 9, y - 3, 18, 5, 2), '#8a8f99', 'metal');
+    g.mat(circle(x, y - 46, 8), '#c8ccd4', 'metal', { hi: 0.95 });
   };
-  F.part('coilB', { bone: 'torso', z: 4, zb: 44, sig: true }, (g) => coil(g, -24, -104));
+  F.part('coilB', { bone: 'torso', z: 4, zb: 44, sig: true }, (g) => coil(g, -30, -100));
   F.part('spark', { bone: 'torso', z: 4.5, zb: 44.5, glow: true, state: ['spark', 'attack', 'hit'] }, (g) => {
-    g.stroke(polyline([[-18, -136], [-8, -142], [0, -134], [10, -144], [20, -136], [30, -140]]), VOLT, 1.6);
-    g.stroke(polyline([[-18, -136], [-8, -142], [0, -134], [10, -144], [20, -136], [30, -140]]), '#ffffff', 0.6);
+    g.stroke(polyline([[-24, -148], [-12, -154], [-2, -146], [10, -156], [22, -148], [30, -152]]), VOLT, 1.6);
+    g.stroke(polyline([[-24, -148], [-12, -154], [-2, -146], [10, -156], [22, -148], [30, -152]]), '#ffffff', 0.6);
   });
 
   // ───────── Beine: Overall, Sicherheitsstiefel ─────────
@@ -123,7 +124,7 @@ export default function electroGiant(F) {
   F.part('helmStripe', { bone: 'hat', z: 35.5, zb: 36.5, team: true }, (g) => g.mat(path([[4, -126], [10, -126.4], [12, -112], [6, -112]]), P.team, 'metal', { line: P.teamDeep, lw: 0.5 }));
 
   // ───────── Vordere Spule, Arm und Handschuh ─────────
-  F.part('coilF', { bone: 'torso', z: 26, zb: 3 }, (g) => coil(g, 28, -100));
+  F.part('coilF', { bone: 'torso', z: 26, zb: 3 }, (g) => coil(g, 34, -96));
   F.part('armF', { bone: 'armF', z: 29, zb: 10 }, (g) => {
     g.mat(limb(31, -96, 37, -62, 11, 10), SUIT, 'cloth', { hi: 0.3 });
     // Warnstreifen und verkohlte Ärmelenden

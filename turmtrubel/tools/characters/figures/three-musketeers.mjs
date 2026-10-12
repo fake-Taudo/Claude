@@ -175,7 +175,7 @@ export default function threeMusketeers(F) {
   });
   F.part('armF', { bone: 'armF', z: 29, zb: 6 }, (g) => g.mat(limb(11, -62, 19.6, -53, 4.6, 4.2), COAT, 'cloth'));
   F.part('handF', { bone: 'handF', z: 41, zb: 7 }, (g) => g.mat(circle(21, -51.4, 3), SKIN, 'skin'));
-  emblem(F, 'emblem', 'torso', 24, -6, -52, 2.4, { zb: 24 });
+  emblem(F, 'emblem', 'torso', 22.5, -6.4, -37.8, 2.3, { zb: 22.5 });
 
   F.anim({
     // drehen den Karabiner wie einen Taktstock, eine richtet die Kokarde

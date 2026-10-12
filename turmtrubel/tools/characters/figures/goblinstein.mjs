@@ -117,7 +117,7 @@ export default function goblinstein(F) {
     g.fill(path([[16, -75], [23, -80], [21, -76]]), SKIN_D, { lod: 1 });
   });
   F.part('armband', { bone: 'armF', z: 40.5, zb: 6.5, team: true }, (g) => {
-    g.mat(rrect(11.6, -61, 8, 3.4, 1).rot(50, 15.6, -59.4), P.team, 'cloth', { line: P.teamDeep, lw: 0.5 });
+    g.mat(rrect(11, -62.6, 9.6, 6.4, 1.4).rot(50, 15.6, -59.4), P.team, 'cloth', { line: P.teamDeep, lw: 0.5 });
   });
 
   // ───────── Fernsteuerkasten mit Blitzantenne (Signature) ─────────

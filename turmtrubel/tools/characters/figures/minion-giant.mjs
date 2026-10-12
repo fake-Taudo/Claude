@@ -227,7 +227,7 @@ export default function minionGiant(F) {
   );
   F.part("earTag", { bone: "head", z: 29.5, zb: 31.5, team: true }, (g) => {
     g.mat(circle(-5, -101, 1), "#c8ccd2", "metal");
-    g.mat(rrect(-8, -100, 6.4, 7, 1.2), P.team, "leather", {
+    g.mat(rrect(-9.4, -100, 8.8, 9.4, 1.4), P.team, "leather", {
       line: P.teamDeep,
       lw: 0.5,
     });
@@ -413,10 +413,10 @@ export default function minionGiant(F) {
   F.part("armband", { bone: "armF", z: 34.8, zb: 6.2, team: true }, (g) =>
     g.mat(
       path([
-        [14.6, -68],
-        [25.4, -69.4],
-        [26.2, -64.6],
-        [15.6, -63.4],
+        [14, -70.2],
+        [25.8, -71.8],
+        [26.8, -62.4],
+        [15.4, -61],
       ]),
       P.team,
       "cloth",

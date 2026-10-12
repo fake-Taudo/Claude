@@ -167,12 +167,12 @@ export default function minions(F) {
   F.part("kerchief", { bone: "body", z: 20, zb: 20, team: true }, (g) => {
     g.mat(
       path([
-        [-3, -34],
-        [10, -33],
-        [8, -29],
-        [5, -25, 1],
-        [2, -29],
-        [-3, -31],
+        [-4, -35],
+        [11, -34],
+        [9, -29],
+        [5, -22, 1],
+        [1.4, -28],
+        [-4, -30.6],
       ]),
       P.team,
       "cloth",

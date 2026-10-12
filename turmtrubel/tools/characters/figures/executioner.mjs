@@ -170,7 +170,7 @@ export default function executioner(F) {
     g.mat(path([[23.6, -45], [28, -48, 1], [27.6, -42, 1]]), P.team, 'cloth', { line: P.teamDeep, lw: 0.4 });
     g.mat(path([[23, -45], [21.4, -38, 1], [23.6, -39.6], [25.6, -38, 1], [24.4, -45]]), P.teamShade, 'cloth', { line: P.teamDeep, lw: 0.4 });
   });
-  F.part('axe', { bone: 'prop', z: 38.6, zb: 4.6, state: AXE_STATES }, (g) => axe(g, 26, -32));
+  F.part('axe', { bone: 'prop', z: 38.6, zb: 4.6, state: AXE_STATES, sig: true }, (g) => axe(g, 26, -32));
   F.part('evoEdge', { bone: 'prop', z: 38.8, zb: 4.8, state: AXE_STATES, evo: 'evo', glow: true }, (g) => g.stroke(spline(arc(27, -23, 12.6, 12.6, -66, 66, 10)), '#ff8a3a', 1.6));
   F.part('armF', { bone: 'armF', z: 29, zb: 6 }, (g) => {
     g.mat(limb(12, -77, 16, -66, 4.8, 4.4), SHIRT, 'cloth');

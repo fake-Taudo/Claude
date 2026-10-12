@@ -63,9 +63,9 @@ export default function megaKnight(F) {
     g.mat(rrect(x - r * 0.9, y - r - 4, r * 1.8, 6, 2.4), BRONZE, 'gold', { hi: 0.8 });
   };
   F.part('armB', { bone: 'armB', z: 14, zb: 44 }, (g) => {
-    g.mat(limb(-34, -90, -38, -58, 12, 10), PLATE_D, 'metal', { hi: 0.5 });
+    g.mat(limb(-34, -90, -42, -56, 12, 10), PLATE_D, 'metal', { hi: 0.5 });
   });
-  F.part('handB', { bone: 'handB', z: 15, zb: 45 }, (g) => fist(g, -40, -40, 15));
+  F.part('handB', { bone: 'handB', z: 15, zb: 45 }, (g) => fist(g, -47, -36, 21));
 
   // ───────── Fassbrust mit Doppelschnallen ─────────
   F.part('torso', { bone: 'torso', z: 18, zb: 28 }, (g) => {
@@ -122,13 +122,18 @@ export default function megaKnight(F) {
   });
 
   // ───────── Schulterplatten, vorderer Arm, Kugelfaust bzw. Evo-Fausthammer ─────────
-  F.part('pauldronB', { bone: 'armB', z: 19, zb: 43 }, (g) => g.mat(blob([[-52, -92], [-40, -104], [-22, -100], [-20, -86], [-36, -80], [-52, -82]], 0.6), PLATE_L, 'metal', { hi: 0.8 }));
-  F.part('armF', { bone: 'armF', z: 36, zb: 10 }, (g) => g.mat(limb(36, -90, 42, -58, 12, 10), PLATE, 'metal', { hi: 0.6 }));
+  F.part('pauldronB', { bone: 'armB', z: 19, zb: 43 }, (g) => {
+    for (const [x, y, tx, ty] of [[-46, -98, -56, -108], [-35, -104, -36, -118]]) g.mat(poly([[x - 4, y + 1], [tx, ty], [x + 4, y + 2]], 0.6), PLATE_D, 'metal', { hi: 0.7 });
+    g.mat(blob([[-52, -92], [-40, -104], [-22, -100], [-20, -86], [-36, -80], [-52, -82]], 0.6), PLATE_L, 'metal', { hi: 0.8 });
+  });
+  F.part('armF', { bone: 'armF', z: 36, zb: 10 }, (g) => g.mat(limb(36, -90, 47, -56, 12, 10), PLATE, 'metal', { hi: 0.6 }));
   F.part('pauldronF', { bone: 'armF', z: 36.5, zb: 10.5 }, (g) => {
+    // drei Dornen auf der Schulterplatte
+    for (const [x, y, tx, ty] of [[30, -104, 27, -117], [41, -105, 44, -120], [51, -99, 60, -110]]) g.mat(poly([[x - 4, y + 2], [tx, ty], [x + 4, y + 1]], 0.6), PLATE_D, 'metal', { hi: 0.7 });
     g.mat(blob([[20, -96], [34, -106], [52, -100], [56, -86], [42, -78], [24, -84]], 0.6), PLATE_L, 'metal', { hi: 0.8 });
     g.lod(1, (h) => rivets(h, [[30, -96], [40, -98], [48, -92]], 1, '#c8ccd4'));
   });
-  F.part('handF', { bone: 'handF', z: 41, zb: 11 }, (g) => fist(g, 46, -40, 16));
+  F.part('handF', { bone: 'handF', z: 41, zb: 11 }, (g) => fist(g, 53, -36, 22));
   F.part('evoHammer', { bone: 'handF', z: 41.5, zb: 11.5, evo: 'evo' }, (g) => {
     g.mat(rrect(30, -58, 34, 30, 6), BRONZE, 'gold', { hi: 0.9 });
     g.mat(rrect(28, -50, 38, 6, 2), '#8a5a28', 'gold');

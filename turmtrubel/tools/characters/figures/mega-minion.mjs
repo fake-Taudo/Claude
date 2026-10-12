@@ -547,10 +547,10 @@ export default function megaMinion(F, o = {}) {
   F.part("armband", { bone: "armF", z: 34.8, zb: 6.2, team: true }, (g) =>
     g.mat(
       path([
-        [14.6, -48],
-        [24, -49],
-        [24.6, -45],
-        [15.4, -44],
+        [14, -49.8],
+        [24.4, -51],
+        [25.2, -43.2],
+        [15, -42],
       ]),
       P.team,
       "cloth",

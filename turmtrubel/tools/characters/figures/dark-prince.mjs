@@ -146,13 +146,14 @@ export default function darkPrince(F) {
   };
   leg('legBf', -26, 2, false);
   leg('legFf', 20, 3, false);
-  F.part('tail', { bone: 'tail', z: 4 }, (g) => {
+  // Signature: gepanzerter Waran (Schwanz, Leib, Kopf)
+  F.part('tail', { bone: 'tail', z: 4, sig: true }, (g) => {
     g.mat(path([[-32, -34], [-50, -30], [-66, -22], [-78, -14, 1], [-64, -16], [-48, -18], [-32, -20]]), SCALE, 'scale', { hi: 0.3 });
     lines(g, [[[-44, -29], [-44, -20]], [[-54, -26], [-54, -18]], [[-64, -22], [-64, -16]]], '#3e4a32', 0.6, 1);
   });
 
   // ───────── Waran-Körper mit Panzerplatten, Schabracke (Teamzone) ─────────
-  F.part('lizard', { bone: 'body', z: 10, zb: 10 }, (g) => {
+  F.part('lizard', { bone: 'body', z: 10, zb: 10, sig: true }, (g) => {
     const b = blob([[-36, -28], [-28, -38], [-6, -42], [18, -40], [36, -34], [40, -24], [30, -16], [0, -14], [-28, -16], [-38, -22]], 0.5);
     g.mat(b, SCALE, 'scale', { hi: 0.3 });
     g.clipTo(b, (h) => {
@@ -177,7 +178,7 @@ export default function darkPrince(F) {
     rivets(g, [[-10, -38], [10, -38]], 0.9, '#9aa0aa');
   });
   emblem(F, 'emblem', 'body', 12.5, -2, -32, 2.8);
-  F.part('head', { bone: 'head', z: 20, zb: 20 }, (g) => {
+  F.part('head', { bone: 'head', z: 20, zb: 20, sig: true }, (g) => {
     g.mat(path([[32, -36], [44, -38], [58, -34], [66, -28], [64, -24], [52, -22], [38, -22], [32, -26]]), SCALE, 'scale', { hi: 0.35 });
     g.fill(ellipse(62, -29, 0.8, 0.6), '#1a1a10', { lod: 1 });
   });

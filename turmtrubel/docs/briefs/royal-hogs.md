@@ -27,7 +27,7 @@ Minikrone plus Schleife am Ringelschwanz (Teamzone) sind einmalig. Das Fluch-Sch
 | Schatten | `#af9795` · Tiefe `#7b6e7c` | Hauptfarbe unten rechts, Falten (Akzent: `#ae8f4f`) |
 | Licht · Glanz | `#f7dac0` · `#fcf2ec` | Flächen oben links, Spitzlichter |
 | Kontur | `#1c1830` außen · `#726065` innen | Stufe 1 |
-| Teamzone | Blau `#3d8bff` / Rot `#ff4d57` | Schleife am Ringelschwanz; Bodenring Kreis/Zacken, Emblem Kreis/Dreieck |
+| Teamzone | Blau `#3d8bff` / Rot `#ff4d57` | Königsmäntelchen, Schleife am Ringelschwanz; Bodenring Kreis/Zacken, Emblem Kreis/Dreieck |
 | Schnauze | `#e8a090` | Materialfarbe |
 | Hufe | `#5a4a40` | Materialfarbe |
 

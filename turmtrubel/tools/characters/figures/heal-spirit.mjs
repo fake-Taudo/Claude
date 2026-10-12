@@ -154,7 +154,7 @@ export default function healSpirit(F) {
       });
     },
   );
-  emblem(F, "emblem", "body", 17.5, 0, -7, 1.2, { zb: 17.5, state: LIVE });
+  emblem(F, "emblem", "body", 17.5, 0, -7.4, 2, { zb: 17.5, state: LIVE });
 
   // ───────── Pusteblumen-Kopf (Signature) ─────────
   F.part(

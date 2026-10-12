@@ -70,11 +70,34 @@ export default function electroSpirit(F) {
   F.part(
     "tailBand",
     { bone: "trail", z: 4.5, zb: 40.5, team: true, state: LIVE },
-    (g) =>
-      g.mat(rrect(-4.6, -11.6, 9, 2.6, 1), P.team, "cloth", {
+    (g) => {
+      // Schwanzband mit Schleife
+      g.mat(rrect(-5.6, -12.6, 11.2, 3.8, 1.2), P.team, "cloth", {
         line: P.teamDeep,
         lw: 0.4,
-      }),
+      });
+      g.mat(
+        path([
+          [4.6, -11.4],
+          [11, -16, 1],
+          [11.4, -8.6, 1],
+        ]),
+        P.team,
+        "cloth",
+        { line: P.teamDeep, lw: 0.4 },
+      );
+      g.mat(
+        path([
+          [4.4, -10.4],
+          [8.6, -4.6],
+          [5.6, -4],
+          [3.4, -9.4],
+        ]),
+        P.teamShade,
+        "cloth",
+        { line: P.teamDeep, lw: 0.4 },
+      );
+    },
   );
   F.part("armB", { bone: "armB", z: 8, zb: 36, state: LIVE }, (g) =>
     g.stroke(
@@ -100,6 +123,17 @@ export default function electroSpirit(F) {
       }
       g.mat(rrect(-8, -30, 16, 3, 1), PLUG, "metal", { hi: 0.8 });
     },
+  );
+  // isolierende Steckerkappe (zweite Teamzone)
+  F.part(
+    "plugCap",
+    { bone: "hat", z: 18.4, zb: 18.4, team: true, state: LIVE },
+    (g) =>
+      g.mat(rrect(-9, -31.4, 18, 5, 1.6), P.team, "cloth", {
+        line: P.teamDeep,
+        lw: 0.4,
+        hi: 0.5,
+      }),
   );
   F.part("body", { bone: "body", z: 18, zb: 18, state: LIVE }, (g) => {
     const b = blob(
@@ -146,7 +180,7 @@ export default function electroSpirit(F) {
     { bone: "body", z: 18.5, zb: 18.5, glow: true, state: LIVE },
     (g) => g.fill(circle(0, -21, 14), SPARK, { op: 0.18 }),
   );
-  emblem(F, "emblem", "body", 19, -6, -20, 1.4, { zb: 19, state: LIVE });
+  emblem(F, "emblem", "hat", 18.6, 0, -28.9, 2.2, { zb: 18.6, state: LIVE });
   F.part(
     "face.idle",
     {

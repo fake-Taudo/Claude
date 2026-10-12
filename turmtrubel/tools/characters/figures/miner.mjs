@@ -100,7 +100,7 @@ export default function miner(F) {
     g.mat(rrect(-10, -32, 11, 8, 1.4), '#5a4030', 'leather', { hi: 0.3 });
     g.lod(1, (h) => stitches(h, [[-9.2, -31], [0.2, -31]], '#c8a878', { step: 1.8, len: 0.8 }));
   });
-  emblem(F, 'emblem', 'torso', 25, -4.6, -27.6, 1.7, { zb: 25 });
+  emblem(F, 'emblem', 'torso', 25, -4.6, -27.6, 2.4, { zb: 25 });
 
   // ───────── Kopf: Pelzkugel, Rüsselnase, Schnurrhaare, Hasenzähne ─────────
   F.part('head', { bone: 'head', z: 30, zb: 30 }, (g) => {

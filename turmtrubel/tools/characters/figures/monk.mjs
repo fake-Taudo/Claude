@@ -158,7 +158,7 @@ export default function monk(F) {
     g.stroke(spline([[17, -60], [23, -56], [27, -50]]), ROBE_D, 0.8, { lod: 1 });
   });
   F.part('handF', { bone: 'handF', z: 41, zb: 9 }, (g) => palm(g, 24, -46, 1, SKIN));
-  emblem(F, 'emblem', 'torso', 23, 12, -49, 2, { zb: 23 });
+  emblem(F, 'emblem', 'torso', 22.5, -15, -49, 2.4, { zb: 22.5 });
 
   F.anim({
     // streicht sich den Bart, die Gebetskette klackert

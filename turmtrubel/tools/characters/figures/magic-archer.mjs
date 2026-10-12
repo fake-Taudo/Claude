@@ -38,9 +38,20 @@ export default function magicArcher(F, o = {}) {
 
   // ───────── Mantel hinten (Futter mit Sternkarte = Teamzone) ─────────
   F.part('coatBack', { bone: 'cape', z: 3, zb: 46 }, (g) => {
-    const c = path([[-10, -70], [6, -70], [10, -40], [14, -10], [2, -6], [-10, -8], [-20, -6], [-18, -40]]);
+    // Held: Sternbild-Mantel weht weit nach hinten aus, der Saum endet in Sternzacken
+    const c = H
+      ? path([[-10, -70], [6, -70], [10, -40], [14, -10], [2, -6], [-10, -8], [-20, -4], [-26, -9], [-29, -2], [-31, -16], [-36, -14], [-30, -28], [-24, -46]])
+      : path([[-10, -70], [6, -70], [10, -40], [14, -10], [2, -6], [-10, -8], [-20, -6], [-18, -40]]);
     g.mat(c, COAT_D, 'cloth');
+    if (H) g.lod(1, (h) => { for (const [x, y] of [[-29, -3], [-36, -14], [-26, -9]]) h.fill(circle(x, y, 1.2), LIGHT); });
   });
+  if (H) {
+    // Sternkragen: steht hinter dem Kopf hoch, Zacken mit Lichtspitzen
+    F.part('starCollar', { bone: 'torso', z: 19.5, zb: 19.5 }, (g) => {
+      g.mat(path([[-10, -69], [-17, -80], [-9, -76], [-7, -88], [-1, -77], [6, -77], [12, -86], [12, -76], [19, -79], [12, -68]]), COAT_D, 'cloth', { hi: 0.4 });
+      g.lod(1, (h) => { for (const [x, y] of [[-17, -80], [-7, -88], [12, -86], [19, -79]]) h.fill(circle(x, y, 1.1), LIGHT); });
+    });
+  }
   F.part('lining', { bone: 'cape', z: 3.5, zb: 46.5, team: true }, (g) => {
     const l = path([[-17, -40], [-12, -40], [-12, -10], [-20, -6]]);
     g.mat(l, P.team, 'cloth', { line: P.teamDeep });
@@ -182,7 +193,7 @@ export default function magicArcher(F, o = {}) {
   });
   F.part('armF', { bone: 'armF', z: 40, zb: 12 }, (g) => g.mat(limb(10, -68, 14.6, -52, 4.6, 4.2), COAT, 'cloth'));
   F.part('handF', { bone: 'handF', z: 42, zb: 14 }, (g) => g.mat(circle(15.6, -50, 3), SKIN, 'skin'));
-  emblem(F, 'emblem', 'torso', 24, -6, -64, 2.2, { zb: 24 });
+  emblem(F, 'emblem', 'torso', 24, -2.4, -53, 2.4, { zb: 24 });
 
   F.anim({
     // schaut durch das Fernrohr in den Himmel

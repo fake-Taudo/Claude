@@ -2731,7 +2731,7 @@
     "text": "grünes Geisterfeuer im Brustkorb"
    },
    "teamZones": [
-    "Halsband"
+    "Halsband mit Wimpelfetzen"
    ],
    "proportion": {
     "head": 0.3,
@@ -3346,7 +3346,8 @@
     "text": "Steckerzinken als Ohren"
    },
    "teamZones": [
-    "Schwanzband"
+    "Schwanzband",
+    "Steckerkappe"
    ],
    "proportion": {
     "head": 0.55,
@@ -3529,7 +3530,7 @@
     "text": "Schleppfedern wie Flammenbänder"
    },
    "teamZones": [
-    "Fußring"
+    "Fußring mit Bändern"
    ],
    "proportion": {
     "head": 0.26,
@@ -3696,6 +3697,7 @@
     "text": "Minikrone zwischen den Ohren"
    },
    "teamZones": [
+    "Königsmäntelchen",
     "Schleife am Ringelschwanz"
    ],
    "proportion": {

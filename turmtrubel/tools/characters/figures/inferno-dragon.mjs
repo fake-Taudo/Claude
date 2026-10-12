@@ -375,10 +375,10 @@ export default function infernoDragon(F) {
     // Wangenriemen unter dem Auge und Nasenriemen um die Schnauze
     g.mat(
       path([
-        [20, -63.6],
-        [37, -64.6],
-        [37, -62],
-        [20, -61],
+        [18, -64.6],
+        [37, -65.8],
+        [37, -61],
+        [18, -60],
       ]),
       P.team,
       "leather",
@@ -395,7 +395,19 @@ export default function infernoDragon(F) {
       "leather",
       { line: P.teamDeep, lw: 0.4 },
     );
-    g.mat(rrect(22, -64.2, 3.6, 3.6, 0.6), BRASS, "gold", { lod: 1 });
+    // Kehlriemen
+    g.mat(
+      path([
+        [17, -67],
+        [21.6, -67.4],
+        [21, -50.6],
+        [16.4, -51.4],
+      ]),
+      P.teamShade,
+      "leather",
+      { line: P.teamDeep, lw: 0.4 },
+    );
+    g.mat(rrect(22, -64.6, 3.6, 3.6, 0.6), BRASS, "gold", { lod: 1 });
   });
   F.part(
     "lens",

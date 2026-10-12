@@ -29,7 +29,7 @@ export default function flyingMachine(F) {
   const wing = (name, s, z, dark) => {
     const root = s > 0 ? [2, -42] : [-4, -42];
     const tips = [[s * 46, -78], [s * 50, -66], [s * 50, -54], [s * 44, -44], [s * 32, -38]].map(([x, y]) => [root[0] + x, y]);
-    F.part(name, { bone: name, z, zb: z }, (g) => {
+    F.part(name, { bone: name, z, zb: z, sig: true }, (g) => {
       const pts = [root];
       tips.forEach((t, i) => {
         pts.push(t);

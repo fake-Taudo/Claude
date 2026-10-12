@@ -48,7 +48,8 @@ export default function bossBandit(F) {
 
   // ───────── Beutesack über der Schulter (Signature) ─────────
   F.part('sack', { bone: 'back', z: 3, zb: 46, sig: true }, (g) => {
-    g.mat(blob([[-26, -66], [-20, -78], [-8, -80], [-2, -72], [-6, -60], [-16, -54], [-24, -56]], 0.7), SACK, 'cloth', { hi: 0.4 });
+    // praller Beutesack: steht über Schulter und Rücken hinaus
+    g.mat(blob([[-36, -64], [-30, -84], [-14, -92], [-2, -80], [-4, -64], [-16, -50], [-32, -50]], 0.7), SACK, 'cloth', { hi: 0.4 });
     g.mat(path([[-4, -76], [2, -80, 1], [4, -74], [-2, -71]]), '#8a6a3a', 'cloth');
     g.lod(1, (h) => {
       lines(h, [[[-20, -74], [-14, -66]], [[-12, -76], [-10, -64]]], '#8a7048', 0.6, 1);

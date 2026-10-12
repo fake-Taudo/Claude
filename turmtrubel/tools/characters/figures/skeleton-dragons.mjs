@@ -244,7 +244,7 @@ export default function skeletonDragons(F) {
       1.4,
     );
   });
-  emblem(F, "emblem", "body", 19, -12, -40, 1.8, { zb: 19, state: LIVE });
+  emblem(F, "emblem", "body", 19, -12, -40, 2.6, { zb: 19, state: LIVE });
 
   // ───────── Hals aus Wirbeln mit Halsband (Teamzone) ─────────
   F.part("neck", { bone: "neck", z: 22, zb: 22, state: LIVE }, (g) =>
@@ -266,12 +266,27 @@ export default function skeletonDragons(F) {
     "collar",
     { bone: "neck", z: 22.5, zb: 22.5, team: true, state: LIVE },
     (g) => {
+      // zerrissener Wimpel am Halsband
       g.mat(
         path([
-          [12.6, -58.4],
-          [18, -53],
-          [20, -55],
-          [14.6, -60.6],
+          [14.6, -56],
+          [9.4, -47],
+          [12.4, -46.4],
+          [8.6, -40],
+          [14, -43.4],
+          [15.4, -39.6],
+          [19.4, -53.4],
+        ]),
+        P.teamShade,
+        "cloth",
+        { line: P.teamDeep, lw: 0.4 },
+      );
+      g.mat(
+        path([
+          [12, -59.4],
+          [18, -52.6],
+          [21.4, -55.6],
+          [15, -62.2],
         ]),
         P.team,
         "leather",

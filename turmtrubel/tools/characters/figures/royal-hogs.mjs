@@ -1,4 +1,5 @@
-// Königsschweinchen – stolze, quiekende Ferkel in Rosé-Creme mit Minikrone zwischen den Ohren und Schleife am Ringelschwanz
+// Königsschweinchen – stolze, quiekende Ferkel in Rosé-Creme mit Minikrone zwischen den Ohren, Königsmäntelchen und
+// Schleife am Ringelschwanz
 // Varianten: 0 = Fleck am Ohr, 1 = Krone schief, 2 = Doppelkinn. Evo: Federflügel mit Goldrand und Fliegerbrille
 // (Brief: docs/briefs/royal-hogs.md)
 import {
@@ -193,7 +194,45 @@ export default function royalHogs(F) {
       lw: 0.3,
     });
   });
-  emblem(F, "emblem", "body", 19, -6, -18, 1.8, { zb: 19 });
+  // Königsmäntelchen mit Hermelinsaum (zweite Teamzone), weht hinten über den Rücken hinaus
+  F.part("cape", { bone: "body", z: 18.6, zb: 18.6, team: true }, (g) => {
+    g.mat(
+      path([
+        [-4, -33],
+        [6, -31.4],
+        [4.4, -22, 1],
+        [-6, -17.4],
+        [-19, -18.4, 1],
+        [-22, -25],
+        [-15, -29.6, 1],
+      ]),
+      P.team,
+      "cloth",
+      { line: P.teamDeep, lw: 0.5, hi: 0.4 },
+    );
+    g.mat(
+      path([
+        [5, -23.6],
+        [-6, -18.6],
+        [-19.4, -19.6],
+        [-20.4, -16.6],
+        [-6, -15.2],
+        [5.8, -20.6],
+      ]),
+      "#fff8f0",
+      "fur",
+      { line: "#c8bca8", lw: 0.3 },
+    );
+    g.lod(1, (h) => {
+      for (const [x, y] of [
+        [-15, -17.6],
+        [-8, -16.6],
+        [-1, -18.2],
+      ])
+        h.fill(rrect(x - 0.4, y - 0.8, 0.8, 1.6, 0.3), INK);
+    });
+  });
+  emblem(F, "emblem", "body", 19, -6, -25, 2, { zb: 19 });
   // Evo: kleine Federflügel mit Goldrand
   F.part("wings", { bone: "body", z: 19.5, zb: 19.5, evo: "evo" }, (g) => {
     const w = path([

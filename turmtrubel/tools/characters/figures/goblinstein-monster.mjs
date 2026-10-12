@@ -33,20 +33,21 @@ export default function goblinsteinMonster(F) {
 
   // ───────── Akku mit Kurbel (Signature) und Kabel zu den Halsklemmen ─────────
   F.part('battery', { bone: 'back', z: 3, zb: 46, sig: true }, (g) => {
-    g.mat(rrect(-46, -104, 26, 40, 4), BATT, 'metal', { hi: 0.6 });
-    g.mat(rrect(-44, -110, 8, 6, 1.6), '#c84a3a', 'metal');
-    g.mat(rrect(-30, -110, 8, 6, 1.6), '#4a4a52', 'metal');
+    // hoher Rücken-Akku: überragt den Kopf, oben zwei Polköpfe
+    g.mat(rrect(-52, -132, 32, 68, 4), BATT, 'metal', { hi: 0.6 });
+    g.mat(rrect(-50, -142, 10, 10, 2), '#c84a3a', 'metal');
+    g.mat(rrect(-32, -142, 10, 10, 2), '#4a4a52', 'metal');
     g.lod(1, (h) => {
-      rivets(h, [[-43, -100], [-23, -100], [-43, -68], [-23, -68]], 1, '#8a909c');
-      h.fill(rrect(-40, -92, 14, 4, 1), '#7cff8a', { op: 0.9 });
+      rivets(h, [[-49, -128], [-23, -128], [-49, -68], [-23, -68]], 1, '#8a909c');
+      for (const y of [-118, -106, -94]) h.fill(rrect(-45, y, 18, 4, 1), '#7cff8a', { op: 0.9 });
     });
     // Kurbel
     g.stroke(polyline([[-46, -84], [-54, -84], [-54, -76]]), '#9aa3ad', 1.8);
     g.mat(rrect(-57, -78, 6, 4, 1.4), '#c84a3a', 'wood');
   });
   F.part('cables', { bone: 'back', z: 3.5, zb: 45 }, (g) => {
-    g.stroke(spline([[-40, -110], [-30, -122], [-6, -114], [2, -100]]), '#1e1e22', 2);
-    g.stroke(spline([[-26, -110], [-14, -118], [8, -108], [16, -100]]), '#1e1e22', 2);
+    g.stroke(spline([[-45, -142], [-30, -150], [-4, -124], [2, -100]]), '#1e1e22', 2.2);
+    g.stroke(spline([[-27, -142], [-12, -146], [10, -116], [16, -100]]), '#1e1e22', 2.2);
   });
   F.part('sparks', { bone: 'back', z: 46, state: ['spark', 'hit', 'spawn'], glow: true }, (g) => {
     for (const [x, y] of [[0, -102], [18, -102], [-6, -110]]) g.stroke(polyline([[x - 3, y - 2], [x, y + 1], [x + 3, y - 3], [x + 5, y]]), '#7cff8a', 1.2);

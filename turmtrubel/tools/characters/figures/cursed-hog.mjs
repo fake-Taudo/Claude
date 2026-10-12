@@ -85,15 +85,17 @@ export default function cursedHog(F) {
 
   // ───────── Mini-Hexenhut mit Knick (Signature) und Hutband (Teamzone) ─────────
   F.part("hat", { bone: "hat", z: 34, zb: 34, sig: true }, (g) => {
-    g.mat(ellipse(14, -38, 10, 2.4, -6), HAT, "cloth", { hi: 0.4 });
+    // hoher, geknickter Hexenhut mit breiter Krempe: die Silhouette ragt weit über die Ohren
+    g.mat(ellipse(13, -38, 14, 3, -6), HAT, "cloth", { hi: 0.4 });
     g.mat(
       path([
-        [8, -39],
-        [12, -48],
-        [14, -54],
-        [20, -56, 1],
-        [16, -51],
-        [18, -39],
+        [6, -39],
+        [9, -52],
+        [11, -64],
+        [24, -72, 1],
+        [17, -61],
+        [16, -50],
+        [19, -39],
       ]),
       HAT,
       "cloth",

@@ -67,11 +67,11 @@ export default function furnace(F) {
     g.fill(ellipse(-14, -66, 6, 3), '#1a1a1e', { op: 0.4, lod: 1 });
   });
   // ───────── Ofenklappe mit Gitter (Signature): Glut, Augen, Mund ─────────
-  F.part('doorFrame', { bone: 'torso', z: 21, zb: 21, view: 'front' }, (g) => {
+  F.part('doorFrame', { bone: 'torso', z: 21, zb: 21, view: 'front', sig: true }, (g) => {
     g.mat(circle(4, -46, 14), BRASS, 'gold', { hi: 0.8 });
     g.fill(circle(4, -46, 11), COAL);
   });
-  F.part('embers', { bone: 'torso', z: 21.5, view: 'front', glow: true }, (g) => {
+  F.part('embers', { bone: 'torso', z: 21.5, view: 'front', glow: true, sig: true }, (g) => {
     g.fill(circle(4, -42, 9), EMBER, { op: 0.8 });
     g.fill(ellipse(4, -40, 6, 4), GLOW);
   });
@@ -87,7 +87,7 @@ export default function furnace(F) {
   F.part('eyes.death', { bone: 'torso', z: 22, view: 'front', expr: 'death' }, (g) => {
     for (const x of [-1, 9]) g.fill(circle(x, -50, 1.4), '#5a4a48');
   });
-  F.part('grate', { bone: 'door', z: 23, zb: 23, view: 'front', state: ['idle', 'walk', 'hit', 'spawn', 'stun', 'sleep', 'charge', 'death'] }, (g) => {
+  F.part('grate', { bone: 'door', z: 23, zb: 23, view: 'front', sig: true, state: ['idle', 'walk', 'hit', 'spawn', 'stun', 'sleep', 'charge', 'death'] }, (g) => {
     for (const x of [-4, 0, 4, 8, 12]) g.mat(rrect(x - 0.8, -56, 1.6, 20, 0.6), IRON_D, 'metal');
     g.mat(rrect(16, -48, 6, 3, 1), BRASS, 'gold');
   });

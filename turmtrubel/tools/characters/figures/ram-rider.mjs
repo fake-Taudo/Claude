@@ -76,7 +76,7 @@ export default function ramRider(F) {
   F.part('saddle', { bone: 'body', z: 13, zb: 13 }, (g) => {
     g.mat(path([[-14, -68, 1], [-8, -64], [6, -64], [12, -70, 1], [14, -64], [8, -60], [-10, -60], [-16, -64]]), '#6b3e22', 'leather', { hi: 0.4 });
   });
-  emblem(F, 'emblem', 'body', 12.5, 6, -52, 2.8);
+  emblem(F, 'emblem', 'body', 12.5, -9, -46.6, 2.8);
 
   // ───────── Kopf mit Doppelspiral-Hörnern und Kristallglöckchen ─────────
   const spiral = (cx, cy, R, turns, s) => {

@@ -27,7 +27,7 @@ Steckerzinken-Ohren und Zickzack-Schwanz sind einmalig. Elektrogeister anderer S
 | Schatten | `#b7a54c` · Tiefe `#80774d` | Hauptfarbe unten rechts, Falten (Akzent: `#694ac1`) |
 | Licht · Glanz | `#ffe77a` · `#fff7d0` | Flächen oben links, Spitzlichter |
 | Kontur | `#1c1830` außen · `#77683a` innen | Stufe 1 |
-| Teamzone | Blau `#3d8bff` / Rot `#ff4d57` | Schwanzband; Bodenring Kreis/Zacken, Emblem Kreis/Dreieck |
+| Teamzone | Blau `#3d8bff` / Rot `#ff4d57` | Schwanzband, Steckerkappe; Bodenring Kreis/Zacken, Emblem Kreis/Dreieck |
 | Steckermetall | `#c8ccd2` | Materialfarbe |
 
 ## Signature-Element

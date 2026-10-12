@@ -219,11 +219,41 @@ export default function phoenix(F) {
   F.part(
     "footRing",
     { bone: "legF", z: 7.5, zb: 7.5, team: true, form: BASE },
-    (g) =>
-      g.mat(rrect(4.4, -22, 4, 3, 0.8), P.team, "metal", {
+    (g) => {
+      // Fußring mit zwei flatternden Bändern
+      g.mat(
+        path([
+          [5, -21.8],
+          [-2, -26.4, 1],
+          [-16, -25],
+          [-11, -21.6],
+          [-15, -18.6],
+          [-2.4, -20.6, 1],
+          [5, -19.4],
+        ]),
+        P.team,
+        "cloth",
+        { line: P.teamDeep, lw: 0.4 },
+      );
+      g.mat(
+        path([
+          [5, -20.4],
+          [-1, -16.4, 1],
+          [-11, -9],
+          [-6, -10.4],
+          [-8, -5.6],
+          [1.4, -14.4, 1],
+          [5.6, -19.4],
+        ]),
+        P.teamShade,
+        "cloth",
+        { line: P.teamDeep, lw: 0.4 },
+      );
+      g.mat(rrect(4, -22.4, 4.8, 3.6, 0.8), P.team, "metal", {
         line: P.teamDeep,
         lw: 0.4,
-      }),
+      });
+    },
   );
 
   // ───────── Körper mit Brustgefieder ─────────

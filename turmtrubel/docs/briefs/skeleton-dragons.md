@@ -27,7 +27,7 @@ Das grüne Feuer, das durch die Rippen leuchtet, ist einmalig; andere Drachen ha
 | Schatten | `#a09a95` · Tiefe `#72717c` | Hauptfarbe unten rechts, Falten (Akzent: `#53b982`) |
 | Licht · Glanz | `#e9ddc0` · `#f6f3ec` | Flächen oben links, Spitzlichter |
 | Kontur | `#1c1830` außen · `#6a6265` innen | Stufe 2 |
-| Teamzone | Blau `#3d8bff` / Rot `#ff4d57` | Halsband; Bodenring Kreis/Zacken, Emblem Kreis/Dreieck |
+| Teamzone | Blau `#3d8bff` / Rot `#ff4d57` | Halsband mit Wimpelfetzen; Bodenring Kreis/Zacken, Emblem Kreis/Dreieck |
 | Flügelhaut | `#8a8478` | Materialfarbe |
 
 ## Signature-Element

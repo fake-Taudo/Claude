@@ -38,7 +38,7 @@ export default function wallBreakerRunner(F) {
   F.part('soot', { bone: 'head', z: 33.5, view: 'front' }, (g) => g.fill(ellipse(X(4), X(-38) - LIFT, X(3), X(1.6)), '#3a3a3a', { op: 0.4 }));
   F.part('armF', { bone: 'armF', z: 29, zb: 6 }, (g) => g.mat(limb(X(5), X(-30) - LIFT, X(9), X(-21) - LIFT, X(1.3), X(1.2)), BONE, 'bone'));
   F.part('handF', { bone: 'handF', z: 41, zb: 7 }, (g) => g.mat(circle(X(9), X(-20) - LIFT, X(2.4)), BONE, 'bone'));
-  emblem(F, 'emblem', 'torso', 25, X(-3), X(-24) - LIFT, X(1.6), { zb: 25 });
+  emblem(F, 'emblem', 'torso', 25, X(-3), X(-24) - LIFT, X(2.3), { zb: 25 });
 
   F.anim({
     // trippelt auf der Stelle
