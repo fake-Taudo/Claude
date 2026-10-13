@@ -134,20 +134,22 @@ export class TripleDraft extends BaseDraft {
     super(db, cfg, opts);
     this.kind = 'triple';
     this.rounds = cfg.rounds ?? 8;
-    this.round = 0;
-    this.offers = [];
-    this.chosen = new Array(this.seats).fill(null);
     this.pool = db.cards.filter((c) => c.class === 'normal' || c.class === 'champion' || c.class === 'hero').map((c) => c.id);
-    this.newRound();
+    // Jeder Spieler wählt in seinem eigenen Tempo: eigenes Angebot, eigene Runde
+    this.offers = Array.from({ length: this.seats }, (_, seat) => this.makeOffer(seat));
+  }
+
+  /** Runde (0-basiert), in der ein Spieler gerade wählt. */
+  roundOf(seat) {
+    return Math.min(this.picks[seat].length, this.rounds - 1);
+  }
+
+  finished(seat) {
+    return this.picks[seat].length >= this.rounds;
   }
 
   picksLeft(seat) {
     return this.rounds - this.picks[seat].length;
-  }
-
-  newRound() {
-    this.chosen.fill(null);
-    this.offers = Array.from({ length: this.seats }, (_, seat) => this.makeOffer(seat));
   }
 
   /** Angebot für einen Spieler: k verschiedene erlaubte Karten, höchstens ein Champion/Held, mit Spielbarkeits-Schutz. */
@@ -192,29 +194,25 @@ export class TripleDraft extends BaseDraft {
     return offer;
   }
 
+  /** Spieler, die noch Karten wählen müssen (unabhängig voneinander). */
   pending() {
     if (this.done) return [];
-    return this.chosen.map((c, i) => (c == null ? i : -1)).filter((i) => i >= 0);
+    return this.picks.map((p, i) => (p.length < this.rounds ? i : -1)).filter((i) => i >= 0);
   }
 
   pick(seat, id, auto = false) {
     if (this.done) return fail('NOT_DRAFTING');
     if (!(seat >= 0 && seat < this.seats)) return fail('NOT_DRAFTING');
-    if (this.chosen[seat] != null) return fail('ALREADY_PICKED');
+    if (this.finished(seat)) return fail('ALREADY_PICKED');
     if (typeof id !== 'string' || !this.offers[seat].includes(id)) return fail('NOT_OFFERED');
     const bad = this.ruleFor(seat, id);
     if (bad) return fail(bad);
-    this.chosen[seat] = id;
     this.picks[seat].push(id);
     this.log.push([seat, id, auto]);
-    let advanced = false;
-    if (this.chosen.every((c) => c != null)) {
-      advanced = true;
-      this.round++;
-      if (this.round >= this.rounds) this.done = true;
-      else this.newRound();
-    }
-    return { ok: true, advanced };
+    // nächstes eigenes Angebot sofort – der andere kann noch in einer früheren Runde sein
+    this.offers[seat] = this.finished(seat) ? [] : this.makeOffer(seat);
+    if (this.picks.every((p) => p.length >= this.rounds)) this.done = true;
+    return { ok: true, advanced: true };
   }
 
   autoPick(seat) {
@@ -222,16 +220,20 @@ export class TripleDraft extends BaseDraft {
     return this.pick(seat, id, true);
   }
 
-  /** Was dieser Spieler sehen darf (die Wahl des anderen bleibt verborgen). */
+  /**
+   * Was dieser Spieler sehen darf: eigenes Angebot und eigene Picks, vom Gegner die aktuellen Optionen und nur
+   * die ANZAHL seiner Picks (welche Karte er genommen hat, bleibt bis zum Reveal verborgen).
+   */
   stateFor(seat) {
     return {
       kind: 'triple',
-      round: Math.min(this.round, this.rounds - 1),
+      round: this.roundOf(seat),
       rounds: this.rounds,
-      offer: this.done ? [] : this.offers[seat].slice(),
+      offer: this.offers[seat].slice(),
       picks: this.picks[seat].slice(),
-      chosen: this.chosen[seat],
-      others: this.chosen.map((c, i) => (i === seat ? null : c != null)),
+      mineDone: this.finished(seat),
+      oppOffers: this.offers.map((o, i) => (i === seat ? null : o.slice())),
+      oppCounts: this.picks.map((p, i) => (i === seat ? null : p.length)),
       done: this.done,
     };
   }

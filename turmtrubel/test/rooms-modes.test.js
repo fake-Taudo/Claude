@@ -229,25 +229,35 @@ function draftRoom(modeId) {
   return { ...env, a, b, room };
 }
 
-test('Triple Draft im Raum: Angebote, Ablehnung fremder Karten, Auto-Pick nach 15 s, Reveal, Kampf mit Draft-Decks', () => {
+test('Triple Draft im Raum: eigenes Tempo, Gegner-Optionen sichtbar, Gesamt-Frist, Reveal, Kampf mit Draft-Decks', () => {
   const { a, b, room, clock } = draftRoom('triple-draft');
   const sa = a.last('draft');
   assert.equal(sa.kind, 'triple');
   assert.equal(sa.offer.length, 3);
   assert.equal(sa.rounds, 8);
-  assert.ok(sa.timeLeft > 14 && sa.timeLeft <= 15);
+  assert.equal(sa.timer, 'total');
+  assert.equal(sa.timerSeconds, 120);
+  assert.ok(sa.timeLeft > 119 && sa.timeLeft <= 120);
+  assert.deepEqual(sa.oppOffers[1], b.last('draft').offer, 'Anna sieht Bens Optionen');
   // Manipulation: Karte, die nicht angeboten wurde
   const foreign = db.cards.find((c) => !sa.offer.includes(c.id)).id;
   assert.equal(room.draftPick(a.s, foreign).code, 'NOT_OFFERED');
   assert.ok(room.draftPick(a.s, sa.offer[0]).ok);
-  assert.equal(room.draftPick(a.s, sa.offer[1]).code, 'ALREADY_PICKED');
-  assert.equal(b.last('draft').others[0], true);
-  // Ben wählt nicht → nach Ablauf zufällig
-  clock.advance(15_100);
-  assert.equal(room.draft.round, 1);
-  assert.equal(room.draft.picks[1].length, 1);
-  // Rest per Zeitablauf
-  for (let r = 1; r < 8; r++) clock.advance(15_100);
+  assert.equal(room.draftPick(a.s, sa.offer[1]).code, 'NOT_OFFERED', 'zweite Karte aus demselben Angebot');
+  // Anna wählt weiter, ohne auf Ben zu warten
+  const sa2 = a.last('draft');
+  assert.equal(sa2.round, 1);
+  assert.ok(room.draftPick(a.s, sa2.offer[2]).ok);
+  const sb = b.last('draft');
+  assert.equal(sb.round, 0, 'Ben ist noch in Runde 1');
+  assert.deepEqual(sb.oppCounts, [2, null], 'Ben sieht nur, dass Anna zwei Karten hat');
+  assert.ok(!sb.picks.length);
+  // Frist läuft für alle Picks gemeinsam: nach 60 s noch kein Auto-Pick
+  clock.advance(60_000);
+  assert.equal(room.state, 'draft');
+  assert.equal(room.draft.picks[1].length, 0);
+  // nach Ablauf der 120 s wird alles Fehlende zufällig ergänzt
+  clock.advance(60_100);
   assert.equal(room.state, 'reveal');
   const rev = a.last('draftReveal');
   assert.equal(rev.decks.length, 2);
@@ -292,7 +302,7 @@ test('Draft: Verlassen bricht den Draft ab, der andere bekommt eine klare Meldun
   assert.equal(b2.last('roomClosed').reason, 'hostLeft');
 });
 
-test('Training in Draft-Modi: der Bot draftet selbst (1–6 s Bedenkzeit), Kampf startet', () => {
+test('Training in Draft-Modi: der Bot draftet selbst (1–6 s Bedenkzeit, zügig wenn der Mensch fertig ist), Kampf startet', () => {
   for (const mode of ['triple-draft', 'mega-draft']) {
     for (const diff of ['easy', 'medium', 'hard']) {
       const { mgr, client, clock } = setup();
@@ -303,13 +313,18 @@ test('Training in Draft-Modi: der Bot draftet selbst (1–6 s Bedenkzeit), Kampf
       clock.advance(3100);
       assert.equal(room.state, 'draft');
       // Mensch wählt immer sofort die erste erlaubte Karte
-      for (let i = 0; i < 400 && room.state === 'draft'; i++) {
+      let i = 0;
+      let doneAt = -1;
+      for (; i < 400 && room.state === 'draft'; i++) {
         const st = a.last('draft');
-        const mine = st.kind === 'triple' ? !st.chosen && st.offer.length : st.turn === 0;
+        if (st.kind === 'triple' && st.mineDone && doneAt < 0) doneAt = i;
+        const mine = st.kind === 'triple' ? !st.mineDone && st.offer.length : st.turn === 0;
         if (mine) room.draftPick(a.s, st.kind === 'triple' ? st.offer[0] : st.allowed[0]);
         clock.advance(500);
       }
       assert.equal(room.state, 'reveal', `${mode}/${diff}`);
+      // Triple: ist der Mensch fertig, wählt der Bot zügig weiter (kein langes Warten)
+      if (mode === 'triple-draft' && doneAt >= 0) assert.ok((i - doneAt) * 0.5 <= 8, `Wartezeit nach dem letzten Pick: ${(i - doneAt) * 0.5} s`);
       assert.ok(room.draft.log.filter(([s, , auto]) => s === 1 && !auto).length >= 7, 'Bot wählt selbst, nicht per Zeitablauf');
       clock.advance(5100);
       room.onLoaded(a.s);

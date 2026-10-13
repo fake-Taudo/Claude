@@ -49,8 +49,9 @@ Weitere Dokumente:
 `server/draft.js` (seed-basiert):
 
 - **Triple Draft**
-  - 8 Runden, je 3 Angebote, alle wählen gleichzeitig. Die Gegenseite sieht nur „hat gewählt“.
-  - 15 s pro Runde, danach Auto-Pick.
+  - 8 Runden, je 3 Angebote. Jeder wählt im eigenen Tempo: Nach einer Wahl kommt sofort das nächste Angebot.
+  - Die aktuellen Optionen des Gegners sind sichtbar, seine Wahl nicht (nur die Anzahl, als „?“-Karten).
+  - Eine Frist für alle Picks: 120 s („Kampf beginnt in …“). Was dann fehlt, wird regelkonform zufällig ergänzt. Bots denken 1–6 s pro Karte; ist der Mensch fertig, wählen sie zügig (0,4–0,9 s).
   - Höchstens 1 Champion und 1 Held pro Deck, Held nie zusammen mit seiner Grundkarte, keine Duplikate, keine Evolutionen.
   - **Playability-Guard**: Wird es knapp, enthält das Angebot rechtzeitig eine Luftabwehr bzw. einen Zauber oder ein Gebäude.
 - **Mega Draft**
@@ -64,9 +65,15 @@ Weitere Dokumente:
 
 `client/js/ui/draft.js`:
 
-- **Triple:** große Karten. Tippen wählt aus, Halten zeigt Details, „Wählen“ bestätigt.
-- **Mega:** scrollbares Raster mit mindestens 4 Spalten auf dem Handy, Filter nach Typ, Elixier und Seltenheit plus Suche. Die Champions sind oben angepinnt und gold umrandet, gewählte Karten tragen die Farbe und den Namen des Wählenden, gesperrte Champions sind ausgegraut („Du hast bereits einen Champion“).
-- Für beide: Timer-Leiste, Fortschritt (Runde 3/8 bzw. Gewählt 3/8), „Du bist dran / … wählt“, eigene Deck-Leiste mit Ø-Elixier. Die gewählte Karte fliegt in die Leiste. Im Mega Draft sind die Picks des Gegners sichtbar.
+Aufbau im Stil der Kampf-Arena (überarbeitet nach Referenz-Screenshots):
+
+- Die Arena ist abgedunkelt im Hintergrund zu sehen. Oben liegt die rote Holzleiste des Gegners mit seinen 8 Plätzen, Schild-Abzeichen und Name. Unten liegt die eigene blaue Leiste mit Name, „Durchschn. Elixierkosten“ und 8 Plätzen. Dazwischen steht ein großer Titel mit den Karten, darunter der orangefarbene Zeitbalken mit großer Sekundenzahl.
+- Die Karten haben einen Rahmen in der Farbe der Seltenheit und den Elixier-Tropfen mittig am unteren Rand. Legendäre Karten und Champions sind sechseckig, Champions tragen eine Krone, Helden ein „HELD“-Schild.
+- **Triple:** Oben steht „Optionen des Gegners:“ mit seinen 3 aktuellen Karten (klein, antippbar für Details). Darunter folgt „Wähle deine Karte“ mit 3 großen Karten samt Namen und „Runde n/8“. Die Picks des Gegners erscheinen verdeckt als „?“-Karten in seiner Leiste. Nach dem letzten eigenen Pick steht dort „Fertig! Warte auf …“. Der Timer heißt „Kampf beginnt in:“.
+- **Mega:** Unter „Wähle eine Karte“ (gold, wenn man dran ist) bzw. „… wählt“ steht das Raster aller 40 Karten. Champions stehen vorne, danach folgen die Karten nach Elixier. Spaltenzahl und Kartengröße werden so berechnet, dass alle Karten ohne Scrollen passen: 7 Spalten im Hochformat, 16 im Querformat, 10 auf dem Desktop. Vergebene Karten sind abgedunkelt, haben ein Häkchen und einen Rand in der Farbe des Wählenden. Gesperrte Champions zeigen ein ✕. Die Picks des Gegners stehen offen in seiner Leiste. Filter (Typ, Elixier, Seltenheit) und Suche liegen im Lupen-Menü; ein Punkt am Knopf zeigt einen aktiven Filter. Der Timer heißt „Zeit übrig:“.
+- Antippen markiert eine Karte, darunter erscheinen „Wählen“ und „Info“. Nochmals Antippen wählt, Halten oder die Taste `i` zeigt die Details. Die gewählte Karte fliegt in den Platz der eigenen Leiste.
+- Zellen und Angebote werden nur neu aufgebaut, wenn sich ihr Inhalt ändert. Bei einem Pick des Gegners flackert nichts, und der Fokus bleibt erhalten.
+- **Reveal:** Die Leiste des Gegners deckt seine 8 Karten nacheinander auf. In der Mitte stehen „Die Decks stehen!“ und der Countdown.
 
 ### Phase 5: 2 gegen 2
 
@@ -181,9 +188,9 @@ Die vollständige Beschreibung steht in [PROTOCOL.md](PROTOCOL.md). Kurz:
 |---|---|
 | `classic-regression` | Die 12 aufgezeichneten Kämpfe ergeben Tick für Tick dieselben Snapshot-Prüfsummen, Zwischenstände und Ergebnisse; der Standard-Bot trifft dieselben Entscheidungen |
 | `modes` (11) | `modes.json` gültig, Fehlererkennung, klassisch = gleiches Regelobjekt, komponierbare Modifikatoren; ×7: Start 10, nach 40 Ticks exakt +5, Maximum 10; keine Phasen (auch in der Verlängerung); autoritative Elixierprüfung, Eingabe-Limit mit Burst 4, „nie verbraucht“, konfigurierbare Spielzeiten; Draft ohne Evos |
-| `draft` (8) | Reproduzierbar per Seed; 150 Triple-Drafts mit absichtlich schlechter Wahl bleiben gültig und spielbar; verdeckte gleichzeitige Wahl; Auto-Pick nur aus dem Angebot; **500 Mega-Pools**: 40 eindeutige Karten, genau 3 Champions, 0 Helden, alle Mindestwerte; strikt abwechselnde Wahl, Startspieler per Los, Sperren mit Besitzer, 24 übrig; Champion-Regel auch für Auto-Pick und alle Bot-Stufen (180 Drafts); Bot-Decks ausgewogen |
+| `draft` (8) | Reproduzierbar per Seed; 150 Triple-Drafts mit absichtlich schlechter Wahl bleiben gültig und spielbar; jeder wählt im eigenen Tempo, sieht die Optionen des Gegners, aber nicht seine Wahl; Auto-Pick nur aus dem Angebot; **500 Mega-Pools**: 40 eindeutige Karten, genau 3 Champions, 0 Helden, alle Mindestwerte; strikt abwechselnde Wahl, Startspieler per Los, Sperren mit Besitzer, 24 übrig; Champion-Regel auch für Auto-Pick und alle Bot-Stufen (180 Drafts); Bot-Decks ausgewogen |
 | `teams` (12) | 4 Spieler / 2 Teams, gemeinsame Türme, Burgturm fürs Team, Kronen pro Team, kein Eigenbeschuss (Zauber und Nahkampf), Wut und Heilung für Verbündete, Folge-Einheiten gehören dem Spieler, Elixiersammler und -golem pro Spieler, gleicher Champion bei Teamkollegen, Aufgabe pro Team, 4 Bots spielen 2v2 durch |
-| `rooms-modes` (13) | Gefälschte Modi und Werte, Beitritt zeigt den Modus, 4-Platz-Lobby, Platzwahl/Verschieben/Entfernen, Start mit 4, Bot-Übernahme nach 30 s ohne Wiedereinstieg, Rematch mit allen 4, Team-Ping, Draft im Raum (fremde Karte, Doppel-Pick, Auto-Pick nach 15 s, Reveal, Kampf mit Draft-Decks), Reconnect mit Restzeit, Abbruch, Training in allen Draft-Modi und Stufen, Bot-Bremse |
+| `rooms-modes` (13) | Gefälschte Modi und Werte, Beitritt zeigt den Modus, 4-Platz-Lobby, Platzwahl/Verschieben/Entfernen, Start mit 4, Bot-Übernahme nach 30 s ohne Wiedereinstieg, Rematch mit allen 4, Team-Ping, Draft im Raum (fremde Karte, Doppel-Pick, eigenes Tempo, Gegner-Optionen, Gesamtfrist 120 s mit Zufallsergänzung, Reveal, Kampf mit Draft-Decks), Reconnect mit Restzeit, Abbruch, Training in allen Draft-Modi und Stufen (Bot wählt zügig, sobald der Mensch fertig ist), Bot-Bremse |
 | `modes-e2e` (5) | Echte WebSockets: **4 Clients** spielen 2v2 (Teamwechsel, Platz klauen abgewiesen, 5. Spieler abgewiesen, kompletter Kampf, Rematch mit allen 4, Abbruch → Bot übernimmt, Rückkehr abgewiesen); **Triple und Mega Draft** mit Reconnect mitten im Draft bis zum Kampfende; **Unendlich-Elixier** mit Massen-Platzierungen (366 Platzierungen, Server-Tick p50 0,48 ms, p99 1,49 ms); **manipulierte Clients** (alte Version, Modus-Objekt, Bots in 2v2, nicht angebotene Karte, Objekt statt ID, Doppel-Pick, fremde Karte, Elixier-Felder) |
 | `bots` (5) | Jede Stufe in jedem Bot-Modus bis zum Ende, 2v2 ohne Bots, Mindestabstand bei ×7, Sichtbarkeit, Stärke-Auswertung |
 
@@ -191,7 +198,7 @@ Dazu ohne Fehler durchgelaufen:
 
 - `tools/ui-shots.mjs`: 8 Viewports × 26 Zustände, Konsole 0, keine Befunde mehr
 - `tools/e2e/browser-match.mjs`: zwei Browser, 0 Desync, 0 Konsolenfehler
-- `tools/modes/screens.mjs`: 3 Viewports × 15 Zustände, keine Befunde
+- `tools/modes/screens.mjs`: 3 Viewports × 17 Zustände (mit „Fertig, warte auf …“ und Mega-Verlauf), keine Befunde
 
 ### Bot-Auswertung
 

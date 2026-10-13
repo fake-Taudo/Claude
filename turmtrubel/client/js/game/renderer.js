@@ -1889,3 +1889,39 @@ function paintArena(c, px, mySide) {
   c.strokeRect(0.11, 0.11, W - 0.22, H - 0.22);
 }
 const MID_Y_WORLD = ARENA_H / 2;
+
+/**
+ * Arena als statische Kulisse (z. B. hinter dem Draft): füllt die Leinwand vollständig („cover“), eigene Seite unten
+ * bzw. rechts, alle sechs Türme stehen. Gleiche Zeichnung wie im Kampf, nur ohne Einheiten.
+ */
+export function paintArenaBackdrop(cv, { side = 0 } = {}) {
+  const cw = cv.clientWidth;
+  const ch = cv.clientHeight;
+  if (!cw || !ch) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(cw * dpr);
+  cv.height = Math.round(ch * dpr);
+  const c = cv.getContext('2d');
+  const view = new View();
+  view.flip = side === 1;
+  view.mode = cw > ch * 1.15 ? 'rotated' : 'portrait';
+  const tw = view.mode === 'portrait' ? ARENA_W : ARENA_H;
+  const th = view.mode === 'portrait' ? ARENA_H : ARENA_W;
+  view.s = Math.max(cw / tw, ch / th);
+  view.ox = (cw - tw * view.s) / 2;
+  view.oy = (ch - th * view.s) / 2;
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  paintSurroundings(c, cw, ch, view.rect(0, 0, ARENA_W, ARENA_H), view.s);
+  const [x0, y0] = view.toScreen(0, 0);
+  const [x1, y1] = view.toScreen(1, 0);
+  const [x2, y2] = view.toScreen(0, 1);
+  c.setTransform(dpr * (x1 - x0), dpr * (y1 - y0), dpr * (x2 - x0), dpr * (y2 - y0), dpr * x0, dpr * y0);
+  paintArena(c, 1 / view.s, side);
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  for (const slot of TOWER_SLOTS) {
+    const [x, y] = view.toScreen(slot.x, slot.y);
+    const king = slot.key === 'king';
+    const mine = slot.side === side;
+    drawTower(c, { x, y, U: ((king ? 4 : 3) / 2) * view.s, t: 0, king, team: mine ? 'blue' : 'red', quality: 2, dpr, stage: 0, back: mine && view.mode !== 'rotated' });
+  }
+}

@@ -42,7 +42,7 @@ test('Triple Draft: 8 Runden à 3 Angebote, gültige und spielbare Decks über v
     const d = createDraft(db, TRIPLE, { seed });
     let rounds = 0;
     while (!d.done) {
-      for (const s of [0, 1]) {
+      for (const s of d.pending()) {
         const offer = d.offers[s];
         assert.equal(offer.length, 3);
         assert.equal(new Set(offer).size, 3, 'Angebot ohne Duplikate');
@@ -67,18 +67,30 @@ test('Triple Draft: 8 Runden à 3 Angebote, gültige und spielbare Decks über v
   }
 });
 
-test('Triple Draft: Spieler wählen gleichzeitig, sehen die Wahl des anderen nicht', () => {
+test('Triple Draft: jeder wählt im eigenen Tempo, sieht die Optionen des Gegners, aber nicht seine Wahl', () => {
   const d = new TripleDraft(db, TRIPLE, { seed: 4 });
-  const pick0 = d.offers[0][1];
+  const old0 = d.offers[0].slice();
+  const pick0 = old0[1];
   assert.equal(d.pick(0, pick0).ok, true);
-  assert.equal(d.round, 0, 'Runde endet erst, wenn alle gewählt haben');
+  // Spieler 0 ist sofort in Runde 2, Spieler 1 noch in Runde 1
+  assert.equal(d.roundOf(0), 1);
+  assert.equal(d.roundOf(1), 0);
+  assert.notDeepEqual(d.offers[0], old0, 'neues Angebot für Spieler 0');
+  assert.equal(d.pick(0, old0[0]).code, 'NOT_OFFERED', 'zweite Karte aus dem alten Angebot geht nicht');
   const st1 = d.stateFor(1);
-  assert.deepEqual(st1.others, [true, null], 'Spieler 1 sieht nur, dass gewählt wurde');
-  assert.ok(!JSON.stringify(st1).includes(`"${pick0}"`) || d.offers[1].includes(pick0), 'die Karte selbst bleibt verborgen');
-  assert.equal(d.pick(0, d.offers[0][0]).code, 'ALREADY_PICKED');
+  assert.deepEqual(st1.oppCounts, [1, null], 'Spieler 1 sieht nur die Anzahl der Picks');
+  assert.deepEqual(st1.oppOffers[0], d.offers[0], 'Spieler 1 sieht die aktuellen Optionen des Gegners');
+  assert.equal(st1.oppOffers[1], null);
+  assert.ok(!('picks' in st1 && st1.picks.includes(pick0)), 'eigene Picks enthalten nicht die des Gegners');
+  assert.ok(!JSON.stringify({ ...st1, oppOffers: null }).includes(`"${pick0}"`) || d.offers[1].includes(pick0), 'die gewählte Karte bleibt verborgen');
   assert.equal(d.pick(1, 'nicht-im-angebot').code, 'NOT_OFFERED');
-  assert.equal(d.pick(1, d.offers[1][2]).ok, true);
-  assert.equal(d.round, 1);
+  // Spieler 0 kann alle 8 Karten wählen, während Spieler 1 noch wartet
+  while (!d.finished(0)) assert.equal(d.autoPick(0).ok, true);
+  assert.equal(d.done, false);
+  assert.deepEqual(d.pending(), [1]);
+  assert.equal(d.pick(0, d.offers[1][0]).code, 'ALREADY_PICKED');
+  while (!d.done) d.autoPick(1);
+  assert.equal(d.picks[1].length, 8);
 });
 
 test('Triple Draft: Auto-Pick wählt nur angebotene, erlaubte Karten', () => {

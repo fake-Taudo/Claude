@@ -46,7 +46,7 @@ export function validateModes(json) {
       if (!d || !DRAFT_KINDS.includes(d.kind)) errors.push(`${where}: draft.kind fehlt`);
       else if (m.players !== 2) errors.push(`${where}: Drafts gibt es nur im 1 gegen 1`);
       else if (d.kind === 'triple') {
-        if (!(d.rounds === 8 && d.offer >= 2 && d.pickSeconds > 0)) errors.push(`${where}: draft.rounds = 8, offer ≥ 2, pickSeconds > 0`);
+        if (!(d.rounds === 8 && d.offer >= 2 && (d.totalSeconds > 0 || d.pickSeconds > 0))) errors.push(`${where}: draft.rounds = 8, offer ≥ 2, totalSeconds oder pickSeconds > 0`);
       } else if (d.kind === 'mega') {
         if (!(d.picksPerPlayer === 8 && d.poolSize >= 20 && d.champions >= 0 && d.pickSeconds > 0)) errors.push(`${where}: draft.picksPerPlayer = 8, poolSize ≥ 20, pickSeconds > 0`);
       }

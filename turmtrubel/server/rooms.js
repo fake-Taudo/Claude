@@ -278,6 +278,7 @@ export class Room {
     this.draftTimer = null;
     this.botPickTimers = new Map();
     this.deadlineAt = 0;
+    this.botHurry = false;
     this.pingAt = new Map();
   }
 
@@ -514,29 +515,50 @@ export class Room {
     const seed = Math.floor(this.mgr.random() * 2 ** 31);
     this.draft = createDraft(this.db, this.mode.draft, { seats: this.size, seed });
     this.draftRng = mulberry32(seed ^ 0x2b2b);
-    this.armDraft();
+    this.botHurry = false;
+    if (this.totalTimer()) {
+      // Triple Draft: eine gemeinsame Frist für alle Picks („Kampf beginnt in …“), jeder wählt in seinem Tempo
+      this.deadlineAt = this.mgr.now() + this.timerSeconds() * 1000;
+      this.draftTimer = this.later(this.timerSeconds() * 1000, () => this.draftTimeout());
+      for (const seat of this.draft.pending()) this.scheduleBotPick(seat);
+      this.broadcastDraft();
+    } else this.armDraft();
   }
 
-  pickSeconds() {
-    return this.mode.draft.pickSeconds ?? 15;
+  /** Gesamt-Frist (Triple) statt Frist pro Pick (Mega)? */
+  totalTimer() {
+    return !!this.mode.draft.totalSeconds;
   }
 
-  /** Neue Wahl-Runde/neuer Zug: Frist setzen, Bots einplanen, Zustand an alle. */
+  /** Länge der laufenden Frist in Sekunden (gesamt bzw. pro Pick). */
+  timerSeconds() {
+    return this.mode.draft.totalSeconds || this.mode.draft.pickSeconds || 15;
+  }
+
+  /** Mega Draft: neuer Zug – Frist pro Pick setzen, Bots einplanen, Zustand an alle. */
   armDraft() {
     this.cancel(this.draftTimer);
     for (const h of this.botPickTimers.values()) this.cancel(h);
     this.botPickTimers.clear();
-    this.deadlineAt = this.mgr.now() + this.pickSeconds() * 1000;
-    this.draftTimer = this.later(this.pickSeconds() * 1000, () => this.draftTimeout());
+    this.deadlineAt = this.mgr.now() + this.timerSeconds() * 1000;
+    this.draftTimer = this.later(this.timerSeconds() * 1000, () => this.draftTimeout());
     for (const seat of this.draft.pending()) this.scheduleBotPick(seat);
     this.broadcastDraft();
   }
 
+  /** Triple: Nur noch Bots wählen – die Menschen sind fertig und sollen nicht lange warten. */
+  onlyBotsPending() {
+    return this.totalTimer() && this.draft.pending().every((s) => this.players[s]?.isBot);
+  }
+
   scheduleBotPick(seat) {
     const p = this.players[seat];
-    if (!p || !p.isBot) return;
-    // menschlich wirkende Bedenkzeit: 1–6 s (höchstens bis kurz vor Ablauf der Frist)
-    const ms = Math.min(this.pickSeconds() * 1000 - 300, 1000 + Math.floor(this.draftRng() * 5000));
+    if (!p || !p.isBot || this.botPickTimers.has(seat)) return;
+    // menschlich wirkende Bedenkzeit: 1–6 s pro Karte (höchstens bis kurz vor Ablauf der Frist);
+    // warten nur noch Bots, wählen sie zügig (0,4–0,9 s)
+    const left = this.deadlineAt - this.mgr.now();
+    const think = this.onlyBotsPending() ? 400 + Math.floor(this.draftRng() * 500) : 1000 + Math.floor(this.draftRng() * 5000);
+    const ms = Math.min(left - 300, think);
     const h = this.later(Math.max(200, ms), () => {
       this.botPickTimers.delete(seat);
       if (this.state !== 'draft' || !this.draft.pending().includes(seat)) return;
@@ -555,7 +577,8 @@ export class Room {
       mode: this.mode.id,
       names: this.players.map((p) => (p ? p.name : '—')),
       bots: this.players.map((p) => !!p?.isBot),
-      pickSeconds: this.pickSeconds(),
+      timer: this.totalTimer() ? 'total' : 'pick',
+      timerSeconds: this.timerSeconds(),
       timeLeft: Math.max(0, (this.deadlineAt - this.mgr.now()) / 1000),
       ...this.draft.stateFor(seat),
     };
@@ -579,18 +602,26 @@ export class Room {
   draftTimeout() {
     this.draftTimer = null;
     if (this.state !== 'draft') return;
-    // Frist abgelaufen: für alle, die noch wählen müssen, zufällig (aber regelkonform) wählen
-    for (const seat of this.draft.pending()) this.draft.autoPick(seat);
+    // Frist abgelaufen: fehlende Picks zufällig (aber regelkonform) ergänzen – Triple alle restlichen, Mega den aktuellen Zug
+    if (this.totalTimer()) {
+      for (let guard = 0; !this.draft.done && guard < 64; guard++) for (const seat of this.draft.pending()) this.draft.autoPick(seat);
+    } else for (const seat of this.draft.pending()) this.draft.autoPick(seat);
     this.afterPick();
   }
 
   afterPick() {
     if (this.draft.done) return this.finishDraft();
-    // Triple: Runde läuft weiter, bis alle gewählt haben (Frist bleibt); Mega: neuer Zug
-    const pending = this.draft.pending();
-    const roundOver = this.draft.kind === 'mega' || pending.length === this.size;
-    if (roundOver) this.armDraft();
-    else this.broadcastDraft();
+    if (this.totalTimer()) {
+      // Triple: Frist läuft weiter; Bots wählen ihre nächste Karte nach neuer Bedenkzeit.
+      // Sind gerade alle Menschen fertig geworden, wird die lange Bedenkzeit der Bots verkürzt.
+      if (this.onlyBotsPending() && !this.botHurry) {
+        this.botHurry = true;
+        for (const h of this.botPickTimers.values()) this.cancel(h);
+        this.botPickTimers.clear();
+      }
+      for (const seat of this.draft.pending()) this.scheduleBotPick(seat);
+      this.broadcastDraft();
+    } else this.armDraft();
   }
 
   finishDraft() {

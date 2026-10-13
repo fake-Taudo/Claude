@@ -116,7 +116,7 @@ export class TestClient {
   onDraft(m) {
     if (m.done) return;
     let pick = null;
-    if (m.kind === 'triple' && !m.chosen && m.offer.length) pick = m.offer[Math.floor(this.rand() * m.offer.length)];
+    if (m.kind === 'triple' && !m.mineDone && m.offer.length) pick = m.offer[Math.floor(this.rand() * m.offer.length)];
     if (m.kind === 'mega' && m.turn === m.you && m.allowed.length) pick = m.allowed[Math.floor(this.rand() * m.allowed.length)];
     if (!pick || this.lastDraftPick === `${m.round ?? ''}:${m.picks?.length}:${pick}`) return;
     this.lastDraftPick = `${m.round ?? ''}:${m.picks?.length}:${pick}`;

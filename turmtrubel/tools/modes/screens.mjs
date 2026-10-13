@@ -1,6 +1,6 @@
 // Screenshot-Serie der Spielmodi in Hochformat, Querformat und Desktop – mit einfachen UI-Prüfungen.
-//   node tools/modes/screens.mjs [--out=docs/screens] [--only=phone-390x844,desk-1440x900] [--jpeg]
-// Zustände: Menü (Modi), Regel-Hinweis, Lobby 2v2, Triple Draft (+ Auswahl), Mega Draft (+ Detail), Reveal,
+//   node tools/modes/screens.mjs [--out=docs/screens] [--only=phone-390x844,desk-1440x900] [--steps=triple,mega] [--jpeg]
+// Zustände: Menü (Modi), Regel-Hinweis, Lobby 2v2, Triple Draft (+ Auswahl, fertig), Mega Draft (+ Verlauf, Filter, Detail), Reveal,
 // Kampf Unendlich-Elixier, Kampf 2v2 (Ping, Verbündete, Teamkollege), Ergebnis 2v2, Ergebnis Draft mit Decks.
 // Prüfungen je Screenshot: kein waagerechtes Scrollen, keine Knöpfe außerhalb, Touch-Ziele ≥ 44 px, keine Konsolenfehler.
 import fs from 'node:fs';
@@ -83,7 +83,7 @@ function pageChecks() {
     while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowX)) scroller = scroller.parentElement;
     if ((r.left < -1 || r.right > vw + 1) && !scroller) out.push({ t: 'offscreen', el: name });
     const small = Math.min(r.width, r.height) < 43.5;
-    if (small && !el.closest('.card, .pool-card, .offer-card, .draft-slot') && el.type !== 'checkbox') out.push({ t: 'touch-target', el: name, w: Math.round(r.width), h: Math.round(r.height) });
+    if (small && !el.closest('.card, .dc, .dv-cell, .dv-pick, .dv-slot') && el.type !== 'checkbox') out.push({ t: 'touch-target', el: name, w: Math.round(r.width), h: Math.round(r.height) });
   }
   return out;
 }
@@ -93,6 +93,7 @@ fs.mkdirSync(OUT, { recursive: true });
 const { url, proc } = await startServer();
 const browser = await pw.chromium.launch({ args: ['--mute-audio', '--autoplay-policy=no-user-gesture-required'] });
 const only = args.only ? String(args.only).split(',') : null;
+const steps = args.steps ? String(args.steps).split(',') : null;
 const report = {};
 
 async function newPlayer(vp, name, small = false) {
@@ -123,6 +124,7 @@ async function runViewport(vp) {
     states.push({ state, file, issues });
   };
   const step = async (name, fn) => {
+    if (steps && !steps.includes(name)) return;
     try {
       await fn();
     } catch (e) {
@@ -148,22 +150,25 @@ async function runViewport(vp) {
     await tap(A.page, '.mode-tile[data-mode="triple-draft"] .mode-bot');
     await A.page.waitForSelector('.mode-rules-modal');
     await tap(A.page, '.mode-rules-modal .btn-success');
-    await A.page.waitForSelector('#s-draft.active .offer-card', { timeout: 15000 });
-    await shot(A.page, 'triple-draft', 700);
-    await tap(A.page, '.offer-card >> nth=1');
+    await A.page.waitForSelector('#s-draft.active .dv-pick', { timeout: 15000 });
+    await shot(A.page, 'triple-draft', 1200);
+    await tap(A.page, '.dv-pick >> nth=1');
     await shot(A.page, 'triple-auswahl', 300);
-    // restliche Runden schnell durchwählen
-    for (let i = 0; i < 80; i++) {
-      if (await A.page.$('.draft-reveal')) break;
-      const c = await A.page.$('.offer-card:not(.dim):not(.chosen)');
-      const waiting = await A.page.evaluate(() => !!document.querySelector('.offer-card.chosen'));
-      if (c && !waiting) {
-        await c.click();
-        await A.page.locator('.draft-confirm').click({ timeout: 2000 }).catch(() => {});
+    // restliche Runden schnell durchwählen (jeder wählt im eigenen Tempo)
+    let waitShot = false;
+    for (let i = 0; i < 300; i++) {
+      if (await A.page.$('.dv-reveal')) break;
+      const mine = await A.page.evaluate(() => document.querySelector('#s-draft').classList.contains('my-turn'));
+      if (mine) {
+        await A.page.locator('.dv-pick >> nth=0').click({ timeout: 2000 }).catch(() => {});
+        await A.page.locator('.dv-pop .dv-pick-btn').click({ timeout: 2000 }).catch(() => {});
+      } else if (!waitShot) {
+        waitShot = true;
+        await shot(A.page, 'triple-fertig', 700);
       }
-      await A.page.waitForTimeout(400);
+      await A.page.waitForTimeout(300);
     }
-    await A.page.waitForSelector('.draft-reveal', { timeout: 30000 });
+    await A.page.waitForSelector('.dv-reveal', { timeout: 90000 });
     await shot(A.page, 'reveal', 1600);
     await A.page.waitForSelector('#s-game.active', { timeout: 30000 });
     await A.page.evaluate(() => window.turmtrubel.net.send('surrender', {}));
@@ -180,20 +185,31 @@ async function runViewport(vp) {
       window.turmtrubel.settings.hideModeInfo = { 'mega-draft': true, 'infinite-elixir': true };
       window.turmtrubel.startTraining('mega-draft');
     });
-    await A.page.waitForSelector('#s-draft.active .pool-card', { timeout: 15000 });
+    await A.page.waitForSelector('#s-draft.active .dv-cell', { timeout: 15000 });
     // warten, bis ich dran bin, dann eine erlaubte Karte auswählen
-    await A.page.waitForFunction(() => document.querySelector('.draft-turn.mine'), null, { timeout: 15000 });
-    await shot(A.page, 'mega-draft', 600);
-    await tap(A.page, '.pool-card:not(.taken):not(.locked) >> nth=3');
+    await A.page.waitForSelector('#s-draft.draft-v2.my-turn', { timeout: 30000 });
+    await shot(A.page, 'mega-draft', 1100);
+    await tap(A.page, '.dv-cell:not(.taken):not(.locked) >> nth=3');
     await shot(A.page, 'mega-auswahl', 300);
-    await A.page.click('.draft-confirm');
+    await A.page.click('.dv-pop .dv-pick-btn');
     await A.page.waitForTimeout(800);
-    // Filter: nur Zauber
-    await A.page.locator('.mega-filters .chips >> nth=0').locator('.fchip >> nth=2').click();
+    // ein paar Picks weiter, damit Häkchen beider Seiten zu sehen sind
+    for (let k = 0; k < 3; k++) {
+      await A.page.waitForSelector('#s-draft.draft-v2.my-turn', { timeout: 30000 });
+      await tap(A.page, '.dv-cell:not(.taken):not(.locked) >> nth=0');
+      await A.page.click('.dv-pop .dv-pick-btn');
+      await A.page.waitForTimeout(600);
+    }
+    await A.page.waitForSelector('#s-draft.draft-v2.my-turn', { timeout: 30000 });
+    await shot(A.page, 'mega-verlauf', 600);
+    // Filter: Menü öffnen, nur Zauber
+    await tap(A.page, '.dv-filter-btn');
+    await A.page.locator('.dv-filters .chips >> nth=0').locator('.fchip >> nth=2').click();
     await shot(A.page, 'mega-filter-zauber', 400);
-    await A.page.locator('.mega-filters .chips >> nth=0').locator('.fchip >> nth=0').click();
+    await A.page.locator('.dv-filters .chips >> nth=0').locator('.fchip >> nth=0').click();
+    await tap(A.page, '.dv-filter-btn');
     // Detail per Halten
-    const card = A.page.locator('.pool-card >> nth=0');
+    const card = A.page.locator('.dv-cell >> nth=0');
     await card.scrollIntoViewIfNeeded();
     const box = await card.boundingBox();
     await A.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

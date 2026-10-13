@@ -134,7 +134,7 @@ async function draftMatch(mode) {
     const w = await b2.wait((m) => m.type === 'welcome');
     assert.equal(w.resumed, true);
     const st = await b2.wait((m) => m.type === 'draft');
-    assert.ok(st.timeLeft > 0 && st.timeLeft <= st.pickSeconds, 'Restzeit wird mitgeschickt');
+    assert.ok(st.timeLeft > 0 && st.timeLeft <= st.timerSeconds, 'Restzeit wird mitgeschickt');
     const mine = st.kind === 'triple' ? st.picks : st.picks[st.you];
     assert.ok(mine.length >= 2, 'bisherige Picks bleiben erhalten');
     b2.onDraft(st);
@@ -234,10 +234,10 @@ test('Manipulierte Clients werden abgewiesen (Protokoll, Modus-Werte, Draft, Kar
     await a.wait((m) => m.type === 'error' && m.code === 'NOT_OFFERED');
     a.send({ type: 'draftPick', card: { id: st.offer[0] } });
     await a.wait((m) => m.type === 'error' && m.code === 'NOT_OFFERED' && a.msgs.filter((x) => x.code === 'NOT_OFFERED').length >= 2);
-    // Doppel-Pick
+    // Doppel-Pick: zweite Karte aus demselben Angebot wird abgelehnt (es gibt schon das nächste Angebot)
     a.send({ type: 'draftPick', card: st.offer[0] });
     a.send({ type: 'draftPick', card: st.offer[1] });
-    await a.wait((m) => m.type === 'error' && m.code === 'ALREADY_PICKED');
+    await a.wait((m) => m.type === 'error' && m.code === 'NOT_OFFERED' && a.msgs.filter((x) => x.code === 'NOT_OFFERED').length >= 3);
     // Restliche Picks automatisch, dann im Kampf: fremde Karte, Elixier-Spoofing
     a.autoDraft = true;
     b.autoDraft = true;

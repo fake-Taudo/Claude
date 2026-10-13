@@ -8,6 +8,20 @@
 
 export const UPDATES = [
   {
+    id: '2026-10-13.1',
+    version: '1.6',
+    date: '13.10.2026',
+    title: 'Neues Draft-Design',
+    items: [
+      { icon: 'castle', title: 'Draft in der Arena', text: 'Triple und Mega Draft sehen jetzt aus wie ein Kampf: Arena im Hintergrund, oben die rote Leiste deines Gegners, unten deine blaue Leiste mit Ø-Elixier und großer Countdown-Balken.' },
+      { icon: 'stopwatch', title: 'Triple Draft im eigenen Tempo', text: 'Du wählst so schnell, wie du willst – nach jeder Wahl kommt sofort das nächste Angebot. Für alle 8 Karten hast du zusammen 2 Minuten („Kampf beginnt in …“). Bist du gegen einen Bot schon fertig, wählt er zügig zu Ende.' },
+      { icon: 'search', title: 'Optionen des Gegners', text: 'Im Triple Draft siehst du die drei Karten, zwischen denen dein Gegner gerade wählt. Was er nimmt, bleibt verdeckt: In seiner Leiste erscheint nur ein „?“.' },
+      { icon: 'cards', title: 'Alle 40 Karten auf einen Blick', text: 'Im Mega Draft passt der ganze Pool ohne Scrollen auf den Bildschirm – im Hoch- und Querformat. Vergebene Karten bekommen ein Häkchen, Filter und Suche stecken im Lupen-Knopf.' },
+      { icon: 'crown', title: 'Neue Draft-Karten', text: 'Elixier-Tropfen mittig am Kartenrand, sechseckige Rahmen für legendäre Karten und Champions. Antippen zeigt „Wählen“ und „Info“ direkt unter der Karte.' },
+      { icon: 'flag', title: 'Großer Reveal', text: 'Nach dem Draft deckt die Leiste deines Gegners seine acht Karten eine nach der anderen auf.' },
+    ],
+  },
+  {
     id: '2026-10-12.2',
     version: '1.5',
     date: '12.10.2026',

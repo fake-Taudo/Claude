@@ -57,7 +57,7 @@
         "kind": "triple",
         "rounds": 8,
         "offer": 3,
-        "pickSeconds": 15,
+        "totalSeconds": 120,
         "maxChampionsPerDeck": 1,
         "maxHeroesPerDeck": 1,
         "allowEvos": false,
@@ -65,8 +65,9 @@
         "revealSeconds": 5
       },
       "rules": [
-        "8 Runden: Jeder bekommt 3 zufällige Karten und wählt 1. Ihr wählt gleichzeitig und seht die Wahl des anderen nicht.",
-        "15 Sekunden pro Runde – danach wird zufällig gewählt.",
+        "8 Runden: Du bekommst 3 zufällige Karten und wählst 1 – in deinem eigenen Tempo.",
+        "Du siehst die Optionen deines Gegners, aber nicht, welche Karte er nimmt.",
+        "2 Minuten für alle Picks („Kampf beginnt in …“) – was dann fehlt, wird zufällig ergänzt.",
         "Höchstens 1 Champion und 1 Held pro Deck, keine Evolutionen.",
         "Deine gespeicherten Decks bleiben unverändert."
       ]
