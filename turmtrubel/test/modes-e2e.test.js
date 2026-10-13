@@ -253,7 +253,7 @@ test('Manipulierte Clients werden abgewiesen (Protokoll, Modus-Werte, Draft, Kar
     a.send({ type: 'play', slot: 0, card: init.deck[0], x: 9, y: 24, seq: 901, elixir: 99, cost: 0 });
     const r2 = await a.wait((m) => (m.type === 'reject' && m.seq === 901) || false, 3000).catch(() => null);
     // Entweder regulär gespielt (Karte war auf der Hand und bezahlbar) oder sauber abgelehnt – Zusatzfelder wirken nie
-    if (r2) assert.ok(['NOT_IN_HAND', 'ELIXIR', 'NOT_READY', 'PLACEMENT', 'MIRROR_EMPTY'].includes(r2.code), r2.code);
+    if (r2) assert.ok(['NOT_IN_HAND', 'ELIXIR', 'NOT_READY', 'PLACEMENT', 'MIRROR_EMPTY', 'MIRROR_CHAMPION'].includes(r2.code), r2.code);
     a.send({ type: 'surrender' });
     await a.wait((m) => m.type === 'matchEnd', 15000);
   } finally {

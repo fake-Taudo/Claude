@@ -28,21 +28,22 @@ export const Motion = {
 
   waypoint(e, t) {
     const mode = crossesRiver(e) ? MODE_JUMP : MODE_GROUND;
-    if (this.nav.lineClear(e.x, e.y, t.x, t.y, mode, t.id)) {
+    const nav = this.navs.find((n) => e.radius <= n.maxRadius).grid;
+    if (nav.lineClear(e.x, e.y, t.x, t.y, mode, t.id)) {
       e.path = null;
       return t;
     }
     const moved = e.path && e.pathGoal ? Math.hypot(e.pathGoal.x - t.x, e.pathGoal.y - t.y) > 1.5 : true;
-    if (!e.path || e.pathTargetId !== t.id || e.pathVer !== this.nav.version || this.time - e.pathT > 1 || moved) {
-      e.path = this.nav.findPath(e.x, e.y, t.x, t.y, mode, t.id) || [];
+    if (!e.path || e.pathTargetId !== t.id || e.pathVer !== nav.version || this.time - e.pathT > 1 || moved) {
+      e.path = nav.findPath(e.x, e.y, t.x, t.y, mode, t.id) || [];
       e.pathTargetId = t.id;
-      e.pathVer = this.nav.version;
+      e.pathVer = nav.version;
       e.pathT = this.time;
       e.pathGoal = { x: t.x, y: t.y };
     }
     const path = e.path;
     while (path.length && Math.hypot(path[0].x - e.x, path[0].y - e.y) < 0.3) path.shift();
-    if (path.length > 1 && this.nav.lineClear(e.x, e.y, path[1].x, path[1].y, mode, t.id)) path.shift();
+    if (path.length > 1 && nav.lineClear(e.x, e.y, path[1].x, path[1].y, mode, t.id)) path.shift();
     return path.length ? path[0] : t;
   },
 
@@ -82,6 +83,29 @@ export const Motion = {
         this.knockback(o, x0, y0, tp.knockback);
       }
     }
+  },
+
+  /**
+   * Freier Landeplatz für Sprünge/Teleports (Magieschützen-Held, Boss-Banditin): von (x1,y1) in Schritten zurück
+   * Richtung (x0,y0), bis die Einheit weder in einem Gebäude/Turm noch (als Bodentruppe) im Fluss stünde.
+   */
+  landingSpot(e, x0, y0, x1, y1) {
+    const r = e.radius;
+    const structs = this.structures();
+    const free = (x, y) => {
+      if (!crossesRiver(e) && blockedByRiver(x, y)) return false;
+      for (const s of structs) if (Math.abs(x - s.x) < s.half + r && Math.abs(y - s.y) < s.half + r) return false;
+      return true;
+    };
+    const d = Math.hypot(x1 - x0, y1 - y0);
+    const n = Math.ceil(d / 0.25);
+    for (let k = 0; k <= n; k++) {
+      const t = 1 - k / Math.max(1, n);
+      const x = clamp(x0 + (x1 - x0) * t, r, ARENA_W - r);
+      const y = clamp(y0 + (y1 - y0) * t, r, ARENA_H - r);
+      if (free(x, y)) return { x, y };
+    }
+    return { x: x0, y: y0 };
   },
 
   // ───────────────────────────── Sonderbewegungen ─────────────────────────────
@@ -134,8 +158,11 @@ export const Motion = {
       const stop = (isStruct(t) ? t.half : t.radius) + e.radius + 0.05;
       const step = d.speed * dt;
       if (dist - stop <= step) {
-        e.x = t.x - (dx / dist) * stop;
-        e.y = t.y - (dy / dist) * stop;
+        // schon am Ziel (auch exakt darauf: keine Division durch 0)
+        if (dist > 1e-6) {
+          e.x = t.x - (dx / dist) * stop;
+          e.y = t.y - (dy / dist) * stop;
+        }
         this.events.push(['ds', e.id, r2(d.x0), r2(d.y0), r2(e.x), r2(e.y)]);
         this.damage(t, t.kind === 'tower' ? d.damage * (e.def.towerDamage ?? 1) : d.damage, e, e.owner, { melee: true });
         e.dash = null;
@@ -347,6 +374,9 @@ export const Motion = {
     }
     o.x += (dx / l) * dist;
     o.y += (dy / l) * dist;
+    // sofort aus Türmen/Gebäuden/Fluss heraus (Rückstoß kann nach der Kollisionsauflösung des Ticks kommen,
+    // z. B. durch Todesschaden – sonst stünde die Einheit einen Tick lang im Turm)
+    if (!o.flying) this.settleGround(o);
     o.path = null;
     if (o.charging) {
       o.charging = false;
@@ -406,41 +436,54 @@ export const Motion = {
     const structs = [];
     for (const e of this.entities) {
       if (e.dead) continue;
+      // Sicherheitsnetz: eine ungültige Position (NaN) würde sich über die Kollision auf alle Nachbarn ausbreiten
+      if (!Number.isFinite(e.x) || !Number.isFinite(e.y)) {
+        e.x = Number.isFinite(e.lastX) ? e.lastX : ARENA_W / 2;
+        e.y = Number.isFinite(e.lastY) ? e.lastY : ARENA_H / 2;
+        this.nanFixes = (this.nanFixes || 0) + 1;
+      }
       if (e.kind !== 'unit') structs.push(e);
       else if (e.dash?.active || e.leap?.active || e.thrown || e.underT > 0 || e.trappedBy) continue;
       else (e.flying ? air : ground).push(e);
     }
     separate(ground);
     separate(air);
-    for (const u of ground) {
-      for (const s of structs) pushOutOfRect(u, s);
-      if (u.def.traits.riverJump || u.def.hover) {
-        u.jumping = u.def.traits.riverJump ? blockedByRiver(u.x, u.y) : false;
-      } else if (blockedByRiver(u.x, u.y)) {
-        const cands = [
-          [u.x, RIVER_Y0 - 0.02],
-          [u.x, RIVER_Y1 + 0.02],
-        ];
-        for (const b of BRIDGES) cands.push([b.x0 + 0.02, u.y], [b.x1 - 0.02, u.y]);
-        let best = cands[0];
-        let bd = Infinity;
-        for (const c of cands) {
-          const d = Math.hypot(c[0] - u.x, c[1] - u.y);
-          if (d < bd) {
-            bd = d;
-            best = c;
-          }
-        }
-        u.x = best[0];
-        u.y = best[1];
-      }
-      u.x = clamp(u.x, u.radius, ARENA_W - u.radius);
-      u.y = clamp(u.y, u.radius, ARENA_H - u.radius);
-    }
+    for (const u of ground) this.settleGround(u, structs);
     for (const u of air) {
       u.x = clamp(u.x, u.radius, ARENA_W - u.radius);
       u.y = clamp(u.y, u.radius, ARENA_H - u.radius);
     }
+    for (const e of this.entities) {
+      e.lastX = e.x;
+      e.lastY = e.y;
+    }
+  },
+
+  /** Bodeneinheit aus Gebäuden/Türmen und (ohne Sprung/Schweben) aus dem Fluss schieben, im Feld halten. */
+  settleGround(u, structs = this.structures()) {
+    for (const s of structs) pushOutOfRect(u, s);
+    if (u.def.traits.riverJump || u.def.hover) {
+      u.jumping = u.def.traits.riverJump ? blockedByRiver(u.x, u.y) : false;
+    } else if (blockedByRiver(u.x, u.y)) {
+      const cands = [
+        [u.x, RIVER_Y0 - 0.02],
+        [u.x, RIVER_Y1 + 0.02],
+      ];
+      for (const b of BRIDGES) cands.push([b.x0 + 0.02, u.y], [b.x1 - 0.02, u.y]);
+      let best = cands[0];
+      let bd = Infinity;
+      for (const c of cands) {
+        const d = Math.hypot(c[0] - u.x, c[1] - u.y);
+        if (d < bd) {
+          bd = d;
+          best = c;
+        }
+      }
+      u.x = best[0];
+      u.y = best[1];
+    }
+    u.x = clamp(u.x, u.radius, ARENA_W - u.radius);
+    u.y = clamp(u.y, u.radius, ARENA_H - u.radius);
   },
 };
 

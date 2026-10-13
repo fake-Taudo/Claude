@@ -1,6 +1,6 @@
 # Bericht: Neue Spielmodi (2v2, Triple Draft, Mega Draft, Unendlich-Elixier)
 
-Erweiterung eines laufenden Spiels, kein Neubau. Der klassische 1v1-Modus ist **Tick für Tick identisch** geblieben: 12 aufgezeichnete Kämpfe, Prüfsumme über den kompletten Snapshot jedes Ticks. Alle vier Modi sind im Multiplayer per Code spielbar, drei davon auch gegen Bots in drei Stufen. Ausnahme ist 2v2, das es nur im Multiplayer gibt.
+Erweiterung eines laufenden Spiels, kein Neubau. Der klassische 1v1-Modus ist **Tick für Tick identisch** geblieben: 12 aufgezeichnete Kämpfe, Prüfsumme über den kompletten Snapshot jedes Ticks. (Die Aufzeichnung wurde mit Version 1.7 neu geschrieben, weil das Fehler-Audit das Simulationsverhalten absichtlich korrigiert hat – [BUG_AUDIT.md](BUG_AUDIT.md).) Alle vier Modi sind im Multiplayer per Code spielbar, drei davon auch gegen Bots in drei Stufen. Ausnahme ist 2v2, das es nur im Multiplayer gibt.
 
 Weitere Dokumente:
 
@@ -207,10 +207,12 @@ Bot gegen Bot, je 40 Kämpfe pro Paarung. Decks und Seiten werden getauscht, in 
 
 | Modus | Schwer – Mittel | Mittel – Leicht | Schwer – Leicht |
 |---|---|---|---|
-| Klassisch | 70 % | 70 % | 80 % |
-| Unendlich-Elixier | 62,5 % | 92,5 % | 95 % |
-| Triple Draft | 65 % | 70 % | 85 % |
-| Mega Draft | 65 % | 85 % | 87,5 % |
+| Klassisch | 60 % | 70 % | 80 % |
+| Unendlich-Elixier | 67,5 % | 95 % | 95 % |
+| Triple Draft | 72,5 % | 65 % | 90 % |
+| Mega Draft | 65 % | 70 % | 85 % |
+
+(Neu gemessen nach dem Fehler-Audit, Version 1.7 – siehe [BUG_AUDIT.md](BUG_AUDIT.md).)
 
 Leicht verliert gegen beide anderen Stufen deutlich und ist damit schlagbar; Schwer ist in jedem Modus spürbar stärker.
 

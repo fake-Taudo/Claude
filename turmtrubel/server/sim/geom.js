@@ -84,6 +84,14 @@ export function separate(list) {
       a.y -= ny * overlap * wa;
       b.x += nx * overlap * wb;
       b.y += ny * overlap * wb;
+      // Gegner, die sich im Laufen frontal begegnen (z. B. auf der Brücke), weichen seitlich aus statt sich
+      // gegenseitig festzuschieben: zusätzlicher Schub quer zur Verbindungslinie, je nach Seite
+      if (a.owner !== b.owner && !a.locked && !b.locked && a.kind === 'unit' && b.kind === 'unit' && Math.abs(ny) > 0.8) {
+        const side = Math.abs(dx) > 0.05 ? Math.sign(dx) : (a.id + b.id) % 2 ? 1 : -1;
+        const slide = overlap * 0.6 * side;
+        a.x -= slide * wa;
+        b.x += slide * wb;
+      }
     }
   }
 }

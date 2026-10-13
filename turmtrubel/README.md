@@ -82,7 +82,7 @@ Im Hauptmenü unter **Spielmodi** – jeweils *Mit Freunden* (Code) oder *Gegen 
 
 **Bots** (alle Modi außer 2 gegen 2): *Leicht* reagiert langsam und verteidigt nicht immer, *Mittel* ist der bisherige Trainingsbot, *Schwer* kontert passend zur Bedrohung, fängt Gebäudejäger früh ab, unterstützt eigene Angriffe und nutzt Zauber nur mit Wert. Im Draft wählen Bots nach Elixier-Kurve und Rollen (Schwer auch nach Synergie und im Mega Draft gegen die sichtbaren Picks des Gegners), mit 1–6 s Bedenkzeit – im Triple Draft zügig, sobald der Mensch fertig ist. Nach einem Draft lassen sich beide Decks im Ergebnis ansehen und das eigene speichern.
 
-Details: `docs/MODES_REPORT.md` (Bericht, neuer Modus per `modes.json`), `docs/PROTOCOL.md` (Protokoll Version 2), `docs/MODES_AUDIT.md`, Screenshots in `docs/screens/`.
+Details: `docs/MODES_REPORT.md` (Bericht, neuer Modus per `modes.json`), `docs/PROTOCOL.md` (Protokoll Version 2), `docs/MODES_AUDIT.md`, Screenshots in `docs/screens/`. Das Fehler-Audit von Version 1.7 (Karten, Interaktionen, VFX, UI) steht in `docs/BUG_AUDIT.md`.
 
 ### Kartenarten
 
@@ -176,6 +176,7 @@ turmtrubel/
 ├─ tools/vfx-gallery.mjs    alle VFX-Presets als Kontaktbögen
 ├─ docs/ui-*.md             UI-Audit, Entscheidungen, Vorher/Nachher (erste UI-Überarbeitung)
 ├─ docs/REPORT.md           Bericht zum visuellen Upgrade (mit AUDIT, COMPARISON, STYLE_GUIDE, vfx-katalog/, before_after/)
+├─ docs/BUG_AUDIT.md        Fehler-Audit 1.7: Vorgehen, gefundene/behobene Fehler, Werkzeuge (tools/audit/)
 └─ test/…                   node:test-Tests
 ```
 
@@ -302,6 +303,8 @@ node tools/modes/screens.mjs --jpeg              # Spielmodi: Menü, Regeln, Lob
 node tools/modes/perf-infinite.mjs               # Unendlich-Elixier mit voller Arena: Server-Tick und FPS in drei Profilen
 node tools/modes/bot-eval.mjs --games=20 --mode=classic,mega-draft   # Bot gegen Bot: Siegquoten der Stufen
 node tools/modes/classic-replay.mjs              # klassischen Modus mit der Aufzeichnung vergleichen
+node tools/audit/fuzz.mjs 200 classic            # Fuzz: Bot-Kämpfe, Grundregeln jedes Ticks (NaN, Fluss, Türme, Festsitzen) – auch 2v2 usw.
+node tools/audit/ui-text.mjs                     # alle DOM-Bildschirme in 4 Größen: Texte, abgeschnittene Knöpfe, Überlauf, Konsole
 ```
 
 Das Skript startet selbst einen Server auf einem freien Port und spielt pro Viewport den ganzen Ablauf durch: Name → Menü → Einstellungen → Beitreten → Deck-Bauer → Kartendetail → Training → Countdown → Laden → Kampf → Karte wählen/ziehen/ausspielen → Fehlertoast → Emote → Pause → letzte 10 s → zerstörter Turm → Aufgeben → Ergebnis (Niederlage und Sieg) → Multiplayer-Lobby mit zwei Seiten. Jeder Zustand wird geprüft: Touch-Ziele unter 44 px, Elemente außerhalb des Bildschirms, abgeschnittene Texte ohne Volltext, HUD über der Arena (über `hud.blocks()`), Toast über dem Kampfgeschehen und Konsolenfehler. Ein nicht leerer Befund bei Arena-Überdeckung oder Seitenfehlern führt zu Exit-Code 1.

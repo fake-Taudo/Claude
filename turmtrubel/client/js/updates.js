@@ -8,6 +8,22 @@
 
 export const UPDATES = [
   {
+    id: '2026-10-13.3',
+    version: '1.7',
+    date: '13.10.2026',
+    title: 'Großer Fehler-Check',
+    items: [
+      { icon: 'ghost', title: 'Suspicious Bush und Skelettfass', text: 'Der Busch platzt jetzt sofort am Gebäude auf und lässt die zwei Busch-Kobolde frei – vorher erst, nachdem er Schaden bekommen hatte und zerstört war. Auch das Skelettfass platzt am Ziel, statt über dem Turm zu schweben.' },
+      { icon: 'swords', title: 'Dunkler Prinz trifft wieder', text: 'Sein Rundumschlag trifft jetzt immer sein Ziel – auch, wenn er am Rand seiner Reichweite steht. Gilt auch für den Helden.' },
+      { icon: 'mirror', title: 'Spiegel und Champions', text: 'Der Spiegel kopiert keinen Champion mehr. So stehen nie zwei Champions gleichzeitig auf dem Feld.' },
+      { icon: 'boot', title: 'Bessere Wege', text: 'Große Truppen wie Riese, Golem oder P.E.K.K.A. bleiben nicht mehr zwischen Gebäuden und Türmen hängen und nehmen die Brückenmitte. Gegner, die sich auf der Brücke begegnen, weichen sich aus.' },
+      { icon: 'shield', title: 'Keine Truppen in Türmen', text: 'Truppen landen nicht mehr in Türmen oder Gebäuden – weder aus dem Koboldfass noch durch Rückstoß oder beim Rücksprung von Magieschützen-Held und Boss-Banditin.' },
+      { icon: 'bolt', title: 'Seltener Absturz behoben', text: 'Ein Sprint der Banditin genau auf ihr Ziel konnte im 2 gegen 2 alle Einheiten vom Feld verschwinden lassen. Außerdem heilen sich Klone nicht mehr über 1 Lebenspunkt hinaus.' },
+      { icon: 'phone', title: 'Kleine Bildschirme', text: 'Im Deck-Bauer ist der Deckname jetzt immer lesbar, die Platz-Schilder überlappen nicht mehr und Kartennamen werden sauber umbrochen. Der Dreh-Hinweis zu Kampfbeginn verdeckt nicht mehr deine Karten.' },
+      { icon: 'cards', title: 'Kartendetails', text: 'Champions zeigen in den Details nicht mehr zweimal „Champion“, sondern Seltenheit und Kartentyp.' },
+    ],
+  },
+  {
     id: '2026-10-13.2',
     version: '1.6.1',
     date: '13.10.2026',

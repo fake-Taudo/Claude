@@ -220,7 +220,8 @@ export const Combat = {
     P = this.attackParams(e, t);
     const d = rangeDist(e, t);
     const inRange = d <= P.range + (e.locked ? 0.35 : 0) && (!P.minRange || Math.hypot(t.x - e.x, t.y - e.y) >= P.minRange);
-    if (inRange && P.damage > 0) {
+    // Kamikaze-Läufer ohne eigenen Schaden (Busch, Skelettfass) „zünden“ trotzdem am Ziel
+    if (inRange && (P.damage > 0 || e.def.traits.kamikaze)) {
       if (!e.locked) {
         e.locked = true;
         e.cd = Math.max(e.cd, e.def.firstHit);
@@ -341,7 +342,8 @@ export const Combat = {
         .sort((a, b) => rangeDist(e, a) - rangeDist(e, b));
       targets.push(...others.slice(0, tr.multiTarget - 1));
     }
-    for (const tt of targets) {
+    // ohne Schaden (Kamikaze-Läufer) gibt es nichts zu treffen – nur zünden (Todes-Spawn/-Schaden)
+    for (const tt of dmg > 0 ? targets : []) {
       if (tripled) {
         // Held Magieschütze: drei weite Pfeile im Fächer
         const ts = tripled.shot;
@@ -594,6 +596,9 @@ export const Combat = {
         if (o.underT > 0) continue;
         if (surfaceDist(cx, cy, o) <= p.splash) hits.push(o);
       }
+      // Rundumschlag (Dunkler Prinz): das angegriffene Ziel wird immer getroffen, auch wenn es am Rand der
+      // Reichweite und damit knapp außerhalb des eigenen Schlagkreises steht
+      if (p.splashSelf && target && !target.dead && target.underT <= 0 && !hits.includes(target) && affects(p.targets, target)) hits.push(target);
     } else if (target && !target.dead) hits.push(target);
 
     const src = this.byId.get(p.srcId);
@@ -954,7 +959,8 @@ export const Combat = {
 
   heal(o, amount, maxOverride = 0) {
     if (!o || o.dead || o.kind !== 'unit' || !(amount > 0)) return;
-    const cap = Math.max(o.maxHp, maxOverride || 0);
+    // Klone (1 Leben) bleiben Klone – keine Überheilung über ihr Maximum
+    const cap = o.clone ? o.maxHp : Math.max(o.maxHp, maxOverride || 0);
     const before = o.hp;
     o.hp = Math.min(cap, o.hp + amount);
     if (o.hp > before + 0.5) this.events.push(['hl', o.id, Math.round(o.hp - before)]);

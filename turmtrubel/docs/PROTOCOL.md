@@ -84,6 +84,7 @@ Dazu `me` pro Spieler. Erweiterungen nur in Team-Modi (mehr Spieler als Teams), 
 | `TAKEN_OVER` | Die Frist zum Wiederverbinden ist abgelaufen – ein Bot hat deinen Platz übernommen. |
 | Draft: `NOT_DRAFTING`, `NOT_YOUR_TURN`, `NOT_OFFERED`, `ALREADY_PICKED`, `TAKEN`, `CHAMPION_LIMIT`, `HERO_LIMIT`, `CONFLICT` | siehe `DRAFT_REJECTS` |
 | Kampf: `TOO_FAST` | Zu schnell – warte kurz bis zur nächsten Karte. (Eingabe-Limit, z. B. Unendlich-Elixier) |
+| Kampf: `MIRROR_CHAMPION` | Der Spiegel kann keinen Champion kopieren. |
 
 ## Ablauf eines Raums
 

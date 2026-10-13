@@ -6,7 +6,9 @@
 //   node tools/modes/classic-replay.mjs           → mit der gespeicherten Aufzeichnung vergleichen
 //
 // test/classic-regression.test.js spielt die gespeicherten Eingaben erneut ab: Die Simulation des
-// klassischen Modus muss Tick für Tick dieselben Prüfsummen liefern wie vor dem Modus-Umbau.
+// klassischen Modus muss Tick für Tick dieselben Prüfsummen liefern wie in der Aufzeichnung.
+// Aufgezeichnet vor dem Modus-Umbau (Version 1.5 blieb bitgenau gleich); neu geschrieben nach dem Fehler-Audit
+// (Version 1.7), weil dessen Simulations-Fehlerbehebungen das Verhalten absichtlich ändern (siehe docs/BUG_AUDIT.md).
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -101,7 +103,7 @@ if (isMain) {
   const recs = [];
   for (let g = 0; g < GAMES; g++) recs.push(record(db, rules, g));
   if (process.argv.includes('--write')) {
-    fs.writeFileSync(FIXTURE, JSON.stringify({ _info: 'Klassischer Modus vor dem Modus-Umbau. Erzeugt mit tools/modes/classic-replay.mjs --write', games: recs }) + '\n');
+    fs.writeFileSync(FIXTURE, JSON.stringify({ _info: 'Klassischer Modus, Stand nach dem Fehler-Audit (Version 1.7). Erzeugt mit tools/modes/classic-replay.mjs --write', games: recs }) + '\n');
     console.log(`geschrieben: ${path.relative(ROOT, FIXTURE)} (${recs.length} Kämpfe, ${recs.reduce((s, r) => s + r.inputs.length, 0)} Eingaben)`);
   } else {
     const old = JSON.parse(fs.readFileSync(FIXTURE, 'utf8')).games;

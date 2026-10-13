@@ -289,11 +289,34 @@ export const Traits = {
       let px = clamp(x + ox * flip, def.radius, ARENA_W - def.radius);
       let py = clamp(y + oy * flip, def.radius, ARENA_H - def.radius);
       if (!def.flying && !def.isBuilding && blockedByRiver(px, py)) py = py < 16 ? 14.9 - def.radius : 17.1 + def.radius;
+      // Bodentruppen nicht in Türme/Gebäude setzen (sonst klemmen sie z. B. zwischen Turm und Grabstein)
+      if (!def.flying && !def.isBuilding) ({ x: px, y: py } = this.freeSpot(def.radius, px, py));
       const e = this.addEntity(def, owner, px, py, { deployTime, evo: !!opts.evo && def.evo, groupId: opts.groupId || 0, clone: !!opts.clone, cardId: opts.cardId, pl: opts.pl });
       if (opts.spawnedBy) e.spawnedBy = opts.spawnedBy;
       out.push(e);
     }
     return out;
+  },
+
+  /** Nächster Punkt um (x,y), an dem eine Bodentruppe mit Radius r weder in einem Gebäude/Turm noch im Fluss steht. */
+  freeSpot(r, x, y) {
+    const structs = this.structures();
+    const free = (px, py) => {
+      if (px < r || px > ARENA_W - r || py < r || py > ARENA_H - r || blockedByRiver(px, py)) return false;
+      for (const s of structs) if (Math.abs(px - s.x) < s.half + r && Math.abs(py - s.y) < s.half + r) return false;
+      return true;
+    };
+    if (free(x, y)) return { x, y };
+    for (let ring = 0.4; ring <= 4; ring += 0.4) {
+      const n = Math.max(8, Math.round(ring * 8));
+      for (let k = 0; k < n; k++) {
+        const a = (k / n) * TAU;
+        const px = x + Math.cos(a) * ring;
+        const py = y + Math.sin(a) * ring;
+        if (free(px, py)) return { x: px, y: py };
+      }
+    }
+    return { x, y };
   },
 
   // ───────────────────────────── Tod ─────────────────────────────

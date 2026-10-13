@@ -2,7 +2,7 @@
 import { validateDeck, averageElixir, cycleCost, randomDeck, isSpecial, EVO_SLOTS, SPECIAL_SLOT, DECK_SIZE, RARITY_ORDER } from '/shared/cards.js';
 import { $, h, ico, modal, showScreen, toast } from './dom.js';
 import { icon } from './icons.js';
-import { cardEl, openCardDetail } from './cardview.js';
+import { cardEl, openCardDetail, fitCardNames } from './cardview.js';
 
 const TYPE_FILTERS = [
   ['all', 'Alle'],
@@ -32,6 +32,16 @@ export class DeckBuilder {
     this.f = { q: '', type: 'all', elixir: new Set(), rarity: 'all', sort: 'elixir' };
     this.bind();
     this.initDrag();
+    // Drehen/Fenstergröße: Kartennamen neu einpassen
+    let t = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        if (!$('#s-deck').classList.contains('active')) return;
+        fitCardNames($('#deck-slots'));
+        fitCardNames($('#card-grid'));
+      }, 150);
+    });
   }
 
   bind() {
@@ -214,13 +224,14 @@ export class DeckBuilder {
         return h(
           'div',
           { class: `slot${this.selSlot === i ? ' selected' : ''}${isEvo ? ' is-evo' : ''}${isSpecialSlot ? ' is-special' : ''}` },
-          isEvo ? h('span', { class: 'slot-label evo' }, `EVO ${i + 1}`) : isSpecialSlot ? h('span', { class: 'slot-label special' }, icon('star'), 'CHAMP/HELD') : null,
+          isEvo ? h('span', { class: 'slot-label evo' }, `EVO ${i + 1}`) : isSpecialSlot ? h('span', { class: 'slot-label special', title: 'Champion/Held' }, icon('star'), h('span', { class: 'slot-label-text' }, 'CHAMP/HELD')) : null,
           el,
         );
       }),
     );
     $('#deck-sel-hint').hidden = this.selSlot < 0;
     $('.deck-panel').classList.toggle('has-selection', this.selSlot >= 0);
+    fitCardNames(root);
   }
 
   renderStats() {
@@ -285,6 +296,7 @@ export class DeckBuilder {
       return;
     }
     $('#card-grid').replaceChildren(...list.map((c) => cardEl(this.db, c.id, { inDeck: inDeck.has(c.id), showEvoHint: true, onClick: () => this.clickCard(c.id) })));
+    fitCardNames($('#card-grid'));
   }
 
   // ───── Drag-and-Drop ─────

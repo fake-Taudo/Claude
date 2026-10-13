@@ -10,7 +10,7 @@
 import { ARENA_W, ARENA_H, TOWER_SLOTS, forwardDir, isPlacementValid } from '../../shared/arena.js';
 import { EVO_SLOTS } from '../../shared/cards.js';
 import { REJECTS, EF, EMOTES } from '../../shared/protocol.js';
-import { NavGrid } from './nav.js';
+import { NavGrid, NAV_CLASSES } from './nav.js';
 import { mulberry32, shuffle } from './rng.js';
 import { r1, r2, clamp, formation, surfaceDist } from './geom.js';
 import { Combat } from './combat.js';
@@ -63,7 +63,9 @@ export class Match {
     this.stats = this.teamOf.map(() => ({ played: 0, spent: 0, towerDamage: 0, abilities: 0 }));
     this.evoOn = rules.evo?.enabled !== false;
     this.limits = rules.limits || null;
-    this.nav = new NavGrid();
+    // je Größenklasse ein Raster (this.nav = feinstes, auch für freie Plätze genutzt)
+    this.navs = NAV_CLASSES.map((c) => ({ maxRadius: c.maxRadius, grid: new NavGrid(c.inflate) }));
+    this.nav = this.navs[0].grid;
     this.structDirty = true;
     this.players = this.teamOf.map((_, pl) => this.makePlayer(pl, decks[pl]));
     this.towers = [];
@@ -260,7 +262,8 @@ export class Match {
   }
 
   rebuildNav() {
-    this.nav.rebuild(this.structures().map((s) => ({ id: s.id, x: s.x, y: s.y, half: s.half })));
+    const structs = this.structures().map((s) => ({ id: s.id, x: s.x, y: s.y, half: s.half }));
+    for (const n of this.navs) n.grid.rebuild(structs);
     this.structDirty = false;
   }
 
@@ -424,7 +427,11 @@ export class Match {
   /** Aktuelle Kosten einer Handkarte (Spiegel = letzte Karte + 1, Spirit Empress je nach Elixier). */
   costOf(side, card) {
     const p = this.players[side];
-    if (card.elixirRule === 'mirror') return p.lastPlayed ? Math.min(10, p.lastCost + 1) : null;
+    if (card.elixirRule === 'mirror') {
+      // Champions lassen sich nicht spiegeln (es darf nie zwei auf dem Feld geben)
+      if (!p.lastPlayed || this.db.card(p.lastPlayed)?.class === 'champion') return null;
+      return Math.min(10, p.lastCost + 1);
+    }
     const f = this.formOf(card, p.elixir);
     return f ? f.elixir : card.elixir;
   }
@@ -475,7 +482,7 @@ export class Match {
     const card = this.db.card(cardId);
     if (!card) return fail('NOT_IN_HAND');
     const cost = this.costOf(pl, card);
-    if (cost == null) return fail('MIRROR_EMPTY');
+    if (cost == null) return fail(p.lastPlayed ? 'MIRROR_CHAMPION' : 'MIRROR_EMPTY');
     if (p.elixir + 1e-9 < cost) return fail('ELIXIR');
     x = Number(x);
     y = Number(y);

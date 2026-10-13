@@ -1,11 +1,20 @@
 // Navigationsraster (0,5 Felder pro Zelle) mit A*-Pfadsuche.
+// Es gibt ein Raster je Größenklasse (winzig, normal, groß, sehr groß): je größer die Einheit, desto stärker sind Gebäude und
+// Türme aufgeblasen – sonst schickt die Wegfindung Einheiten durch Lücken, in denen sie hängen bleiben.
 // Zellwerte: 0 = frei, -1 = Fluss, >0 = ID des blockierenden Gebäudes/Turms.
-import { ARENA_W, ARENA_H, RIVER_Y0, RIVER_Y1, onBridge } from '../../shared/arena.js';
+import { ARENA_W, ARENA_H, RIVER_Y0, RIVER_Y1, BRIDGES } from '../../shared/arena.js';
 
 export const CELL = 0.5;
 export const GW = Math.round(ARENA_W / CELL);
 export const GH = Math.round(ARENA_H / CELL);
 const INFLATE = 0.2;
+/** Größenklassen: bis zu diesem Radius → Raster mit diesem Abstand zu Gebäuden/Türmen. */
+export const NAV_CLASSES = Object.freeze([
+  Object.freeze({ maxRadius: 0.35, inflate: INFLATE }),
+  Object.freeze({ maxRadius: 0.55, inflate: 0.4 }),
+  Object.freeze({ maxRadius: 0.75, inflate: 0.6 }),
+  Object.freeze({ maxRadius: Infinity, inflate: 0.85 }),
+]);
 const SQRT2 = Math.SQRT2;
 const MAX_ITER = 5000;
 
@@ -13,7 +22,8 @@ export const MODE_GROUND = 0;
 export const MODE_JUMP = 1; // darf den Fluss überqueren
 
 export class NavGrid {
-  constructor() {
+  constructor(inflate = INFLATE) {
+    this.inflate = inflate;
     const n = GW * GH;
     this.cells = new Int32Array(n);
     this.g = new Float64Array(n);
@@ -31,16 +41,19 @@ export class NavGrid {
   rebuild(structures) {
     const c = this.cells;
     c.fill(0);
+    // Brücken: große Einheiten bleiben vom Rand weg (sonst kleben sie halb über dem Wasser an der Kante)
+    const edge = this.inflate - INFLATE;
+    const onBridgeLane = (x) => BRIDGES.some((b) => x >= b.x0 + edge && x <= b.x1 - edge);
     for (let cy = 0; cy < GH; cy++) {
       const y = (cy + 0.5) * CELL;
       if (y <= RIVER_Y0 || y >= RIVER_Y1) continue;
       for (let cx = 0; cx < GW; cx++) {
         const x = (cx + 0.5) * CELL;
-        if (!onBridge(x)) c[cy * GW + cx] = -1;
+        if (!onBridgeLane(x)) c[cy * GW + cx] = -1;
       }
     }
     for (const s of structures) {
-      const h = s.half + INFLATE;
+      const h = s.half + this.inflate;
       const cx0 = Math.max(0, Math.floor((s.x - h) / CELL));
       const cx1 = Math.min(GW - 1, Math.floor((s.x + h) / CELL));
       const cy0 = Math.max(0, Math.floor((s.y - h) / CELL));
@@ -119,7 +132,9 @@ export class NavGrid {
 
   /** A* von (x0,y0) nach (x1,y1). Gibt geglättete Wegpunkte zurück oder null. */
   findPath(x0, y0, x1, y1, mode, allowId) {
-    const start = this.index(x0, y0);
+    let start = this.index(x0, y0);
+    // Steht die Einheit im Sperrbereich (eingeklemmt zwischen Gebäuden), von der nächsten freien Zelle aus suchen
+    if (!this.passable(start, mode, allowId)) start = this.nearestPassable(start, mode, allowId);
     let goal = this.index(x1, y1);
     if (!this.passable(goal, mode, allowId)) goal = this.nearestPassable(goal, mode, allowId);
     if (start === goal) return [{ x: x1, y: y1 }];

@@ -143,7 +143,7 @@ export class Game {
     window.removeEventListener('keydown', this.onKey);
     this.canvas.removeEventListener('contextmenu', this.onContext);
     this.fx.clear();
-    for (const k of ['--toast-x', '--toast-y', '--toast-w']) document.body.style.removeProperty(k);
+    for (const k of ['--toast-x', '--toast-y', '--toast-w', '--hint-y']) document.body.style.removeProperty(k);
     this.canvas.title = '';
   }
 
@@ -278,6 +278,8 @@ export class Game {
     b.setProperty('--toast-x', `${t.x}px`);
     b.setProperty('--toast-y', `${t.y}px`);
     b.setProperty('--toast-w', `${t.w}px`);
+    // Dreh-Hinweis oben in der Arena statt über Hand und Elixierleiste
+    b.setProperty('--hint-y', `${Math.round(Math.max(0, L.arena.y) + 10)}px`);
   }
 
   // ───────────── Netzwerk ─────────────
@@ -1278,7 +1280,7 @@ export class Game {
     if (me.hr[slot] > 0.01 || this.pendingSlot.has(slot)) return false;
     const cost = this.handCost(slot, card);
     if (cost == null) {
-      this.app.toast(REJECTS.MIRROR_EMPTY, 'warn', 1600);
+      this.app.toast(me.lp ? REJECTS.MIRROR_CHAMPION : REJECTS.MIRROR_EMPTY, 'warn', 1600);
       this.audio.sfx('error');
       return false;
     }

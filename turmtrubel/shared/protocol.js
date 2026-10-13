@@ -136,6 +136,7 @@ export const REJECTS = Object.freeze({
   EMOTE_COOLDOWN: 'Emote noch nicht bereit.',
   LIMIT: 'Zu viele Einheiten auf dem Feld.',
   MIRROR_EMPTY: 'Der Spiegel braucht eine zuvor gespielte Karte.',
+  MIRROR_CHAMPION: 'Der Spiegel kann keinen Champion kopieren.',
   TOO_FAST: 'Zu schnell – warte kurz bis zur nächsten Karte.',
 });
 

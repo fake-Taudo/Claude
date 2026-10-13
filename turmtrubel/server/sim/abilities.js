@@ -76,7 +76,9 @@ export const Abilities = {
         if (e.dead) return;
         const x0 = e.x;
         const y0 = e.y;
-        e.y = clamp(e.y - fwd * v.back, e.radius, ARENA_H - e.radius);
+        const to = this.landingSpot(e, x0, y0, x0, y0 - fwd * v.back);
+        e.x = to.x;
+        e.y = to.y;
         e.locked = false;
         e.dash = null;
         this.events.push(['tp', e.id, r2(x0), r2(y0), r2(e.x), r2(e.y)]);
@@ -151,7 +153,9 @@ export const Abilities = {
       this.spawnAround(d.unit, 1, e.owner, e.x, e.y, 0);
       const x0 = e.x;
       const y0 = e.y;
-      e.y = clamp(e.y - fwd * d.back, e.radius, ARENA_H - e.radius);
+      const to = this.landingSpot(e, x0, y0, x0, y0 - fwd * d.back);
+      e.x = to.x;
+      e.y = to.y;
       e.locked = false;
       this.events.push(['tp', e.id, r2(x0), r2(y0), r2(e.x), r2(e.y)]);
     }

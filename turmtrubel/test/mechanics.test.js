@@ -173,6 +173,20 @@ test('Sprint: Banditin springt aufs Ziel und ist dabei unverwundbar', () => {
   assert.equal(lost(g), db.unit('bandit').traits.dash.damage);
 });
 
+test('Sprint genau auf dem Ziel: keine ungültige Position (NaN), Nachbarn bleiben unberührt', () => {
+  const m = newMatch();
+  quiet(m);
+  const b = spawn(m, 'bandit', 0, 9, 20);
+  const g = dummy(m, 'giant', 1, 9, 20);
+  const n = spawn(m, 'knight', 0, 9.6, 20.4);
+  // Sprint ist schon aktiv, das Ziel steht exakt auf der Banditin
+  b.dash = { mode: 'bandit', targetId: g.id, windup: 0, active: true, speed: 8.33, damage: 100, x0: 9, y0: 20 };
+  runSeconds(m, 0.5);
+  for (const e of [b, g, n]) assert.ok(Number.isFinite(e.x + e.y), `${e.def.key}: ${e.x},${e.y}`);
+  assert.ok(lost(g) > 0, 'Sprint trifft');
+  assert.ok(!m.nanFixes, 'kein NaN aufgetreten');
+});
+
 test('Sprungangriff: Megaritter landet mit Flächenschaden', () => {
   const m = newMatch();
   quiet(m);
@@ -214,6 +228,25 @@ test('Tarnung: Königsgeist ist unsichtbar, bis er zuschlägt', () => {
   assert.ok(runUntil(m, () => a.hp < a.maxHp, 5));
   runSeconds(m, 0.1);
   assert.ok(!m.isHidden(gh), 'nach dem Angriff sichtbar');
+});
+
+test('Kamikaze ohne eigenen Schaden: Suspicious Bush und Skelettfass zünden am Gebäude, nicht erst beim Tod', () => {
+  // Busch: unsichtbar, der Turm kann ihn nicht treffen – er muss am Turm selbst aufplatzen
+  const m = newMatch();
+  const bush = spawn(m, 'suspicious-bush', 0, 3.5, 12);
+  assert.ok(runUntil(m, () => bush.dead, 15), 'Busch platzt am Turm auf');
+  assert.equal(bush.selfDestruct, true, 'durch Erreichen des Ziels, nicht durch Schaden');
+  assert.equal(lost(bush), bush.maxHp);
+  assert.ok(m.time < 6, `sofort am Ziel (${m.time.toFixed(1)} s)`);
+  runSeconds(m, 0.2);
+  assert.equal(unitsOf(m, 0, 'bush-goblin').length, 2, 'zwei Busch-Kobolde');
+  // Skelettfass: fliegt zum Turm und platzt dort (Todesschaden + Skelette), statt über dem Turm zu schweben
+  const m2 = newMatch();
+  const barrel = spawn(m2, 'skeleton-barrel', 0, 3.5, 10.5);
+  assert.ok(runUntil(m2, () => barrel.dead, 5));
+  assert.equal(barrel.selfDestruct, true);
+  runSeconds(m2, 1);
+  assert.ok(unitsOf(m2, 0, 'skeletons').length >= 5, 'Skelette landen am Turm');
 });
 
 test('Versteckt: Tesla taucht nur bei Gegnern auf', () => {
@@ -336,6 +369,21 @@ test('Spiegel: letzte Karte eine Stufe stärker für +1 Elixier', () => {
   const ks = unitsOf(m, 0, 'knight');
   assert.equal(ks.length, 2);
   near(ks[1].maxHp / ks[0].maxHp, 1.1, 0.01);
+});
+
+test('Spiegel kopiert keinen Champion (nie zwei Champions auf dem Feld)', () => {
+  const m = newMatch();
+  play(m, 0, 'archer-queen', 9, 22);
+  forceHand(m, 0, 0, 'mirror', 10);
+  assert.equal(m.costOf(0, db.card('mirror')), null, 'Spiegel ist nicht spielbar');
+  const r = m.play(0, 0, 'mirror', 12, 22);
+  assert.equal(r.code, 'MIRROR_CHAMPION');
+  runSeconds(m, 2);
+  assert.equal(m.entities.filter((e) => !e.dead && e.owner === 0 && e.championOf).length, 1);
+  // nach einer normalen Karte geht der Spiegel wieder
+  play(m, 0, 'knight', 6, 22);
+  forceHand(m, 0, 0, 'mirror', 10);
+  assert.ok(m.play(0, 0, 'mirror', 12, 22).ok);
 });
 
 test('Spirit Empress: Form hängt vom Elixier ab', () => {

@@ -5,7 +5,7 @@ import { icon } from './icons.js';
 import { cardArtURL } from './art.js';
 
 // Weiche Trennstellen für lange zusammengesetzte Namen (nur Anzeige, Kartendaten bleiben unverändert)
-const PARTS = ['Barbaren', 'Blasrohr', 'Bogen', 'Bomben', 'Drachen', 'Elektro', 'Elite', 'Elixier', 'Feuerwerk', 'Feuer', 'Fleder', 'Flug', 'Heilungs', 'Hexen', 'Holz', 'Inferno', 'Kampf', 'Kanonen', 'Klon', 'Kobold', 'Königs', 'Lakaien', 'Magie', 'Mauer', 'Mega', 'Minen', 'Musketier', 'Prinz', 'Riesen', 'Scharf', 'Schnee', 'Schweine', 'Skelett', 'Speer', 'Tunnel', 'Widder'];
+const PARTS = ['Barbaren', 'Blasrohr', 'Bogen', 'Bomben', 'Drachen', 'Elektro', 'Elite', 'Elixier', 'Feuerwerk', 'Feuer', 'Fleder', 'Flug', 'Heilungs', 'Hexen', 'Holz', 'Inferno', 'Kampf', 'Kanonen', 'Klon', 'Kobold', 'Königs', 'Lakaien', 'Magie', 'Mauer', 'Mega', 'Minen', 'Musketier', 'Nacht', 'Prinz', 'Riesen', 'Scharf', 'Schnee', 'Schweine', 'Skelett', 'Speer', 'Tunnel', 'Widder'];
 export function softHyphens(name) {
   return name.replace(/[A-Za-zÄÖÜäöüß]{9,}/g, (w) => {
     let out = w;
@@ -17,6 +17,29 @@ export function softHyphens(name) {
     }
     return out;
   });
+}
+
+/**
+ * Kartennamen, deren längstes Wort nicht in die Karte passt, kleiner setzen – statt sie mitten im Wort zu
+ * trennen (nicht jeder Browser hat deutsche Silbentrennung). Nach dem Einfügen in den DOM aufrufen.
+ */
+let measureCtx = null;
+export function fitCardNames(root) {
+  // erst mit der echten Schrift messen (vorher wäre die schmalere Ersatzschrift aktiv)
+  if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(() => fitCardNames(root));
+  measureCtx ||= document.createElement('canvas').getContext('2d');
+  for (const el of root.querySelectorAll('.card .name')) {
+    el.style.fontSize = '';
+    const cs = getComputedStyle(el);
+    const avail = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if (!(avail > 0)) continue;
+    measureCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    // Wortteile an Leerzeichen, Bindestrichen und weichen Trennstellen – ein Teil vor einer Trennstelle braucht
+    // zusätzlich Platz für den Trennstrich, sonst bricht der Browser mitten im Wort um
+    const parts = el.textContent.match(/[^\s\-\u00AD]+[\-\u00AD]?/g) || [];
+    const widest = Math.max(0, ...parts.map((w) => measureCtx.measureText(w.replace('\u00AD', '-')).width));
+    if (widest > avail * 0.97) el.style.fontSize = `${Math.max(7.5, (parseFloat(cs.fontSize) * avail * 0.95) / widest).toFixed(1)}px`;
+  }
 }
 
 export function cardEl(db, id, opts = {}) {
@@ -182,8 +205,11 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
   const db = app.db;
   const card = db.card(id);
   if (!card) return null;
-  const kindLabel = card.class !== 'normal' ? CLASS_LABELS[card.class] : TYPE_LABELS[card.type];
   const rarity = db.rarities[card.rarity]?.name || card.rarity;
+  // Klasse (Champion/Held) nur, wenn sie nicht schon als Seltenheit dasteht – sonst der Kartentyp
+  const classLabel = card.class !== 'normal' ? CLASS_LABELS[card.class] : null;
+  const showClass = !!classLabel && classLabel !== rarity;
+  const kindLabel = showClass ? classLabel : TYPE_LABELS[card.type];
   const table = h(
     'table',
     { class: 'stats-table' },
@@ -213,7 +239,7 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
         'div',
         { class: 'detail-tags' },
         h('span', { class: `tag r-${card.rarity}` }, rarity),
-        h('span', { class: `tag ${card.class !== 'normal' ? card.class : ''}` }, kindLabel),
+        h('span', { class: `tag ${showClass ? card.class : ''}` }, kindLabel),
         h('span', { class: 'tag' }, card.elixirRule === 'mirror' ? 'Elixier: letzte Karte + 1' : `${card.elixir} Elixier`),
         card.evo ? h('span', { class: 'tag evo' }, 'Evo verfügbar') : null,
       ),
