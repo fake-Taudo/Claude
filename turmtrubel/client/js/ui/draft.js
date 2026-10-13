@@ -182,6 +182,7 @@ export class DraftUI {
       this.sel = null;
     }
     if (m.kind === 'mega' && prev && prev.turn !== m.turn && m.turn === m.you) this.app.audio.sfx('emote', 0.7);
+    this.paintTimer(); // Zeitbalken gefüllt, bevor fit() misst (leere Zahl = niedrigerer Balken)
     if (m.kind === 'mega' && !prev && !m.done && m.picks.every((p) => !p.length)) toast(m.first === m.you ? t('firstPickYou') : t('firstPick', { name: m.names[m.first] }), 'info', 3200);
     this.render();
     if (newMine) {
@@ -349,26 +350,43 @@ export class DraftUI {
   fit() {
     const E = this.els;
     if (!E || !this.state || this.revealing || !E.board.clientHeight) return;
-    const key = `${innerWidth}x${innerHeight}|${this.offerKey}|${this.oppKey}|${this.filterOpen}`;
+    // nur neu rechnen, wenn sich der Platz ändert – sonst springen die Karten bei jedem Angebot oder Gegner-Pick
+    const key = `${this.kind}|${E.board.clientWidth}x${E.board.clientHeight}`;
     if (key === this.fitKey) return;
     this.fitKey = key;
     if (this.kind === 'mega') this.fitGrid();
     else this.fitTriple();
   }
 
-  /** Triple: große Karten so groß wie möglich, bis das Brett nicht mehr überläuft. */
+  /**
+   * Triple: große Karten so groß wie möglich, ohne dass das Brett überläuft. Gemessen wird nur das Layout
+   * (offsetHeight, Breiten gerechnet) – Einflug- und Auswahl-Animationen (transform) verfälschen das Ergebnis nicht.
+   */
   fitTriple() {
     const board = this.els.board;
     const st = board.style;
-    // fertig gewählt: Größen beibehalten (die Optionen des Gegners sollen nicht plötzlich wachsen)
-    if (!this.state.offer.length && st.getPropertyValue('--bw')) return;
-    let bw = Math.min(190, (board.clientWidth - 56) / 3);
-    for (let i = 0; i < 18; i++) {
+    const cs = getComputedStyle(board);
+    const row = cs.flexDirection.startsWith('row');
+    const gap = parseFloat(row ? cs.columnGap : cs.rowGap) || 0;
+    const availW = board.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const availH = board.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const sections = [...board.children].filter((el) => el.offsetParent !== null);
+    const fits = (bw, sw) => {
+      const bigGap = Math.min(18, Math.max(8, bw * 0.09));
+      const wMine = 3 * bw + 2 * bigGap;
+      const wOpp = 3 * sw + 2 * 10;
+      const hs = sections.map((el) => el.offsetHeight);
+      const width = row ? wMine + wOpp + gap : Math.max(wMine, wOpp);
+      const height = row ? Math.max(...hs) : hs.reduce((a, b) => a + b, 0) + gap * (hs.length - 1);
+      return width <= availW + 0.5 && height <= availH + 0.5;
+    };
+    let bw = Math.min(190, (availW - 16) / 3);
+    for (let i = 0; i < 24; i++) {
+      const sw = Math.round(Math.max(44, Math.min(100, bw * 0.52)));
       st.setProperty('--bw', `${Math.round(bw)}px`);
-      st.setProperty('--sw', `${Math.round(Math.max(44, Math.min(100, bw * 0.52)))}px`);
-      if (board.scrollHeight <= board.clientHeight + 1 && board.scrollWidth <= board.clientWidth + 1) break;
-      if (bw <= 60) break;
-      bw = Math.max(60, bw * 0.92);
+      st.setProperty('--sw', `${sw}px`);
+      if (bw <= 60 || fits(Math.round(bw), sw)) break;
+      bw = Math.max(60, bw * 0.95);
     }
   }
 
@@ -663,20 +681,23 @@ export class DraftUI {
     if (slot && !reducedMotion()) slot.classList.add('landed');
   }
 
+  paintTimer() {
+    const E = this.els;
+    if (!this.state || this.revealing || !E?.timerBar) return;
+    const total = (this.state.timerSeconds || 15) * 1000;
+    const left = Math.max(0, this.deadline - performance.now());
+    E.timerBar.style.transform = `scaleX(${Math.min(1, left / total)})`;
+    E.timerNum.textContent = `${Math.ceil(left / 1000)}s`;
+    E.timer.classList.toggle('warn', left < 6000 && !this.state.done);
+  }
+
   tickTimer() {
     const step = () => {
-      const E = this.els;
       if (!this.state || currentScreen() !== 's-draft') {
         this.raf = 0;
         return;
       }
-      const total = (this.state.timerSeconds || 15) * 1000;
-      const left = Math.max(0, this.deadline - performance.now());
-      if (!this.revealing && E?.timerBar) {
-        E.timerBar.style.transform = `scaleX(${Math.min(1, left / total)})`;
-        E.timerNum.textContent = `${Math.ceil(left / 1000)}s`;
-        E.timer.classList.toggle('warn', left < 6000 && !this.state.done);
-      }
+      this.paintTimer();
       this.raf = requestAnimationFrame(step);
     };
     this.raf = requestAnimationFrame(step);

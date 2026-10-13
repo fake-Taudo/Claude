@@ -8,6 +8,15 @@
 
 export const UPDATES = [
   {
+    id: '2026-10-13.2',
+    version: '1.6.1',
+    date: '13.10.2026',
+    title: 'Triple Draft: ruhige Karten',
+    items: [
+      { icon: 'check', title: 'Kein Springen mehr', text: 'Im Triple Draft wechselten die Karten bei jeder neuen Runde oder jedem Pick des Gegners zwischen groß und klein. Jetzt behalten sie ihre Größe und passen immer vollständig auf den Bildschirm – auch auf dem iPhone im Browser.' },
+    ],
+  },
+  {
     id: '2026-10-13.1',
     version: '1.6',
     date: '13.10.2026',
