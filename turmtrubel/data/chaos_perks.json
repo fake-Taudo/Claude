@@ -1,0 +1,27 @@
+{
+  "_info": "Perks des Modus „Chaos“: je Karte aus chaos.json → cardPool genau drei Perks (common, rare, epic). Im Perk-Interview Karte für Karte ausgewählt. Elixierkosten ändern sich nie.",
+  "_schema": {
+    "id": "eindeutig: <cardId>.<rarityTier>",
+    "cardId": "Karte aus cardPool",
+    "rarityTier": "common | rare | epic",
+    "name": "Perk-Name (eigene Wortschöpfung)",
+    "description": "ein Satz, der exakt sagt, was sich ändert",
+    "mechanicType": "statBoost | behaviorChange | newAbility | spawnChange | visualOnly",
+    "effectParameters": {
+      "mult": "{ feld: faktor } – Einheitenwerte multiplizieren (hp, damage, hitSpeed [kleiner = schneller], range, speed, sight, splash, deployTime, shield, radius)",
+      "add": "{ feld: zahl } – Einheitenwerte addieren",
+      "set": "{ feld: wert } – Einheitenwerte setzen (targets, flying …)",
+      "traits": "{ eigenschaft: parameter } – vorhandene Simulations-Bausteine (siehe docs/CHAOS_AUDIT.md Abschnitt 7) hinzufügen oder überschreiben",
+      "hook": "bei newAbility: onSpawn | onAttack | onHit | onDeath | onPeriodicTick",
+      "groups": "bei spawnChange: zusätzliche Einheitengruppen [{ unit, count, behind }] oder count-Änderung",
+      "spell": "bei Zaubern: { mult, add, set, after } auf die Zauberwerte",
+      "ability": "bei Champions/Helden: { mult, add, set } auf die Werte der vorhandenen Fähigkeit",
+      "appliesTo": "optional: self (Standard) | spawned:<einheit> – worauf der Perk wirkt"
+    },
+    "elixirCostUnchanged": "immer true",
+    "balanceNote": "ein Satz: warum der Perk zur Stufe passt",
+    "selection": "interview (aus den Vorschlägen gewählt) | custom (eigene Idee im Interview) | auto (automatisch gewählt: empfohlene Option)"
+  },
+  "version": 1,
+  "perks": []
+}

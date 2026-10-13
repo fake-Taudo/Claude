@@ -1,0 +1,38 @@
+{
+  "_info": "Einstellungen des Modus „Chaos“ (Modifikator-Kampf mit Perks). Perks stehen in chaos_perks.json. Zeiten in Sekunden Spielzeit. Änderungen wirken nach einem Server-Neustart.",
+  "version": 1,
+  "cardPool": [
+    "giant", "pekka", "mega-knight", "golem",
+    "knight", "bandit", "valkyrie", "mini-pekka", "prince",
+    "bomber", "archers", "musketeer", "electro-wizard", "goblin-demolisher", "wizard", "witch",
+    "bats", "minions", "goblin-gang", "skeleton-army", "barbarians",
+    "ice-spirit",
+    "mega-minion", "baby-dragon", "inferno-dragon",
+    "hog-rider", "battle-ram", "balloon", "royal-giant",
+    "tesla", "goblin-hut", "inferno-tower",
+    "zap", "the-log", "arrows", "goblin-barrel", "fireball", "poison",
+    "golden-knight",
+    "bowler-hero"
+  ],
+  "_cardPoolInfo": "40 Karten, im Interview am 13.10.2026 freigegeben (Vorschlag 36 + Golem, Elektromagier, Lakaien, Tesla, Goblin Demolisher − Kanone). Reihenfolge = Rolle, dann Elixier (so läuft auch das Perk-Interview).",
+  "fixedLevel": 11,
+  "towerHpMultiplier": 2,
+  "elixirRateMultiplier": 1.5,
+  "evos": false,
+  "_evosInfo": "Im Interview entschieden: keine Evolutionen im Chaos-Modus – der Perk ist das Upgrade einer Karte.",
+  "rounds": 5,
+  "firstRoundSeconds": 36,
+  "roundIntervalSeconds": 36,
+  "_roundsInfo": "Im Interview entschieden: Runden bei 0:36, 1:12, 1:48 und 2:24 Spielzeit; die letzte Runde (3:00) gibt es nur, wenn die Verlängerung erreicht wird.",
+  "lastRoundOvertimeOnly": true,
+  "pickTimeSeconds": 6,
+  "offersPerRound": 2,
+  "rarityByRound": [
+    { "common": 90, "rare": 10, "epic": 0 },
+    { "common": 20, "rare": 80, "epic": 0 },
+    { "common": 0, "rare": 50, "epic": 50 },
+    { "common": 0, "rare": 20, "epic": 80 },
+    { "common": 0, "rare": 0, "epic": 100 }
+  ],
+  "bot": { "pickDelaySeconds": [1, 4] }
+}
