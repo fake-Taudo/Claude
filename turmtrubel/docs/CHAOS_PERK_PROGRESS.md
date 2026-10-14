@@ -1,19 +1,20 @@
 # Fortschritt Perk-Interview (Chaos-Modus)
 
-Stand: 0 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
+Stand: 4 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
 
 Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).
 
 ## Erledigt
 
-_noch keine_
+| Nr. | Karte | Gewöhnlich | Selten | Episch | Auswahl |
+|---|---|---|---|---|---|
+| 1 | Riese | Sturmlauf | Turmschüttler | Bruchlandung | eigene Idee, Interview |
+| 2 | P.E.K.K.A. | Raketenstiefel | Schwungschlag | Tiefenläuferin | eigene Idee, Interview |
+| 3 | Megaritter | Heavy Hitter | Springer Bube | Himmelfahrt | eigene Idee |
+| 4 | Golem | Bergkoloss | Golemit-Kaskade | Doppelgolem | eigene Idee |
 
 ## Offen
 
-1. Riese (`giant`)
-2. P.E.K.K.A. (`pekka`)
-3. Megaritter (`mega-knight`)
-4. Golem (`golem`)
 5. Ritter (`knight`)
 6. Banditin (`bandit`)
 7. Walküre (`valkyrie`)

@@ -23,5 +23,244 @@
     "selection": "interview (aus den Vorschlägen gewählt) | custom (eigene Idee im Interview) | auto (automatisch gewählt: empfohlene Option)"
   },
   "version": 1,
-  "perks": []
+  "perks": [
+    {
+      "id": "giant.common",
+      "cardId": "giant",
+      "rarityTier": "common",
+      "name": "Sturmlauf",
+      "description": "Der Riese läuft doppelt so schnell: 0,75 → 1,5 Felder pro Sekunde.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "speed": 2
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview, bewusst kräftig für Gewöhnlich: Der Riese ist in etwa der halben Zeit am Turm, bekommt aber weder mehr Leben noch mehr Schaden und bleibt ein reiner Gebäude-Angreifer.",
+      "selection": "custom"
+    },
+    {
+      "id": "giant.rare",
+      "cardId": "giant",
+      "rarityTier": "rare",
+      "name": "Turmschüttler",
+      "description": "Jeder Schlag des Riesen betäubt das getroffene Gebäude 0,5 Sekunden und setzt dessen Angriff zurück.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onHit",
+        "traits": {
+          "onHit": {
+            "stun": 0.5
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Ein Turm verliert bei jedem Schlag (alle 1,5 s) eine halbe Sekunde Angriffszeit – deutlich spürbar, wirkt aber erst, wenn der Riese schon am Gebäude steht.",
+      "selection": "interview"
+    },
+    {
+      "id": "giant.epic",
+      "cardId": "giant",
+      "rarityTier": "epic",
+      "name": "Bruchlandung",
+      "description": "Der Riese erscheint mit Flügeln und fliegt; beim ersten eigenen Angriff oder ersten erlittenen Treffer stürzt er ab und löst eine Explosion aus: 450 Schaden mit Rückstoß 1,5 an Bodenzielen und Gebäuden im Umkreis von 3 Feldern.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "flying": true
+        },
+        "traits": {
+          "glide": {
+            "landing": {
+              "damage": 450,
+              "radius": 3,
+              "knockback": 1.5
+            }
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (Mechanik wie Evo-Königsschweinchen): Der Riese fliegt über Bodenabwehr hinweg und landet mit großem Knall, doch schon der erste Turmtreffer holt ihn herunter – spektakulär, aber konterbar.",
+      "selection": "custom"
+    },
+    {
+      "id": "pekka.common",
+      "cardId": "pekka",
+      "rarityTier": "common",
+      "name": "Raketenstiefel",
+      "description": "Die P.E.K.K.A. läuft doppelt so schnell: 0,75 → 1,5 Felder pro Sekunde.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "speed": 2
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview, bewusst kräftig für Gewöhnlich: Sie ist schneller am Gegner, hat aber weder mehr Leben noch mehr Schaden und bleibt gegen Schwärme und Luft verwundbar.",
+      "selection": "custom"
+    },
+    {
+      "id": "pekka.rare",
+      "cardId": "pekka",
+      "rarityTier": "rare",
+      "name": "Schwungschlag",
+      "description": "Jeder Schlag trifft alle Bodentruppen und Gebäude im Umkreis von 1,5 Feldern um das Ziel statt nur ein Ziel.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "splash": 1.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Nimmt der P.E.K.K.A. ihre größte Schwäche (Schwärme) und verändert damit, wie man sie kontert – stärker als eine reine Zahl, aber Luft und Gebäude bleiben Antworten.",
+      "selection": "interview"
+    },
+    {
+      "id": "pekka.epic",
+      "cardId": "pekka",
+      "rarityTier": "epic",
+      "name": "Tiefenläuferin",
+      "description": "Die P.E.K.K.A. lässt sich wie der Tunnelgräber überall in der Arena platzieren (außer im Fluss und auf Gebäuden), auch direkt an gegnerischen Türmen; ihr Turmschaden bleibt unverändert.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "traits": {
+          "deployAnywhere": true
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil sie 842 Schaden direkt am Turm ansetzen kann; die doppelten Turm-Leben im Chaos-Modus und klassische Konter (Schwärme, Infernoturm) lassen dem Gegner rund 13 Sekunden zum Reagieren.",
+      "selection": "custom"
+    },
+    {
+      "id": "mega-knight.common",
+      "cardId": "mega-knight",
+      "rarityTier": "common",
+      "name": "Heavy Hitter",
+      "description": "Der Landestoß beim Platzieren macht doppelt so viel Schaden: 430 → 860 (Radius 2,2, Rückstoß unverändert).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "traits": {
+          "deployBlast": {
+            "damage": 860
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Wirkt nur einmal pro Ausspielen, macht den Megaritter aber zu einem verlässlichen Konter gegen Schwärme und mittelgroße Truppen.",
+      "selection": "custom"
+    },
+    {
+      "id": "mega-knight.rare",
+      "cardId": "mega-knight",
+      "rarityTier": "rare",
+      "name": "Springer Bube",
+      "description": "Statt normaler Schläge springt der Megaritter bei jedem Angriff auf sein Ziel (0–5 Felder Entfernung, auch direkt vor ihm) und macht 537 Flächenschaden mit Rückstoß; 0,3 s nach jeder Landung folgt der nächste Sprung.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "traits": {
+          "leap": {
+            "min": 0,
+            "max": 5,
+            "damage": 537,
+            "radius": 2.2,
+            "windup": 0.9,
+            "speed": 4.17,
+            "knockback": 1
+          },
+          "leapOnly": {
+            "cooldown": 0.3
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Taktisch völlig neu (ständige Sprungangriffe statt Nahkampf) und stärker gegen Gruppen; die Ausholzeit von 0,9 s pro Sprung hält das Tempo begrenzt, Lufttruppen bleiben unberührt.",
+      "selection": "custom"
+    },
+    {
+      "id": "mega-knight.epic",
+      "cardId": "mega-knight",
+      "rarityTier": "epic",
+      "name": "Himmelfahrt",
+      "description": "Jede Bodentruppe, die der Megaritter trifft (Schlag, Sprung oder Landestoß), wird in die Luft geschleudert und sofort aus der Arena entfernt – ohne Todeseffekte; Gebäude und Türme nehmen normalen Schaden.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onHit",
+        "traits": {
+          "launchOnHit": {
+            "affects": "groundTroops",
+            "removeFromArena": true,
+            "deathEffects": false,
+            "includeChampions": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview, der stärkste Perk im Pool: Er löscht jede Bodentruppe mit einem Treffer, bleibt aber gegen Lufttruppen, Gebäude, Zauber und Türme machtlos und kommt nur in den späten Runden (Episch) vor.",
+      "selection": "custom"
+    },
+    {
+      "id": "golem.common",
+      "cardId": "golem",
+      "rarityTier": "common",
+      "name": "Bergkoloss",
+      "description": "Der Golem hat doppelt so viel Leben (5120 → 10240), läuft dafür nur halb so schnell (0,75 → 0,375 Felder pro Sekunde).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hp": 2,
+          "speed": 0.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Der Lebensgewinn wird durch die halbe Geschwindigkeit teuer erkauft – der Golem braucht doppelt so lange zum Turm und gibt dem Gegner viel Zeit für einen Gegenangriff.",
+      "selection": "custom"
+    },
+    {
+      "id": "golem.rare",
+      "cardId": "golem",
+      "rarityTier": "rare",
+      "name": "Golemit-Kaskade",
+      "description": "Beim Tod entstehen wie gewohnt 2 Golemiten, die beim eigenen Tod jeweils noch einmal in 2 Golemiten zerfallen (6 Golemiten insgesamt; die zweite Generation teilt sich nicht weiter).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "deathSpawn": {
+            "unit": "golemite",
+            "count": 2,
+            "childTraits": {
+              "deathSpawn": {
+                "unit": "golemite",
+                "count": 2
+              }
+            }
+          }
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Vier zusätzliche Golemiten (je 1039 Leben) verlängern den Druck nach dem Tod deutlich – stark, aber erst spürbar, wenn der Golem selbst schon gefallen ist.",
+      "selection": "custom"
+    },
+    {
+      "id": "golem.epic",
+      "cardId": "golem",
+      "rarityTier": "epic",
+      "name": "Doppelgolem",
+      "description": "Beim Tod erscheinen statt der 2 Golemiten 2 normale Golems (je 5120 Leben, ohne Perk), die beim eigenen Tod normal in je 2 Golemiten zerfallen; die Todesexplosion bleibt.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "deathSpawn": {
+            "unit": "golem",
+            "count": 2
+          }
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil aus einem Golem eine ganze Welle wird (insgesamt rund 19 500 Leben); die Golems sind langsam und greifen nur Gebäude an, ein Gegenangriff auf der anderen Seite bleibt die Antwort.",
+      "selection": "custom"
+    }
+  ]
 }
