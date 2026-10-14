@@ -12,6 +12,8 @@ import { sprites } from '../design/spritecache.js';
 import { drawTower } from './sprites.js';
 import { mixHex } from '../design/light.js';
 import { figureForType, figureEntry, loadFigure, loadFigures, prebakeCharacter, prefetchAllFigures, setCharacterQuality, setCharacterColorblind, CharacterAnimator } from '../characters/index.js';
+import { PerkOverlay, openPerksModal, PERK_COLORS, PERK_TIER_BY_CODE } from '../ui/perks.js';
+import { PERK_TIER_LABELS } from '/shared/chaos.js';
 
 const INTERP_MS = 110;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -100,6 +102,17 @@ export class Game {
     this.mates = []; // [{ seat, el, lp, at }] Teamkollegen (2 gegen 2)
     this.away = new Set(); // getrennte Mitspieler (Sitze)
     this.ended = false;
+    // Modus „Chaos“: Rundenplan, gewählte Perks, Auswahlpause (Spielzeit steht, Darstellung friert ein)
+    this.chaos = init.chaos ? { ...init.chaos } : null;
+    this.paused = false;
+    this.pauseTotal = init.chaos?.pauseTotal || 0;
+    this.pauseAcc = 0;
+    this.pausedAt = null;
+    this.pe = new Map(); // Entität → [Stufe, Größe] (Snapshot „pe“)
+    this.myPerks = new Map(); // Karten-ID → Perk (eigene)
+    this.perkFlashAt = new Map(); // Karten-ID → Zeitpunkt der Zuweisung (Hand-Abzeichen leuchtet auf)
+    this.perkOverlay = null;
+    if (this.chaos) this.setChosen(this.chaos.chosen);
     this.ping = null;
     this.oppDisconnected = false;
     this.running = false;
@@ -134,6 +147,8 @@ export class Game {
 
   destroy() {
     this.running = false;
+    this.perkOverlay?.destroy(true);
+    this.perksModal?.close();
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('orientationchange', this.onResize);
     this.canvas.removeEventListener('pointerdown', this.onPointerDown);
@@ -285,6 +300,26 @@ export class Game {
   // ───────────── Netzwerk ─────────────
   onSnapshot(s) {
     const now = performance.now();
+    // Chaos: Auswahlpause (pz) – gleiche Spielzeit, nur Lebenszeichen; danach Zeitbezug neu aufbauen
+    if (this.chaos) {
+      if (s.pt != null) this.pauseTotal = s.pt;
+      if (s.pe) {
+        this.pe.clear();
+        for (let i = 0; i + 2 < s.pe.length; i += 3) this.pe.set(s.pe[i], [s.pe[i + 1], s.pe[i + 2] / 10]);
+      }
+      const wasPaused = this.paused;
+      this.paused = !!s.pz;
+      if (this.paused) this.pauseInfo = s.pz;
+      if (wasPaused && !this.paused) this.offset = null;
+      if (this.latest && s.k === this.latest.k) {
+        // gleicher Tick (Pause): nichts interpolieren, nur Zustand und Ereignisse (Emotes) übernehmen
+        this.me = s.me;
+        this.latestAt = now;
+        this.latest.tl = s.tl;
+        if (s.ev?.length) this.processEvents(s.ev, this.clock);
+        return;
+      }
+    }
     s.tms = s.t * 1000;
     const off = s.tms - now;
     if (this.offset === null || off > this.offset || Math.abs(off - this.offset) > 1500) this.offset = off;
@@ -314,8 +349,10 @@ export class Game {
       }
     }
     if (s.em !== this.snapMult) {
-      if (this.snapMult != null && s.em > this.snapMult && s.em >= 2 && s.em > this.baseMult) {
-        const triple = s.em >= 3;
+      // Phasen-Faktor ohne den Grund-Faktor des Modus (Chaos ×1,5: Doppel-Elixier = ×3 insgesamt)
+      const phaseMult = s.em / (this.baseMult || 1);
+      if (this.snapMult != null && s.em > this.snapMult && phaseMult >= 2 - 1e-9 && s.em > this.baseMult) {
+        const triple = phaseMult >= 3 - 1e-9;
         this.hud.banner(triple ? 'Dreifaches Elixier!' : 'Doppeltes Elixier!', '#ffe9fd', triple ? 'Elixier fließt 3× so schnell' : 'Letzte Minute', {
           kind: 'phase',
           base: '#c43cf0',
@@ -383,7 +420,7 @@ export class Game {
   elixirNow() {
     if (!this.me) return 0;
     const E = this.rules.elixir;
-    const dt = (performance.now() - this.latestAt) / 1000;
+    const dt = this.paused ? 0 : (performance.now() - this.latestAt) / 1000;
     let el = Math.min(E.max, this.me.el + (dt * this.snapMult) / E.regenSeconds);
     for (const p of this.pendingSlot.values()) el -= p.cost;
     return Math.max(0, el);
@@ -391,7 +428,7 @@ export class Game {
 
   timeLeftNow() {
     if (!this.latest) return this.rules.regularSeconds;
-    if (this.ended) return this.latest.tl;
+    if (this.ended || this.paused) return this.latest.tl;
     return Math.max(0, this.latest.tl - (performance.now() - this.latestAt) / 1000);
   }
 
@@ -496,6 +533,12 @@ export class Game {
       v.atk = Math.max(0, v.atk - dt / 0.35);
       v.hurt = Math.max(0, v.hurt - dt / 0.16);
       v.U = view.s * v.uf;
+      if (this.chaos) {
+        // Chaos: Perk-Abzeichen, Glow (Episch) und Größe (Luftschiff, Gletscherkoloss)
+        v.perk = this.perkMark(id);
+        v.pscale = v.perk?.scale || 1;
+        if (v.pscale !== 1) v.U *= v.pscale;
+      }
     }
     for (const id of this.vis.keys()) if (!seen.has(id)) this.vis.delete(id);
     for (const v of this.vis.values()) {
@@ -658,6 +701,69 @@ export class Game {
     }
   }
 
+  // ───────────── Chaos: Perks ─────────────
+  /** Gewählte Perks übernehmen (matchInit, perkResult) – eigene Perks mit vollen Daten aus chaos_perks.json. */
+  setChosen(chosen) {
+    if (!this.chaos) return;
+    this.chaos.chosen = chosen || this.players?.map(() => []) || [];
+    this.myPerks.clear();
+    for (const p of this.chaos.chosen[this.seat] || []) {
+      const full = this.app.chaos?.perk(p.id);
+      this.myPerks.set(p.card, { ...p, effectParameters: full?.effectParameters || {} });
+    }
+  }
+
+  /** Auswahlrunde beginnt oder ändert sich (eigene/gegnerische Wahl, Reconnect). */
+  onPerkRound(m) {
+    if (!this.chaos || this.ended) return;
+    this.app.pauseModal?.close();
+    this.perksModal?.close();
+    this.sel = -1;
+    this.drag = null;
+    this.paused = true;
+    this.perkOverlay ||= new PerkOverlay(this.app, this);
+    this.perkOverlay.show(m);
+  }
+
+  /** Ende der Auswahlrunde: Bestätigung, Hinweis auf die Wahl des Gegners, Abzeichen aufleuchten lassen. */
+  onPerkResult(m) {
+    if (!this.chaos) return;
+    this.setChosen(m.chosen);
+    if (m.skipped) {
+      this.app.toast(`Runde ${m.round} entfällt – alle Karten haben schon einen Perk.`, 'info', 2600);
+      return;
+    }
+    this.perkOverlay?.finish(m);
+    const now = this.clock;
+    const mine = m.picks[this.seat];
+    if (mine) this.perkFlashAt.set(mine.card, now);
+    const opp = m.picks.find((p, i) => i !== this.seat && p);
+    if (opp) {
+      const card = this.db.card(opp.card);
+      this.app.toast(`${this.names[1 - this.seat] || 'Gegner'}: ${opp.name} für ${card?.name || opp.card} (${PERK_TIER_LABELS[opp.tier]})`, 'info', 3200);
+    }
+    this.audio.sfx('go', 0.6);
+  }
+
+  openPerks() {
+    if (!this.chaos || this.perksModal) return;
+    const m = openPerksModal(this.app, this);
+    const close = m.close;
+    this.perksModal = m;
+    m.close = () => {
+      this.perksModal = null;
+      close();
+    };
+  }
+
+  /** Perk-Markierung einer Einheit: { tier, color, scale } oder null. */
+  perkMark(id) {
+    const pm = this.pe.get(id);
+    if (!pm) return null;
+    const tier = PERK_TIER_BY_CODE[pm[0]];
+    return { tier, color: PERK_COLORS[tier], scale: pm[1] || 1 };
+  }
+
   // ───────────── Ereignisse → Effekte ─────────────
   /** Team eines Spielers (Sitz); klassisch ist Sitz = Team. */
   teamOfPl(pl) {
@@ -735,6 +841,8 @@ export class Game {
           const src = this.vis.get(ev[1]);
           const tgt = this.vis.get(ev[2]);
           if (!src) break;
+          // weitere Strahlen (Chaos: mehrere Ziele gleichzeitig) – kurz sichtbar halten
+          if (src.beam && tgt && tgt.id !== src.target) (src.beams ||= new Map()).set(tgt.id, now);
           src.atk = 1;
           src.anim?.attack(now);
           if (tgt && src.lightning) {
@@ -1029,9 +1137,29 @@ export class Game {
           if (card?.type !== 'spell') A.sfx('deploy', owner === this.side ? 0.7 : 0.4);
           else A.sfx('cast', owner === this.side ? 0.7 : 0.4);
           if (evo) fx.emit('evo.deploy', { x, y, team: this.teamOf(owner) });
+          // Chaos: Karte mit Perk → Ring in der Seltenheitsfarbe am Platzierungsort
+          if (this.chaos) {
+            const chosen = this.chaos.chosen?.[pl] || [];
+            const pk = chosen.find((p) => p.card === key);
+            if (pk) {
+              const col = PERK_COLORS[pk.tier];
+              fx.ring({ radius: [0.3, 2.2], width: [0.35, 0.02], color: col, life: 0.6, alpha: 0.9 }, { x, y, k: 1 });
+              if (pk.tier === 'epic') fx.emit('evo.deploy', { x, y, team: this.teamOf(owner) });
+            }
+          }
           if (key === 'mirror') fx.emit('spell.mirror', { x, y, team: this.teamOf(owner) });
           break;
         }
+        case 'pk': {
+          // Chaos: Perk zugewiesen – Abzeichen auf der Handkarte leuchtet auf (eigene Karte)
+          const [, pl, type, tier] = ev;
+          if (pl === this.seat) this.perkFlashAt.set(this.types[type], now);
+          void tier;
+          break;
+        }
+        case 'pv':
+          this.perkFx(ev, now);
+          break;
         case 'ot':
           this.hud.banner('Verlängerung!', '#ffffff', this.rules.suddenDeath === 'firstHit' ? 'Erster Turmtreffer gewinnt' : 'Erster zerstörter Turm gewinnt', {
             kind: 'phase',
@@ -1047,6 +1175,46 @@ export class Game {
           break;
       }
     }
+  }
+
+  /** Sichtbare Perk-Wirkungen (Chaos). */
+  perkFx(ev, now) {
+    const [, kind, id, x, y] = ev;
+    const fx = this.fx;
+    const v = this.vis.get(id);
+    switch (kind) {
+      case 'launch':
+        fx.emit('unit.teleport', { x, y });
+        fx.emit('blast.gold', { x, y, r: 0.9 });
+        if (v) v.arc = { t0: performance.now() / 1000, dur: 0.5, h: 6 };
+        this.audio.sfx('whoosh', 0.7);
+        break;
+      case 'share':
+        for (const o of this.vis.values()) if (o.kind === 'unit' && o.owner !== (v?.owner ?? this.side) && Math.random() < 0.6) fx.emit('proj.impact.fire', { x: o.x, y: o.y, z: 0.5 });
+        break;
+      case 'laststand':
+        if (v) fx.emit('unit.shieldBreak', { x: v.x, y: v.y, z: this.hitZ(v) });
+        this.audio.sfx('ability', 0.6);
+        break;
+      case 'flame':
+        if (v) {
+          for (let k = 1; k <= 4; k++) fx.emit('proj.impact.fire', { x: v.x + ((x - v.x) * k) / 4, y: v.y + ((y - v.y) * k) / 4, z: 1 });
+        }
+        break;
+      case 'zap':
+        if (v) this.line([v.x, v.y, 1.2], [x, y, 0.5], '#9ff0ff', 0.12, 0.25, 0.3, 8, 1);
+        this.audio.sfx('zap', 0.5);
+        break;
+      case 'shove':
+        fx.emit('unit.dash', { x, y });
+        break;
+      case 'spawn':
+        fx.emit('blast.gold', { x, y, r: 1 });
+        break;
+      default:
+        break;
+    }
+    void now;
   }
 
   /** skin.json → fx: { preset, tint } einer Karte auf Effektname und Umgebung anwenden (nur Darstellung). */
@@ -1102,7 +1270,7 @@ export class Game {
       case 'card': {
         const wasSelected = this.sel === hit.index;
         this.sel = hit.index;
-        this.drag = { start: p, active: false, wasSelected, pointerId: e.pointerId };
+        this.drag = { start: p, active: false, wasSelected, pointerId: e.pointerId, badge: !!hit.badge, card: this.me.h[hit.index] };
         this.audio.sfx('select', 0.5);
         try {
           this.canvas.setPointerCapture(e.pointerId);
@@ -1173,9 +1341,21 @@ export class Game {
       } else if (this.hud.hit(p.x, p.y).type === 'card') {
         // zurück auf die Hand gezogen → Auswahl behalten
       } else this.sel = -1;
+    } else if (d.badge) {
+      // Chaos: Perk-Abzeichen angetippt → volle Beschreibung (Karte bleibt nicht ausgewählt)
+      this.sel = d.wasSelected ? this.sel : -1;
+      this.showPerkInfo(d.card);
     } else if (d.wasSelected) {
       this.sel = -1;
     }
+  }
+
+  /** Beschreibung des eigenen Perks einer Karte (Antippen des Abzeichens). */
+  showPerkInfo(cardId) {
+    const pk = this.myPerks.get(cardId);
+    if (!pk) return;
+    const card = this.db.card(cardId);
+    this.app.toast(`${card?.name || cardId} · ${pk.name} (${PERK_TIER_LABELS[pk.tier]}): ${pk.description}`, 'info', 5200);
   }
 
   keyDown(e) {
@@ -1231,6 +1411,8 @@ export class Game {
     if (card.type === 'spell') return card.spell?.ownSide ? 'troop' : 'spell';
     const def = this.db.unit(this.db.unitRefOf(card));
     if (def.traits.deployAnywhere) return 'anywhere';
+    // Chaos: eigener Perk „überall platzierbar“ (P.E.K.K.A., Episch)
+    if (this.myPerks.get(card.id)?.effectParameters?.traits?.deployAnywhere) return 'anywhere';
     return card.type === 'building' ? 'building' : 'troop';
   }
 
@@ -1363,7 +1545,8 @@ export class Game {
     g.flying = def.flying;
     g.U = this.view.s * (0.42 + def.radius * 0.8) * (def.look?.scale || 1);
     g.range = def.range >= 2 ? def.range + def.radius : 0;
-    const n = eff.forms ? 1 : this.db.groupsOf(eff).reduce((sum, gr) => sum + (gr.count || 1), 0);
+    const pk = this.myPerks.get(eff.id)?.effectParameters;
+    const n = eff.forms ? 1 : pk?.count && !pk.groups ? pk.count : this.db.groupsOf(eff).reduce((sum, gr) => sum + (gr.count || 1), 0);
     g.offsets = formationOffsets(n, def.radius, this.side, eff.formation || null);
     return g;
   }
@@ -1372,7 +1555,14 @@ export class Game {
   frame(ts) {
     if (!this.running) return;
     requestAnimationFrame(this.frame);
-    const now = ts / 1000;
+    const real = ts / 1000;
+    // Chaos-Auswahlpause: Darstellungszeit anhalten – Animationen, Partikel und Uhr frieren sichtbar ein
+    if (this.paused && this.pausedAt == null) this.pausedAt = real;
+    else if (!this.paused && this.pausedAt != null) {
+      this.pauseAcc += real - this.pausedAt;
+      this.pausedAt = null;
+    }
+    const now = (this.pausedAt ?? real) - this.pauseAcc;
     const dt = Math.min(0.05, Math.max(0, now - (this.lastFrame ?? now)));
     this.lastFrame = now;
     this.clock = now;
@@ -1478,7 +1668,8 @@ export class Game {
   /** Verbindung instabil (Snapshots bleiben aus oder Ping sehr hoch) → Ping rot + einmaliger Hinweis. */
   checkConnection() {
     const t = performance.now();
-    const stale = this.latestAt > 0 && !this.ended && t - this.latestAt > 700;
+    // In der Auswahlpause kommen nur zwei Snapshots pro Sekunde
+    const stale = this.latestAt > 0 && !this.ended && t - this.latestAt > (this.paused ? 1500 : 700);
     const unstable = stale || (this.ping ?? 0) >= 250;
     if (unstable && !this.netUnstable && t - (this.unstableToastAt || -1e9) > 8000) {
       this.unstableToastAt = t;

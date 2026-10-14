@@ -221,7 +221,7 @@ export function startServer({ port = Number(process.env.PORT) || 3000, host = pr
           reply(mgr.createRoom(session, msg.deck, msg.mode));
           break;
         case C2S.JOIN:
-          reply(mgr.joinRoom(session, msg.code, msg.deck));
+          reply(mgr.joinRoom(session, msg.code, msg.deck, msg.chaosDeck));
           break;
         case C2S.TRAINING:
           reply(mgr.createTraining(session, msg.deck, msg.mode, msg.difficulty));

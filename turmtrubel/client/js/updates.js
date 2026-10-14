@@ -8,6 +8,20 @@
 
 export const UPDATES = [
   {
+    id: '2026-10-14.1',
+    version: '1.8',
+    date: '14.10.2026',
+    title: 'Neuer Modus: Chaos',
+    items: [
+      { icon: 'sparkles', title: 'Chaos-Modus', text: 'Ein 1 gegen 1 mit 40 ausgewählten Karten – mit Freunden per Code oder gegen den Bot auf allen drei Stufen. Alle Türme haben doppelt so viele Lebenspunkte, Elixier lädt 1,5× so schnell, alle Karten auf Level 11, keine Evolutionen.' },
+      { icon: 'hourglass', title: 'Perk-Pausen', text: 'Bei 0:36, 1:12, 1:48 und 2:24 Spielzeit hält der Kampf für beide an: Du hast 6 Sekunden, um einen von zwei Perks für eine deiner Karten zu wählen – sonst wählt der Zufall. In der Verlängerung gibt es bei 3:00 eine fünfte Runde mit epischen Perks. Die Pausen zählen nicht zur Spielzeit.' },
+      { icon: 'star', title: '120 Perks', text: 'Jede der 40 Karten hat einen gewöhnlichen, seltenen und epischen Perk – von schnellerem Laufen bis zum fliegenden Riesen oder einem Megaritter, der Truppen aus der Arena schleudert. Elixierkosten bleiben immer gleich, jede Karte bekommt höchstens einen Perk.' },
+      { icon: 'cards', title: 'Chaos-Deck', text: 'Eigene Chaos-Decks mit drei Plätzen, nur aus Pool-Karten (Knopf „Chaos-Deck“ auf der Kachel). Im Kartendetail siehst du die drei Perks jeder Karte, der Regel-Hinweis zeigt Rundenplan und Kartenpool.' },
+      { icon: 'shield', title: 'Abzeichen im Kampf', text: 'Karten und Einheiten mit Perk tragen ein Abzeichen in der Seltenheitsfarbe (Grau, Bronze, Lila), epische leuchten. Antippen des Abzeichens zeigt die Beschreibung, alle Perks beider Spieler stehen im Kampfmenü. Die Türme zeigen „×2“.' },
+      { icon: 'crown', title: 'Ergebnis mit Perks', text: 'Nach dem Kampf siehst du „Deine gewählten Perks“ mit Runde und Seltenheit sowie die Zeit aller Auswahlpausen.' },
+    ],
+  },
+  {
     id: '2026-10-13.3',
     version: '1.7',
     date: '13.10.2026',

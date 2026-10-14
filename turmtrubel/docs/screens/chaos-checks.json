@@ -1,0 +1,227 @@
+{
+ "phone-390x844": {
+  "states": [
+   {
+    "state": "menue-kachel",
+    "file": "chaos-phone-390x844-01-menue-kachel.jpg",
+    "issues": []
+   },
+   {
+    "state": "info",
+    "file": "chaos-phone-390x844-02-info.jpg",
+    "issues": []
+   },
+   {
+    "state": "info-pool",
+    "file": "chaos-phone-390x844-03-info-pool.jpg",
+    "issues": []
+   },
+   {
+    "state": "deckbau",
+    "file": "chaos-phone-390x844-04-deckbau.jpg",
+    "issues": []
+   },
+   {
+    "state": "deckbau-perks",
+    "file": "chaos-phone-390x844-05-deckbau-perks.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-runde1",
+    "file": "chaos-phone-390x844-06-auswahl-runde1.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-gewaehlt",
+    "file": "chaos-phone-390x844-07-auswahl-gewaehlt.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-gewoehnlich",
+    "file": "chaos-phone-390x844-08-auswahl-gewoehnlich.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-selten",
+    "file": "chaos-phone-390x844-09-auswahl-selten.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-episch",
+    "file": "chaos-phone-390x844-10-auswahl-episch.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-perks",
+    "file": "chaos-phone-390x844-11-kampf-perks.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-abzeichen-info",
+    "file": "chaos-phone-390x844-12-kampf-abzeichen-info.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-perkliste",
+    "file": "chaos-phone-390x844-13-kampf-perkliste.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis",
+    "file": "chaos-phone-390x844-14-ergebnis.jpg",
+    "issues": []
+   }
+  ],
+  "log": []
+ },
+ "phone-844x390": {
+  "states": [
+   {
+    "state": "menue-kachel",
+    "file": "chaos-phone-844x390-01-menue-kachel.jpg",
+    "issues": []
+   },
+   {
+    "state": "info",
+    "file": "chaos-phone-844x390-02-info.jpg",
+    "issues": []
+   },
+   {
+    "state": "info-pool",
+    "file": "chaos-phone-844x390-03-info-pool.jpg",
+    "issues": []
+   },
+   {
+    "state": "deckbau",
+    "file": "chaos-phone-844x390-04-deckbau.jpg",
+    "issues": []
+   },
+   {
+    "state": "deckbau-perks",
+    "file": "chaos-phone-844x390-05-deckbau-perks.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-runde1",
+    "file": "chaos-phone-844x390-06-auswahl-runde1.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-gewaehlt",
+    "file": "chaos-phone-844x390-07-auswahl-gewaehlt.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-gewoehnlich",
+    "file": "chaos-phone-844x390-08-auswahl-gewoehnlich.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-selten",
+    "file": "chaos-phone-844x390-09-auswahl-selten.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-episch",
+    "file": "chaos-phone-844x390-10-auswahl-episch.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-perks",
+    "file": "chaos-phone-844x390-11-kampf-perks.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-abzeichen-info",
+    "file": "chaos-phone-844x390-12-kampf-abzeichen-info.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-perkliste",
+    "file": "chaos-phone-844x390-13-kampf-perkliste.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis",
+    "file": "chaos-phone-844x390-14-ergebnis.jpg",
+    "issues": []
+   }
+  ],
+  "log": []
+ },
+ "desk-1440x900": {
+  "states": [
+   {
+    "state": "menue-kachel",
+    "file": "chaos-desk-1440x900-01-menue-kachel.jpg",
+    "issues": []
+   },
+   {
+    "state": "info",
+    "file": "chaos-desk-1440x900-02-info.jpg",
+    "issues": []
+   },
+   {
+    "state": "info-pool",
+    "file": "chaos-desk-1440x900-03-info-pool.jpg",
+    "issues": []
+   },
+   {
+    "state": "deckbau",
+    "file": "chaos-desk-1440x900-04-deckbau.jpg",
+    "issues": []
+   },
+   {
+    "state": "deckbau-perks",
+    "file": "chaos-desk-1440x900-05-deckbau-perks.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-runde1",
+    "file": "chaos-desk-1440x900-06-auswahl-runde1.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-gewaehlt",
+    "file": "chaos-desk-1440x900-07-auswahl-gewaehlt.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-gewoehnlich",
+    "file": "chaos-desk-1440x900-08-auswahl-gewoehnlich.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-selten",
+    "file": "chaos-desk-1440x900-09-auswahl-selten.jpg",
+    "issues": []
+   },
+   {
+    "state": "auswahl-episch",
+    "file": "chaos-desk-1440x900-10-auswahl-episch.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-perks",
+    "file": "chaos-desk-1440x900-11-kampf-perks.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-abzeichen-info",
+    "file": "chaos-desk-1440x900-12-kampf-abzeichen-info.jpg",
+    "issues": []
+   },
+   {
+    "state": "kampf-perkliste",
+    "file": "chaos-desk-1440x900-13-kampf-perkliste.jpg",
+    "issues": []
+   },
+   {
+    "state": "ergebnis",
+    "file": "chaos-desk-1440x900-14-ergebnis.jpg",
+    "issues": []
+   }
+  ],
+  "log": []
+ }
+}

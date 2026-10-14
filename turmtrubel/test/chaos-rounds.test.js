@@ -449,3 +449,56 @@ test('Perks verändern nie die gemeinsamen Kartenwerte und nie die Elixierkosten
   const m = room.match;
   for (const id of m.players[0].deck) assert.equal(m.costOf(0, db.card(id)), db.card(id).elixir);
 });
+
+test('Bots: jede Stufe spielt ein vollständiges Chaos-Match mit eigener Perk-Wahl (ohne Hänger)', () => {
+  for (const diff of ['easy', 'medium', 'hard']) {
+    const env = setup();
+    const a = env.client('Anna');
+    assert.ok(env.mgr.createTraining(a.s, DECK, 'chaos', diff).ok);
+    const room = a.s.room;
+    env.clock.advance(3100);
+    room.onLoaded(a.s);
+    const bot = room.bots.get(1);
+    assert.ok(bot, 'Bot im Kampf');
+    let ticks = 0;
+    // der Mensch wählt immer die erste Option; der Bot wählt selbst nach 1–4 s
+    while (room.state === 'playing' && ticks < 20 * 420) {
+      const c = room.perkRounds.current;
+      if (c && c.offers[0] && !c.picks[0]) room.perkPick(a.s, c.offers[0][0]);
+      room.tick();
+      env.clock.advance(50);
+      ticks++;
+    }
+    assert.equal(room.state, 'ended', `${diff}: Kampf endet`);
+    const end = a.last('matchEnd');
+    assert.ok(end.perks, `${diff}: Ergebnis mit Perks`);
+    const results = a.all('perkResult').filter((r) => !r.skipped);
+    assert.ok(results.length >= 1, `${diff}: mindestens eine Auswahlrunde`);
+    assert.ok(results.every((r) => r.auto[1] === false), `${diff}: Bot wählt selbst`);
+    assert.equal(end.perks[1].length, results.length);
+    assert.ok(room.match.stats[1].played > 3, `${diff}: Bot spielt Karten`);
+  }
+});
+
+test('Bot-Perkwahl: Leicht zufällig, Mittel bevorzugt Werte/Einheiten, Schwer bewertet Lage und Kategorie', async () => {
+  const { choosePerk, perkScore, noteScore } = await import('../server/botperk.js');
+  const R = resolveRules(rules(), MODE, { chaos });
+  const m = new Match({ db, rules: R, decks: [DECK, DECK], seed: 2 });
+  m.started = true;
+  let s = 7;
+  const rng = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  // Mittel: gleiche Stufe → statBoost/spawnChange vor newAbility/behaviorChange
+  assert.equal(choosePerk(chaos, m, 1, ['giant.rare', 'golden-knight.rare'], 'medium', rng), 'golden-knight.rare', 'statBoost (Klingenwirbel) vor newAbility (Turmschüttler)');
+  // höhere Stufe schlägt Kategorie
+  assert.equal(choosePerk(chaos, m, 1, ['giant.common', 'zap.epic'], 'medium', rng), 'zap.epic');
+  // Leicht: beide Optionen kommen vor
+  const seen = new Set();
+  for (let i = 0; i < 60; i++) seen.add(choosePerk(chaos, m, 1, ['knight.common', 'archers.common'], 'easy', rng));
+  assert.equal(seen.size, 2);
+  // Schwer: gegnerische Flieger auf dem Feld → Perk für eine Karte mit Luftabwehr
+  for (let i = 0; i < 3; i++) m.addEntity(db.unit('minions'), 0, 9, 10 + i, { deployTime: 0 });
+  const air = perkScore(chaos, m, 1, chaos.perk('minions.common'), 'hard');
+  const ground = perkScore(chaos, m, 1, chaos.perk('knight.common'), 'hard');
+  assert.ok(air > ground, `Luftabwehr wird bevorzugt (${air} > ${ground})`);
+  assert.ok(noteScore('deutlich stark, aber konterbar') !== 0);
+});

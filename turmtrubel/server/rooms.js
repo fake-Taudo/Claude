@@ -176,7 +176,8 @@ export class RoomManager {
     return { ok: true, room };
   }
 
-  joinRoom(s, rawCode, deck) {
+  /** chaosDeck: Deck für Chaos-Räume (der Client kennt den Modus vor dem Beitritt nicht und schickt beide Decks). */
+  joinRoom(s, rawCode, deck, chaosDeck = null) {
     if (s.room) return { ok: false, code: 'ALREADY_IN_ROOM', message: ERRORS.ALREADY_IN_ROOM };
     const code = normalizeCode(rawCode);
     if (!isValidCodeFormat(code)) return { ok: false, code: 'INVALID_CODE', message: ERRORS.INVALID_CODE };
@@ -189,7 +190,7 @@ export class RoomManager {
     if (this.now() >= room.expiresAt) return { ok: false, code: 'ROOM_EXPIRED', message: ERRORS.ROOM_EXPIRED };
     if (room.full()) return { ok: false, code: 'ROOM_FULL', message: ERRORS.ROOM_FULL };
     if (room.state !== 'lobby') return { ok: false, code: 'ROOM_BUSY', message: ERRORS.ROOM_BUSY };
-    const d = this.deckFor(room.mode, deck);
+    const d = this.deckFor(room.mode, room.mode.chaos && Array.isArray(chaosDeck) ? chaosDeck : deck);
     if (d.error) return d.error;
     room.addPlayer(s, d.deck);
     return { ok: true, room };

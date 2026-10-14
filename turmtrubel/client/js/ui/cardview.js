@@ -201,7 +201,7 @@ function statMax(db, type, key) {
 }
 
 /** Detail-Modal (am Handy Bottom-Sheet). actions: [{ label, cls, onClick, disabled, reason }]; evoState: 'active' | 'inactive' | null */
-export function openCardDetail(app, id, { evo = false, evoState = null, actions = [] } = {}) {
+export function openCardDetail(app, id, { evo = false, evoState = null, actions = [], noEvo = false, perks = null } = {}) {
   const db = app.db;
   const card = db.card(id);
   if (!card) return null;
@@ -241,13 +241,13 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
         h('span', { class: `tag r-${card.rarity}` }, rarity),
         h('span', { class: `tag ${showClass ? card.class : ''}` }, kindLabel),
         h('span', { class: 'tag' }, card.elixirRule === 'mirror' ? 'Elixier: letzte Karte + 1' : `${card.elixir} Elixier`),
-        card.evo ? h('span', { class: 'tag evo' }, 'Evo verfügbar') : null,
+        card.evo && !noEvo ? h('span', { class: 'tag evo' }, 'Evo verfügbar') : null,
       ),
       h('p', { class: 'detail-desc' }, card.description),
     ),
   );
   // Evo-Vorschau: normale Karte → entwickelte Karte, darunter Zyklus und Beschreibung
-  const evoPanel = card.evo
+  const evoPanel = card.evo && !noEvo
     ? h(
         'div',
         { class: `box evo${evoState ? ' ' + evoState : ''}` },
@@ -286,6 +286,8 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
   const tabs = [['stats', 'Werte', table]];
   if (evoPanel) tabs.push(['evo', 'Evo', evoPanel]);
   if (abilityPanel) tabs.push(['ability', 'Fähigkeit', abilityPanel]);
+  // Chaos-Deckbau: die drei möglichen Perks der Karte
+  if (perks) tabs.push(['perks', 'Perks', perks]);
   let tabBlock = table;
   if (tabs.length > 1) {
     const uid = Math.random().toString(36).slice(2, 7);
@@ -319,7 +321,7 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
               select(tabs[(i + d + tabs.length) % tabs.length][0], true);
             },
           },
-          k === 'evo' ? icon('sparkles') : k === 'ability' ? icon('bolt') : icon('swords'),
+          k === 'evo' || k === 'perks' ? icon('sparkles') : k === 'ability' ? icon('bolt') : icon('swords'),
           label,
         ),
       );
@@ -327,7 +329,7 @@ export function openCardDetail(app, id, { evo = false, evoState = null, actions 
     });
     tabBlock = h('div', { class: 'tab-block' }, bar, panels);
     // Evo-Karte im Evo-Platz → direkt den Evo-Reiter zeigen
-    select(evo && evoPanel ? 'evo' : 'stats');
+    select(evo && evoPanel ? 'evo' : perks ? 'perks' : 'stats');
   }
   const body = h(
     'div',

@@ -521,7 +521,7 @@ export class Renderer {
     for (const v of list) {
       if (v.kind === 'tower') continue;
       const [x, y] = view.toScreen(v.x, v.y);
-      const r = v.kind === 'building' ? v.half * s * 1.05 : v.radius * s * (v.flying ? 0.8 : 1.1);
+      const r = (v.kind === 'building' ? v.half * s * 1.05 : v.radius * s * (v.flying ? 0.8 : 1.1)) * (v.pscale || 1);
       if (v.fig && !(v.flags & EF.UNDER)) {
         // Neue Figuren: Bodenschatten mit Teamring (Blau Kreis, Rot Zackenring)
         characterShadow(ctx, { x, y: y + s * 0.05, r, team: v.owner === mySide ? 'blue' : 'red', ring: !v.flying, dpr, alpha: v.flying ? 0.6 : 1, dx: r * ox, dy: r * oy });
@@ -537,6 +537,13 @@ export class Renderer {
       }
       // 2 gegen 2: Einheiten des Teamkollegen mit gestricheltem Ring (zusätzlich zur Teamfarbe)
       if (v.ally && !(v.flags & EF.UNDER)) this.allyRing(ctx, x, y + s * 0.05, r, t, v.seed);
+      // Chaos: Einheiten mit epischem Perk tragen einen dezenten lila Glow am Boden
+      if (v.perk?.tier === 'epic' && !(v.flags & EF.UNDER)) {
+        const g = softGlow(v.perk.color, r * 1.5 * dpr, 0.6);
+        ctx.globalAlpha = 0.5 + Math.sin(t * 3 + v.seed) * 0.15;
+        ctx.drawImage(g, x - r * 1.5, y - r * 0.7, r * 3, r * 1.4);
+        ctx.globalAlpha = 1;
+      }
       // Champions und Helden: pulsierender Goldring am Boden
       if (v.cls === 'champion' || v.cls === 'hero') {
         const g = softGlow(v.cls === 'hero' ? '#ff9a7a' : '#ffd84d', r * 1.3 * dpr, 0.55);
@@ -672,6 +679,7 @@ export class Renderer {
       state: st.state,
       u: st.u,
       variant: v.variant,
+      ...(v.pscale && v.pscale !== 1 ? { scale: this.game.view.s * v.pscale } : {}),
       alpha,
       lift,
       squash,
@@ -966,8 +974,12 @@ export class Renderer {
       tnum(ctx, String(Math.ceil(v.hp)), x + w / 2 + h * 0.1, y + h / 2 + 1, Math.max(12, h * 0.82), mine ? '#e3f0ff' : '#ffe3e5', 'center', 3);
       const cb = this.crownBadge(h * 1.5, dpr);
       ctx.drawImage(cb, x - h * 0.95, y + h / 2 - (h * 1.5) / 2 - 2 / dpr, cb.width / dpr, cb.height / dpr);
+      // Chaos: erhöhte Turm-Leben deutlich kennzeichnen („×2“ am Balken)
+      const thm = this.game.chaos?.towerHpMultiplier;
+      if (thm > 1) this.multBadge(ctx, x + w + h * 0.15, y + h / 2, h, '×' + String(thm).replace('.', ','));
       return;
     }
+    if (v.perk) this.drawPerkMark(ctx, v);
     // Einheiten und Gebäude: Abzeichen + Balken nur bei Schaden (Champion/Held/Evo behalten ihr Abzeichen)
     if (!damaged && !special && !v.evo) return;
     const h = Math.max(5, s * 0.2);
@@ -987,6 +999,52 @@ export class Renderer {
       ctx.fillStyle = '#e8eef4';
       ctx.fillRect(x + 2, y - 3, (w - 4) * Math.min(1, v.shield / (v.maxShield || v.shield)), 3);
     }
+  }
+
+  /** Kleines Faktor-Abzeichen (z. B. „×2“ an den Turm-Leben im Chaos-Modus). */
+  multBadge(ctx, x, cy, h, label) {
+    const fs = Math.max(11, h * 0.78);
+    ctx.save();
+    ctx.font = `${fs}px ${FONT}`;
+    const w = ctx.measureText(label).width + h * 0.7;
+    const bh = h * 1.05;
+    rrect(ctx, x, cy - bh / 2, w, bh, bh / 2);
+    ctx.fillStyle = '#ffd84d';
+    ctx.fill();
+    ctx.lineWidth = Math.max(1.5, h * 0.12);
+    ctx.strokeStyle = OUTLINE;
+    ctx.stroke();
+    ctx.restore();
+    ctext(ctx, label, x + w / 2, cy + 1, fs, '#1c1830', 'center', 0);
+  }
+
+  /** Perk-Abzeichen über einer Einheit: Raute in der Seltenheitsfarbe (Gewöhnlich Grau, Selten Bronze, Episch Lila). */
+  drawPerkMark(ctx, v) {
+    const s = this.game.view.s;
+    const r = Math.max(5, s * 0.2);
+    const x = v.sx + (v.kind === 'building' ? v.half * s * 0.9 : v.U * 0.75);
+    const y = v.kind === 'building' ? v.sy - v.half * s * 1.9 : v.sy - (v.flying ? s * 1.1 : 0) - v.U * 1.75;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, y - r);
+    ctx.lineTo(x + r * 0.8, y);
+    ctx.lineTo(x, y + r);
+    ctx.lineTo(x - r * 0.8, y);
+    ctx.closePath();
+    ctx.fillStyle = v.perk.color;
+    ctx.fill();
+    ctx.lineWidth = Math.max(1.5, r * 0.3);
+    ctx.strokeStyle = OUTLINE;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.beginPath();
+    ctx.moveTo(x, y - r * 0.6);
+    ctx.lineTo(x + r * 0.35, y - r * 0.1);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x - r * 0.35, y - r * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   }
 
   /** Balkenkörper: dunkler Track, weißer Nachzieher, Teamfarbe mit Glanzband, Kontur, Treffer-Aufhellung. */
@@ -1250,27 +1308,41 @@ export class Renderer {
 
   drawBeams(ctx, list, t) {
     const s = this.game.view.s;
+    const now = this.game.clock;
     for (const v of list) {
       if (!v.beam || !(v.flags & EF.ATTACK) || !v.targetV) continue;
-      const tv = v.targetV;
-      const x0 = v.sx;
-      const y0 = v.sy - v.half * s * 1.9;
-      const x1 = tv.sx;
-      const y1 = tv.sy - (tv.flying ? s * 1.1 : 0) - (tv.kind === 'unit' ? tv.U * 0.6 : s * 0.8);
-      const stage = v.aux || 0;
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = stage >= 2 ? 'rgba(255,240,160,0.5)' : 'rgba(255,120,40,0.45)';
-      ctx.lineWidth = s * (0.25 + stage * 0.18) + Math.sin(t * 40) * 1.5;
-      ctx.beginPath();
-      ctx.moveTo(x0, y0);
-      ctx.lineTo(x1, y1);
-      ctx.stroke();
-      ctx.strokeStyle = stage >= 2 ? '#fffbe0' : '#ffcf6b';
-      ctx.lineWidth = s * (0.08 + stage * 0.06);
-      ctx.stroke();
-      ctx.restore();
+      // Chaos: zusätzliche Strahlen auf weitere Ziele (aus den Angriffsereignissen)
+      const targets = [v.targetV];
+      if (v.beams) {
+        for (const [id, at] of v.beams) {
+          const o = this.game.vis.get(id);
+          if (!o || now - at > 0.6) v.beams.delete(id);
+          else if (o !== v.targetV) targets.push(o);
+        }
+      }
+      for (const tv of targets) this.drawBeam(ctx, v, tv, s, t);
     }
+  }
+
+  /** Ein Strahl (Inferno) von v zu tv; Dicke und Farbe nach Strahlstufe. */
+  drawBeam(ctx, v, tv, s, t) {
+    const x0 = v.sx;
+    const y0 = v.sy - v.half * s * 1.9;
+    const x1 = tv.sx;
+    const y1 = tv.sy - (tv.flying ? s * 1.1 : 0) - (tv.kind === 'unit' ? tv.U * 0.6 : s * 0.8);
+    const stage = v.aux || 0;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = stage >= 2 ? 'rgba(255,240,160,0.5)' : 'rgba(255,120,40,0.45)';
+    ctx.lineWidth = s * (0.25 + stage * 0.18) + Math.sin(t * 40) * 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+    ctx.strokeStyle = stage >= 2 ? '#fffbe0' : '#ffcf6b';
+    ctx.lineWidth = s * (0.08 + stage * 0.06);
+    ctx.stroke();
+    ctx.restore();
   }
 
   // ───────────── Emotes & Hinweise ─────────────

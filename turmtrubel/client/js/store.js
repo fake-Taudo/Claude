@@ -1,9 +1,11 @@
 // Lokale Speicherung (localStorage): Name, Einstellungen, Deck-Slots.
 import { validateDeck } from '/shared/cards.js';
-import { STARTER_DECKS } from '/shared/decks.js';
+import { STARTER_DECKS, CHAOS_STARTER_DECKS } from '/shared/decks.js';
 
 const KEY = 'turmtrubel.v1';
 export const DECK_SLOTS = 5;
+/** Eigene Deckplätze für den Modus „Chaos“ (nur Karten aus dem Chaos-Kartenpool). */
+export const CHAOS_DECK_SLOTS = 3;
 
 export const DEFAULT_SETTINGS = Object.freeze({
   music: true,
@@ -53,11 +55,22 @@ export class Store {
       this.decks.push({ name, slots });
     }
     this.active = Number.isInteger(data.active) && data.active >= 0 && data.active < DECK_SLOTS ? data.active : 0;
+    // Chaos-Decks: eigene Plätze und eigenes aktives Deck (die normalen Decks bleiben unberührt)
+    this.chaosDecks = [];
+    for (let i = 0; i < CHAOS_DECK_SLOTS; i++) {
+      const saved = data.chaosDecks?.[i];
+      const starter = CHAOS_STARTER_DECKS[i % CHAOS_STARTER_DECKS.length];
+      const ok = Array.isArray(saved?.slots) && saved.slots.length === 8 && !saved.slots.some((id) => id && !db.card(id));
+      this.chaosDecks.push({ name: ok && typeof saved.name === 'string' ? saved.name.slice(0, 20) : starter.name, slots: ok ? saved.slots.slice() : starter.slots.slice() });
+    }
+    this.chaosActive = Number.isInteger(data.chaosActive) && data.chaosActive >= 0 && data.chaosActive < CHAOS_DECK_SLOTS ? data.chaosActive : 0;
+    /** Chaos-Kartenpool (Set), setzt die App nach dem Laden von chaos.json */
+    this.chaosPool = null;
   }
 
   save() {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ name: this.name, settings: this.settings, decks: this.decks, active: this.active }));
+      localStorage.setItem(KEY, JSON.stringify({ name: this.name, settings: this.settings, decks: this.decks, active: this.active, chaosDecks: this.chaosDecks, chaosActive: this.chaosActive }));
     } catch {
       /* Speicher voll oder gesperrt – ignorieren */
     }
@@ -69,5 +82,34 @@ export class Store {
 
   deckValid(i = this.active) {
     return validateDeck(this.db, this.decks[i].slots).ok;
+  }
+
+  // ───── Chaos-Decks ─────
+  activeChaosDeck() {
+    return this.chaosDecks[this.chaosActive];
+  }
+
+  /** Gültig und nur aus Pool-Karten? */
+  chaosDeckValid(i = this.chaosActive) {
+    const slots = this.chaosDecks[i].slots;
+    return validateDeck(this.db, slots).ok && (!this.chaosPool || slots.every((id) => this.chaosPool.has(id)));
+  }
+
+  /** Deckplätze je Deck-Art: 'normal' (Standard) oder 'chaos'. */
+  decksOf(set) {
+    return set === 'chaos' ? this.chaosDecks : this.decks;
+  }
+
+  activeOf(set) {
+    return set === 'chaos' ? this.chaosActive : this.active;
+  }
+
+  setActive(set, i) {
+    if (set === 'chaos') this.chaosActive = i;
+    else this.active = i;
+  }
+
+  validOf(set, i) {
+    return set === 'chaos' ? this.chaosDeckValid(i) : this.deckValid(i);
   }
 }

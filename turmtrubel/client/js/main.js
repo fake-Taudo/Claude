@@ -17,6 +17,8 @@ import { renderModes, showModeRules, modeBadge } from './ui/modes.js';
 import { DraftUI } from './ui/draft.js';
 import { t } from './lang/de.js';
 import { createModes } from '/shared/modes.js';
+import { createChaos } from '/shared/chaos.js';
+import { perkRow } from './ui/perks.js';
 import { applyBodyFlags, reducedMotion } from './ui/tokens.js';
 import { Game } from './game/game.js';
 import { initCharacters, prefetchAllFigures } from './characters/index.js';
@@ -78,13 +80,20 @@ class App {
     const bar = $('#boot-bar');
     const txt = $('#boot-text');
     try {
-      const [cards, rules, skin, modes] = await Promise.all(
-        ['/data/cards.json', '/data/rules.json', '/data/skin.json', '/data/modes.json'].map((u) => fetch(u).then((r) => (r.ok ? r.json() : null))),
+      const [cards, rules, skin, modes, chaosJson, perksJson] = await Promise.all(
+        ['/data/cards.json', '/data/rules.json', '/data/skin.json', '/data/modes.json', '/data/chaos.json', '/data/chaos_perks.json'].map((u) => fetch(u).then((r) => (r.ok ? r.json() : null))),
       );
       // Gleiche Datenbank wie der Server: Level aus rules.json, Namen/Grafik aus skin.json
       this.db = createDb(cards, { level: rules.cardLevel, skin, skinName: rules.skin });
       this.rules = rules;
       this.modes = createModes(modes);
+      // Modus „Chaos“: Kartenpool und Perks (ohne diese Daten bleibt der Modus im Menü gesperrt)
+      try {
+        this.chaos = chaosJson && perksJson ? createChaos(chaosJson, perksJson, this.db) : null;
+      } catch (e) {
+        this.chaos = null;
+        console.warn(e);
+      }
     } catch (e) {
       txt.textContent = 'Die Spieldaten konnten nicht geladen werden. Läuft der Server?';
       console.error(e);
@@ -105,6 +114,7 @@ class App {
       console.warn(e);
     }
     this.store = new Store(this.db);
+    this.store.chaosPool = this.chaos?.poolSet || null;
     if (this.store.resetDecks) {
       // Gespeicherte Decks mit Karten, die es nicht mehr gibt → Startdecks (einmalig speichern)
       this.store.save();
@@ -207,14 +217,15 @@ class App {
     });
     $('#lobby-deck-select').addEventListener('change', (e) => {
       const i = Number(e.target.value);
-      if (!this.store.deckValid(i)) {
-        toast('Dieses Deck ist unvollständig.', 'warn');
-        e.target.value = String(this.store.active);
+      const set = this.lobbyDeckSet();
+      if (!this.store.validOf(set, i)) {
+        toast(set === 'chaos' ? 'Dieses Chaos-Deck ist unvollständig oder enthält Karten außerhalb des Pools.' : 'Dieses Deck ist unvollständig.', 'warn');
+        e.target.value = String(this.store.activeOf(set));
         return;
       }
-      this.store.active = i;
+      this.store.setActive(set, i);
       this.store.save();
-      this.net.send(C2S.DECK, { deck: this.store.activeDeck().slots });
+      this.net.send(C2S.DECK, { deck: this.store.decksOf(set)[i].slots });
     });
 
     $('#res-rematch').addEventListener('click', () => {
@@ -265,6 +276,7 @@ class App {
         toggleBtn('gm-music', () => s.music, (v) => (s.music = v), 'Musik an', 'Musik aus', 'music', 'music-off'),
         toggleBtn('gm-emotes', () => !s.muteEmotes, (v) => (s.muteEmotes = !v), 'Gegner-Emotes an', 'Gegner-Emotes stumm', 'chat', 'chat-off'),
         h('button', { class: 'btn btn-accent', id: 'gm-settings', onclick: () => (m.close(), openSettings(this, { allowRename: false })) }, ico('gear'), 'Einstellungen'),
+        this.game.chaos ? h('button', { class: 'btn btn-accent gm-perks', id: 'gm-perks', onclick: () => (m.close(), this.game?.openPerks()) }, ico('sparkles'), 'Perks im Kampf') : null,
       ),
       h(
         'button',
@@ -383,6 +395,8 @@ class App {
     n.on(S2C.DRAFT, roomMsg((m) => this.draftUI.update(m)));
     n.on(S2C.DRAFT_REVEAL, roomMsg((m) => setTimeout(() => this.draftUI.reveal(m), reducedMotion() ? 0 : 650)));
     n.on(S2C.TEAM_PING, (m) => this.game?.onTeamPing(m));
+    n.on(S2C.PERK_ROUND, roomMsg((m) => this.game?.onPerkRound(m)));
+    n.on(S2C.PERK_RESULT, roomMsg((m) => this.game?.onPerkResult(m)));
     n.on(S2C.TAKEOVER, (m) => this.game?.onTakeover(m));
     n.on(S2C.PRESENCE, (m) => {
       if (this.game && !this.game.ended) {
@@ -482,9 +496,19 @@ class App {
     $('#menu-room-banner').hidden = !show;
   }
 
-  fillDeckSelect(sel) {
-    sel.replaceChildren(...this.store.decks.map((d, i) => h('option', { value: String(i) }, `${d.name}${validateDeck(this.db, d.slots).ok ? '' : ' (unvollständig)'}`)));
-    sel.value = String(this.store.active);
+  fillDeckSelect(sel, set = 'normal') {
+    sel.replaceChildren(...this.store.decksOf(set).map((d, i) => h('option', { value: String(i) }, `${d.name}${this.store.validOf(set, i) ? '' : ' (unvollständig)'}`)));
+    sel.value = String(this.store.activeOf(set));
+  }
+
+  /** Deck-Art der aktuellen Lobby: Chaos-Räume nutzen die Chaos-Decks. */
+  lobbyDeckSet() {
+    return this.room?.mode?.chaos ? 'chaos' : 'normal';
+  }
+
+  /** Deck, das für einen Modus gesendet wird (Chaos: aktives Chaos-Deck). */
+  deckFor(mode) {
+    return mode?.chaos ? this.store.activeChaosDeck().slots : this.store.activeDeck().slots;
   }
 
   renderMenuDeck() {
@@ -504,12 +528,20 @@ class App {
     );
   }
 
-  requireReady({ deck = true } = {}) {
+  requireReady({ deck = true, chaos = false } = {}) {
     if (!this.net.welcomed) {
       toast('Keine Verbindung zum Server.', 'error');
       return false;
     }
-    if (deck && !this.store.deckValid()) {
+    if (deck && chaos && !this.chaos) {
+      toast('Der Chaos-Modus konnte nicht geladen werden – bitte Seite neu laden.', 'error', 3500);
+      return false;
+    }
+    if (deck && chaos && !this.store.chaosDeckValid()) {
+      toast('Dein Chaos-Deck ist unvollständig – bau es über „Chaos-Deck“ fertig (nur Karten aus dem Pool).', 'warn', 4000);
+      return false;
+    }
+    if (deck && !chaos && !this.store.deckValid()) {
       toast('Dein aktives Deck ist unvollständig – bau es im Deck-Bauer fertig.', 'warn', 3500);
       return false;
     }
@@ -523,18 +555,18 @@ class App {
   /** Freundschaftskampf im gewählten Modus erstellen (Regel-Hinweis beim ersten Mal). */
   async createRoom(modeId) {
     const mode = this.modeOf(modeId);
-    if (!this.requireReady({ deck: mode.deckSource !== 'draft' })) return;
+    if (!this.requireReady({ deck: mode.deckSource !== 'draft', chaos: !!mode.chaos })) return;
     await showModeRules(this, mode);
-    this.net.send(C2S.CREATE, { deck: this.store.activeDeck().slots, mode: mode.id });
+    this.net.send(C2S.CREATE, { deck: this.deckFor(mode), mode: mode.id });
   }
 
   /** Einzelspieler gegen einen Bot (Stärke aus dem Menü). */
   async startTraining(modeId) {
     const mode = this.modeOf(modeId);
     if (!mode.botsAllowed) return toast(t('onlyMultiplayerTip'), 'warn');
-    if (!this.requireReady({ deck: mode.deckSource !== 'draft' })) return;
+    if (!this.requireReady({ deck: mode.deckSource !== 'draft', chaos: !!mode.chaos })) return;
     await showModeRules(this, mode);
-    this.net.send(C2S.TRAINING, { deck: this.store.activeDeck().slots, mode: mode.id, difficulty: this.settings.botDifficulty || 'medium' });
+    this.net.send(C2S.TRAINING, { deck: this.deckFor(mode), mode: mode.id, difficulty: this.settings.botDifficulty || 'medium' });
   }
 
   /** Beitreten: 6 Felder mit Auto-Weiter, Einfügen aus der Zwischenablage und klarem Fehlerzustand. */
@@ -565,7 +597,8 @@ class App {
       // Deck prüft der Server je nach Modus (Draft-Räume brauchen keins)
       if (!this.requireReady({ deck: false })) return;
       err.textContent = '';
-      this.net.send(C2S.JOIN, { code, deck: this.store.activeDeck().slots });
+      // Chaos-Räume nehmen das Chaos-Deck (der Modus ist erst nach dem Beitritt bekannt)
+      this.net.send(C2S.JOIN, { code, deck: this.store.activeDeck().slots, chaosDeck: this.store.activeChaosDeck().slots });
     };
     boxes.forEach((b, i) => {
       b.addEventListener('input', () => {
@@ -694,7 +727,8 @@ class App {
     // Code als einzelne Kacheln (textContent bleibt der Code → Kopieren/Markieren funktioniert weiter)
     const codeEl = $('#lobby-code');
     if (codeEl.textContent !== m.code) codeEl.replaceChildren(...[...m.code].map((ch, i) => h('span', { class: 'code-ch', style: { '--i': i } }, ch)));
-    this.fillDeckSelect($('#lobby-deck-select'));
+    this.fillDeckSelect($('#lobby-deck-select'), mode.chaos ? 'chaos' : 'normal');
+    $('#lobby-deck').querySelector('span').textContent = mode.chaos ? 'Dein Chaos-Deck' : 'Dein Deck';
     $('#lobby-deck').hidden = draft;
     $('#lobby-draft-note').hidden = !draft;
     $('#lobby-draft-note').textContent = draft ? t('draftDeckNote') : '';
@@ -1115,6 +1149,7 @@ class App {
         ? t('rematchNoTakeover')
         : 'Dein Gegner hat den Raum verlassen.';
     this.renderResultDecks(m, me);
+    this.renderResultPerks(m, me);
     showScreen('s-result');
     // Konfetti nur bei Sieg, ab Qualität „Mittel“ und ohne reduzierte Bewegung
     if (win && this.settings.quality !== 'low' && !this.settings.reduceFx && !reducedMotion()) this.confetti();
@@ -1140,6 +1175,25 @@ class App {
       h('h2', { class: 'res-decks-title' }, ico('cards'), t('draftDecks')),
       ...m.decks.map(row),
       h('button', { class: 'btn btn-accent res-save-deck', onclick: () => this.saveDraftDeck(m.decks[me]) }, ico('star'), t('saveDeck')),
+    );
+  }
+
+  /** Chaos: „Deine gewählten Perks“ mit Name und Seltenheit je Karte. */
+  renderResultPerks(m, me) {
+    const root = $('#res-perks');
+    if (!m.perks) {
+      root.hidden = true;
+      root.replaceChildren();
+      return;
+    }
+    const mine = m.perks[me] || [];
+    root.hidden = false;
+    root.replaceChildren(
+      h('h2', { class: 'res-decks-title' }, ico('sparkles'), 'Deine gewählten Perks'),
+      mine.length
+        ? h('div', { class: 'res-perk-list' }, mine.map((p) => perkRow(this, p, { card: true, extra: h('span', { class: 'perk-round' }, `Runde ${p.round}${p.auto ? ' · Zufall' : ''}`) })))
+        : h('p', { class: 'hint' }, 'In diesem Kampf hast du keinen Perk gewählt.'),
+      m.pauseTotal > 0 ? h('p', { class: 'hint small' }, `Auswahlpausen insgesamt: ${String(Math.round(m.pauseTotal * 10) / 10).replace('.', ',')} s (zählen nicht zur Spielzeit)`) : null,
     );
   }
 

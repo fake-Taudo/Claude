@@ -7,3 +7,10 @@ export const STARTER_DECKS = Object.freeze([
   { name: 'X-Bogen', slots: ['tesla', 'archers', 'archer-queen', 'x-bow', 'knight', 'ice-spirit', 'fireball', 'the-log'] },
   { name: 'P.E.K.K.A.-Brücke', slots: ['pekka', 'battle-ram', 'golden-knight', 'bandit', 'electro-wizard', 'magic-archer', 'poison', 'zap'] },
 ]);
+
+// Startdecks für den Modus „Chaos“: nur Karten aus data/chaos.json → cardPool (eigene Deckplätze, eigenes aktives Deck).
+export const CHAOS_STARTER_DECKS = Object.freeze([
+  { name: 'Chaos-Riese', slots: ['giant', 'musketeer', 'golden-knight', 'mini-pekka', 'bats', 'arrows', 'zap', 'fireball'] },
+  { name: 'Chaos-Schweine', slots: ['hog-rider', 'valkyrie', 'bowler-hero', 'ice-spirit', 'tesla', 'musketeer', 'the-log', 'fireball'] },
+  { name: 'Chaos-Golem', slots: ['golem', 'baby-dragon', 'electro-wizard', 'mega-minion', 'barbarians', 'inferno-dragon', 'poison', 'zap'] },
+]);

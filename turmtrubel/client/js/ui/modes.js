@@ -4,6 +4,7 @@ import { h, modal } from './dom.js';
 import { icon, hasIcon } from './icons.js';
 import { seg } from './settings.js';
 import { t } from '../lang/de.js';
+import { chaosInfo } from './perks.js';
 
 const ico = (name) => (hasIcon(name) ? icon(name) : icon('swords'));
 
@@ -61,8 +62,22 @@ export function renderModes(app) {
           botBtn,
         ),
         m.botsAllowed ? null : h('span', { class: 'mode-mp', id: `mode-mp-${m.id}` }, ico('group'), t('onlyMultiplayer')),
+        m.chaos ? chaosDeckRow(app) : null,
       );
     }),
+  );
+}
+
+/** Chaos-Kachel: eigenes Deck (nur Pool-Karten) mit Status und Knopf zum Chaos-Deckbau. */
+function chaosDeckRow(app) {
+  const st = app.store;
+  const d = st.activeChaosDeck();
+  const ok = st.chaosDeckValid();
+  return h(
+    'div',
+    { class: 'mode-chaos-deck' },
+    h('span', { class: `mode-chaos-status${ok ? ' ok' : ' bad'}` }, ico(ok ? 'check' : 'cross'), ok ? d.name : 'Chaos-Deck unvollständig'),
+    h('button', { class: 'btn btn-small btn-accent mode-chaos-btn', title: 'Chaos-Deck bauen (nur Karten aus dem Chaos-Pool)', onclick: () => app.deckBuilder.open(null, 'chaos') }, ico('cards'), 'Chaos-Deck'),
   );
 }
 
@@ -85,6 +100,7 @@ export function showModeRules(app, mode, { force = false } = {}) {
         { class: 'mode-rule-list' },
         (mode.rules || []).map((r, i) => h('li', { style: { '--i': i } }, h('span', { class: 'rule-num' }, String(i + 1)), h('span', {}, r))),
       ),
+      mode.chaos ? chaosInfo(app) : null,
       mode.id === app.modes?.defaultId ? null : h('label', { class: 'mode-rules-hide' }, box, h('span', {}, t('rulesHide'))),
       h('div', { class: 'row' }, h('button', { class: 'btn btn-success btn-big', onclick: () => m.close() }, t('rulesGo'))),
     );
@@ -98,6 +114,7 @@ export function showModeRules(app, mode, { force = false } = {}) {
       },
     });
     m.el.classList.add('mode-rules-modal');
+    if (mode.chaos) m.el.classList.add('wide');
   });
 }
 

@@ -1,0 +1,1055 @@
+{
+ "games": 20,
+ "difficulty": "medium",
+ "seconds": 5.7,
+ "sideWins": [
+  8,
+  12
+ ],
+ "draws": 0,
+ "reasons": {
+  "king": 1,
+  "suddenDeath": 9,
+  "time": 10
+ },
+ "avgTime": 197,
+ "perksPicked": 176,
+ "perksPerMatch": 8.8,
+ "tiers": {
+  "common": 33,
+  "rare": 53,
+  "epic": 90
+ },
+ "notableCards": [
+  {
+   "k": "mega-knight",
+   "games": 4,
+   "wins": 4,
+   "rate": 100
+  },
+  {
+   "k": "goblin-barrel",
+   "games": 9,
+   "wins": 7,
+   "rate": 78
+  },
+  {
+   "k": "mini-pekka",
+   "games": 4,
+   "wins": 1,
+   "rate": 25
+  },
+  {
+   "k": "giant",
+   "games": 4,
+   "wins": 1,
+   "rate": 25
+  },
+  {
+   "k": "tesla",
+   "games": 4,
+   "wins": 0,
+   "rate": 0
+  }
+ ],
+ "notablePerks": [
+  {
+   "k": "battle-ram.common",
+   "games": 3,
+   "wins": 3,
+   "rate": 100
+  },
+  {
+   "k": "zap.epic",
+   "games": 5,
+   "wins": 4,
+   "rate": 80
+  },
+  {
+   "k": "pekka.epic",
+   "games": 5,
+   "wins": 4,
+   "rate": 80
+  },
+  {
+   "k": "golem.epic",
+   "games": 4,
+   "wins": 3,
+   "rate": 75
+  },
+  {
+   "k": "golden-knight.epic",
+   "games": 4,
+   "wins": 3,
+   "rate": 75
+  },
+  {
+   "k": "royal-giant.epic",
+   "games": 4,
+   "wins": 1,
+   "rate": 25
+  },
+  {
+   "k": "golden-knight.rare",
+   "games": 4,
+   "wins": 1,
+   "rate": 25
+  },
+  {
+   "k": "witch.epic",
+   "games": 4,
+   "wins": 1,
+   "rate": 25
+  },
+  {
+   "k": "golden-knight.common",
+   "games": 4,
+   "wins": 1,
+   "rate": 25
+  },
+  {
+   "k": "knight.epic",
+   "games": 4,
+   "wins": 0,
+   "rate": 0
+  }
+ ],
+ "matches": [
+  {
+   "seed": 500,
+   "winner": 1,
+   "reason": "king",
+   "time": 119.2,
+   "crowns": [
+    0,
+    3
+   ],
+   "decks": [
+    [
+     "skeleton-army",
+     "bats",
+     "minions",
+     "the-log",
+     "golem",
+     "goblin-gang",
+     "mini-pekka",
+     "battle-ram"
+    ],
+    [
+     "archers",
+     "witch",
+     "valkyrie",
+     "zap",
+     "poison",
+     "hog-rider",
+     "royal-giant",
+     "pekka"
+    ]
+   ],
+   "perks": [
+    [
+     "goblin-gang.rare",
+     "mini-pekka.rare",
+     "golem.epic"
+    ],
+    [
+     "witch.rare",
+     "archers.rare",
+     "zap.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 501,
+   "winner": 0,
+   "reason": "suddenDeath",
+   "time": 211.1,
+   "crowns": [
+    1,
+    0
+   ],
+   "decks": [
+    [
+     "bats",
+     "zap",
+     "golden-knight",
+     "electro-wizard",
+     "hog-rider",
+     "inferno-tower",
+     "wizard",
+     "valkyrie"
+    ],
+    [
+     "pekka",
+     "battle-ram",
+     "goblin-demolisher",
+     "arrows",
+     "wizard",
+     "archers",
+     "bomber",
+     "royal-giant"
+    ]
+   ],
+   "perks": [
+    [
+     "hog-rider.common",
+     "inferno-tower.rare",
+     "electro-wizard.epic",
+     "wizard.epic",
+     "zap.epic"
+    ],
+    [
+     "goblin-demolisher.common",
+     "archers.rare",
+     "wizard.epic",
+     "arrows.epic",
+     "royal-giant.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 502,
+   "winner": 1,
+   "reason": "suddenDeath",
+   "time": 189.7,
+   "crowns": [
+    1,
+    2
+   ],
+   "decks": [
+    [
+     "witch",
+     "zap",
+     "golden-knight",
+     "inferno-dragon",
+     "golem",
+     "electro-wizard",
+     "goblin-gang",
+     "bomber"
+    ],
+    [
+     "inferno-dragon",
+     "knight",
+     "hog-rider",
+     "poison",
+     "witch",
+     "musketeer",
+     "baby-dragon",
+     "wizard"
+    ]
+   ],
+   "perks": [
+    [
+     "electro-wizard.common",
+     "golden-knight.rare",
+     "bomber.epic",
+     "witch.epic",
+     "zap.epic"
+    ],
+    [
+     "hog-rider.common",
+     "poison.rare",
+     "inferno-dragon.epic",
+     "witch.epic",
+     "wizard.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 503,
+   "winner": 1,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    0,
+    1
+   ],
+   "decks": [
+    [
+     "witch",
+     "zap",
+     "golden-knight",
+     "the-log",
+     "hog-rider",
+     "giant",
+     "electro-wizard",
+     "barbarians"
+    ],
+    [
+     "archers",
+     "bomber",
+     "bowler-hero",
+     "arrows",
+     "fireball",
+     "royal-giant",
+     "minions",
+     "zap"
+    ]
+   ],
+   "perks": [
+    [
+     "giant.common",
+     "golden-knight.rare",
+     "barbarians.rare",
+     "the-log.epic"
+    ],
+    [
+     "bowler-hero.rare",
+     "arrows.rare",
+     "royal-giant.rare",
+     "bomber.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 504,
+   "winner": 1,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    1,
+    2
+   ],
+   "decks": [
+    [
+     "witch",
+     "bomber",
+     "bowler-hero",
+     "poison",
+     "fireball",
+     "hog-rider",
+     "skeleton-army",
+     "balloon"
+    ],
+    [
+     "pekka",
+     "zap",
+     "mega-knight",
+     "goblin-barrel",
+     "musketeer",
+     "witch",
+     "royal-giant",
+     "golem"
+    ]
+   ],
+   "perks": [
+    [
+     "balloon.common",
+     "poison.rare",
+     "bowler-hero.epic",
+     "hog-rider.epic"
+    ],
+    [
+     "witch.rare",
+     "golem.rare",
+     "pekka.epic",
+     "goblin-barrel.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 505,
+   "winner": 1,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    0,
+    2
+   ],
+   "decks": [
+    [
+     "zap",
+     "bats",
+     "bowler-hero",
+     "the-log",
+     "balloon",
+     "poison",
+     "pekka",
+     "ice-spirit"
+    ],
+    [
+     "witch",
+     "inferno-dragon",
+     "bowler-hero",
+     "poison",
+     "balloon",
+     "the-log",
+     "bomber",
+     "golem"
+    ]
+   ],
+   "perks": [
+    [
+     "bowler-hero.common",
+     "the-log.rare",
+     "balloon.epic",
+     "pekka.epic"
+    ],
+    [
+     "poison.common",
+     "the-log.rare",
+     "bowler-hero.epic",
+     "golem.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 506,
+   "winner": 1,
+   "reason": "suddenDeath",
+   "time": 224.6,
+   "crowns": [
+    0,
+    1
+   ],
+   "decks": [
+    [
+     "archers",
+     "pekka",
+     "goblin-demolisher",
+     "the-log",
+     "mega-minion",
+     "golem",
+     "bats",
+     "goblin-hut"
+    ],
+    [
+     "goblin-barrel",
+     "inferno-dragon",
+     "bowler-hero",
+     "fireball",
+     "electro-wizard",
+     "battle-ram",
+     "mini-pekka",
+     "ice-spirit"
+    ]
+   ],
+   "perks": [
+    [
+     "golem.rare",
+     "mega-minion.rare",
+     "the-log.rare",
+     "goblin-hut.epic",
+     "archers.epic"
+    ],
+    [
+     "ice-spirit.common",
+     "mini-pekka.rare",
+     "bowler-hero.epic",
+     "goblin-barrel.epic",
+     "inferno-dragon.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 507,
+   "winner": 0,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    1,
+    0
+   ],
+   "decks": [
+    [
+     "skeleton-army",
+     "musketeer",
+     "golden-knight",
+     "zap",
+     "poison",
+     "royal-giant",
+     "inferno-tower",
+     "goblin-demolisher"
+    ],
+    [
+     "inferno-dragon",
+     "skeleton-army",
+     "golden-knight",
+     "goblin-barrel",
+     "archers",
+     "wizard",
+     "royal-giant",
+     "musketeer"
+    ]
+   ],
+   "perks": [
+    [
+     "golden-knight.common",
+     "royal-giant.rare",
+     "musketeer.epic",
+     "skeleton-army.epic"
+    ],
+    [
+     "golden-knight.common",
+     "goblin-barrel.rare",
+     "inferno-dragon.epic",
+     "musketeer.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 508,
+   "winner": 0,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    2,
+    0
+   ],
+   "decks": [
+    [
+     "archers",
+     "mega-knight",
+     "bowler-hero",
+     "fireball",
+     "zap",
+     "golem",
+     "barbarians",
+     "balloon"
+    ],
+    [
+     "knight",
+     "skeleton-army",
+     "golden-knight",
+     "the-log",
+     "fireball",
+     "witch",
+     "battle-ram",
+     "mini-pekka"
+    ]
+   ],
+   "perks": [
+    [
+     "archers.common",
+     "balloon.rare",
+     "zap.epic",
+     "golem.epic"
+    ],
+    [
+     "golden-knight.rare",
+     "battle-ram.rare",
+     "knight.epic",
+     "witch.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 509,
+   "winner": 1,
+   "reason": "suddenDeath",
+   "time": 299,
+   "crowns": [
+    1,
+    2
+   ],
+   "decks": [
+    [
+     "goblin-barrel",
+     "barbarians",
+     "baby-dragon",
+     "zap",
+     "witch",
+     "balloon",
+     "wizard",
+     "inferno-tower"
+    ],
+    [
+     "ice-spirit",
+     "battle-ram",
+     "golden-knight",
+     "goblin-barrel",
+     "minions",
+     "archers",
+     "golem",
+     "mega-knight"
+    ]
+   ],
+   "perks": [
+    [
+     "wizard.common",
+     "balloon.rare",
+     "witch.rare",
+     "goblin-barrel.epic",
+     "barbarians.epic"
+    ],
+    [
+     "archers.common",
+     "battle-ram.common",
+     "golden-knight.epic",
+     "minions.epic",
+     "golem.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 510,
+   "winner": 0,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    2,
+    1
+   ],
+   "decks": [
+    [
+     "ice-spirit",
+     "skeleton-army",
+     "bowler-hero",
+     "zap",
+     "musketeer",
+     "royal-giant",
+     "goblin-hut",
+     "pekka"
+    ],
+    [
+     "tesla",
+     "valkyrie",
+     "mini-pekka",
+     "fireball",
+     "musketeer",
+     "balloon",
+     "royal-giant",
+     "battle-ram"
+    ]
+   ],
+   "perks": [
+    [
+     "skeleton-army.common",
+     "goblin-hut.rare",
+     "musketeer.epic",
+     "ice-spirit.epic"
+    ],
+    [
+     "balloon.common",
+     "battle-ram.rare",
+     "royal-giant.epic",
+     "musketeer.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 511,
+   "winner": 1,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    0,
+    2
+   ],
+   "decks": [
+    [
+     "valkyrie",
+     "archers",
+     "bowler-hero",
+     "poison",
+     "minions",
+     "hog-rider",
+     "giant",
+     "wizard"
+    ],
+    [
+     "baby-dragon",
+     "bomber",
+     "bowler-hero",
+     "zap",
+     "arrows",
+     "battle-ram",
+     "skeleton-army",
+     "the-log"
+    ]
+   ],
+   "perks": [
+    [
+     "hog-rider.common",
+     "bowler-hero.rare",
+     "minions.rare",
+     "wizard.epic"
+    ],
+    [
+     "bomber.common",
+     "the-log.rare",
+     "skeleton-army.epic",
+     "bowler-hero.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 512,
+   "winner": 0,
+   "reason": "suddenDeath",
+   "time": 186.3,
+   "crowns": [
+    1,
+    0
+   ],
+   "decks": [
+    [
+     "bomber",
+     "musketeer",
+     "golden-knight",
+     "goblin-barrel",
+     "fireball",
+     "minions",
+     "giant",
+     "pekka"
+    ],
+    [
+     "archers",
+     "knight",
+     "golden-knight",
+     "poison",
+     "wizard",
+     "hog-rider",
+     "skeleton-army",
+     "prince"
+    ]
+   ],
+   "perks": [
+    [
+     "minions.common",
+     "goblin-barrel.rare",
+     "fireball.epic",
+     "pekka.epic",
+     "musketeer.epic"
+    ],
+    [
+     "poison.common",
+     "hog-rider.rare",
+     "prince.rare",
+     "wizard.epic",
+     "knight.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 513,
+   "winner": 0,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    1,
+    0
+   ],
+   "decks": [
+    [
+     "bomber",
+     "mega-knight",
+     "bowler-hero",
+     "the-log",
+     "arrows",
+     "musketeer",
+     "battle-ram",
+     "ice-spirit"
+    ],
+    [
+     "knight",
+     "archers",
+     "bowler-hero",
+     "the-log",
+     "witch",
+     "hog-rider",
+     "skeleton-army",
+     "mega-minion"
+    ]
+   ],
+   "perks": [
+    [
+     "battle-ram.common",
+     "musketeer.rare",
+     "mega-knight.epic",
+     "bomber.epic"
+    ],
+    [
+     "witch.rare",
+     "the-log.rare",
+     "bowler-hero.epic",
+     "knight.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 514,
+   "winner": 1,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    0,
+    1
+   ],
+   "decks": [
+    [
+     "tesla",
+     "bats",
+     "hog-rider",
+     "the-log",
+     "fireball",
+     "valkyrie",
+     "giant",
+     "inferno-dragon"
+    ],
+    [
+     "battle-ram",
+     "goblin-barrel",
+     "barbarians",
+     "electro-wizard",
+     "witch",
+     "bats",
+     "zap",
+     "the-log"
+    ]
+   ],
+   "perks": [
+    [
+     "the-log.rare",
+     "hog-rider.common",
+     "tesla.epic",
+     "giant.epic"
+    ],
+    [
+     "the-log.common",
+     "bats.rare",
+     "zap.epic",
+     "battle-ram.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 515,
+   "winner": 0,
+   "reason": "time",
+   "time": 180,
+   "crowns": [
+    2,
+    0
+   ],
+   "decks": [
+    [
+     "musketeer",
+     "witch",
+     "bowler-hero",
+     "goblin-barrel",
+     "the-log",
+     "battle-ram",
+     "mega-minion",
+     "ice-spirit"
+    ],
+    [
+     "bomber",
+     "knight",
+     "golden-knight",
+     "zap",
+     "witch",
+     "tesla",
+     "hog-rider",
+     "battle-ram"
+    ]
+   ],
+   "perks": [
+    [
+     "battle-ram.common",
+     "witch.rare",
+     "the-log.epic",
+     "musketeer.epic"
+    ],
+    [
+     "hog-rider.common",
+     "witch.rare",
+     "golden-knight.epic",
+     "knight.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 516,
+   "winner": 1,
+   "reason": "suddenDeath",
+   "time": 243.6,
+   "crowns": [
+    1,
+    2
+   ],
+   "decks": [
+    [
+     "skeleton-army",
+     "bomber",
+     "golden-knight",
+     "poison",
+     "inferno-dragon",
+     "baby-dragon",
+     "balloon",
+     "wizard"
+    ],
+    [
+     "royal-giant",
+     "pekka",
+     "golden-knight",
+     "fireball",
+     "bats",
+     "electro-wizard",
+     "zap",
+     "knight"
+    ]
+   ],
+   "perks": [
+    [
+     "golden-knight.common",
+     "balloon.rare",
+     "inferno-dragon.epic",
+     "wizard.epic",
+     "baby-dragon.epic"
+    ],
+    [
+     "royal-giant.common",
+     "fireball.rare",
+     "electro-wizard.epic",
+     "pekka.epic",
+     "golden-knight.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 517,
+   "winner": 1,
+   "reason": "suddenDeath",
+   "time": 237,
+   "crowns": [
+    0,
+    1
+   ],
+   "decks": [
+    [
+     "baby-dragon",
+     "royal-giant",
+     "bowler-hero",
+     "the-log",
+     "poison",
+     "fireball",
+     "witch",
+     "minions"
+    ],
+    [
+     "pekka",
+     "inferno-dragon",
+     "bowler-hero",
+     "the-log",
+     "baby-dragon",
+     "hog-rider",
+     "skeleton-army",
+     "battle-ram"
+    ]
+   ],
+   "perks": [
+    [
+     "poison.common",
+     "the-log.rare",
+     "witch.epic",
+     "baby-dragon.epic",
+     "fireball.epic"
+    ],
+    [
+     "baby-dragon.rare",
+     "skeleton-army.rare",
+     "hog-rider.epic",
+     "pekka.epic",
+     "the-log.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 518,
+   "winner": 1,
+   "reason": "suddenDeath",
+   "time": 224.9,
+   "crowns": [
+    0,
+    1
+   ],
+   "decks": [
+    [
+     "barbarians",
+     "ice-spirit",
+     "golden-knight",
+     "arrows",
+     "electro-wizard",
+     "hog-rider",
+     "poison",
+     "musketeer"
+    ],
+    [
+     "wizard",
+     "pekka",
+     "golden-knight",
+     "the-log",
+     "archers",
+     "royal-giant",
+     "mega-minion",
+     "electro-wizard"
+    ]
+   ],
+   "perks": [
+    [
+     "golden-knight.common",
+     "barbarians.rare",
+     "ice-spirit.epic",
+     "musketeer.epic",
+     "hog-rider.epic"
+    ],
+    [
+     "royal-giant.common",
+     "golden-knight.rare",
+     "mega-minion.epic",
+     "archers.epic",
+     "wizard.epic"
+    ]
+   ]
+  },
+  {
+   "seed": 519,
+   "winner": 0,
+   "reason": "suddenDeath",
+   "time": 204,
+   "crowns": [
+    1,
+    0
+   ],
+   "decks": [
+    [
+     "goblin-barrel",
+     "knight",
+     "golden-knight",
+     "zap",
+     "wizard",
+     "inferno-dragon",
+     "balloon",
+     "royal-giant"
+    ],
+    [
+     "pekka",
+     "royal-giant",
+     "archers",
+     "fireball",
+     "tesla",
+     "electro-wizard",
+     "inferno-dragon",
+     "bandit"
+    ]
+   ],
+   "perks": [
+    [
+     "balloon.common",
+     "goblin-barrel.rare",
+     "golden-knight.epic",
+     "royal-giant.epic",
+     "wizard.epic"
+    ],
+    [
+     "archers.common",
+     "pekka.rare",
+     "royal-giant.epic",
+     "fireball.epic",
+     "tesla.epic"
+    ]
+   ]
+  }
+ ]
+}

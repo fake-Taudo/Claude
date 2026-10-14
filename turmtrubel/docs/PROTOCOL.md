@@ -15,7 +15,7 @@ JSON-Nachrichten über WebSocket (`/ws`), jede mit Feld `type`. Definiert in `sh
 |---|---|---|---|
 | `hello` | `name`, `token?`, `protocol` | `protocol` | Anmelden oder Sitzung fortsetzen (Reconnect) |
 | `create` | `deck?`, `mode?` | `mode` | Freundschaftskampf erstellen. `mode` ist eine **ID** aus `data/modes.json` (Standard `classic`). Draft-Modi brauchen kein `deck`. |
-| `join` | `code`, `deck?` | – | Raum per Code betreten. Das Deck prüft der Server je nach Modus des Raums. |
+| `join` | `code`, `deck?`, `chaosDeck?` | `chaosDeck` (Chaos) | Raum per Code betreten. Das Deck prüft der Server je nach Modus des Raums; in Chaos-Räumen gilt `chaosDeck` (der Client kennt den Modus vor dem Beitritt nicht). |
 | `training` | `deck?`, `mode?`, `difficulty?` | `mode`, `difficulty` | Einzelspieler gegen Bot. `difficulty`: `easy`, `medium` (Standard) oder `hard`. Nur für Modi mit `botsAllowed`. |
 | `deck` | `deck` | – | Deck in der Lobby wechseln (in Draft-Modi ohne Wirkung) |
 | `ready` | `ready` | – | Bereit / nicht bereit |

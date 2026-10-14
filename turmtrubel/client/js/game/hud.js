@@ -13,6 +13,7 @@ import { OUTLINE, text, tnum, ellipsize, setFont, rr } from './canvastext.js';
 import { paintPanel, paintWell, cardSprite, selectGlow, elixirOverlay, timerBox, crownSprite, emoteButton, teamPill, emotePanel, emoteSlot, ribbon } from './hudart.js';
 import { backOut, outCubic, clamp01 } from '../design/easing.js';
 import { softGlow } from '../design/light.js';
+import { PERK_COLORS } from '../ui/perks.js';
 
 const TAU = Math.PI * 2;
 const GAP = 6;
@@ -429,7 +430,13 @@ export class Hud {
     for (let i = 0; i < 4; i++) {
       const r = L.cards[i];
       const lift = g.sel === i ? 10 : 0;
-      if (inRect({ x: r.x - 3, y: r.y - lift - 3, w: r.w + 6, h: r.h + lift + 6 }, x, y)) return { type: 'card', index: i };
+      if (inRect({ x: r.x - 3, y: r.y - lift - 3, w: r.w + 6, h: r.h + lift + 6 }, x, y)) {
+        // Chaos: Antippen des Perk-Abzeichens (Ecke oben links, Trefferfläche ≥ 44 px) zeigt die Beschreibung
+        const id = g.me?.h?.[i];
+        const R = Math.max(8, r.w * 0.17);
+        const badge = !!(id && g.myPerks?.get(id)) && Math.hypot(x - (r.x + R * 0.75), y - (r.y - lift + R * 0.75)) <= Math.max(22, R * 1.4);
+        return { type: 'card', index: i, badge };
+      }
     }
     if (inRect(L.oppGroup, x, y)) return { type: 'oppName' };
     if (inRect(L.panel, x, y) || inRect(L.topbar, x, y)) return { type: 'panel' };
@@ -486,6 +493,7 @@ export class Hud {
     }
     this.drawTimer(ctx, now);
     this.drawGroups(ctx, now);
+    this.drawPauseInfo(ctx);
     this.drawPing(ctx);
     this.drawEmoteButton(ctx, now);
     if (L.abilityBtn) me?.ab ? this.drawAbility(ctx, me.ab, now) : this.drawAbilitySlot(ctx);
@@ -725,6 +733,9 @@ export class Hud {
       ctx.restore();
       text(ctx, 'EVO', x + w / 2, y + h - Math.max(9, w * 0.13), Math.max(12, w * 0.2), '#ffd6ff');
     }
+    // Chaos: Perk-Abzeichen in der Seltenheitsfarbe (leuchtet nach der Wahl kurz auf)
+    const pk = g.myPerks?.get(id);
+    if (pk) this.drawPerkBadge(ctx, x, y, w, pk, now - (g.perkFlashAt.get(id) ?? -99));
     if (selected) {
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 3;
@@ -733,6 +744,48 @@ export class Hud {
     }
     void cls;
     if (this.fineInput && w >= 56) keycap(ctx, x + w - 13, y + h - 13, String(i + 1));
+    ctx.restore();
+  }
+
+  /** Perk-Abzeichen oben links auf einer Handkarte (Kreis in Seltenheitsfarbe mit Funkeln). */
+  drawPerkBadge(ctx, x, y, w, pk, age) {
+    const col = PERK_COLORS[pk.tier] || '#ffffff';
+    const R = Math.max(8, w * 0.17);
+    const cx = x + R * 0.75;
+    const cy = y + R * 0.75;
+    ctx.save();
+    if (age >= 0 && age < 1.2 && !this.rm) {
+      const k = age / 1.2;
+      ctx.globalAlpha = 1 - k;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 4;
+      rr(ctx, x - 4 - k * 6, y - 4 - k * 6, w + 8 + k * 12, w * 1.25 + 8 + k * 12, 12);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    if (pk.tier === 'epic' && !this.rm) {
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 8;
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = col;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = Math.max(2, R * 0.22);
+    ctx.strokeStyle = '#1c1830';
+    ctx.stroke();
+    // Funkeln (vier Zacken)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    const a = R * 0.62;
+    const b = R * 0.16;
+    ctx.moveTo(cx, cy - a);
+    ctx.quadraticCurveTo(cx + b, cy - b, cx + a, cy);
+    ctx.quadraticCurveTo(cx + b, cy + b, cx, cy + a);
+    ctx.quadraticCurveTo(cx - b, cy + b, cx - a, cy);
+    ctx.quadraticCurveTo(cx - b, cy - b, cx, cy - a);
+    ctx.fill();
     ctx.restore();
   }
 
@@ -850,7 +903,7 @@ export class Hud {
       ctx.fill();
       ctx.stroke();
     }
-    if (dbl) tnum(ctx, '×' + g.snapMult, r.x + r.w - 6, r.y + r.h / 2 + 1, Math.max(12, r.h * 0.72), T.gold.light, 'right', 3);
+    if (dbl) tnum(ctx, '×' + String(Math.round(g.snapMult * 10) / 10).replace('.', ','), r.x + r.w - 6, r.y + r.h / 2 + 1, Math.max(12, r.h * 0.72), T.gold.light, 'right', 3);
     ctx.restore();
     const d = L.drop;
     // Elixierzahl im großen Tropfen (Pop, wenn sich die ganze Zahl ändert)
@@ -891,7 +944,9 @@ export class Hud {
     const color = low ? '#ff4d57' : ot ? '#ffcf6b' : '#ffffff';
     const withLabel = r.h >= 38;
     if (withLabel) {
-      text(ctx, ot ? 'Verlängerung' : 'Restzeit', cx, r.y + r.h * 0.26, clamp(r.h * 0.24, 10, 13), '#fff3c4', 'center', 2.5);
+      // Chaos: „Spielzeit“ (Pausen zählen nicht) und während der Auswahl „Auswahlpause“
+      const label = g.chaos && g.paused ? 'Auswahlpause' : ot ? 'Verlängerung' : g.chaos ? 'Spielzeit' : 'Restzeit';
+      text(ctx, label, cx, r.y + r.h * 0.26, clamp(r.h * 0.24, 10, 13), '#fff3c4', 'center', 2.5);
       tnum(ctx, fmtTime(tl), cx, r.y + r.h * 0.64, clamp(r.h * 0.5, 18, 28), color, 'center', 3.5);
     } else tnum(ctx, fmtTime(tl), cx, cy + 1, clamp(r.h * 0.62, 18, 30), color, 'center', 3.5);
     ctx.restore();
@@ -899,8 +954,32 @@ export class Hud {
     if (g.snapMult > 1) {
       const bx = r.x + r.w - 2;
       const by = r.y + r.h + 2;
-      drawElixirDrop(ctx, bx, by, 10, '×' + g.snapMult);
+      drawElixirDrop(ctx, bx, by, 10, '×' + String(Math.round(g.snapMult * 10) / 10).replace('.', ','));
     }
+  }
+
+  /** Chaos: Summe der Auswahlpausen als kleine Plakette an der Uhr (läuft separat, zählt nicht zur Spielzeit). */
+  drawPauseInfo(ctx) {
+    const g = this.game;
+    if (!g.chaos || !(g.pauseTotal > 0 || g.paused)) return;
+    const r = this.L.timer;
+    const ps = Math.max(0, Math.round(g.pauseTotal));
+    const label = `Pause ${Math.floor(ps / 60)}:${String(ps % 60).padStart(2, '0')}`;
+    const h = clamp(r.h * 0.36, 14, 18);
+    const fs = Math.round(h * 0.68);
+    setFont(ctx, fs);
+    const w = ctx.measureText(label).width + h * 0.9;
+    const x = r.x - 4;
+    const y = r.y + r.h - h * 0.55;
+    ctx.save();
+    rr(ctx, x, y, w, h, h / 2);
+    ctx.fillStyle = g.paused ? '#ffd84d' : '#3a2f8f';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = OUTLINE;
+    ctx.stroke();
+    ctx.restore();
+    text(ctx, label, x + w / 2, y + h / 2 + 1, fs, g.paused ? '#1c1830' : '#ffffff', 'center', g.paused ? 0 : 2.5);
   }
 
   drawGroups(ctx, now) {

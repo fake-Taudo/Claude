@@ -1,8 +1,10 @@
 // Deck-Bauer: 5 Deck-Slots (localStorage), Filter, Suche, Evo- und Champion/Held-Plätze, Zufallsdeck.
+// Chaos-Deckbau (set = 'chaos'): eigene 3 Plätze, nur Karten aus dem Chaos-Pool, keine Evo-Plätze, Perks im Kartendetail.
 import { validateDeck, averageElixir, cycleCost, randomDeck, isSpecial, EVO_SLOTS, SPECIAL_SLOT, DECK_SIZE, RARITY_ORDER } from '/shared/cards.js';
 import { $, h, ico, modal, showScreen, toast } from './dom.js';
 import { icon } from './icons.js';
 import { cardEl, openCardDetail, fitCardNames } from './cardview.js';
+import { cardPerksPanel } from './perks.js';
 
 const TYPE_FILTERS = [
   ['all', 'Alle'],
@@ -27,6 +29,7 @@ export class DeckBuilder {
     this.app = app;
     this.db = app.db;
     this.store = app.store;
+    this.set = 'normal';
     this.idx = this.store.active;
     this.selSlot = -1;
     this.f = { q: '', type: 'all', elixir: new Set(), rarity: 'all', sort: 'elixir' };
@@ -47,7 +50,7 @@ export class DeckBuilder {
   bind() {
     $('#deck-back').addEventListener('click', () => this.app.goMenu());
     $('#deck-random').addEventListener('click', () => {
-      this.deck().slots = randomDeck(this.db);
+      this.deck().slots = randomDeck(this.db, Math.random, this.chaos ? { pool: this.app.chaos.poolSet } : {});
       this.changed();
       this.app.audio.sfx('deploy');
     });
@@ -57,11 +60,11 @@ export class DeckBuilder {
       this.changed();
     });
     $('#deck-use').addEventListener('click', () => {
-      if (!validateDeck(this.db, this.deck().slots).ok) {
+      if (!this.store.validOf(this.set, this.idx)) {
         toast('Dieses Deck ist noch nicht vollständig.', 'warn');
         return;
       }
-      this.store.active = this.idx;
+      this.store.setActive(this.set, this.idx);
       this.store.save();
       toast(`„${this.deck().name}“ ist jetzt dein aktives Deck.`, 'ok');
       this.renderTabs();
@@ -83,6 +86,7 @@ export class DeckBuilder {
     for (const [k, label] of TYPE_FILTERS) {
       typeRoot.append(h('button', { class: 'fchip', 'aria-pressed': 'false', dataset: { k }, onclick: () => ((this.f.type = k), this.renderFilters(), this.renderGrid()) }, label));
     }
+    this.defaultHelp = $('.deck-help').innerHTML;
     const elRoot = $('#flt-elixir');
     for (let i = 1; i <= 9; i++) {
       elRoot.append(
@@ -109,15 +113,34 @@ export class DeckBuilder {
     }
   }
 
-  open(index = this.store.active) {
-    this.idx = index;
+  /** set = 'normal' (Standard-Decks) oder 'chaos' (Chaos-Decks, nur Pool-Karten). */
+  open(index = null, set = 'normal') {
+    this.set = set === 'chaos' && this.app.chaos ? 'chaos' : 'normal';
+    this.idx = index ?? this.store.activeOf(this.set);
     this.selSlot = -1;
+    if (this.chaos && this.f.type === 'evo') this.f.type = 'all';
+    this.applySet();
     this.render();
     showScreen('s-deck');
   }
 
+  get chaos() {
+    return this.set === 'chaos';
+  }
+
+  /** Überschrift, Hilfetext und Filter je Deck-Art. */
+  applySet() {
+    const top = document.querySelector('#s-deck .topbar-title');
+    top.textContent = this.chaos ? 'Chaos-Deck' : 'Deck-Bauer';
+    document.getElementById('s-deck').classList.toggle('chaos-set', this.chaos);
+    $('.deck-help').innerHTML = this.chaos
+      ? `Nur Karten aus dem <b class="special-text">Chaos-Pool</b> (${this.app.chaos.pool.length} Karten) · Platz 3 = <b class="special-text">Champion/Held</b> · keine Evolutionen. Tippe eine Karte an, um ihre drei Perks zu sehen.`
+      : this.defaultHelp;
+    for (const b of document.querySelectorAll('#flt-type .fchip')) b.hidden = this.chaos && b.dataset.k === 'evo';
+  }
+
   deck() {
-    return this.store.decks[this.idx];
+    return this.store.decksOf(this.set)[this.idx];
   }
 
   changed() {
@@ -138,7 +161,7 @@ export class DeckBuilder {
     const d = this.deck();
     $('#deck-name-text').textContent = d.name;
     $('#deck-name').title = `${d.name} – umbenennen`;
-    const active = this.store.active === this.idx;
+    const active = this.store.activeOf(this.set) === this.idx;
     const use = $('#deck-use');
     use.disabled = active;
     use.replaceChildren(ico(active ? 'star' : 'star-o'), active ? 'Aktiv' : 'Aktivieren');
@@ -188,14 +211,14 @@ export class DeckBuilder {
   renderTabs() {
     const root = $('#deck-tabs');
     root.replaceChildren(
-      ...this.store.decks.map((d, i) =>
+      ...this.store.decksOf(this.set).map((d, i) =>
         h(
           'button',
           {
-            class: `deck-tab${i === this.idx ? ' active' : ''}${validateDeck(this.db, d.slots).ok ? '' : ' invalid'}`,
+            class: `deck-tab${i === this.idx ? ' active' : ''}${this.store.validOf(this.set, i) ? '' : ' invalid'}`,
             role: 'tab',
             'aria-selected': i === this.idx ? 'true' : 'false',
-            title: d.name + (i === this.store.active ? ' (aktiv)' : ''),
+            title: d.name + (i === this.store.activeOf(this.set) ? ' (aktiv)' : ''),
             onclick: () => {
               this.idx = i;
               this.selSlot = -1;
@@ -203,7 +226,7 @@ export class DeckBuilder {
             },
           },
           String(i + 1),
-          i === this.store.active ? icon('star') : null,
+          i === this.store.activeOf(this.set) ? icon('star') : null,
         ),
       ),
     );
@@ -214,7 +237,7 @@ export class DeckBuilder {
     const slots = this.deck().slots;
     root.replaceChildren(
       ...slots.map((id, i) => {
-        const isEvo = EVO_SLOTS.includes(i);
+        const isEvo = EVO_SLOTS.includes(i) && !this.chaos;
         const isSpecialSlot = i === SPECIAL_SLOT;
         const card = id ? this.db.card(id) : null;
         const evoActive = isEvo && card?.evo;
@@ -241,7 +264,14 @@ export class DeckBuilder {
     $('#deck-count').textContent = `${slots.filter(Boolean).length}/8`;
     const v = validateDeck(this.db, slots);
     const missing = slots.filter((s) => !s).length;
-    $('#deck-errors').textContent = v.ok ? '' : missing ? `Noch ${missing} Karte${missing > 1 ? 'n' : ''} fehlen.` : v.errors[0];
+    const outside = this.chaos ? slots.filter((id) => id && !this.app.chaos.inPool(id)) : [];
+    $('#deck-errors').textContent = outside.length
+      ? `Nicht im Chaos-Pool: ${outside.map((id) => this.db.card(id)?.name || id).join(', ')}.`
+      : v.ok
+        ? ''
+        : missing
+          ? `Noch ${missing} Karte${missing > 1 ? 'n' : ''} fehlen.`
+          : v.errors[0];
   }
 
   renderFilters() {
@@ -257,7 +287,9 @@ export class DeckBuilder {
 
   filtered() {
     const f = this.f;
+    const pool = this.chaos ? this.app.chaos.poolSet : null;
     let list = this.db.cards.filter((c) => {
+      if (pool && !pool.has(c.id)) return false;
       if (f.type === 'champion' && c.class !== 'champion') return false;
       if (f.type === 'hero' && c.class !== 'hero') return false;
       if (f.type === 'evo' && !c.evo) return false;
@@ -280,7 +312,8 @@ export class DeckBuilder {
     const inDeck = new Set(this.deck().slots.filter(Boolean));
     const list = this.filtered();
     this.renderFilterCount();
-    $('#grid-count').textContent = `${list.length} von ${this.db.cards.length} Karten · ${this.selSlot >= 0 ? 'Tippe eine Karte zum Tauschen' : 'Tippe auf eine Karte für Details'}`;
+    const total = this.chaos ? this.app.chaos.pool.length : this.db.cards.length;
+    $('#grid-count').textContent = `${list.length} von ${total} ${this.chaos ? 'Pool-Karten' : 'Karten'} · ${this.selSlot >= 0 ? 'Tippe eine Karte zum Tauschen' : 'Tippe auf eine Karte für Details'}`;
     if (!list.length) {
       // Leerzustand mit Ausweg
       $('#card-grid').replaceChildren(
@@ -295,7 +328,7 @@ export class DeckBuilder {
       );
       return;
     }
-    $('#card-grid').replaceChildren(...list.map((c) => cardEl(this.db, c.id, { inDeck: inDeck.has(c.id), showEvoHint: true, onClick: () => this.clickCard(c.id) })));
+    $('#card-grid').replaceChildren(...list.map((c) => cardEl(this.db, c.id, { inDeck: inDeck.has(c.id), showEvoHint: !this.chaos, onClick: () => this.clickCard(c.id) })));
     fitCardNames($('#card-grid'));
   }
 
@@ -500,10 +533,12 @@ export class DeckBuilder {
       this.selSlot = -1;
       this.renderSlots();
       this.renderGrid();
-      const evoCard = !!this.db.card(id)?.evo;
+      const evoCard = !!this.db.card(id)?.evo && !this.chaos;
       openCardDetail(this.app, id, {
         evo: EVO_SLOTS.includes(i) && evoCard,
         evoState: evoCard ? (EVO_SLOTS.includes(i) ? 'active' : 'inactive') : null,
+        noEvo: this.chaos,
+        perks: this.chaos ? cardPerksPanel(this.app, id) : null,
         actions: [{ label: 'Aus dem Deck entfernen', cls: 'btn-danger', onClick: () => this.removeSlot(i) }],
       });
       return;
@@ -549,10 +584,10 @@ export class DeckBuilder {
     if (pos >= 0) actions.push({ label: 'Aus dem Deck entfernen', cls: 'btn-danger', onClick: () => this.removeSlot(pos) });
     else {
       actions.push({ label: 'Ins Deck', cls: 'btn-success', onClick: () => this.addCard(id), disabled: full, reason });
-      if (card.evo) actions.push({ label: 'In Evo-Platz', cls: 'btn-accent', onClick: () => this.addCard(id, true), disabled: full, reason });
+      if (card.evo && !this.chaos) actions.push({ label: 'In Evo-Platz', cls: 'btn-accent', onClick: () => this.addCard(id, true), disabled: full, reason });
     }
-    const evoState = card.evo ? (pos >= 0 && EVO_SLOTS.includes(pos) ? 'active' : 'inactive') : null;
-    openCardDetail(this.app, id, { evo: evoState === 'active', evoState, actions });
+    const evoState = card.evo && !this.chaos ? (pos >= 0 && EVO_SLOTS.includes(pos) ? 'active' : 'inactive') : null;
+    openCardDetail(this.app, id, { evo: evoState === 'active', evoState, actions, noEvo: this.chaos, perks: this.chaos ? cardPerksPanel(this.app, id) : null });
   }
 
   /** Nur ein Champion/Held: ein anderer wird aus dem Spezialplatz entfernt. */
@@ -591,7 +626,7 @@ export class DeckBuilder {
       this.changed();
       return;
     }
-    const order = preferEvo || card.evo ? [0, 1, 3, 4, 5, 6, 7, 2] : [3, 4, 5, 6, 7, 0, 1, 2];
+    const order = (preferEvo || card.evo) && !this.chaos ? [0, 1, 3, 4, 5, 6, 7, 2] : [3, 4, 5, 6, 7, 0, 1, 2];
     let target = order.find((i) => !slots[i]);
     if (preferEvo && target !== 0 && target !== 1) {
       // Evo-Plätze belegt → Karte aus Evo-Platz 2 in einen freien Platz schieben

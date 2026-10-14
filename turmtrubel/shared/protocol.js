@@ -10,7 +10,7 @@ export const PROTOCOL_VERSION = 2;
 export const C2S = Object.freeze({
   HELLO: 'hello',         // { name, token?, protocol }
   CREATE: 'create',       // { deck, mode }
-  JOIN: 'join',           // { code, deck }
+  JOIN: 'join',           // { code, deck, chaosDeck? }  chaosDeck gilt nur in Chaos-Räumen
   TRAINING: 'training',   // { deck, mode, difficulty }
   LEAVE: 'leave',         // {}
   DECK: 'deck',           // { deck }

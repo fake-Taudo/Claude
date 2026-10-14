@@ -1929,3 +1929,150 @@ body.card-dragging, body.card-dragging * { cursor: grabbing !important; user-sel
   .dv-opt, .dv-pick, .dv-cell, .dv-check, .dv-title.big, .dv-pop { animation: none; }
   .draft-v2.my-turn .dv-status.mine, .dv-timer.warn .dv-timer-num { animation: none; }
 }
+
+/* ═════════════ Modus „Chaos“: Perk-Auswahl, Abzeichen, Chaos-Deck, Ergebnis ═════════════ */
+:root {
+  /* Perk-Seltenheiten (Gewöhnlich Grau, Selten Bronze, Episch Lila) – Canvas: client/js/ui/perks.js */
+  --perk-common: #b9c3cf;
+  --perk-common-d: #6f7c8a;
+  --perk-rare: #cd8a45;
+  --perk-rare-d: #8a5223;
+  --perk-epic: #a855f7;
+  --perk-epic-d: #6b21a8;
+}
+.t-common { --pc: var(--perk-common); --pcd: var(--perk-common-d); }
+.t-rare { --pc: var(--perk-rare); --pcd: var(--perk-rare-d); }
+.t-epic { --pc: var(--perk-epic); --pcd: var(--perk-epic-d); }
+
+/* ───── Abzeichen und Perk-Zeilen ───── */
+.perk-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px 2px 5px; border-radius: var(--radius-pill); border: 2px solid var(--ink-900); background: linear-gradient(color-mix(in srgb, var(--pc) 70%, #fff), var(--pc) 55%, var(--pcd)); color: #fff; font-weight: 900; font-size: 12px; line-height: 1.2; text-shadow: 0 1px 0 var(--ink-900); white-space: nowrap; }
+.perk-badge svg.i { width: 15px; height: 15px; }
+.t-epic.perk-badge, .t-epic .perk-badge { box-shadow: 0 0 10px color-mix(in srgb, var(--perk-epic) 70%, transparent); }
+.perk-row { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 12px; border: 3px solid var(--ink-900); background: linear-gradient(100deg, color-mix(in srgb, var(--pc) 28%, var(--night-700)), var(--night-800)); box-shadow: inset 0 2px 0 var(--panel-edge), 0 3px 0 var(--ink-900); }
+.perk-row + .perk-row { margin-top: 8px; }
+.perk-row-card { flex: none; width: 54px; }
+.perk-row-text { min-width: 0; flex: 1; }
+.perk-row-head { display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap; }
+.perk-name { color: #fff; font-family: var(--font-head); font-weight: normal; font-size: 17px; -webkit-text-stroke: 3px var(--ink-900); paint-order: stroke fill; }
+.perk-desc { margin: 4px 0 0; color: #eef1ff; font-weight: 700; font-size: 14px; line-height: 1.35; }
+.perk-mech, .perk-round { margin-left: auto; color: var(--on-dark-muted); font-weight: 800; font-size: 12px; }
+.box.perks { display: flex; flex-direction: column; gap: 0; }
+.perk-list-title { display: flex; align-items: center; gap: 6px; margin: 4px 0 8px; font-family: var(--font-head); font-weight: normal; font-size: 18px; color: #fff; -webkit-text-stroke: 3px var(--ink-900); paint-order: stroke fill; }
+.perk-list-title.blue svg.i { color: var(--team-blue-300); }
+.perk-list-title.red svg.i { color: var(--team-red-300); }
+.perk-list-title.red { margin-top: 16px; }
+.perk-card-head { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; margin-bottom: 10px; }
+
+/* ───── Kampf: Perks im Kampfmenü ───── */
+.pause-grid .gm-perks { background: linear-gradient(#e9d5ff, #a855f7 60%, #7c3aed); }
+
+/* ───── Auswahl-Overlay ───── */
+.perk-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: center;
+  padding: max(12px, var(--safe-t)) max(12px, var(--safe-r)) max(12px, var(--safe-b)) max(12px, var(--safe-l));
+  background: radial-gradient(80% 60% at 50% 45%, rgb(26 20 51 / 0.45), rgb(12 9 30 / 0.72));
+  overflow: hidden;
+  animation: fade var(--dur-base) var(--ease-out);
+}
+#s-game { overflow: hidden; }
+body[data-quality='high'] .perk-overlay { backdrop-filter: blur(1.5px) saturate(0.8); -webkit-backdrop-filter: blur(1.5px) saturate(0.8); }
+.perk-overlay.closing { animation: fade-out 0.6s ease-in forwards; pointer-events: none; }
+.perk-panel { width: min(660px, 100%); max-height: 100%; overflow: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: var(--radius-l); border: 3px solid var(--ink-900); background: linear-gradient(170deg, rgb(58 47 143 / 0.94), rgb(26 20 51 / 0.94)); box-shadow: inset 0 2px 0 var(--panel-edge), 0 6px 0 var(--ink-900), 0 18px 40px rgb(5 4 20 / 0.55); animation: pop var(--dur-base) var(--ease-pop); }
+.perk-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.perk-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.perk-kicker { color: var(--gold-300); font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
+.perk-title { margin: 0; font-family: var(--font-head); font-weight: normal; font-size: clamp(22px, 5vw, 30px); color: #fff; -webkit-text-stroke: 5px var(--ink-900); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink-900); line-height: 1.05; }
+.perk-ring { position: relative; flex: none; width: 64px; height: 64px; }
+.perk-ring-svg, .perk-ring-svg svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.perk-ring-bg { fill: rgb(12 9 30 / 0.7); stroke: rgb(255 255 255 / 0.18); stroke-width: 7; }
+.perk-ring-fg { fill: none; stroke: var(--gold-400); stroke-width: 7; stroke-linecap: round; transition: stroke 0.2s; }
+.perk-overlay.hurry .perk-ring-fg { stroke: var(--team-red-500); }
+.perk-ring-num { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-head); font-size: 26px; color: #fff; -webkit-text-stroke: 4px var(--ink-900); paint-order: stroke fill; }
+.perk-overlay.hurry .perk-ring-num { animation: perk-tick 0.5s ease-in-out infinite alternate; }
+@keyframes perk-tick { to { transform: scale(1.15); } }
+.perk-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.perk-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 12px 10px 14px;
+  border-radius: var(--radius-m);
+  border: 3px solid var(--ink-900);
+  background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--pc) 55%, transparent), transparent 70%), linear-gradient(170deg, var(--night-600), var(--night-800));
+  box-shadow: inset 0 2px 0 var(--panel-edge), inset 0 0 0 3px color-mix(in srgb, var(--pc) 70%, transparent), 0 5px 0 var(--ink-900);
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  font: inherit;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast), opacity var(--dur-base);
+  animation: perk-in 0.35s var(--ease-pop) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+@keyframes perk-in { from { opacity: 0; transform: translateY(18px) scale(0.92); } }
+.perk-option:hover:not([disabled]) { transform: translateY(-3px); filter: brightness(1.08); }
+.perk-option:active:not([disabled]) { transform: translateY(2px); }
+.perk-option:focus-visible { outline: 4px solid var(--gold-400); outline-offset: 2px; }
+.perk-option.t-epic { box-shadow: inset 0 2px 0 var(--panel-edge), inset 0 0 0 3px color-mix(in srgb, var(--pc) 80%, transparent), 0 5px 0 var(--ink-900), 0 0 22px color-mix(in srgb, var(--perk-epic) 55%, transparent); }
+.perk-option[disabled] { cursor: default; }
+.perk-option.dropped { opacity: 0.35; filter: saturate(0.3); transform: scale(0.96); }
+.perk-option.chosen { transform: translateY(-4px) scale(1.03); box-shadow: inset 0 2px 0 var(--panel-edge), inset 0 0 0 4px var(--gold-400), 0 5px 0 var(--ink-900), 0 0 24px rgb(255 216 77 / 0.6); }
+.perk-option.confirm { animation: perk-confirm 0.6s var(--ease-pop) both; }
+@keyframes perk-confirm { 0% { transform: scale(1.03); } 35% { transform: scale(1.12); filter: brightness(1.35); } 100% { transform: scale(1); } }
+.perk-opt-tier { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); }
+.perk-opt-card { width: min(84px, 22vw); margin-top: 8px; }
+.perk-opt-card .card { pointer-events: none; }
+.perk-opt-cardname { color: var(--on-dark-muted); font-weight: 900; font-size: 13px; }
+.perk-opt-name { font-family: var(--font-head); font-weight: normal; font-size: clamp(18px, 4.2vw, 23px); -webkit-text-stroke: 4px var(--ink-900); paint-order: stroke fill; line-height: 1.1; }
+.perk-opt-desc { color: #eef1ff; font-weight: 700; font-size: clamp(12px, 3.2vw, 14px); line-height: 1.35; }
+.perk-status { margin: 0; text-align: center; color: var(--on-dark-muted); font-weight: 900; font-size: 14px; min-height: 1.4em; }
+@media (max-height: 560px) and (orientation: landscape) {
+  /* flache Querformat-Bildschirme: Karte links neben dem Text, kleinere Schrift */
+  .perk-panel { gap: 6px; padding: 8px 10px; width: min(820px, 100%); }
+  .perk-title { font-size: 21px; -webkit-text-stroke-width: 4px; }
+  .perk-kicker { font-size: 11px; }
+  .perk-ring { width: 48px; height: 48px; }
+  .perk-ring-num { font-size: 20px; }
+  .perk-options { gap: 10px; }
+  .perk-option { display: grid; grid-template-columns: 52px 1fr; grid-template-rows: auto auto 1fr; column-gap: 10px; row-gap: 2px; align-items: start; padding: 14px 10px 10px; text-align: left; }
+  .perk-opt-card { grid-row: 1 / span 3; width: 52px; margin-top: 0; }
+  .perk-opt-cardname { font-size: 11px; }
+  .perk-opt-name { font-size: 17px; }
+  .perk-opt-desc { font-size: 12px; line-height: 1.3; }
+  .perk-status { font-size: 12px; }
+}
+
+/* ───── Menü-Kachel und Regel-Hinweis ───── */
+.mode-chaos-deck { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 8px; padding: 6px 6px 6px 10px; border-radius: 12px; background: rgb(0 0 0 / 0.3); }
+.mode-chaos-status { flex: 1 1 110px; display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: #eef1ff; font-weight: 900; font-size: 13px; line-height: 1.2; }
+.mode-chaos-status svg.i { flex: none; width: 18px; height: 18px; }
+.mode-chaos-status.bad { color: var(--gold-300); }
+.mode-chaos-btn { min-height: var(--tap-min); flex: none; }
+.mode-tile[data-mode='chaos'] { background: radial-gradient(120% 90% at 100% 0%, rgb(168 85 247 / 0.35), transparent 60%), linear-gradient(170deg, var(--night-600), var(--night-700) 55%, var(--night-800)); }
+.mode-tile[data-mode='chaos'] .mode-ico { background: linear-gradient(#e9d5ff, #a855f7 60%, #7c3aed); box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.6), inset 0 -4px 0 #5b21b6, 0 3px 0 var(--ink-900); }
+.chaos-info { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.chaos-info-title { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-family: var(--font-head); font-weight: normal; font-size: 18px; color: #fff; -webkit-text-stroke: 3px var(--ink-900); paint-order: stroke fill; }
+.chaos-rounds { list-style: none; margin: 0; padding: 8px; display: flex; flex-direction: column; gap: 6px; border-radius: var(--radius-m); background: var(--night-900); box-shadow: var(--well-shadow); }
+.chaos-round { display: grid; grid-template-columns: 52px 1fr; gap: 2px 10px; align-items: center; color: #eef1ff; font-weight: 800; }
+.chaos-round-time { grid-row: span 2; display: grid; place-items: center; height: 40px; border-radius: 10px; border: 2px solid var(--ink-900); background: var(--gold-400); color: var(--ink-900); font-family: var(--font-head); font-size: 16px; }
+.chaos-round-label { font-size: 14px; }
+.chaos-round-pct { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.perk-pct { font-size: 12px; font-weight: 900; color: var(--pc); text-shadow: 0 1px 0 var(--ink-900); }
+.chaos-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 6px; }
+.chaos-pool .card { cursor: pointer; }
+#s-deck.chaos-set .topbar-title { color: #e9d5ff; }
+
+/* ───── Ergebnis: gewählte Perks ───── */
+.res-perks { display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(640px, 94vw); }
+.res-perk-list { width: 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .perk-option, .perk-option.confirm, .perk-panel, .perk-overlay { animation: none; }
+  .perk-overlay.hurry .perk-ring-num { animation: none; }
+}
+.res-perks .perk-row, .perk-list-modal .perk-row { text-align: left; }
