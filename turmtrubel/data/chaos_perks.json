@@ -261,6 +261,312 @@
       "elixirCostUnchanged": true,
       "balanceNote": "Eigene Idee aus dem Interview: Episch, weil aus einem Golem eine ganze Welle wird (insgesamt rund 19 500 Leben); die Golems sind langsam und greifen nur Gebäude an, ein Gegenangriff auf der anderen Seite bleibt die Antwort.",
       "selection": "custom"
+    },
+    {
+      "id": "knight.common",
+      "cardId": "knight",
+      "rarityTier": "common",
+      "name": "Bollwerk",
+      "description": "Der Ritter hat dreimal so viel Leben (1766 → 5298, +200 %), läuft dafür nur halb so schnell (1 → 0,5 Felder pro Sekunde).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hp": 3,
+          "speed": 0.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Ein 3-Elixier-Tank mit über 5000 Leben, der aber kaum vorankommt und weiterhin nur 202 Schaden macht – ein starker Verteidiger, kein Angreifer.",
+      "selection": "custom"
+    },
+    {
+      "id": "knight.rare",
+      "cardId": "knight",
+      "rarityTier": "rare",
+      "name": "Donnerklinge",
+      "description": "Jeder Treffer des Ritters löst am Ziel einen Knall aus (192 Schaden, 0,5 s Betäubung, Radius 2,5 Felder, an Türmen 30 % Schaden).",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onHit",
+        "traits": {
+          "castOnHit": {
+            "spell": "zap",
+            "atTarget": true,
+            "usePerk": false
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Taktisch neu – alle 1,2 s ein Knall betäubt Gruppen und setzt Infernos zurück; der Ritter muss dafür aber im Nahkampf überleben.",
+      "selection": "custom"
+    },
+    {
+      "id": "knight.epic",
+      "cardId": "knight",
+      "rarityTier": "epic",
+      "name": "Beförderung",
+      "description": "Beim Ausspielen erscheint statt des Ritters ein normaler Megaritter (3993 Leben, Landestoß 430, Sprungangriff) – für weiterhin 3 Elixier und ohne Megaritter-Perk.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "replaceUnit": "mega-knight",
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil man 4 Elixier Wert pro Ausspielen gewinnt; der Megaritter bleibt ohne Perk und trifft weiterhin keine Lufttruppen.",
+      "selection": "custom"
+    },
+    {
+      "id": "bandit.common",
+      "cardId": "bandit",
+      "rarityTier": "common",
+      "name": "Weitsprint",
+      "description": "Die Sprintreichweite verdoppelt sich: Sie sprintet auf Ziele in 3,5–12 statt 3,5–6 Feldern Entfernung (Sprintschaden unverändert 389).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "traits": {
+          "dash": {
+            "max": 12
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Sie erreicht Ziele aus viel größerer Entfernung, macht aber nicht mehr Schaden und hat nicht mehr Leben – moderat für Gewöhnlich.",
+      "selection": "custom"
+    },
+    {
+      "id": "bandit.rare",
+      "cardId": "bandit",
+      "rarityTier": "rare",
+      "name": "Letzter Sprint",
+      "description": "Ein tödlicher Treffer tötet sie nicht sofort: Sie wird 1,5 Sekunden unverwundbar, sprintet ein letztes Mal ohne Mindestabstand auf das nächste Ziel in bis zu 6 Feldern (389 Schaden) und fällt danach.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onDeath",
+        "traits": {
+          "lastStand": {
+            "invulnerable": 1.5,
+            "then": "dash",
+            "dash": {
+              "min": 0,
+              "max": 6,
+              "damage": 389
+            },
+            "dieAfter": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Garantiert einen zusätzlichen Sprinttreffer und 1,5 s Ablenkung nach dem tödlichen Schlag – deutlich spürbar, ohne sie dauerhaft zäher zu machen.",
+      "selection": "custom"
+    },
+    {
+      "id": "bandit.epic",
+      "cardId": "bandit",
+      "rarityTier": "epic",
+      "name": "Schattenbande",
+      "description": "Bei jedem Sprint erscheint für jeden weiteren Gegner in Sprintreichweite (3,5–6 Felder) ein Banditinnen-Klon mit 1 Leben, der genau dieses Ziel ansprintet (389 Schaden) und danach weiterkämpft; höchstens 4 Klone pro Sprint, Klone erzeugen keine weiteren Klone.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "hook": "onAttack",
+        "traits": {
+          "cloneOnDash": {
+            "perExtraTarget": 1,
+            "maxPerDash": 4,
+            "cloneHp": 1,
+            "dashToTarget": true,
+            "clonesSpawnClones": false
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil ein Sprint mehrere Ziele gleichzeitig trifft; die Klone sterben aber durch jeden Treffer, und ohne mehrere Ziele in Reichweite passiert gar nichts.",
+      "selection": "custom"
+    },
+    {
+      "id": "valkyrie.common",
+      "cardId": "valkyrie",
+      "rarityTier": "common",
+      "name": "Riesenschwung",
+      "description": "Der Rundumschlag reicht 150 % weiter: Radius 2 → 5 Felder (Schaden unverändert 266).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "splash": 2.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Sie trifft ganze Gruppen auf einmal, macht aber nicht mehr Schaden pro Schlag und bleibt gegen Lufttruppen wehrlos.",
+      "selection": "custom"
+    },
+    {
+      "id": "valkyrie.rare",
+      "cardId": "valkyrie",
+      "rarityTier": "rare",
+      "name": "Sogwirbel",
+      "description": "Jeder Schlag zieht alle gegnerischen Bodentruppen im Umkreis von 4 Feldern 1 Feld zu ihr heran.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onAttack",
+        "traits": {
+          "pullOnAttack": {
+            "radius": 4,
+            "distance": 1,
+            "targets": "ground"
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Taktisch neu – Fernkämpfer und Unterstützer hinter der Front werden in ihren Rundumschlag gezogen.",
+      "selection": "interview"
+    },
+    {
+      "id": "valkyrie.epic",
+      "cardId": "valkyrie",
+      "rarityTier": "epic",
+      "name": "Wirbelsturm",
+      "description": "Die Walküre läuft dreimal so schnell (1 → 3 Felder pro Sekunde, +200 %) und schlägt ununterbrochen zu, auch im Laufen: alle 1,5 s ein Rundumschlag mit 266 Schaden; an Zielen bleibt sie wie gewohnt stehen.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "mult": {
+          "speed": 3
+        },
+        "traits": {
+          "attackWhileMoving": {
+            "aoeAroundSelf": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil sie wie ein Tornado durch die Arena fegt und alles auf dem Weg trifft; Leben und Schaden pro Schlag bleiben gleich, Luft bleibt ihr Konter.",
+      "selection": "custom"
+    },
+    {
+      "id": "mini-pekka.common",
+      "cardId": "mini-pekka",
+      "rarityTier": "common",
+      "name": "Luftpost-Lieferung",
+      "description": "Der Mini-P.E.K.K.A. kommt wie die Königliche Luftpost vom Himmel: 3 s nach dem Platzieren (eigene Spielhälfte) landet er mit 384 Schaden im Umkreis von 3 Feldern (kein Turmschaden) und kämpft dann normal.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "deliverAs": {
+          "spell": "royal-delivery",
+          "delay": 3,
+          "damage": 384,
+          "radius": 3,
+          "towerDamage": 0,
+          "targets": "both"
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Der Landeschlag räumt kleine Truppen weg, dafür ist der Mini-P.E.K.K.A. 3 Sekunden später einsatzbereit – ein fairer Tausch für Gewöhnlich.",
+      "selection": "custom"
+    },
+    {
+      "id": "mini-pekka.rare",
+      "cardId": "mini-pekka",
+      "rarityTier": "rare",
+      "name": "Zwillinge",
+      "description": "Es kommen 2 Mini-P.E.K.K.A. mit je 55 % Leben (765) und vollem Schaden (755).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "count": 2,
+        "mult": {
+          "hp": 0.55
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Doppelter Schaden auf zwei Ziele bei insgesamt 110 % Leben – deutlich stärker, aber anfälliger für Flächenschaden.",
+      "selection": "interview"
+    },
+    {
+      "id": "mini-pekka.epic",
+      "cardId": "mini-pekka",
+      "rarityTier": "epic",
+      "name": "Super-Mini-P.E.K.K.A.",
+      "description": "Der Mini-P.E.K.K.A. läuft doppelt so schnell (1,5 → 3 Felder pro Sekunde) und hat 250 % mehr Leben (1390 → 4865).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "speed": 2,
+          "hp": 3.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil ein 4-Elixier-Nahkämpfer mit fast 5000 Leben in Sekunden am Turm ist; er trifft weiterhin nur Bodenziele und ist gegen Schwärme und Luft verwundbar.",
+      "selection": "custom"
+    },
+    {
+      "id": "prince.common",
+      "cardId": "prince",
+      "rarityTier": "common",
+      "name": "Sturmlanze",
+      "description": "Der Ansturm macht 75 % mehr Schaden: 783 → 1370.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "traits": {
+          "charge": {
+            "damage": 1370
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Wirkt nur beim ersten Treffer nach einem Anlauf; normale Schläge, Leben und Tempo bleiben gleich.",
+      "selection": "custom"
+    },
+    {
+      "id": "prince.rare",
+      "cardId": "prince",
+      "rarityTier": "rare",
+      "name": "Turnierreiter",
+      "description": "Nach jedem Treffer weicht der Prinz 2 Felder zurück und stürmt erneut an, sodass jeder Schlag ein Ansturm wird (783 Schaden); jeder Ansturmtreffer schleudert das Ziel 3 Felder zurück und betäubt es 1 Sekunde.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "traits": {
+          "rechargeAfterHit": {
+            "backoff": 2
+          },
+          "charge": {
+            "distance": 2,
+            "speed": 2,
+            "damage": 783,
+            "knockback": 3,
+            "stun": 1
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (Kombination aus „Neuer Anlauf“ und „Stoßlanze“): Jeder Schlag doppelt so stark und mit Kontrolle, dafür verliert er pro Schlag Zeit durch Zurückweichen und Anlauf.",
+      "selection": "custom"
+    },
+    {
+      "id": "prince.epic",
+      "cardId": "prince",
+      "rarityTier": "epic",
+      "name": "Unaufhaltsam",
+      "description": "Der Prinz greift nur noch Kronentürme an, ist ab dem Landen dauerhaft im Ansturm und schiebt alles in seinem Weg 3 Felder zur Seite; Betäubung, Verlangsamung, Einfrieren, Rückstoß und Sog wirken nicht auf ihn – nur sein Tod stoppt ihn.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "targets": "towers"
+        },
+        "traits": {
+          "permanentCharge": true,
+          "shoveOnPath": {
+            "distance": 3,
+            "damage": 0
+          },
+          "ccImmune": [
+            "stun",
+            "slow",
+            "freeze",
+            "knockback",
+            "pull"
+          ]
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil Ablenken und Bremsen nicht mehr funktionieren; mit 1920 Leben muss er trotzdem den Beschuss von Türmen und Verteidigern überleben – reiner Schaden bleibt der Konter.",
+      "selection": "custom"
     }
   ]
 }

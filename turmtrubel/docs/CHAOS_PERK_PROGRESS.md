@@ -1,6 +1,6 @@
 # Fortschritt Perk-Interview (Chaos-Modus)
 
-Stand: 4 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
+Stand: 9 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
 
 Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).
 
@@ -12,14 +12,14 @@ Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfol
 | 2 | P.E.K.K.A. | Raketenstiefel | Schwungschlag | Tiefenläuferin | eigene Idee, Interview |
 | 3 | Megaritter | Heavy Hitter | Springer Bube | Himmelfahrt | eigene Idee |
 | 4 | Golem | Bergkoloss | Golemit-Kaskade | Doppelgolem | eigene Idee |
+| 5 | Ritter | Bollwerk | Donnerklinge | Beförderung | eigene Idee |
+| 6 | Banditin | Weitsprint | Letzter Sprint | Schattenbande | eigene Idee |
+| 7 | Walküre | Riesenschwung | Sogwirbel | Wirbelsturm | eigene Idee, Interview |
+| 8 | Mini-P.E.K.K.A. | Luftpost-Lieferung | Zwillinge | Super-Mini-P.E.K.K.A. | eigene Idee, Interview |
+| 9 | Prinz | Sturmlanze | Turnierreiter | Unaufhaltsam | eigene Idee |
 
 ## Offen
 
-5. Ritter (`knight`)
-6. Banditin (`bandit`)
-7. Walküre (`valkyrie`)
-8. Mini-P.E.K.K.A. (`mini-pekka`)
-9. Prinz (`prince`)
 10. Bomber (`bomber`)
 11. Bogenschützen (`archers`)
 12. Musketierin (`musketeer`)
