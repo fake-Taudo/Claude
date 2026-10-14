@@ -2303,6 +2303,270 @@
       "elixirCostUnchanged": true,
       "balanceNote": "Episch: Ein 6-Elixier-Tank landet für 3 Elixier direkt am gegnerischen Turm; dafür fehlen die schnellen Kobolde, und er ist langsam.",
       "selection": "interview"
+    },
+    {
+      "id": "fireball.common",
+      "cardId": "fireball",
+      "rarityTier": "common",
+      "name": "Glutboden",
+      "description": "Nach dem Einschlag brennt der Boden 3 Sekunden lang: 50 Schaden pro Sekunde an Gegnern im Radius 2,5.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "spell": {
+          "after": {
+            "zone": {
+              "radius": 2.5,
+              "duration": 3,
+              "pulse": 0.5,
+              "damage": 25,
+              "towerDamage": 0.23,
+              "targets": "both",
+              "fx": "fire"
+            }
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (Werte bewusst moderat für Gewöhnlich): bis zu 150 Zusatzschaden für alle, die im Feuer stehen bleiben.",
+      "selection": "custom"
+    },
+    {
+      "id": "fireball.rare",
+      "cardId": "fireball",
+      "rarityTier": "rare",
+      "name": "Tornado-Feuerball-Kombo",
+      "description": "Am Zielpunkt entsteht zuerst ein Tornado (Radius 5,5, zieht Gegner zusammen, wie der Tornado-Zauber), und währenddessen schlagen 3 Feuerbälle (je 688 Schaden, Radius 2,5) nach 0,4, 0,7 und 1,0 s in seine Mitte ein.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "spell": {
+          "before": {
+            "castSpell": "tornado",
+            "usePerk": false
+          },
+          "repeat": {
+            "count": 3,
+            "offsets": [
+              0.4,
+              0.7,
+              1
+            ],
+            "spacing": 0
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Bündelt ganze Gruppen und trifft sie dreifach – sehr stark gegen alles in der Nähe; an Türmen bleibt es bei 23 % pro Feuerball.",
+      "selection": "custom"
+    },
+    {
+      "id": "fireball.epic",
+      "cardId": "fireball",
+      "rarityTier": "epic",
+      "name": "Riesenfeuerball",
+      "description": "Ein riesiger Feuerball: 1000 Schaden im Radius 4, danach läuft eine Druckwelle bis 7 Felder weit (300 Schaden, 2 Felder Rückstoß); an Türmen jeweils 23 %.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "spell": {
+          "set": {
+            "radius": 4,
+            "damage": 1000,
+            "scale": 1.8
+          },
+          "after": {
+            "shockwave": {
+              "radius": 7,
+              "damage": 300,
+              "knockback": 2,
+              "towerDamage": 0.23,
+              "speed": 10
+            }
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil er fast alles im großen Umkreis vernichtet oder wegschleudert; Türme nehmen weiterhin nur einen Bruchteil.",
+      "selection": "custom"
+    },
+    {
+      "id": "poison.common",
+      "cardId": "poison",
+      "rarityTier": "common",
+      "name": "Lähmgift",
+      "description": "Gegner in der Giftwolke sind 50 % statt 15 % langsamer.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "spell": {
+          "set": {
+            "slow": {
+              "amount": 0.5
+            }
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Gegner bleiben deutlich länger im Gift und kommen langsamer voran, der Schaden bleibt gleich.",
+      "selection": "custom"
+    },
+    {
+      "id": "poison.rare",
+      "cardId": "poison",
+      "rarityTier": "rare",
+      "name": "Dreifachgift",
+      "description": "Die Giftwolke macht dreimal so viel Schaden pro Sekunde: 92 → 276 (über 8 s zusammen 2208, an Türmen 24 %).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "spell": {
+          "mult": {
+            "damage": 3
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Aus dem langsamen Zermürbungszauber wird ein Flächenvernichter für mittelgroße Truppen – Gegner, die schnell herauslaufen, entkommen aber weiterhin.",
+      "selection": "custom"
+    },
+    {
+      "id": "poison.epic",
+      "cardId": "poison",
+      "rarityTier": "epic",
+      "name": "Würgegift",
+      "description": "Doppelter Schaden (184 pro Sekunde), doppelte Dauer (16 s) und doppelte Fläche (Radius 3,5 → 4,95), und jede Truppe, die die Wolke betritt, wird festgehalten (kann sich weder bewegen noch angreifen), bis das Gift vorbei ist – auch Flieger, Gebäude nicht.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "spell": {
+          "mult": {
+            "damage": 2,
+            "duration": 2
+          },
+          "set": {
+            "radius": 4.95
+          },
+          "onEnter": {
+            "rootUntilZoneEnds": true,
+            "affects": "troops",
+            "includeAir": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch und gnadenlos gegen alles, was hineinläuft (bis zu 2944 Schaden); der Gegner kann die Wolke aber sehen und seine Truppen um sie herum oder später schicken.",
+      "selection": "custom"
+    },
+    {
+      "id": "golden-knight.common",
+      "cardId": "golden-knight",
+      "rarityTier": "common",
+      "name": "Gratis-Sprung",
+      "description": "Seine Fähigkeit „Schnellsprung“ kostet 0 statt 1 Elixier.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "ability": {
+          "set": {
+            "cost": 0
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Spart 1 Elixier pro Einsatz; die Kartenkosten und die Fähigkeit selbst bleiben unverändert.",
+      "selection": "interview"
+    },
+    {
+      "id": "golden-knight.rare",
+      "cardId": "golden-knight",
+      "rarityTier": "rare",
+      "name": "Klingenwirbel",
+      "description": "Er schlägt doppelt so schnell zu (+100 % Angriffsgeschwindigkeit): alle 0,45 s statt alle 0,9 s (161 Schaden pro Schlag).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hitSpeed": 0.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Doppelter Nahkampfschaden pro Sekunde; Leben und Fähigkeit bleiben gleich, Schwärme und Luft bleiben Konter.",
+      "selection": "custom"
+    },
+    {
+      "id": "golden-knight.epic",
+      "cardId": "golden-knight",
+      "rarityTier": "epic",
+      "name": "Goldene Endloskette",
+      "description": "Die Sprungkette endet nicht nach 10 Sprüngen: Er springt weiter unverwundbar von Gegner zu Gegner (je 335 Schaden), bevorzugt Ziele Richtung nächstem gegnerischen Kronenturm und hört erst auf, wenn er am Turm landet oder kein Ziel mehr in 5,5 Feldern ist (technische Obergrenze 50 Sprünge).",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "ability": {
+          "set": {
+            "dash.count": 50
+          },
+          "dashUntilTower": true,
+          "preferTowardTower": true
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil ein einziger Einsatz eine ganze Verteidigung durchqueren kann; ohne Gegner in Sprungweite endet die Kette aber sofort.",
+      "selection": "custom"
+    },
+    {
+      "id": "bowler-hero.common",
+      "cardId": "bowler-hero",
+      "rarityTier": "common",
+      "name": "Günstiger Wurf",
+      "description": "Die Heldenfähigkeit „Steinwurf“ kostet 1 statt 2 Elixier.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "ability": {
+          "set": {
+            "cost": 1
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Spart 1 Elixier pro Einsatz, ohne die Fähigkeit selbst stärker zu machen.",
+      "selection": "interview"
+    },
+    {
+      "id": "bowler-hero.rare",
+      "cardId": "bowler-hero",
+      "rarityTier": "rare",
+      "name": "Felsenbrecher",
+      "description": "Normale Felsen rollen doppelt so weit (7 → 14 Felder) und stoßen getroffene Bodentruppen 2 statt 1 Feld zurück.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "traits": {
+          "pierce": {
+            "length": 14,
+            "width": 1.8,
+            "knockback": 2
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Ein Fels trifft eine ganze Spur und hält Gegner deutlich weiter auf Abstand.",
+      "selection": "interview"
+    },
+    {
+      "id": "bowler-hero.epic",
+      "cardId": "bowler-hero",
+      "rarityTier": "epic",
+      "name": "Sprengfels",
+      "description": "Jeder normale Fels explodiert, wo er aufschlägt: 289 Schaden im Radius 2, alle getroffenen Truppen fliegen 5 Felder zurück; danach rollt er wie gewohnt weiter.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onAttack",
+        "traits": {
+          "impactBlast": {
+            "at": "landing",
+            "damage": 289,
+            "radius": 2,
+            "knockback": 5,
+            "affects": "troops",
+            "fx": "rock"
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil jeder Wurf ganze Gruppen quer über die Arena zurückschleudert; Gebäude und Lufttruppen bleiben unberührt.",
+      "selection": "custom"
     }
   ]
 }
