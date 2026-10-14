@@ -1547,6 +1547,250 @@
       "elixirCostUnchanged": true,
       "balanceNote": "Eigene Idee aus dem Interview: Episch, weil das Drachenbaby zweimal kämpft und der zweite Drache sogar stärker sein kann; Luftabwehr muss beide Drachen besiegen.",
       "selection": "custom"
+    },
+    {
+      "id": "inferno-dragon.common",
+      "cardId": "inferno-dragon",
+      "rarityTier": "common",
+      "name": "Langer Strahl",
+      "description": "Der Strahl reicht doppelt so weit: Reichweite 3,5 → 7 Felder (Sichtweite ebenso).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "range": 2
+        },
+        "set": {
+          "sight": 7
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Er beginnt früher mit dem Aufheizen und bleibt außer Reichweite vieler Nahkämpfer, Leben und Schaden bleiben gleich.",
+      "selection": "custom"
+    },
+    {
+      "id": "inferno-dragon.rare",
+      "cardId": "inferno-dragon",
+      "rarityTier": "rare",
+      "name": "Gespaltener Strahl",
+      "description": "Er hält zwei Strahlen gleichzeitig auf 2 verschiedene Ziele, jeder Strahl heizt sich eigenständig auf (35 → 120 → 422 Schaden).",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "traits": {
+          "multiBeam": {
+            "targets": 2,
+            "independentRamp": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Doppelter Schaden gegen zwei Ziele, aber jeder Strahl braucht seine eigene Aufheizzeit und Knall setzt beide zurück.",
+      "selection": "interview"
+    },
+    {
+      "id": "inferno-dragon.epic",
+      "cardId": "inferno-dragon",
+      "rarityTier": "epic",
+      "name": "Höllenfeuer-Evo",
+      "description": "Es erscheint ein Evo-Infernodrache (behält seine Strahlstufe bis 9 s nach einem Sieg, 4. Stufe mit 844 Schaden nach 20 s), und jeder Schaden, den er einer Truppe zufügt, trifft zur Hälfte auch alle anderen gegnerischen Truppen in der Arena (Gebäude und Türme ausgenommen).",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "forceEvo": true,
+        "hook": "onHit",
+        "traits": {
+          "shareDamage": {
+            "fraction": 0.5,
+            "scope": "allEnemyTroops",
+            "onlyWhenTargetIsTroop": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch und extrem stark gegen Truppenmassen – der einzige Konter ist, den Drachen (1295 Leben, fliegend) schnell auszuschalten, bevor sein Strahl aufgeheizt ist.",
+      "selection": "custom"
+    },
+    {
+      "id": "hog-rider.common",
+      "cardId": "hog-rider",
+      "rarityTier": "common",
+      "name": "Wildgalopp",
+      "description": "Der Schweinereiter läuft 75 % schneller: 2 → 3,5 Felder pro Sekunde.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "speed": 1.75
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Er ist noch schneller am Turm und schwerer abzufangen, Schaden und Leben bleiben aber gleich.",
+      "selection": "custom"
+    },
+    {
+      "id": "hog-rider.rare",
+      "cardId": "hog-rider",
+      "rarityTier": "rare",
+      "name": "Bohrhammer",
+      "description": "Statt des Hammers nutzt er einen Bohrer, der alle 0,4 s trifft und sich alle 2 s steigert (50 → 120 → 300 Schaden pro Treffer); Zielwechsel oder Betäubung setzen ihn zurück.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "hitSpeed": 0.4,
+          "damage": 50
+        },
+        "traits": {
+          "ramp": {
+            "stages": [
+              50,
+              120,
+              300
+            ],
+            "stageTime": 2
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Bleibt er ungestört am Turm, macht er fast viermal so viel Schaden; Knall, Betäubung und Ablenkung setzen ihn aber wie einen Infernoturm zurück.",
+      "selection": "custom"
+    },
+    {
+      "id": "hog-rider.epic",
+      "cardId": "hog-rider",
+      "rarityTier": "epic",
+      "name": "Ferkelflut",
+      "description": "Jeder Treffer gegen ein Gebäude lässt ein Ferkel frei (300 Leben, 80 Schaden, rennt zu Gebäuden) – ohne eigene Obergrenze, nur die allgemeine Einheitengrenze der Arena gilt.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "hook": "onHit",
+        "traits": {
+          "spawnOnHit": {
+            "unit": "royal-hogs",
+            "count": 1,
+            "onlyVsBuildings": true,
+            "scale": {
+              "hp": 0.36,
+              "damage": 1.08,
+              "radius": 0.7
+            },
+            "name": "Ferkel",
+            "max": null
+          }
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (ohne Limit): Episch, weil jeder Treffer am Turm Verstärkung bringt; die Ferkel entstehen aber nur, solange der Schweinereiter am Gebäude überlebt.",
+      "selection": "custom"
+    },
+    {
+      "id": "battle-ram.common",
+      "cardId": "battle-ram",
+      "rarityTier": "common",
+      "name": "Volle Besatzung",
+      "description": "Beim Zerbrechen steigen 4 statt 2 Barbaren aus (je 716 Leben, 192 Schaden).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "deathSpawn": {
+            "unit": "barbarians",
+            "count": 4
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Der Nachschub nach dem Aufprall verdoppelt sich, der Rammbock selbst bleibt aber genauso leicht abzufangen.",
+      "selection": "custom"
+    },
+    {
+      "id": "battle-ram.rare",
+      "cardId": "battle-ram",
+      "rarityTier": "rare",
+      "name": "Elitebesatzung",
+      "description": "Beim Zerbrechen steigen 2 Elitebarbaren aus (je 1341 Leben, 384 Schaden, schnell) statt 2 normaler Barbaren.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "deathSpawn": {
+            "unit": "elite-barbarians",
+            "count": 2
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Fast doppelte Kampfkraft nach dem Aufprall – deutlich stärker, aber erst, wenn der Rammbock sein Ziel erreicht oder zerstört wird.",
+      "selection": "interview"
+    },
+    {
+      "id": "battle-ram.epic",
+      "cardId": "battle-ram",
+      "rarityTier": "epic",
+      "name": "Doppelramme",
+      "description": "Es kommen 2 Rammböcke nebeneinander, jeder mit 2 Barbaren an Bord (zusammen 4 Barbaren).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "count": 2,
+        "formation": "side"
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Episch: Doppelter Druck auf eine Spur für 4 Elixier; beide Rammböcke sind aber einzeln so zerbrechlich wie einer.",
+      "selection": "interview"
+    },
+    {
+      "id": "balloon.common",
+      "cardId": "balloon",
+      "rarityTier": "common",
+      "name": "Bombenhagel",
+      "description": "Der Ballon wirft dreimal so schnell: eine Bombe (640 Schaden) alle 0,67 s statt alle 2 s.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hitSpeed": 0.3333
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview, sehr stark für Gewöhnlich: Erreicht er einen Turm, fällt dieser in wenigen Sekunden – deshalb entscheidet umso mehr, ob die Luftabwehr ihn vorher stoppt.",
+      "selection": "custom"
+    },
+    {
+      "id": "balloon.rare",
+      "cardId": "balloon",
+      "rarityTier": "rare",
+      "name": "Bombenspur",
+      "description": "Unterwegs wirft er alle 0,5 s eine kleine Bombe auf Bodentruppen unter sich: 150 Schaden im Radius 1,5.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onPeriodicTick",
+        "traits": {
+          "pulse": {
+            "interval": 0.5,
+            "radius": 1.5,
+            "damage": 150,
+            "targets": "ground",
+            "whileMoving": true,
+            "fx": "bomb"
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (alle 0,5 s): Bodentruppen unter dem Ballon schmelzen dahin, Luftabwehr und Gebäude bleiben aber unberührt und sind weiter der Konter.",
+      "selection": "custom"
+    },
+    {
+      "id": "balloon.epic",
+      "cardId": "balloon",
+      "rarityTier": "epic",
+      "name": "Luftschiff",
+      "description": "Der Ballon wird zum Luftschiff: doppelte Größe, 300 % mehr Leben (1679 → 6716) und 50 % mehr Schaden (640 → 960).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hp": 4,
+          "damage": 1.5,
+          "radius": 2
+        },
+        "visualScale": 2
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil ein fliegender Riesentank mit fast 1000 Schaden pro Bombe auf die Türme zusteuert; er bleibt aber langsam und trifft nur Gebäude.",
+      "selection": "custom"
     }
   ]
 }
