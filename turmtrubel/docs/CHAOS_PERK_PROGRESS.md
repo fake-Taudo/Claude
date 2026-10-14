@@ -1,6 +1,6 @@
 # Fortschritt Perk-Interview (Chaos-Modus)
 
-Stand: 19 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
+Stand: 24 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
 
 Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).
 
@@ -27,14 +27,14 @@ Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfol
 | 17 | Fledermäuse | Blutdurst | Teilung | Explosionsbisse | Interview, eigene Idee |
 | 18 | Lakaien | Vierter Lakai | Schockbiss | Megastaffel | Interview, eigene Idee |
 | 19 | Koboldgang | Großfamilie | Giftspeere | Riesenbande | eigene Idee |
+| 20 | Skelettarmee | Knochenschilde | Schattenrückkehr | Knochenlotterie | Interview, eigene Idee |
+| 21 | Barbaren | Sechster Barbar | Stahlhaut | Elitetrupp | Interview, eigene Idee |
+| 22 | Eisgeist | Frosttrio | Schneesturm | Gletscherkoloss | eigene Idee |
+| 23 | Megalakai | Bollwerkflügel | Flammenatem | Fernbomber | eigene Idee |
+| 24 | Drachenbaby | Turbodrache | Feuerspucker | Drachenei | eigene Idee |
 
 ## Offen
 
-20. Skelettarmee (`skeleton-army`)
-21. Barbaren (`barbarians`)
-22. Eisgeist (`ice-spirit`)
-23. Megalakai (`mega-minion`)
-24. Drachenbaby (`baby-dragon`)
 25. Infernodrache (`inferno-dragon`)
 26. Schweinereiter (`hog-rider`)
 27. Rammbock (`battle-ram`)

@@ -1200,6 +1200,353 @@
       "elixirCostUnchanged": true,
       "balanceNote": "Eigene Idee aus dem Interview: Episch, weil aus 3 Elixier rund 12 Elixier Wert mit Tank und Unterstützung werden; der Koboldriese ist langsam und die Blasrohrkobolde fallen jedem Zauber zum Opfer.",
       "selection": "custom"
+    },
+    {
+      "id": "skeleton-army.common",
+      "cardId": "skeleton-army",
+      "rarityTier": "common",
+      "name": "Knochenschilde",
+      "description": "Jedes der 15 Skelette trägt einen Schild von 60 Punkten, der zuerst Schaden schluckt.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "add": {
+          "shield": 60
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Die Skelette überstehen einen schwachen Treffer mehr, Knall und Feuerball räumen sie aber weiterhin ab.",
+      "selection": "interview"
+    },
+    {
+      "id": "skeleton-army.rare",
+      "cardId": "skeleton-army",
+      "rarityTier": "rare",
+      "name": "Schattenrückkehr",
+      "description": "Jedes Skelett steht nach seinem Tod einmal für 6 Sekunden unsichtbar wieder auf und greift weiter an; Truppen, Gebäude und Türme können es nicht anvisieren, Flächenschaden und Zauber treffen es aber.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "hook": "onDeath",
+        "traits": {
+          "deathSpawn": {
+            "unit": "skeletons",
+            "count": 1,
+            "childTraits": {
+              "stealth": {
+                "permanent": true
+              },
+              "lifetimeSeconds": 6
+            }
+          }
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Jedes Skelett kämpft zweimal, die zweite Runde unsichtbar – nur Flächenschaden beendet die Armee endgültig.",
+      "selection": "custom"
+    },
+    {
+      "id": "skeleton-army.epic",
+      "cardId": "skeleton-army",
+      "rarityTier": "epic",
+      "name": "Knochenlotterie",
+      "description": "Statt 15 Skeletten erscheinen 15 zufällige Skelett-Einheiten aus allen Skelett-Typen des Spiels (Skelett, Wächter, Bomber, Mauerbrecher, Skelettdrache, Skelett-Fallschirmjäger, Riesenskelett, Skelettkönig ohne Fähigkeit, Grabkönigin) – schwere Einheiten selten und höchstens einmal.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "randomGroups": {
+          "count": 15,
+          "pool": [
+            {
+              "unit": "skeletons",
+              "weight": 30
+            },
+            {
+              "unit": "guards",
+              "weight": 15
+            },
+            {
+              "unit": "bomber",
+              "weight": 10
+            },
+            {
+              "unit": "wall-breakers",
+              "weight": 10
+            },
+            {
+              "unit": "skeleton-dragons",
+              "weight": 10
+            },
+            {
+              "unit": "skeletrooper",
+              "weight": 9
+            },
+            {
+              "unit": "giant-skeleton",
+              "weight": 6,
+              "max": 1
+            },
+            {
+              "unit": "skeleton-king",
+              "weight": 5,
+              "max": 1,
+              "noAbility": true
+            },
+            {
+              "unit": "tomb-queen",
+              "weight": 5,
+              "max": 1
+            }
+          ],
+          "seeded": "matchRng"
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch und unberechenbar – meist eine bunte Truppe mit 1–2 schweren Überraschungen; der Zufall läuft serverseitig mit dem Match-Seed, beide Spieler sehen dasselbe Ergebnis.",
+      "selection": "custom"
+    },
+    {
+      "id": "barbarians.common",
+      "cardId": "barbarians",
+      "rarityTier": "common",
+      "name": "Sechster Barbar",
+      "description": "Es kommen 6 statt 5 Barbaren, jeder mit vollen Werten (716 Leben, 192 Schaden).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "count": 6
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: 20 % mehr Leben und Schaden insgesamt, ohne die Stärken oder Schwächen der Karte zu ändern.",
+      "selection": "interview"
+    },
+    {
+      "id": "barbarians.rare",
+      "cardId": "barbarians",
+      "rarityTier": "rare",
+      "name": "Stahlhaut",
+      "description": "Jeder Barbar hat doppelt so viel Leben: 716 → 1432.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hp": 2
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Fünf zähe Nahkämpfer überstehen jetzt Feuerball und Walküre deutlich besser; Lufttruppen bleiben ihr Konter.",
+      "selection": "custom"
+    },
+    {
+      "id": "barbarians.epic",
+      "cardId": "barbarians",
+      "rarityTier": "epic",
+      "name": "Elitetrupp",
+      "description": "Statt der 5 Barbaren erscheinen 3 Elitebarbaren (je 1341 Leben, 384 Schaden alle 1,4 s, schnell).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "replaceUnit": "elite-barbarians",
+        "count": 3,
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil drei schnelle Elitebarbaren mehr Druck machen als fünf normale; dafür sind es weniger Körper gegen Schwärme.",
+      "selection": "custom"
+    },
+    {
+      "id": "ice-spirit.common",
+      "cardId": "ice-spirit",
+      "rarityTier": "common",
+      "name": "Frosttrio",
+      "description": "Es erscheinen 3 Eisgeister statt einem, jeder mit vollen Werten (110 Flächenschaden, 1,1 s Einfrieren).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "count": 3
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Dreifacher Effekt für 1 Elixier, aber jeder Geist ist mit dem Aufprall verbraucht und stirbt an jedem Treffer.",
+      "selection": "custom"
+    },
+    {
+      "id": "ice-spirit.rare",
+      "cardId": "ice-spirit",
+      "rarityTier": "rare",
+      "name": "Schneesturm",
+      "description": "Beim Aufprall entsteht 7 Sekunden lang ein Schneesturm (Radius 2,5): Gegner, die hineinlaufen, frieren 1,1 s ein; wer darin bleibt, friert alle 2,5 s erneut ein.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onDeath",
+        "traits": {
+          "deathSpell": {
+            "radius": 2.5,
+            "duration": 7,
+            "freezeOnEnter": 1.1,
+            "refreezeEvery": 2.5,
+            "targets": "both",
+            "fx": "frost"
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Eine 7-Sekunden-Sperrzone für 1 Elixier – stark zur Verteidigung, aber ortsgebunden; Fernkämpfer außerhalb und Zauber umgehen sie.",
+      "selection": "custom"
+    },
+    {
+      "id": "ice-spirit.epic",
+      "cardId": "ice-spirit",
+      "rarityTier": "epic",
+      "name": "Gletscherkoloss",
+      "description": "Statt des Eisgeists erscheint ein riesiger Eisgolem mit viermal so viel Leben wie normal (1228 → 4912), der wie gewohnt Gebäude angreift und beim Tod Frost verteilt.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "replaceUnit": "ice-golem",
+        "count": 1,
+        "unitMult": {
+          "hp": 4
+        },
+        "unitScale": 1.5,
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil 1 Elixier einen Tank mit fast 5000 Leben bringt; er macht aber kaum Schaden (84) und ist langsam – ein reiner Schutzschild.",
+      "selection": "custom"
+    },
+    {
+      "id": "mega-minion.common",
+      "cardId": "mega-minion",
+      "rarityTier": "common",
+      "name": "Bollwerkflügel",
+      "description": "Der Megalakai hat dreimal so viel Leben (+200 %): 837 → 2511.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hp": 3
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Ein fliegender Mini-Tank für 3 Elixier, der aber nicht mehr Schaden macht und weiter langsam fliegt.",
+      "selection": "custom"
+    },
+    {
+      "id": "mega-minion.rare",
+      "cardId": "mega-minion",
+      "rarityTier": "rare",
+      "name": "Flammenatem",
+      "description": "Statt einzelner Schläge speit er einen Flammenkegel (3 Felder lang, 60° breit): 120 Schaden pro Sekunde und 30 % Verlangsamung an allen Gegnern darin, danach brennen sie 3 s lang mit 40 Schaden pro Sekunde nach.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "damage": 0
+        },
+        "traits": {
+          "flameCone": {
+            "length": 3,
+            "angle": 60,
+            "dps": 120,
+            "tick": 0.25,
+            "slow": {
+              "amount": 0.3,
+              "duration": 0.5
+            },
+            "targets": "both"
+          },
+          "burn": {
+            "dps": 40,
+            "duration": 3
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Taktisch neu – aus einem Einzelziel-Flieger wird ein Flächenschaden-Flieger, der Gruppen bremst; gegen ein einzelnes starkes Ziel macht er etwas weniger Schaden als vorher.",
+      "selection": "custom"
+    },
+    {
+      "id": "mega-minion.epic",
+      "cardId": "mega-minion",
+      "rarityTier": "epic",
+      "name": "Fernbomber",
+      "description": "Er greift aus sechsfacher Entfernung an (+500 % Reichweite: 1,6 → 9,6 Felder) und dreimal so schnell (+200 %: alle 0,5 s statt alle 1,5 s), Schaden je Treffer unverändert 312.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "range": 6,
+          "hitSpeed": 0.3333
+        },
+        "set": {
+          "sight": 9.6
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil er mit über 600 Schaden pro Sekunde aus größerer Entfernung als jeder Turm angreift; mit 837 Leben fällt er aber jedem Luft-Konter und Zauber zum Opfer.",
+      "selection": "custom"
+    },
+    {
+      "id": "baby-dragon.common",
+      "cardId": "baby-dragon",
+      "rarityTier": "common",
+      "name": "Turbodrache",
+      "description": "Das Drachenbaby fliegt dreimal so schnell (+200 %): 1,5 → 4,5 Felder pro Sekunde.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "speed": 3
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Es ist blitzschnell am Ziel und unterstützt jeden Angriff sofort, Schaden und Leben bleiben aber gleich.",
+      "selection": "custom"
+    },
+    {
+      "id": "baby-dragon.rare",
+      "cardId": "baby-dragon",
+      "rarityTier": "rare",
+      "name": "Feuerspucker",
+      "description": "Jede Attacke ist ein Feuerball-Zauber auf sein Ziel (688 Schaden, Radius 2,5, Rückstoß, an Türmen 23 %) im normalen Takt alle 1,5 s.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "replaceAttack": {
+          "castSpell": "fireball",
+          "atTarget": true,
+          "usePerk": false
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (nach Rückfrage: der Zauber): Vierfacher Flächenschaden pro Angriff und dazu fliegend – sehr stark, aber Luftabwehr und Pfeile bleiben wirksame Konter.",
+      "selection": "custom"
+    },
+    {
+      "id": "baby-dragon.epic",
+      "cardId": "baby-dragon",
+      "rarityTier": "epic",
+      "name": "Drachenei",
+      "description": "Beim Tod lässt das Drachenbaby ein Ei fallen, aus dem sofort eine zufällige Evo-Dracheneinheit schlüpft: Evo-Drachenbaby, Evo-Elektrodrache oder Evo-Infernodrache (je ein Drittel Chance, ohne Perk).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "hook": "onDeath",
+        "randomDeathSpawn": {
+          "pool": [
+            {
+              "unit": "baby-dragon",
+              "evo": true,
+              "weight": 1
+            },
+            {
+              "unit": "electro-dragon",
+              "evo": true,
+              "weight": 1
+            },
+            {
+              "unit": "inferno-dragon",
+              "evo": true,
+              "weight": 1
+            }
+          ],
+          "count": 1,
+          "fx": "egg",
+          "seeded": "matchRng"
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil das Drachenbaby zweimal kämpft und der zweite Drache sogar stärker sein kann; Luftabwehr muss beide Drachen besiegen.",
+      "selection": "custom"
     }
   ]
 }
