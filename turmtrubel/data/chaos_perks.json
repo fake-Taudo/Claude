@@ -1791,6 +1791,265 @@
       "elixirCostUnchanged": true,
       "balanceNote": "Eigene Idee aus dem Interview: Episch, weil ein fliegender Riesentank mit fast 1000 Schaden pro Bombe auf die Türme zusteuert; er bleibt aber langsam und trifft nur Gebäude.",
       "selection": "custom"
+    },
+    {
+      "id": "royal-giant.common",
+      "cardId": "royal-giant",
+      "rarityTier": "common",
+      "name": "Weitschuss",
+      "description": "Seine Kanone reicht 1,5 Felder weiter: Reichweite 5 → 6,5 Felder.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "add": {
+          "range": 1.5,
+          "sight": 1.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Er beginnt früher zu schießen und steht weiter weg von Nahkampf-Verteidigern, bleibt aber in Reichweite der Türme.",
+      "selection": "interview"
+    },
+    {
+      "id": "royal-giant.rare",
+      "cardId": "royal-giant",
+      "rarityTier": "rare",
+      "name": "Kolossrüstung",
+      "description": "Der Königsriese hat dreimal so viel Leben (+200 %): 3164 → 9492.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hp": 3
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Kaum zu stoppen, wenn er erst einmal schießt; Schaden und Tempo bleiben gleich, Ablenkung durch Gebäude funktioniert weiterhin.",
+      "selection": "custom"
+    },
+    {
+      "id": "royal-giant.epic",
+      "cardId": "royal-giant",
+      "rarityTier": "epic",
+      "name": "Wandelndes Geschütz",
+      "description": "Seine Kanone reicht 11 Felder weit wie ein X-Bogen, er läuft trotzdem weiter, und er schießt 50 % schneller (alle 1,2 s statt alle 1,8 s, 307 Schaden).",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "range": 11,
+          "sight": 11
+        },
+        "mult": {
+          "hitSpeed": 0.6667
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil er Türme schon von der eigenen Flussseite beschießt; man muss ihn mit Truppen oder Zaubern angreifen, statt auf die Türme zu vertrauen.",
+      "selection": "custom"
+    },
+    {
+      "id": "tesla.common",
+      "cardId": "tesla",
+      "rarityTier": "common",
+      "name": "Viererspule",
+      "description": "Die Tesla greift bis zu 4 Ziele gleichzeitig an, jedes mit vollem Schaden (220 alle 1,1 s).",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "traits": {
+          "multiTarget": 4
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Gegen Schwärme vervierfacht sich ihr Schaden, gegen einen einzelnen Tank ändert sich nichts.",
+      "selection": "custom"
+    },
+    {
+      "id": "tesla.rare",
+      "cardId": "tesla",
+      "rarityTier": "rare",
+      "name": "Zermürbungsstrom",
+      "description": "Jeder Blitztreffer senkt die maximalen Leben und den Schaden des getroffenen Gegners dauerhaft um 10 % (stapelbar bis höchstens −70 %).",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onHit",
+        "traits": {
+          "weakenOnHit": {
+            "hpPerHit": 0.1,
+            "damagePerHit": 0.1,
+            "max": 0.7,
+            "permanent": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Tanks werden mit jedem Treffer schwächer und gefährliche Angreifer harmloser – stark gegen alles, was lange in ihrer Reichweite bleibt.",
+      "selection": "custom"
+    },
+    {
+      "id": "tesla.epic",
+      "cardId": "tesla",
+      "rarityTier": "epic",
+      "name": "Dr. Frankens Erbe",
+      "description": "Wird die Tesla zerstört oder läuft sie ab, erscheint Goblinstein: der Kobold-Doktor (721 Leben, Blitze gegen Boden & Luft) mit seinem Monster (2240 Leben, greift Gebäude an) – ohne Champion-Fähigkeit.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "hook": "onDeath",
+        "traits": {
+          "deathSpawnGroups": [
+            {
+              "unit": "goblinstein",
+              "count": 1,
+              "behind": 1.5
+            },
+            {
+              "unit": "goblinstein-monster",
+              "count": 1
+            }
+          ],
+          "alsoOnExpire": true
+        },
+        "noAbility": true,
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil aus einer 4-Elixier-Abwehr am Ende ein Champion-Duo wird; der Gegner kann aber entscheiden, wann und wo er die Tesla zerstört.",
+      "selection": "custom"
+    },
+    {
+      "id": "goblin-hut.common",
+      "cardId": "goblin-hut",
+      "rarityTier": "common",
+      "name": "Speer-Doppelpack",
+      "description": "Die Hütte bringt jedes Mal 2 Speerkobolde statt einem (alle 2,2 s, sobald Gegner in 6 Feldern sind).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "spawner": {
+            "unit": "spear-goblins",
+            "count": 2,
+            "interval": 2.2,
+            "firstDelay": 0.5,
+            "enemyInRange": 6
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Doppelter Nachschub, aber jeder Speerkobold stirbt weiterhin an jedem Flächenschaden.",
+      "selection": "interview"
+    },
+    {
+      "id": "goblin-hut.rare",
+      "cardId": "goblin-hut",
+      "rarityTier": "rare",
+      "name": "Koboldpartyhütte",
+      "description": "Die Hütte wirft zusätzlich selbst Speere: 60 Schaden alle 0,5 s, Reichweite 8 Felder, gegen Boden und Luft.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "set": {
+          "damage": 60,
+          "hitSpeed": 0.5,
+          "range": 8,
+          "targets": "both",
+          "projectile": {
+            "kind": "spear",
+            "speed": 10
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (Name, Reichweite und Schaden vorgegeben): Aus dem Spawner wird zusätzlich eine Abwehranlage mit 120 Schaden pro Sekunde und großer Reichweite.",
+      "selection": "custom"
+    },
+    {
+      "id": "goblin-hut.epic",
+      "cardId": "goblin-hut",
+      "rarityTier": "epic",
+      "name": "Demolisher-Werkstatt",
+      "description": "Statt Speerkobolden bringt die Hütte alle 2,2 s einen Goblin Demolisher (1300 Leben, 186 Flächenschaden, ohne Perk), sobald Gegner in 6 Feldern sind; beim Zerstören kommt ebenfalls ein Demolisher.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "spawner": {
+            "unit": "goblin-demolisher",
+            "count": 1,
+            "interval": 2.2,
+            "firstDelay": 0.5,
+            "enemyInRange": 6
+          },
+          "deathSpawn": {
+            "unit": "goblin-demolisher",
+            "count": 1
+          }
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (Takt nach Rückfrage wie bisher 2,2 s): Episch und sehr stark – eine ungestörte Hütte erzeugt eine ganze Demolisher-Armee; Zerstören der Hütte mit Zaubern oder Gebäude-Angreifern ist Pflicht.",
+      "selection": "custom"
+    },
+    {
+      "id": "inferno-tower.common",
+      "cardId": "inferno-tower",
+      "rarityTier": "common",
+      "name": "Turbo-Glut",
+      "description": "Der Strahl heizt sich doppelt so schnell auf: Stufenwechsel alle 1 s statt alle 2 s (43 → 158 → 847 Schaden).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "traits": {
+          "ramp": {
+            "stages": [
+              43,
+              158,
+              847
+            ],
+            "stageTime": 1
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Tanks schmelzen deutlich früher, Knall und Zielwechsel setzen den Strahl aber weiterhin zurück.",
+      "selection": "custom"
+    },
+    {
+      "id": "inferno-tower.rare",
+      "cardId": "inferno-tower",
+      "rarityTier": "rare",
+      "name": "Dreifachstrahl",
+      "description": "Der Infernoturm hält drei Strahlen auf 3 Ziele gleichzeitig, jeder heizt sich eigenständig auf.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "traits": {
+          "multiBeam": {
+            "targets": 3,
+            "independentRamp": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Gruppen aus mittelgroßen Truppen werden gleichzeitig bekämpft; jeder Strahl muss sich aber einzeln aufheizen.",
+      "selection": "interview"
+    },
+    {
+      "id": "inferno-tower.epic",
+      "cardId": "inferno-tower",
+      "rarityTier": "epic",
+      "name": "Weißglut",
+      "description": "Der Strahl startet sofort auf der Höchststufe (847 Schaden alle 0,4 s) und fällt auch nach Zielwechsel oder Betäubung nicht mehr zurück.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "traits": {
+          "ramp": {
+            "stages": [
+              847,
+              847,
+              847
+            ],
+            "stageTime": 2,
+            "neverReset": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch und extrem stark gegen alles in Reichweite; der Turm steht aber nur 30 s und lässt sich mit Zaubern und Gebäude-Angreifern von außerhalb zerstören.",
+      "selection": "custom"
     }
   ]
 }

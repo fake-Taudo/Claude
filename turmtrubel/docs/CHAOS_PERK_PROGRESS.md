@@ -1,6 +1,6 @@
 # Fortschritt Perk-Interview (Chaos-Modus)
 
-Stand: 28 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
+Stand: 32 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
 
 Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).
 
@@ -36,13 +36,13 @@ Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfol
 | 26 | Schweinereiter | Wildgalopp | Bohrhammer | Ferkelflut | eigene Idee |
 | 27 | Rammbock | Volle Besatzung | Elitebesatzung | Doppelramme | eigene Idee, Interview |
 | 28 | Ballon | Bombenhagel | Bombenspur | Luftschiff | eigene Idee |
+| 29 | Königsriese | Weitschuss | Kolossrüstung | Wandelndes Geschütz | Interview, eigene Idee |
+| 30 | Tesla | Viererspule | Zermürbungsstrom | Dr. Frankens Erbe | eigene Idee |
+| 31 | Koboldhütte | Speer-Doppelpack | Koboldpartyhütte | Demolisher-Werkstatt | Interview, eigene Idee |
+| 32 | Infernoturm | Turbo-Glut | Dreifachstrahl | Weißglut | eigene Idee, Interview |
 
 ## Offen
 
-29. Königsriese (`royal-giant`)
-30. Tesla (`tesla`)
-31. Koboldhütte (`goblin-hut`)
-32. Infernoturm (`inferno-tower`)
 33. Knall (`zap`)
 34. Kampfholz (`the-log`)
 35. Pfeile (`arrows`)
