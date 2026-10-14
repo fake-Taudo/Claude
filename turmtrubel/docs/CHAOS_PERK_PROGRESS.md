@@ -1,6 +1,6 @@
 # Fortschritt Perk-Interview (Chaos-Modus)
 
-Stand: 9 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
+Stand: 14 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
 
 Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).
 
@@ -17,14 +17,14 @@ Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfol
 | 7 | Walküre | Riesenschwung | Sogwirbel | Wirbelsturm | eigene Idee, Interview |
 | 8 | Mini-P.E.K.K.A. | Luftpost-Lieferung | Zwillinge | Super-Mini-P.E.K.K.A. | eigene Idee, Interview |
 | 9 | Prinz | Sturmlanze | Turnierreiter | Unaufhaltsam | eigene Idee |
+| 10 | Bomber | Panzerweste | Springbombe | Megabombe | eigene Idee, Interview |
+| 11 | Bogenschützen | Fernsicht | Magieschützen-Pfeile | Schützenkompanie | eigene Idee, Interview |
+| 12 | Musketierin | Schnellfeuer | Kanonenkugel | Nachschub | eigene Idee |
+| 13 | Elektromagier | Dreifachblitz | Dauerblitz | Blitzherr | Interview, eigene Idee |
+| 14 | Goblin Demolisher | Weitwerfer | Zündkette | Dauerfeuerwerk | eigene Idee, Interview |
 
 ## Offen
 
-10. Bomber (`bomber`)
-11. Bogenschützen (`archers`)
-12. Musketierin (`musketeer`)
-13. Elektromagier (`electro-wizard`)
-14. Goblin Demolisher (`goblin-demolisher`)
 15. Magier (`wizard`)
 16. Hexe (`witch`)
 17. Fledermäuse (`bats`)

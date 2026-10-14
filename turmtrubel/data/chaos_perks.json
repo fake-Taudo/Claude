@@ -567,6 +567,303 @@
       "elixirCostUnchanged": true,
       "balanceNote": "Eigene Idee aus dem Interview: Episch, weil Ablenken und Bremsen nicht mehr funktionieren; mit 1920 Leben muss er trotzdem den Beschuss von Türmen und Verteidigern überleben – reiner Schaden bleibt der Konter.",
       "selection": "custom"
+    },
+    {
+      "id": "bomber.common",
+      "cardId": "bomber",
+      "rarityTier": "common",
+      "name": "Panzerweste",
+      "description": "Der Bomber hat 300 % mehr Leben: 304 → 1216.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hp": 4
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Er überlebt jetzt Pfeile, Knall und mehrere Turmschüsse, macht aber nicht mehr Schaden und trifft weiter keine Luft.",
+      "selection": "custom"
+    },
+    {
+      "id": "bomber.rare",
+      "cardId": "bomber",
+      "rarityTier": "rare",
+      "name": "Springbombe",
+      "description": "Jede Bombe hüpft nach dem Einschlag noch 2-mal je 3 Felder in Wurfrichtung weiter und explodiert jedes Mal erneut (je 212 Schaden, Radius 1,5).",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onHit",
+        "traits": {
+          "bounce": {
+            "count": 2,
+            "distance": 3
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Bis zu dreifacher Schaden gegen Gruppen in einer Linie – deutlich stärker, wirkt aber nur, wenn Gegner hintereinander stehen.",
+      "selection": "interview"
+    },
+    {
+      "id": "bomber.epic",
+      "cardId": "bomber",
+      "rarityTier": "epic",
+      "name": "Megabombe",
+      "description": "Jeder Wurf ist eine Bombe wie die des Riesenskeletts: Sie bleibt liegen und explodiert nach 3 Sekunden mit 688 Schaden (an Türmen doppelt: 1376) und Rückstoß 1,5 im Umkreis von 3 Feldern.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "splash": 0
+        },
+        "traits": {
+          "bombOnImpact": {
+            "damage": 688,
+            "radius": 3,
+            "delay": 3,
+            "towerDamage": 2,
+            "knockback": 1.5,
+            "fx": "fire"
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil jede Bombe so stark ist wie die Todesbombe eines 6-Elixier-Riesen; der Bomber hat aber nur 304 Leben, und die 3 Sekunden Zündzeit lassen Gegnern Zeit zum Ausweichen.",
+      "selection": "custom"
+    },
+    {
+      "id": "archers.common",
+      "cardId": "archers",
+      "rarityTier": "common",
+      "name": "Fernsicht",
+      "description": "Die Bogenschützinnen schießen 150 % weiter: Reichweite 5 → 12,5 Felder (Sichtweite ebenso).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "range": 2.5
+        },
+        "set": {
+          "sight": 12.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Sie treffen aus größerer Entfernung als jeder Turm (7,5), behalten aber nur 304 Leben und 112 Schaden – Zauber und schnelle Truppen erreichen sie weiterhin.",
+      "selection": "custom"
+    },
+    {
+      "id": "archers.rare",
+      "cardId": "archers",
+      "rarityTier": "rare",
+      "name": "Magieschützen-Pfeile",
+      "description": "Jeder Pfeil fliegt wie beim Magieschützen 11 Felder weit durch alle Gegner in der Linie (Breite 0,5) und trifft jeden mit 112 Schaden.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "traits": {
+          "pierce": {
+            "length": 11,
+            "width": 0.5
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Taktisch neu – ein Schuss trifft ganze Reihen und auch Truppen hinter dem Tank; gegen Einzelziele ändert sich nichts.",
+      "selection": "custom"
+    },
+    {
+      "id": "archers.epic",
+      "cardId": "archers",
+      "rarityTier": "epic",
+      "name": "Schützenkompanie",
+      "description": "Es kommen 5 Bogenschützinnen statt 2, jede mit vollen Werten (304 Leben, 112 Schaden).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "count": 5
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Episch: Zweieinhalbfacher Schaden und Lebensvorrat für 3 Elixier; ein einzelner Flächenzauber trifft aber immer noch alle fünf.",
+      "selection": "interview"
+    },
+    {
+      "id": "musketeer.common",
+      "cardId": "musketeer",
+      "rarityTier": "common",
+      "name": "Schnellfeuer",
+      "description": "Die Musketierin lädt doppelt so schnell nach: ein Schuss alle 0,5 s statt alle 1 s (217 Schaden pro Schuss).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hitSpeed": 0.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview, kräftig für Gewöhnlich: doppelter Schaden pro Sekunde, aber unverändert 721 Leben – sie fällt weiterhin schnell gegen Zauber und Nahkämpfer.",
+      "selection": "custom"
+    },
+    {
+      "id": "musketeer.rare",
+      "cardId": "musketeer",
+      "rarityTier": "rare",
+      "name": "Kanonenkugel",
+      "description": "Sie schießt eine doppelt so große, halb so schnelle Kugel (16,7 → 8,3 Felder/s), die getroffene Truppen 1,5 Felder zurückdrückt (Schaden unverändert 217).",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "projectile": {
+            "kind": "cannonball",
+            "speed": 8.33,
+            "scale": 2
+          }
+        },
+        "traits": {
+          "onHit": {
+            "knockback": 1.5
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Taktisch neu – sie hält Nahkämpfer auf Abstand; die langsame Kugel kann aber schnelle Ziele verfehlen bzw. trifft später.",
+      "selection": "custom"
+    },
+    {
+      "id": "musketeer.epic",
+      "cardId": "musketeer",
+      "rarityTier": "epic",
+      "name": "Nachschub",
+      "description": "Für jede gegnerische Truppe, die sie besiegt, erscheint neben ihr eine weitere vollwertige Musketierin (721 Leben, 217 Schaden, ohne Perk); höchstens 4 zusätzliche pro Ausspielen, Gebäude und Türme zählen nicht.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "hook": "onKill",
+        "traits": {
+          "spawnOnKill": {
+            "unit": "musketeer",
+            "count": 1,
+            "max": 4,
+            "killsOf": "troops",
+            "inheritPerk": false
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil aus einer Karte bis zu fünf Musketierinnen werden; das klappt aber nur, wenn die erste lange genug überlebt und Gegner besiegt.",
+      "selection": "custom"
+    },
+    {
+      "id": "electro-wizard.common",
+      "cardId": "electro-wizard",
+      "rarityTier": "common",
+      "name": "Dreifachblitz",
+      "description": "Der Elektromagier trifft 3 statt 2 Ziele gleichzeitig (je 115 Schaden und 0,5 s Betäubung).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "traits": {
+          "multiTarget": 3
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Ein zusätzliches Ziel lohnt sich nur gegen Gruppen; gegen Einzelziele bleibt alles beim Alten.",
+      "selection": "interview"
+    },
+    {
+      "id": "electro-wizard.rare",
+      "cardId": "electro-wizard",
+      "rarityTier": "rare",
+      "name": "Dauerblitz",
+      "description": "Statt einzelner Blitze hält er einen Dauerstrahl auf bis zu 2 Ziele: 80 Schaden pro Sekunde je Ziel, dazu wie gewohnt alle 1,8 s eine Betäubung von 0,5 s.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "damage": 0
+        },
+        "traits": {
+          "beam": {
+            "targets": 2,
+            "dps": 80,
+            "tick": 0.1
+          },
+          "periodicStun": {
+            "interval": 1.8,
+            "duration": 0.5
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (Variante „Strahl + Stoßbetäubung“ nach Rückfrage): rund 25 % mehr Dauerschaden und kein Leerlauf zwischen den Blitzen, Ziele können zwischen den Betäubungen weiter handeln.",
+      "selection": "custom"
+    },
+    {
+      "id": "electro-wizard.epic",
+      "cardId": "electro-wizard",
+      "rarityTier": "epic",
+      "name": "Blitzherr",
+      "description": "Statt der normalen Attacke wirkt er alle 1,8 s den Blitz-Zauber auf sein Ziel: 3 Einschläge auf die Gegner mit den meisten Leben im Umkreis von 3,5 Feldern, je 1057 Schaden (an Türmen 27 %) und 0,5 s Betäubung.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "replaceAttack": {
+          "castSpell": "lightning",
+          "atTarget": true,
+          "usePerk": false
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch und extrem stark gegen alles in Reichweite; mit 714 Leben und 5 Feldern Reichweite muss er aber vor Turm und Zaubern geschützt werden.",
+      "selection": "custom"
+    },
+    {
+      "id": "goblin-demolisher.common",
+      "cardId": "goblin-demolisher",
+      "rarityTier": "common",
+      "name": "Weitwerfer",
+      "description": "Er wirft sein Dynamit 150 % weiter: Reichweite 5 → 12,5 Felder (Sichtweite ebenso).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "range": 2.5
+        },
+        "set": {
+          "sight": 12.5
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Er trifft aus großer Entfernung, das langsam fliegende Dynamit verfehlt aber bewegliche Ziele leichter, und Schaden sowie Leben bleiben gleich.",
+      "selection": "custom"
+    },
+    {
+      "id": "goblin-demolisher.rare",
+      "cardId": "goblin-demolisher",
+      "rarityTier": "rare",
+      "name": "Zündkette",
+      "description": "Beim Verwandeln in den Kamikaze (bei 50 % Leben) explodiert er sofort einmal mit 404 Schaden und Rückstoß im Umkreis von 2,5 Feldern und rennt danach trotzdem los.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onTransform",
+        "traits": {
+          "blastOnTransform": {
+            "damage": 404,
+            "radius": 2.5,
+            "knockback": 1,
+            "fx": "fire"
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Eine zusätzliche volle Explosion genau dann, wenn Gegner ihn bedrängen – deutlich stärker, aber nur einmal pro Ausspielen.",
+      "selection": "interview"
+    },
+    {
+      "id": "goblin-demolisher.epic",
+      "cardId": "goblin-demolisher",
+      "rarityTier": "epic",
+      "name": "Dauerfeuerwerk",
+      "description": "Er wirft sechsmal so schnell (+500 % Angriffsgeschwindigkeit): eine Dynamitstange alle 0,2 s statt alle 1,2 s (je 186 Flächenschaden); die Kamikaze-Form bleibt unverändert.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "hitSpeed": 0.1667
+        },
+        "appliesTo": "self"
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil er Bodentruppen in Sekunden einebnet; er trifft weiter keine Luft und wird bei halbem Leben zum Kamikaze.",
+      "selection": "custom"
     }
   ]
 }
