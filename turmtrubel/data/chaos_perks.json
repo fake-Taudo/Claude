@@ -2241,6 +2241,68 @@
       "elixirCostUnchanged": true,
       "balanceNote": "Eigene Idee aus dem Interview (Bogenschützen-Königin statt 3 Bogenschützinnen): Episch, weil ein 3-Elixier-Zauber zusätzlich einen Champion aufs Feld bringt – auch in der gegnerischen Hälfte.",
       "selection": "custom"
+    },
+    {
+      "id": "goblin-barrel.common",
+      "cardId": "goblin-barrel",
+      "rarityTier": "common",
+      "name": "Schnellwurf",
+      "description": "Das Fass fliegt 50 % schneller (Fluggeschwindigkeit 10 → 15 Felder pro Sekunde), dem Gegner bleibt weniger Zeit zum Reagieren.",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "spell": {
+          "mult": {
+            "travel": 1.5
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Nur ein Zeitvorteil von Sekundenbruchteilen; die drei Kobolde bleiben genauso leicht zu kontern.",
+      "selection": "interview"
+    },
+    {
+      "id": "goblin-barrel.rare",
+      "cardId": "goblin-barrel",
+      "rarityTier": "rare",
+      "name": "Bombenfass",
+      "description": "Das Fass schlägt ein wie eine Rakete (1484 Schaden im Radius 2, Rückstoß, an Türmen 25 %) und lässt danach die 3 Kobolde frei.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "spell": {
+          "impact": {
+            "damage": 1484,
+            "radius": 2,
+            "knockback": 1,
+            "towerDamage": 0.25,
+            "targets": "both",
+            "fx": "rocket"
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Ein Raketeneinschlag samt Kobolden räumt Verteidiger weg und trifft den Turm spürbar – sehr stark, aber das langsame Fass ist am Himmel gut sichtbar.",
+      "selection": "custom"
+    },
+    {
+      "id": "goblin-barrel.epic",
+      "cardId": "goblin-barrel",
+      "rarityTier": "epic",
+      "name": "Riesenfass",
+      "description": "Statt der 3 Kobolde springt ein Koboldriese aus dem Fass (3022 Leben, greift Gebäude an, 2 Speerkobolde auf dem Rücken).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "spell": {
+          "spawn": {
+            "unit": "goblin-giant",
+            "count": 1,
+            "deployTime": 1.1
+          }
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Episch: Ein 6-Elixier-Tank landet für 3 Elixier direkt am gegnerischen Turm; dafür fehlen die schnellen Kobolde, und er ist langsam.",
+      "selection": "interview"
     }
   ]
 }

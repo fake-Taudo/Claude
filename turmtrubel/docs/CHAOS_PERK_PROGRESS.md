@@ -1,6 +1,6 @@
 # Fortschritt Perk-Interview (Chaos-Modus)
 
-Stand: 35 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
+Stand: 36 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
 
 Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).
 
@@ -43,10 +43,10 @@ Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfol
 | 33 | Knall | Schwächungsknall | Blitznachschlag | Knall-Kette | eigene Idee |
 | 34 | Kampfholz | Weitroller | Doppelstamm | Holzfäller-Überraschung | eigene Idee, Interview |
 | 35 | Pfeile | Vierte Welle | Feuerregen | Königin des Hagels | Interview, eigene Idee |
+| 36 | Koboldfass | Schnellwurf | Bombenfass | Riesenfass | Interview, eigene Idee |
 
 ## Offen
 
-36. Koboldfass (`goblin-barrel`)
 37. Feuerball (`fireball`)
 38. Gift (`poison`)
 39. Goldener Ritter (`golden-knight`)
