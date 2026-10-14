@@ -544,7 +544,7 @@
       "cardId": "prince",
       "rarityTier": "epic",
       "name": "Unaufhaltsam",
-      "description": "Der Prinz greift nur noch Kronentürme an, ist ab dem Landen dauerhaft im Ansturm und schiebt alles in seinem Weg 3 Felder zur Seite; Betäubung, Verlangsamung, Einfrieren, Rückstoß und Sog wirken nicht auf ihn – nur sein Tod stoppt ihn.",
+      "description": "Der Prinz greift nur noch Kronentürme an, ist ab dem Landen dauerhaft im Ansturm und schiebt alles in seinem Weg 3 Felder zur Seite; Betäubung, Verlangsamung, Einfrieren, Festhalten, Rückstoß und Sog wirken nicht auf ihn – nur sein Tod stoppt ihn.",
       "mechanicType": "behaviorChange",
       "effectParameters": {
         "set": {
@@ -561,7 +561,8 @@
             "slow",
             "freeze",
             "knockback",
-            "pull"
+            "pull",
+            "root"
           ]
         }
       },

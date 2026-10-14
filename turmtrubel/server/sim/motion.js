@@ -118,6 +118,7 @@ export const Motion = {
     if (tr.dash && !t.flying && dist >= tr.dash.min && dist <= tr.dash.max) {
       e.dash = { mode: 'bandit', targetId: t.id, windup: tr.dash.windup, active: false, speed: tr.dash.speed, damage: tr.dash.damage };
       this.events.push(['dw', e.id]);
+      if (e.px?.cloneOnDash) this.perkCloneDash(e, t);
       return true;
     }
     if (tr.leap && t.kind === 'unit' && !t.flying && dist >= tr.leap.min && dist <= tr.leap.max) {
@@ -190,8 +191,10 @@ export const Motion = {
     for (const o of this.entities) {
       if (o.dead || o.owner === e.owner || d.hit.has(o.id) || this.isHidden(o) || o.flying) continue;
       const dd = surfaceDist(e.x, e.y, o);
-      if (dd <= d.radius && dd < bd) {
-        bd = dd;
+      // Chaos (Goldener Ritter, Episch): Ziele Richtung gegnerischem Kronenturm bevorzugen
+      const sc = d.preferTower ? this.perkTowerScore(e, o, dd) : dd;
+      if (dd <= d.radius && sc < bd) {
+        bd = sc;
         best = o;
       }
     }
@@ -362,6 +365,7 @@ export const Motion = {
   /** Rückstoß. Schwere Einheiten sind immun (außer force, z. B. Mönch-Kombo). */
   knockback(o, fx, fy, dist, force = false) {
     if (!o || o.dead || o.kind !== 'unit' || o.dash?.active || o.thrown || o.underT > 0) return;
+    if (o.px?.cc?.knockback) return;
     if (!force && o.mass >= 12) return;
     if (this.getBuff(o, 'reflect')?.immovable) return;
     let dx = o.x - fx;
@@ -386,6 +390,7 @@ export const Motion = {
 
   pull(o, tx, ty, strength) {
     if (!o || o.dead || o.kind !== 'unit' || o.mass >= 1e5 || o.dash?.active || o.thrown || o.underT > 0) return;
+    if (o.px?.cc?.pull) return;
     if (this.getBuff(o, 'reflect')?.immovable) return;
     const dx = tx - o.x;
     const dy = ty - o.y;

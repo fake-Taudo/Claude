@@ -254,6 +254,12 @@ export class Match {
       lastHitBy: 0,
     };
     if (e.ability) e.abilityUses = e.ability.uses || 1;
+    // Chaos: Einheit aus einer Perk-Kopie (Laufzeitverhalten px, eigener Zustand ps, Abzeichen)
+    if (def.px) {
+      e.px = def.px;
+      e.ps = {};
+      e.perkTier = def.px.tier;
+    }
     if (kind === 'unit' && tr.hidden) e.underT = 0;
     if (kind !== 'unit' && tr.hidden) e.hidden = true;
     this.entities.push(e);
@@ -364,6 +370,7 @@ export class Match {
       this.ctxPl = e.pl;
       this.updateEntity(e, dt);
     }
+    if (this.perkOn) this.updatePerks(dt);
     this.updateProjectiles(dt);
     this.updateLines(dt);
     this.ctxPl = null;
@@ -456,7 +463,7 @@ export class Match {
     let anywhere = false;
     if (card.type === 'spell') kind = card.spell?.ownSide ? 'troop' : 'spell';
     else {
-      const def = this.db.unit(this.db.unitRefOf(card));
+      const def = this.perkOn ? this.placeDef(pl, card) : this.db.unit(this.db.unitRefOf(card));
       if (card.type === 'building') {
         kind = 'building';
         half = def.size / 2;
@@ -550,6 +557,9 @@ export class Match {
 
   /** Einheiten einer Truppen-/Gebäudekarte erzeugen (inkl. gemischter Gruppen und Evo-Zusätze). */
   spawnCard(side, card, x, y, evo, levelBonus = 0, form = null) {
+    // Chaos: Karte mit Perk → Matchkopie der Werte, veränderte Gruppen
+    const perk = this.perkOn && !form ? this.perkOf(this.ctxPl ?? this.plFor(side), card.id) : null;
+    if (perk) return this.spawnPerkCard(side, card, x, y, evo, levelBonus, perk);
     const groups = form ? [{ unit: form.unit, count: 1 }] : this.db.groupsOf(card, evo);
     const fwd = forwardDir(side);
     const flip = side === 0 ? 1 : -1;

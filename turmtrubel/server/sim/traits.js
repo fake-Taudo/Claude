@@ -95,7 +95,8 @@ export const Traits = {
       if (e.kind !== 'unit') y += fwd * (e.half + 0.6);
       else if (s.side) x += (k % 2 ? 1 : -1) * (e.radius + 0.6);
       else if (e.kind === 'unit' && s.count === 1) y += fwd * (e.radius + 0.4);
-      const out = this.spawnAround(s.unit, s.stagger ? 1 : s.count, e.owner, x, y, 0.4, { spawnedBy: e.id, evo: !!s.evo });
+      // Evo-Beschwörungen (Chaos-Perk der Hexe) bilden je Welle eine eigene Gruppe (Obergrenze der Evo-Skelette)
+      const out = this.spawnAround(s.unit, s.stagger ? 1 : s.count, e.owner, x, y, 0.4, s.evo ? { spawnedBy: e.id, evo: true, groupId: this.nextGroup++ } : { spawnedBy: e.id, evo: !!s.evo });
       for (const o of out) o.spawnWave = e.spawnWaves || 0;
     };
     e.spawnWaves = (e.spawnWaves || 0) + 1;
@@ -254,6 +255,8 @@ export const Traits = {
     o.removed = false;
     o.silentDeath = true;
     this.events.push(['tr', o.id, n.id]);
+    // Chaos: Goblin Demolisher (Selten) explodiert beim Verwandeln
+    if (o.px?.blastOnTransform) this.areaBlast(o.owner, o.x, o.y, o.px.blastOnTransform, n);
   },
 
   /** Evo-Koboldbohrer: taucht ab und an anderer Stelle (um den nächsten Kronenturm) wieder auf. */
@@ -280,7 +283,7 @@ export const Traits = {
   // ───────────────────────────── Erzeugen ─────────────────────────────
 
   spawnAround(ref, count, owner, x, y, deployTime = 0.5, opts = {}) {
-    const def = this.db.unit(ref, !!opts.evo, opts.levelBonus || 0);
+    const def = opts.def || this.db.unit(ref, !!opts.evo, opts.levelBonus || 0);
     const offs = formation(count, def.radius);
     const flip = owner === 0 ? 1 : -1;
     const out = [];
@@ -291,7 +294,7 @@ export const Traits = {
       if (!def.flying && !def.isBuilding && blockedByRiver(px, py)) py = py < 16 ? 14.9 - def.radius : 17.1 + def.radius;
       // Bodentruppen nicht in Türme/Gebäude setzen (sonst klemmen sie z. B. zwischen Turm und Grabstein)
       if (!def.flying && !def.isBuilding) ({ x: px, y: py } = this.freeSpot(def.radius, px, py));
-      const e = this.addEntity(def, owner, px, py, { deployTime, evo: !!opts.evo && def.evo, groupId: opts.groupId || 0, clone: !!opts.clone, cardId: opts.cardId, pl: opts.pl });
+      const e = this.addEntity(def, owner, px, py, { deployTime, evo: !!opts.evo && def.evo, groupId: opts.groupId || 0, clone: !!opts.clone, cardId: opts.cardId, pl: opts.pl, ability: opts.ability });
       if (opts.spawnedBy) e.spawnedBy = opts.spawnedBy;
       out.push(e);
     }
@@ -348,6 +351,7 @@ export const Traits = {
     const tr = e.def.traits;
     const byAttack = e.selfDestruct;
     if (e.cast) this.refundCast(e);
+    if (e.px) this.perkOnDeath(e);
     if (tr.hatch && e.expired) this.spawnAround(tr.hatch.unit, 1, e.owner, e.x, e.y, 0.5, { cardId: e.cardId });
     if (tr.deathDamage && !(tr.deathDamage.notOnAttack && byAttack)) {
       const dd = tr.deathDamage;

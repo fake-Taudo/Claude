@@ -76,7 +76,7 @@ Seltenheitsfarben im Spiel: Gewöhnlich = Grau, Selten = Bronze, Episch = Lila.
 |---|---|---|---|---|
 | Gewöhnlich | **Sturmlanze** | Der Ansturm macht 75 % mehr Schaden: 783 → 1370. | Werte | eigene Idee |
 | Selten | **Turnierreiter** | Nach jedem Treffer weicht der Prinz 2 Felder zurück und stürmt erneut an, sodass jeder Schlag ein Ansturm wird (783 Schaden); jeder Ansturmtreffer schleudert das Ziel 3 Felder zurück und betäubt es 1 Sekunde. | Verhalten | eigene Idee |
-| Episch | **Unaufhaltsam** | Der Prinz greift nur noch Kronentürme an, ist ab dem Landen dauerhaft im Ansturm und schiebt alles in seinem Weg 3 Felder zur Seite; Betäubung, Verlangsamung, Einfrieren, Rückstoß und Sog wirken nicht auf ihn – nur sein Tod stoppt ihn. | Verhalten | eigene Idee |
+| Episch | **Unaufhaltsam** | Der Prinz greift nur noch Kronentürme an, ist ab dem Landen dauerhaft im Ansturm und schiebt alles in seinem Weg 3 Felder zur Seite; Betäubung, Verlangsamung, Einfrieren, Festhalten, Rückstoß und Sog wirken nicht auf ihn – nur sein Tod stoppt ihn. | Verhalten | eigene Idee |
 
 ## 10. Bomber (2 Elixier)
 

@@ -89,6 +89,7 @@ export const Abilities = {
     if (ab.dash) {
       const d = ab.dash;
       e.dash = { mode: 'chain', left: d.count, radius: d.radius, damage: d.damage, interval: d.interval || 0.3, t: 0, hit: new Set(), seeking: true, seekUntil: now + 6, seekSpeed: d.seekSpeed || 2 };
+      if (ab.preferTowardTower) e.dash.preferTower = true;
       e.locked = false;
     }
     if (ab.summonCharge) this.royalRescue(e, ab.summonCharge);

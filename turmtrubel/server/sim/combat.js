@@ -110,6 +110,7 @@ export const Combat = {
   canTarget(e, t, opts = {}) {
     if (!t || t.dead || t.owner === e.owner) return false;
     if (this.isHidden(t)) return false;
+    if (e.px?.towersOnly && t.kind !== 'tower') return false;
     const tg = opts.targets || (e.buffs.length || e.def.traits.melee ? this.attackParams(e).targets : e.def.targets);
     if (opts.troopsOnly && t.kind !== 'unit') return false;
     if (tg === 'buildings') return t.kind !== 'unit';
@@ -222,6 +223,7 @@ export const Combat = {
     const inRange = d <= P.range + (e.locked ? 0.35 : 0) && (!P.minRange || Math.hypot(t.x - e.x, t.y - e.y) >= P.minRange);
     // Kamikaze-Läufer ohne eigenen Schaden (Busch, Skelettfass) „zünden“ trotzdem am Ziel
     if (inRange && (P.damage > 0 || e.def.traits.kamikaze)) {
+      if (e.px && this.perkInRange(e, t, P, d, dt)) return;
       if (!e.locked) {
         e.locked = true;
         e.cd = Math.max(e.cd, e.def.firstHit);
@@ -233,12 +235,14 @@ export const Combat = {
         this.attack(e, t, P);
         e.cd = P.hitSpeed;
       }
+      if (e.px) this.perkWhileInRange(e, t, d, dt);
     } else {
       e.locked = false;
       if (e.kind !== 'unit') return;
       if (this.trySpecialMove(e, t, d)) return;
       this.moveTowards(e, t, dt);
       this.onMoved(e, dt);
+      if (e.px) this.perkMoving(e, t, P, dt);
     }
   },
 
@@ -274,14 +278,18 @@ export const Combat = {
   // ───────────────────────────── Angriff ─────────────────────────────
 
   attack(e, t, P = this.attackParams(e, t)) {
+    // Chaos: ersetzter Angriff (Zauber, Flammenkegel, mehrere Strahlen)
+    if (e.px?.attack && this.perkAttack(e, t, P)) return;
     const def = e.def;
     const tr = def.traits;
     let dmg = P.damage;
+    let chargeHit = false;
     if (tr.ramp) dmg = tr.ramp.stages[e.rampStage] * (e.dmgMult || 1);
     if (e.charging && tr.charge && !e.buffs.some((b) => b.attack)) {
       dmg = tr.charge.damage != null ? tr.charge.damage * (e.dmgMult || 1) : dmg * (tr.charge.damageMult || 2);
       e.charging = false;
       e.chargeDist = 0;
+      chargeHit = true;
     }
     e.attacks++;
     e.lastAttackT = this.time;
@@ -333,6 +341,14 @@ export const Combat = {
       forceKnock,
       evoFx: e.evo,
     };
+    if (e.px) {
+      // Chaos: Bombe bleibt liegen (Bomber, Episch) / sichtbare Explosion je Biss (Fledermäuse, Episch)
+      if (e.px.bomb) {
+        payload.perkBomb = e.px.bomb;
+        payload.damage = 0;
+      }
+      if (e.px.hitFx) payload.perkFx = e.px.hitFx;
+    }
     const proj = P.projectile;
     // Mehrfachziel (Elektromagier)
     const targets = [t];
@@ -355,7 +371,7 @@ export const Combat = {
         e.buffs = e.buffs.filter((b) => b !== tripled);
       } else if (tr.pierce && !override) {
         const a = Math.atan2(tt.y - e.y, tt.x - e.x);
-        this.addLine(e, payload, Math.cos(a), Math.sin(a), {
+        const line = this.addLine(e, payload, Math.cos(a), Math.sin(a), {
           length: tr.pierce.length,
           width: tr.pierce.width,
           speed: proj?.speed || 10,
@@ -365,6 +381,7 @@ export const Combat = {
           close: tr.pierce.close,
           rollFrom: tr.pierce.rollFrom,
         });
+        if (e.px?.impactBlast) line.perkBlast = e.px.impactBlast;
       } else if (tr.spread && !override) {
         const base = Math.atan2(tt.y - e.y, tt.x - e.x);
         const n = tr.spread.count;
@@ -388,6 +405,7 @@ export const Combat = {
     if (tr.healOnAttack) this.pulseHeal(e, tr.healOnAttack, false);
     if (tr.slowShot) this.slowShot(e, t, tr.slowShot);
     if (e.ability?.pancakes) e.pancakeT += e.ability.pancakes.perHit;
+    if (e.px) this.perkAfterAttack(e, t, P, chargeHit);
     if (tr.kamikaze) {
       e.x = t.x + (e.x - t.x) * 0.3;
       e.y = t.y + (e.y - t.y) * 0.3;
@@ -557,6 +575,7 @@ export const Combat = {
         }
         const amt = o.kind === 'tower' ? dmg * (l.payload.towerDamage ?? 1) : dmg;
         const src = this.byId.get(l.payload.srcId);
+        if (l.perkBlast) this.perkLineBlast(l, o);
         this.damage(o, amt, src, l.owner, { ranged: true });
         if (knock && o.kind === 'unit') this.knockback(o, o.x - l.dx, o.y - l.dy, knock);
         if (l.payload.onHit) this.applyOnHit(l.payload, o, src);
@@ -610,6 +629,11 @@ export const Combat = {
       if (p.knock && o.kind === 'unit') this.knockback(o, p.sx, p.sy, p.knock, p.forceKnock);
       if (p.onHit) this.applyOnHit(p, o, src, target);
     }
+    if (p.perkBomb) {
+      const b = p.perkBomb;
+      this.addZone(p.owner, { delay: b.delay, radius: b.radius, damage: b.damage, towerDamage: b.towerDamage, knockback: b.knockback, targets: 'ground', fx: b.fx || 'fire' }, ix, iy, { bomb: true });
+    }
+    if (p.perkFx) this.events.push(['bl', r2(ix), r2(iy), p.splash || 1, p.owner, p.perkFx]);
     const oh = p.onHit;
     if (oh) {
       if (oh.chain && target) this.chainFrom(p, target, oh.chain, src);
@@ -873,6 +897,8 @@ export const Combat = {
   damage(o, amount, src, srcOwner, opts = {}) {
     if (!o || o.dead || !(amount > 0)) return 0;
     if (this.isInvulnerable(o, opts)) return 0;
+    // Chaos (Megaritter, Episch): getroffene Bodentruppen fliegen aus der Arena
+    if (src?.px?.launch && o.kind === 'unit' && !o.flying && this.perkLaunch(o, src)) return 0;
     const tr = o.def.traits;
     // Evo-Lakaienhorde: der erste Treffer macht kurz unsichtbar und unverwundbar
     if (tr.veil && !o.triggered.veil) {
@@ -917,11 +943,16 @@ export const Combat = {
       this.events.push(['zb', o.id, src.id]);
     }
     if (o.hp <= 0) {
-      o.hp = 0;
-      o.dead = true;
-      if (src && !src.dead) this.onKill(src, o);
+      if (o.px?.lastStand && this.perkLastStand(o)) {
+        // Chaos (Banditin, Selten): letzter Sprint statt sofortigem Tod
+      } else {
+        o.hp = 0;
+        o.dead = true;
+        if (src && !src.dead) this.onKill(src, o);
+      }
     } else this.checkThresholds(o);
     this.events.push(['h', o.id, Math.round(dealt)]);
+    if (src?.px) this.perkOnDamage(o, dealt, src, opts);
     return dealt;
   },
 
@@ -955,6 +986,7 @@ export const Combat = {
     if (src.def.traits.ramp?.keep) src.rampKeepT = this.time;
     const w = this.getBuff(src, 'warp');
     if (w && w.targetId === victim.id) this.endWarp(src, w);
+    if (src.px?.spawnOnKill) this.perkOnKill(src, victim);
   },
 
   heal(o, amount, maxOverride = 0) {
@@ -990,6 +1022,10 @@ export const Combat = {
   stun(o, t, freeze = false) {
     if (!o || o.dead || !(t > 0) || this.isInvulnerable(o)) return;
     if (o.dash?.active || o.thrown) return;
+    if (o.px) {
+      if (o.px.cc?.stun || (freeze && o.px.cc?.freeze)) return;
+      this.perkOnStun(o);
+    }
     o.stunT = Math.max(o.stunT, t);
     if (freeze) o.frozen = true;
     // Betäubung setzt Aufladen, Strahl-Stufen und Ansturm zurück
@@ -1009,6 +1045,7 @@ export const Combat = {
 
   slow(o, amount, duration) {
     if (!o || o.dead) return;
+    if (o.px?.cc?.slow) return;
     o.slowAmt = o.slowT > 0 ? Math.max(o.slowAmt, amount) : amount;
     o.slowT = Math.max(o.slowT, duration);
   },
@@ -1028,6 +1065,7 @@ export const Combat = {
   /** Festhalten (Ranken, Netz): kann sich nicht bewegen/angreifen; Flieger werden auf den Boden geholt. */
   root(o, duration, ground = true) {
     if (!o || o.dead || o.kind !== 'unit' || this.isInvulnerable(o)) return;
+    if (o.px?.cc?.root) return;
     o.rootT = Math.max(o.rootT, duration);
     o.cd = Math.max(o.cd, o.def.firstHit);
     o.charging = false;

@@ -14,6 +14,9 @@ function hitsEnemy(z, o) {
 
 export const Spells = {
   castSpell(owner, card, x, y, evo, levelBonus = 0) {
+    // Chaos: Zauber mit Perk (Matchkopie der Zauberwerte, Wiederholungen, Vorab-Zauber)
+    const perk = this.perkOn ? this.perkOf(this.ctxPl ?? this.plFor(owner), card.id) : null;
+    if (perk) return this.castPerkSpell(owner, card, x, y, evo, levelBonus, perk);
     let s = this.db.spell(card, evo);
     if (levelBonus) s = scaleStats(s, levelFactor(BASE_LEVEL + levelBonus));
     const king = this.kingOf(owner);
@@ -113,6 +116,7 @@ export const Spells = {
           }
         }
         this.zoneContinuous(z, dt);
+        if (s.px) this.perkZone(z);
         if (s.graveyard) this.updateGraveyard(z);
         if (z.activeT + 1e-9 >= s.duration) z.done = true;
       } else if (z.echoAt < 0 && !z.captured) {
@@ -158,6 +162,7 @@ export const Spells = {
       const out = this.spawnAround(s.spawn.unit, s.spawn.count, z.owner, z.x, z.y, s.spawn.deployTime ?? 0.3);
       if (z.heroCard) for (const e of out) this.makeHeroUnit(e, z.heroCard);
     }
+    if (s.px) this.perkSpellImpact(z);
     this.events.push(['sp', z.typeIdx, r2(z.x), r2(z.y), z.r, z.owner, z.fx || '', z.evo ? 1 : 0]);
   },
 
@@ -170,6 +175,7 @@ export const Spells = {
       if (s.stun) this.stun(o, s.stun, !!s.freeze);
       if (s.slow && s.slow.duration != null) this.slow(o, s.slow.amount, s.slow.duration);
       if (s.knockback && o.kind === 'unit') this.knockback(o, z.x, z.y, s.knockback);
+      if (s.px?.onHitTarget) this.perkZoneOnHit(z, o);
     }
   },
 
