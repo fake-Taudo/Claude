@@ -8,6 +8,7 @@ import { WebSocketServer } from 'ws';
 import { createDb } from '../shared/cards.js';
 import { C2S, S2C, ERRORS, PROTOCOL_VERSION, sanitizeName } from '../shared/protocol.js';
 import { createModes } from '../shared/modes.js';
+import { createChaos } from '../shared/chaos.js';
 import { RoomManager } from './rooms.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -24,9 +25,22 @@ export function loadData(root = ROOT) {
   // Umgebungsvariable SKIN (z. B. SKIN=custom) hat Vorrang vor rules.json → skin und skin.json → active
   if (process.env.SKIN) rules.skin = process.env.SKIN;
   const db = createDb(JSON.parse(cardsText), { level: rules.cardLevel, skin, skinName: rules.skin });
+  // Modus „Chaos“: Einstellungen und Perks (werden gegen die Kartendatenbank geprüft)
+  const chaosText = fs.readFileSync(path.join(root, 'data/chaos.json'), 'utf8');
+  const perksText = fs.readFileSync(path.join(root, 'data/chaos_perks.json'), 'utf8');
+  const chaos = createChaos(JSON.parse(chaosText), JSON.parse(perksText), db);
   const rulesOut = process.env.SKIN ? JSON.stringify(rules) : rulesText;
-  const version = crypto.createHash('sha1').update(cardsText).update(rulesOut).update(skinText).update(modesText).digest('hex').slice(0, 10);
-  return { db, rules, modes, cardsText, rulesText: rulesOut, skinText, modesText, version };
+  const version = crypto
+    .createHash('sha1')
+    .update(cardsText)
+    .update(rulesOut)
+    .update(skinText)
+    .update(modesText)
+    .update(chaosText)
+    .update(perksText)
+    .digest('hex')
+    .slice(0, 10);
+  return { db, rules, modes, chaos, cardsText, rulesText: rulesOut, skinText, modesText, chaosText, perksText, version };
 }
 
 const MIME = {
@@ -65,7 +79,14 @@ function makeStaticHandler(data) {
     const p = decodeURIComponent(url.pathname);
     const headers = { 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-cache' };
     // Daten immer aus dem Speicher → identisch mit dem, was der Server simuliert
-    const json = { '/data/cards.json': data.cardsText, '/data/rules.json': data.rulesText, '/data/skin.json': data.skinText, '/data/modes.json': data.modesText };
+    const json = {
+      '/data/cards.json': data.cardsText,
+      '/data/rules.json': data.rulesText,
+      '/data/skin.json': data.skinText,
+      '/data/modes.json': data.modesText,
+      '/data/chaos.json': data.chaosText,
+      '/data/chaos_perks.json': data.perksText,
+    };
     if (json[p] !== undefined) {
       res.writeHead(200, { ...headers, 'Content-Type': MIME['.json'], ETag: data.version });
       res.end(json[p]);
@@ -127,7 +148,7 @@ export function startServer({ port = Number(process.env.PORT) || 3000, host = pr
   const data = loadData();
   // Nur für automatisierte Tests: einzelne Regelwerte überschreiben (z. B. kurze Reconnect-Frist)
   if (rulesOverride) for (const [k, v] of Object.entries(rulesOverride)) data.rules[k] = v && typeof v === 'object' && !Array.isArray(v) ? { ...data.rules[k], ...v } : v;
-  const mgr = new RoomManager({ db: data.db, rules: data.rules, modes: data.modes });
+  const mgr = new RoomManager({ db: data.db, rules: data.rules, modes: data.modes, chaos: data.chaos });
   const server = http.createServer(makeStaticHandler(data));
   const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 16 * 1024 });
 
@@ -254,6 +275,10 @@ export function startServer({ port = Number(process.env.PORT) || 3000, host = pr
           break;
         case C2S.MAP_PING:
           if (room) room.mapPing(session, msg.x, msg.y);
+          break;
+        case C2S.PERK_PICK:
+          if (!room) error('NOT_IN_ROOM');
+          else reply(room.perkPick(session, msg.perk));
           break;
         default:
           break;

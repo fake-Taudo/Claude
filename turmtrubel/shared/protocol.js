@@ -2,6 +2,7 @@
 // Alle Nachrichten sind JSON-Objekte mit einem Feld "type".
 
 // Version 2: Spielmodi (Modus beim Erstellen, Team-Lobby, Draft, Team-Ping, Bot-Übernahme).
+// Erweitert (abwärtskompatibel) um den Modus „Chaos“: perkPick / perkRound / perkResult, Snapshot-Felder pz/pt/pe.
 // Clients mit anderer Version erhalten beim Anmelden ERRORS.OUTDATED („Bitte Seite neu laden“).
 export const PROTOCOL_VERSION = 2;
 
@@ -27,6 +28,7 @@ export const C2S = Object.freeze({
   KICK: 'kick',           // { seat }        Gastgeber entfernt Spieler
   DRAFT_PICK: 'draftPick', // { card }       Karte im Draft wählen
   MAP_PING: 'mapPing',    // { x, y }        Zeichen für den Teamkollegen
+  PERK_PICK: 'perkPick',  // { perk }        Chaos: einen der zwei angebotenen Perks wählen
 });
 
 // Server → Client
@@ -49,6 +51,8 @@ export const S2C = Object.freeze({
   DRAFT_REVEAL: 'draftReveal', // { decks, names, seconds }
   TEAM_PING: 'teamPing',    // { seat, x, y }
   TAKEOVER: 'takeover',     // { seat, name, bot }
+  PERK_ROUND: 'perkRound',  // Chaos: Auswahlpause – Runde, eigene Optionen, Restzeit (auch nach Reconnect)
+  PERK_RESULT: 'perkResult', // Chaos: Ende der Auswahlpause – gewählte Perks beider Spieler
 });
 
 // Bit-Flags für Entitäten im Snapshot
@@ -108,6 +112,14 @@ export const ERRORS = Object.freeze({
   NOT_IN_LOBBY: 'Das geht nur in der Lobby.',
   KICKED: 'Der Gastgeber hat dich aus dem Raum entfernt.',
   TAKEN_OVER: 'Die Frist zum Wiederverbinden ist abgelaufen – ein Bot hat deinen Platz übernommen.',
+  NOT_IN_POOL: 'Im Chaos-Modus sind nur Karten aus dem Chaos-Kartenpool erlaubt.',
+});
+
+// Ablehnungen bei der Perk-Wahl (Antwort auf perkPick)
+export const PERK_REJECTS = Object.freeze({
+  NO_ROUND: 'Gerade läuft keine Perk-Auswahl.',
+  PERK_NOT_OFFERED: 'Dieser Perk steht nicht zur Wahl.',
+  ALREADY_PICKED: 'Du hast in dieser Runde schon gewählt.',
 });
 
 // Ablehnungen im Draft (Antwort auf draftPick)
@@ -138,6 +150,7 @@ export const REJECTS = Object.freeze({
   MIRROR_EMPTY: 'Der Spiegel braucht eine zuvor gespielte Karte.',
   MIRROR_CHAMPION: 'Der Spiegel kann keinen Champion kopieren.',
   TOO_FAST: 'Zu schnell – warte kurz bis zur nächsten Karte.',
+  PAUSED: 'Perk-Auswahl läuft – gleich geht es weiter.',
 });
 
 // Sechs Emotes – die Gesichter werden im Client prozedural gezeichnet.

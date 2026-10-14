@@ -19,6 +19,7 @@ export const Abilities = {
     const fail = (code) => ({ ok: false, code, message: REJECTS[code] });
     if (!this.started || this.result) return fail('NOT_RUNNING');
     if (!this.players[side]) return fail('NOT_RUNNING');
+    if (this.paused) return fail('PAUSED');
     const e = this.abilityEntity(side);
     if (!e) return fail('NO_ABILITY');
     if (e.deployT > 0 || e.cast) return fail('DEPLOYING');

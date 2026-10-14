@@ -162,6 +162,7 @@ export function createDb(raw, opts = {}) {
   const typeIndex = new Map(typeList.map((k, i) => [k, i]));
   const unitCache = new Map();
   const heroOf = new Map(cards.filter((c) => c.heroOf).map((c) => [c.id, c.heroOf]));
+  const levelDbs = new Map();
   const db = {
     raw,
     level,
@@ -206,6 +207,13 @@ export function createDb(raw, opts = {}) {
     /** Basiskarte eines Helden (oder null) */
     heroBase(id) {
       return heroOf.get(id) || null;
+    },
+    /** Dieselbe Datenbank auf einem anderen Level (Chaos: festes Level) – gleiche Karten-IDs und Typ-Indizes. */
+    atLevel(lv) {
+      const want = Number(lv) || BASE_LEVEL;
+      if (want === level) return db;
+      if (!levelDbs.has(want)) levelDbs.set(want, createDb(raw, { ...opts, level: want }));
+      return levelDbs.get(want);
     },
   };
   return db;
@@ -351,19 +359,23 @@ export function targetsAir(db, card) {
   return u.targets === 'both' || u.targets === 'air' || !!u.traits.secondary;
 }
 
-/** Erzeugt ein zufälliges, gültiges und halbwegs sinnvolles Deck. */
-export function randomDeck(db, rng = Math.random) {
+/**
+ * Erzeugt ein zufälliges, gültiges und halbwegs sinnvolles Deck.
+ * @param {object} [opts] { pool } – nur Karten aus dieser Menge (Chaos-Kartenpool)
+ */
+export function randomDeck(db, rng = Math.random, opts = {}) {
   const take = (arr) => arr.splice(Math.floor(rng() * arr.length), 1)[0];
   const slots = new Array(DECK_SIZE).fill(null);
   const used = new Set();
-  const blocked = (c) => used.has(c.id) || (c.heroOf && used.has(c.heroOf)) || [...used].some((u) => db.heroBase(u) === c.id);
+  const allowed = opts.pool ? (c) => opts.pool.has(c.id) : () => true;
+  const blocked = (c) => !allowed(c) || used.has(c.id) || (c.heroOf && used.has(c.heroOf)) || [...used].some((u) => db.heroBase(u) === c.id);
   const pool = () => db.cards.filter((c) => c.class === 'normal' && !blocked(c));
   const put = (i, card) => {
     slots[i] = card.id;
     used.add(card.id);
   };
 
-  const specials = db.cards.filter(isSpecial);
+  const specials = db.cards.filter((c) => isSpecial(c) && allowed(c));
   if (specials.length && rng() < 0.8) put(SPECIAL_SLOT, take(specials.slice()));
 
   const evos = pool().filter((c) => c.evo);

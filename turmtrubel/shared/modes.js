@@ -51,6 +51,10 @@ export function validateModes(json) {
         if (!(d.picksPerPlayer === 8 && d.poolSize >= 20 && d.champions >= 0 && d.pickSeconds > 0)) errors.push(`${where}: draft.picksPerPlayer = 8, poolSize ≥ 20, pickSeconds > 0`);
       }
     }
+    if (has(m.chaos)) {
+      if (m.chaos !== true) errors.push(`${where}: chaos muss true sein (Einstellungen stehen in chaos.json)`);
+      else if (m.players !== 2 || m.deckSource !== 'saved') errors.push(`${where}: Chaos gibt es nur im 1 gegen 1 mit eigenem Deck`);
+    }
     if (!Array.isArray(m.rules) || !m.rules.length) errors.push(`${where}: rules (Regel-Hinweise) fehlen`);
   }
   if (json.defaultMode && !ids.has(json.defaultMode)) errors.push('defaultMode unbekannt');
@@ -87,9 +91,11 @@ export function evosEnabled(mode) {
 /**
  * Effektive Regeln für ein Match in diesem Modus. Der klassische Modus liefert die Regeln unverändert
  * zurück (gleiches Objekt) – so bleibt der klassische Kampf bitgenau wie vorher.
+ * @param {object} [opts] { chaos } – Chaos-Einstellungen (shared/chaos.js createChaos), Pflicht für den Modus „Chaos“
  */
-export function resolveRules(rules, mode) {
+export function resolveRules(rules, mode, opts = {}) {
   if (!mode || isClassic(mode)) return rules;
+  if (mode.chaos && !opts.chaos) throw new Error(`Modus ${mode.id}: Chaos-Einstellungen (chaos.json) fehlen`);
   const R = structuredClone(rules);
   // Modifikator: Elixier
   const e = mode.elixir || {};
@@ -107,6 +113,15 @@ export function resolveRules(rules, mode) {
   if (!evosEnabled(mode)) R.evo = { ...(R.evo || {}), enabled: false };
   // Modifikator: Eingabe-Limit (Platzierungen pro Sekunde und Spieler)
   if (mode.limits?.playsPerSecond) R.limits = { playsPerSecond: mode.limits.playsPerSecond, burst: mode.limits.burst || Math.ceil(mode.limits.playsPerSecond * 2) };
+  // Modifikator: Chaos (Werte aus chaos.json) – Elixier-Faktor zusätzlich zu den Phasen, Turm-Leben, festes Level
+  if (mode.chaos) {
+    const c = opts.chaos.config || opts.chaos;
+    R.elixir.rate = (R.elixir.rate ?? 1) * c.elixirRateMultiplier;
+    for (const key of Object.keys(R.towers)) R.towers[key] = { ...R.towers[key], hp: Math.round(R.towers[key].hp * c.towerHpMultiplier) };
+    R.cardLevel = c.fixedLevel;
+    if (!c.evos) R.evo = { ...(R.evo || {}), enabled: false };
+    R.chaos = { towerHpMultiplier: c.towerHpMultiplier, elixirRateMultiplier: c.elixirRateMultiplier, fixedLevel: c.fixedLevel };
+  }
   // Modifikator: Teams
   R.players = mode.players;
   R.teamOf = teamLayout(mode.players);
@@ -122,7 +137,8 @@ export function isClassic(mode) {
     !mode.elixir &&
     !mode.limits &&
     !(mode.match && Object.values(mode.match).some(has)) &&
-    mode.evos !== false
+    mode.evos !== false &&
+    !mode.chaos
   );
 }
 
@@ -137,6 +153,7 @@ export function modeSummary(mode) {
     teams: mode.teams,
     deckSource: mode.deckSource,
     draft: mode.draft ? mode.draft.kind : null,
+    chaos: !!mode.chaos,
     rules: mode.rules,
   };
 }

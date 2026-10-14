@@ -14,6 +14,8 @@ import { Bot } from '../../server/bot.js';
 import { createDraft } from '../../server/draft.js';
 import { draftChoice } from '../../server/botdraft.js';
 import { mulberry32 } from '../../server/sim/rng.js';
+import { loadChaos, PerkRounds } from '../../server/chaos.js';
+import { choosePerk } from '../../server/botperk.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -21,13 +23,18 @@ export function loadAll() {
   const raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/cards.json'), 'utf8'));
   const rules = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/rules.json'), 'utf8'));
   const modes = createModes(JSON.parse(fs.readFileSync(path.join(ROOT, 'data/modes.json'), 'utf8')));
-  return { db: createDb(raw, { level: rules.cardLevel }), rules, modes };
+  const db = createDb(raw, { level: rules.cardLevel });
+  return { db, rules, modes, chaos: loadChaos(db) };
 }
 
-/** Ein Bot-Kampf; diffs[i] = Stufe auf Seite i. Draft-Modi draften die Bots selbst. */
-export function botMatch({ db, rules, modes }, modeId, diffs, seed, decks = null) {
+/**
+ * Ein Bot-Kampf; diffs[i] = Stufe auf Seite i. Draft-Modi draften die Bots selbst. Chaos: Decks aus dem Pool,
+ * Auswahlrunden wie im Raum (die Pause kostet keine Spielzeit, die Bots wählen ihre Perks selbst).
+ */
+export function botMatch({ db: baseDb, rules, modes, chaos }, modeId, diffs, seed, decks = null) {
   const mode = modes.get(modeId);
-  const R = resolveRules(rules, mode);
+  const R = resolveRules(rules, mode, mode.chaos ? { chaos } : {});
+  const db = mode.chaos ? baseDb.atLevel(R.cardLevel) : baseDb;
   if (!decks) {
     if (mode.deckSource === 'draft') {
       const d = createDraft(db, mode.draft, { seed });
@@ -36,18 +43,28 @@ export function botMatch({ db, rules, modes }, modeId, diffs, seed, decks = null
       decks = d.decks();
     } else {
       const rng = mulberry32(7000 + seed);
-      decks = [randomDeck(db, rng), randomDeck(db, rng)];
+      const opts = mode.chaos ? { pool: chaos.poolSet } : {};
+      decks = [randomDeck(db, rng, opts), randomDeck(db, rng, opts)];
     }
   }
   const m = new Match({ db, rules: R, decks, seed });
   m.started = true;
   const bots = diffs.map((d, i) => new Bot(m, i, seed * 13 + i, { difficulty: d, minGap: mode.bot?.minGap?.[d] }));
+  const rounds = mode.chaos ? new PerkRounds(chaos, m, { seed: seed ^ 0x6c6c }) : null;
+  const prng = mulberry32(seed * 977 + 5);
   while (!m.result && m.tick < 20 * 330) {
     for (const b of bots) b.update();
     m.step();
+    if (rounds && !m.result) {
+      const r = rounds.due();
+      if (r >= 0 && rounds.start(r)) {
+        for (const pl of rounds.pending()) rounds.pick(pl, choosePerk(chaos, m, pl, rounds.current.offers[pl], diffs[pl], prng));
+        rounds.finish();
+      }
+    }
     m.flushEvents();
   }
-  return { result: m.result, decks, ticks: m.tick };
+  return { result: m.result, decks, ticks: m.tick, perks: rounds ? rounds.chosen() : null };
 }
 
 /** Paarung A gegen B: Punkte von A (Sieg 1, Unentschieden 0,5). */

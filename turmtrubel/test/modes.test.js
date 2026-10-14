@@ -18,9 +18,9 @@ function matchIn(modeId, overrides = {}) {
   return m;
 }
 
-test('modes.json ist gültig und enthält die fünf Modi', () => {
+test('modes.json ist gültig und enthält die sechs Modi', () => {
   assert.deepEqual(validateModes(json), []);
-  assert.deepEqual(modes.list.map((m) => m.id), ['classic', 'infinite-elixir', 'triple-draft', 'mega-draft', '2v2']);
+  assert.deepEqual(modes.list.map((m) => m.id), ['classic', 'infinite-elixir', 'triple-draft', 'mega-draft', '2v2', 'chaos']);
   assert.equal(modes.defaultId, 'classic');
   assert.equal(modes.get('2v2').multiplayerOnly, true);
   assert.equal(modes.get('2v2').botsAllowed, false);

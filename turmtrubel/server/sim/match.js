@@ -18,6 +18,7 @@ import { Motion } from './motion.js';
 import { Spells } from './spells.js';
 import { Traits } from './traits.js';
 import { Abilities } from './abilities.js';
+import { Perks } from './perks.js';
 
 export { surfaceDist, formation };
 
@@ -43,6 +44,8 @@ export class Match {
     this.time = 0;
     this.phase = 'regular';
     this.started = false;
+    // Chaos: Auswahlpause (setzt der Raum; während der Pause ruft er step() nicht auf und Eingaben werden abgewiesen)
+    this.paused = false;
     this.result = null;
     this.nextId = 1;
     this.nextGroup = 1;
@@ -61,6 +64,8 @@ export class Match {
     // Spieler, dessen Einheit/Zauber/Geschoss gerade wirkt (für Folge-Einheiten, Elixier, Statistik)
     this.ctxPl = null;
     this.stats = this.teamOf.map(() => ({ played: 0, spent: 0, towerDamage: 0, abilities: 0 }));
+    // Chaos: Perks je Spieler (Karten-ID → Perk), siehe perks.js
+    this.perks = this.teamOf.map(() => ({}));
     this.evoOn = rules.evo?.enabled !== false;
     this.limits = rules.limits || null;
     // je Größenklasse ein Raster (this.nav = feinstes, auch für freie Plätze genutzt)
@@ -473,6 +478,7 @@ export class Match {
   play(pl, slot, cardId, x, y) {
     const fail = (code) => ({ ok: false, code, message: REJECTS[code] });
     if (!this.started || this.result) return fail('NOT_RUNNING');
+    if (this.paused) return fail('PAUSED');
     const p = this.players[pl];
     if (!p) return fail('NOT_RUNNING');
     const side = p.team;
@@ -733,6 +739,7 @@ export class Match {
       z,
       ev: this.events,
     };
+    if (this.rules.chaos) this._snap.pe = this.perkMarks();
     this._snapTick = this.tick;
     return this._snap;
   }
@@ -795,4 +802,4 @@ export class Match {
   }
 }
 
-Object.assign(Match.prototype, Combat, Motion, Spells, Traits, Abilities);
+Object.assign(Match.prototype, Combat, Motion, Spells, Traits, Abilities, Perks);

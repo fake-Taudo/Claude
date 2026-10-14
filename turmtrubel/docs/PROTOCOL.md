@@ -28,6 +28,7 @@ JSON-Nachrichten über WebSocket (`/ws`), jede mit Feld `type`. Definiert in `sh
 | `ability` | `seq` | – | Champion-/Heldenfähigkeit |
 | `emote` | `id` | – | Emote (Index 0–5) |
 | `mapPing` | `x`, `y` | ✓ | Nur 2 gegen 2: Zeichen für den Teamkollegen (Arena-Koordinaten, Abklingzeit 2 s) |
+| `perkPick` | `perk` | Chaos | Einen der zwei angebotenen Perks wählen (Perk-ID als Text, z. B. `giant.rare`), siehe Abschnitt „Modus Chaos“ |
 | `surrender` | – | – | Aufgeben. Im 2 gegen 2 heißt das „Kampf verlassen“: ein Bot übernimmt den Platz. |
 | `rematch` | `want` | – | Rematch-Wunsch; startet erst, wenn alle Plätze zustimmen |
 | `leave`, `name`, `ping` | – | – | wie Version 1 |
@@ -51,6 +52,8 @@ JSON-Nachrichten über WebSocket (`/ws`), jede mit Feld `type`. Definiert in `sh
 | `teamPing` | `seat`, `name`, `x`, `y` | ✓ (nur an das eigene Team) |
 | `takeover` | `seat`, `name`, `bot` | ✓ |
 | `notice` | `message`, `takenOver?` | `takenOver`: Rückkehr nach Ablauf der Frist |
+| `perkRound` | siehe „Modus Chaos“ | Chaos |
+| `perkResult` | siehe „Modus Chaos“ | Chaos |
 | `roomClosed` | `reason` (`left`, `hostLeft`, `expired`, **`kicked`**), `message` | `kicked` |
 | `error` | `code`, `message` | neue Codes siehe unten |
 
@@ -85,6 +88,9 @@ Dazu `me` pro Spieler. Erweiterungen nur in Team-Modi (mehr Spieler als Teams), 
 | Draft: `NOT_DRAFTING`, `NOT_YOUR_TURN`, `NOT_OFFERED`, `ALREADY_PICKED`, `TAKEN`, `CHAMPION_LIMIT`, `HERO_LIMIT`, `CONFLICT` | siehe `DRAFT_REJECTS` |
 | Kampf: `TOO_FAST` | Zu schnell – warte kurz bis zur nächsten Karte. (Eingabe-Limit, z. B. Unendlich-Elixier) |
 | Kampf: `MIRROR_CHAMPION` | Der Spiegel kann keinen Champion kopieren. |
+| Kampf: `PAUSED` | Perk-Auswahl läuft – gleich geht es weiter. (Chaos: `play` und `ability` während einer Auswahlpause) |
+| `NOT_IN_POOL` | Im Chaos-Modus sind nur Karten aus dem Chaos-Kartenpool erlaubt. Nicht erlaubt: … (`create`, `join`, `training`, `deck`) |
+| Perk-Wahl: `NO_ROUND`, `PERK_NOT_OFFERED`, `ALREADY_PICKED` | siehe `PERK_REJECTS` |
 
 ## Ablauf eines Raums
 
@@ -99,3 +105,24 @@ lobby ──(alle Plätze besetzt + bereit)──▶ countdown (3 s)
   - Klassisch und Draft im Kampf: Niederlage durch Verbindungsabbruch.
   - Während des Drafts: Der Draft wird abgebrochen, der andere bekommt eine Meldung. Ist der Gastgeber weg, wird der Raum geschlossen.
   - 2 gegen 2 im Kampf: Ein Bot übernimmt den Platz, solange noch ein Mensch im Raum ist. Danach ist kein Rematch mehr möglich.
+
+## Modus Chaos (Erweiterung, Version bleibt 2)
+
+Alle Felder kommen nur in Räumen mit dem Modus `chaos` vor; klassische Nachrichten und Snapshots bleiben Byte für Byte gleich.
+
+- **Daten:** `/data/chaos.json` (Kartenpool, Faktoren, Rundenplan, Seltenheiten) und `/data/chaos_perks.json` (120 Perks) liefert der Server wie die übrigen Daten aus dem Speicher. Sie fließen in `dataVersion` ein.
+- **Decks:** `create`, `join`, `training` und `deck` mit Karten außerhalb von `cardPool` → `NOT_IN_POOL`. Der Bot bekommt ein Zufallsdeck nur aus dem Pool.
+- **`matchInit.chaos`:** `towerHpMultiplier`, `elixirRateMultiplier`, `fixedLevel`, `rounds`, `schedule[]` (Spielzeit der Runden in s), `lastRoundOvertimeOnly`, `pickSeconds`, `chosen[][]` (bisher gewählte Perks je Platz, siehe unten), `pauseTotal` (s). Die Turm-Leben stehen wie immer in `maxHp` der Entitäten.
+- **Snapshot-Zusätze:** `pt` Pausenzeit gesamt in s (Wanduhr, zählt nicht zur Spielzeit) · `pz` `[runde, restzeit]` nur während einer Auswahlpause · `pe` flach `[id, stufe, id, stufe, …]` für Einheiten mit Perk (Stufe 1 Gewöhnlich, 2 Selten, 3 Episch). Während der Pause schickt der Server zwei Snapshots pro Sekunde mit unverändertem `k`/`t`.
+- **Ereignis `pk`:** `['pk', platz, typIndexDerKarte, stufe]` – ein Perk wurde einer Karte zugewiesen (für die Kennzeichnung im Kampf).
+
+### Auswahlrunde
+
+1. Erreicht die Spielzeit eine Rundenzeit (nach einem vollständigen Tick), hält der Server die Simulation an. Die letzte Runde gibt es nur in der Verlängerung.
+2. `perkRound` an jeden Spieler einzeln: `round` (1-basiert), `rounds`, `timeLeft` (s), `pickSeconds`, `weights` (Seltenheiten dieser Runde in %), `options[]` (eigene zwei Optionen: `{ id, card, tier, name, description, mechanic }`, leer wenn übersprungen), `skipped`, `picked` (eigene Wahl oder `null`), `done[]` (je Platz: fertig oder übersprungen), `pauseTotal`. Nach jeder Wahl kommt ein aktualisiertes `perkRound`.
+3. `perkPick { perk }` – der Server nimmt nur eine der eigenen zwei Optionen an (`PERK_NOT_OFFERED`, `ALREADY_PICKED`, `NO_ROUND`).
+4. Haben alle gewählt (oder ist die Frist abgelaufen – dann wählt der Server zufällig), kommt `perkResult` an alle: `round`, `rounds`, `skipped`, `picks[]` (Perk je Platz oder `null`), `auto[]` (zufällig gewählt?), `chosen[][]` (alle Perks bisher: `{ round, auto, id, card, tier, name, description, mechanic }`), `pauseTotal`. Danach läuft die Simulation sofort weiter.
+5. Hat kein Spieler mehr eine perk-freie Karte, entfällt die Runde ohne Pause (`perkResult` mit `skipped: true`).
+
+- **Reconnect während einer Pause:** nach `matchInit` (mit `resume`) und `matchStart` folgt `perkRound` mit denselben Optionen und der exakten Restzeit. Die Frist läuft auf der Wanduhr weiter; wer nicht zurückkommt, bekommt nach Ablauf eine zufällige Wahl.
+- **`matchEnd`:** zusätzlich `perks[][]` (wie `chosen`) und `pauseTotal`.

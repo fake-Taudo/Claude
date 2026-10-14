@@ -120,6 +120,28 @@
         "Tippe und halte auf die Arena, um deinem Kollegen ein Zeichen zu geben.",
         "Wer die Verbindung verliert und nicht zurückkommt, wird von einem Bot ersetzt."
       ]
+    },
+    {
+      "id": "chaos",
+      "name": "Chaos",
+      "short": "Perks verändern deine Karten",
+      "description": "Ein 1 gegen 1 mit 40 ausgewählten Karten: Mehrmals pro Kampf hält das Spiel kurz an, und du wählst für eine deiner Karten einen Perk, der sie bis zum Ende verändert.",
+      "icon": "sparkles",
+      "players": 2,
+      "teams": 2,
+      "multiplayerOnly": false,
+      "botsAllowed": true,
+      "deckSource": "saved",
+      "evos": false,
+      "chaos": true,
+      "rules": [
+        "Du spielst ein eigenes Chaos-Deck aus 40 erlaubten Karten (höchstens 1 Champion bzw. Held), alle auf Level 11, ohne Evolutionen.",
+        "Alle Türme haben doppelt so viele Lebenspunkte, Elixier lädt 1,5× so schnell (Doppel- und Dreifach-Elixier kommen noch dazu).",
+        "Bei 0:36, 1:12, 1:48 und 2:24 Spielzeit hält der Kampf an: Du wählst in 6 Sekunden einen von zwei Perks für eine deiner Karten – sonst wählt der Zufall.",
+        "Erreicht ihr die Verlängerung, gibt es bei 3:00 eine fünfte Runde mit epischen Perks.",
+        "Jede Karte bekommt höchstens einen Perk. Er gilt nur für dich und bis zum Ende des Kampfs, die Elixierkosten bleiben gleich.",
+        "Die Pausen zählen nicht zur Spielzeit."
+      ]
     }
   ]
 }

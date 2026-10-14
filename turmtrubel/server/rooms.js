@@ -3,11 +3,12 @@
 //
 // Ablauf eines Raums:
 //   lobby → countdown → [draft → reveal] → loading → playing → ended → (Rematch) countdown …
+// Chaos: Während „playing“ hält der Raum die Simulation für Auswahlrunden an (perkRounds.current gesetzt).
 // Plätze („Sitze“): so viele wie der Modus Spieler hat. Sitz = Spielerindex der Simulation, das Team
 // ergibt sich aus teamLayout() (klassisch: Sitz 0 blau, Sitz 1 rot; 2v2: Sitze 0–1 blau, 2–3 rot).
 import fs from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { S2C, ERRORS, CODE_ALPHABET, CODE_LENGTH, END_REASONS, PING_COOLDOWN, normalizeCode, isValidCodeFormat, sanitizeName } from '../shared/protocol.js';
+import { S2C, ERRORS, PERK_REJECTS, CODE_ALPHABET, CODE_LENGTH, END_REASONS, PING_COOLDOWN, normalizeCode, isValidCodeFormat, sanitizeName } from '../shared/protocol.js';
 import { validateDeck, averageElixir, randomDeck } from '../shared/cards.js';
 import { ARENA_W, ARENA_H } from '../shared/arena.js';
 import { createModes, resolveRules, teamLayout, modeSummary, DIFFICULTIES, DIFFICULTY_LABELS } from '../shared/modes.js';
@@ -16,6 +17,9 @@ import { Bot } from './bot.js';
 import { createDraft } from './draft.js';
 import { draftChoice } from './botdraft.js';
 import { mulberry32 } from './sim/rng.js';
+import { loadChaos, PerkRounds } from './chaos.js';
+import { choosePerk } from './botperk.js';
+import { cardsOutsidePool, perkSummary } from '../shared/chaos.js';
 
 let fileModes = null;
 /** modes.json von der Platte (Standard, wenn der Aufrufer keine Modi übergibt – z. B. in Tests). */
@@ -42,10 +46,11 @@ export class Session {
 }
 
 export class RoomManager {
-  constructor({ db, rules, modes = null, now = () => Date.now(), random = Math.random, timers = {} }) {
+  constructor({ db, rules, modes = null, chaos = null, now = () => Date.now(), random = Math.random, timers = {} }) {
     this.db = db;
     this.rules = rules;
     this.modes = modes || defaultModes();
+    this._chaos = chaos;
     this.now = now;
     this.random = random;
     this.setTimeout = timers.setTimeout || setTimeout;
@@ -58,6 +63,12 @@ export class RoomManager {
 
   get lobbyRules() {
     return this.rules.lobby;
+  }
+
+  /** Chaos-Daten (chaos.json + chaos_perks.json); ohne Übergabe beim ersten Bedarf von der Platte. */
+  get chaos() {
+    if (!this._chaos) this._chaos = loadChaos(this.db);
+    return this._chaos;
   }
 
   // ─────────────── Sitzungen ───────────────
@@ -136,10 +147,19 @@ export class RoomManager {
     return mode ? { mode } : { error: { ok: false, code: 'UNKNOWN_MODE', message: ERRORS.UNKNOWN_MODE } };
   }
 
-  /** Deck für einen Modus prüfen (Draft-Modi brauchen kein gespeichertes Deck). */
+  /** Chaos: Deck nur aus dem Kartenpool (Fehler oder null). */
+  checkPool(mode, deck) {
+    if (!mode.chaos) return null;
+    const out = cardsOutsidePool(this.chaos, deck);
+    if (!out.length) return null;
+    const names = out.map((id) => this.db.card(id)?.name || id).join(', ');
+    return { ok: false, code: 'NOT_IN_POOL', message: `${ERRORS.NOT_IN_POOL} Nicht erlaubt: ${names}.` };
+  }
+
+  /** Deck für einen Modus prüfen (Draft-Modi brauchen kein gespeichertes Deck, Chaos nur Pool-Karten). */
   deckFor(mode, deck) {
     if (mode.deckSource === 'draft') return { deck: null };
-    const bad = this.checkDeck(deck);
+    const bad = this.checkDeck(deck) || this.checkPool(mode, deck);
     return bad ? { error: bad } : { deck: deck.slice() };
   }
 
@@ -193,7 +213,7 @@ export class RoomManager {
     bot.isBot = true;
     bot.connected = true;
     bot.difficulty = diff;
-    room.addPlayer(bot, mode.deckSource === 'draft' ? null : randomDeck(this.db, this.random));
+    room.addPlayer(bot, mode.deckSource === 'draft' ? null : randomDeck(this.db, this.random, mode.chaos ? { pool: this.chaos.poolSet } : {}));
     room.ready = room.players.map(() => true);
     room.startCountdown();
     return { ok: true, room };
@@ -253,7 +273,9 @@ export class Room {
     this.mode = mode;
     this.size = mode.players;
     this.teamOf = teamLayout(this.size);
-    this.rules = resolveRules(mgr.rules, mode);
+    this.rules = resolveRules(mgr.rules, mode, mode.chaos ? { chaos: mgr.chaos } : {});
+    // Chaos: festes Kartenlevel (gleiche Datenbank, wenn es dem Standard entspricht)
+    this.levelDb = mode.chaos ? mgr.db.atLevel(this.rules.cardLevel) : null;
     this.createdAt = mgr.now();
     this.expiresAt = this.createdAt + (mgr.lobbyRules.codeTtlSeconds ?? 600) * 1000;
     const n = () => new Array(this.size).fill(null);
@@ -280,10 +302,18 @@ export class Room {
     this.deadlineAt = 0;
     this.botHurry = false;
     this.pingAt = new Map();
+    // Chaos: Auswahlrunden des laufenden Kampfs, Frist (Wanduhr) und Pausenzeit
+    this.perkRounds = null;
+    this.perkTimer = null;
+    this.perkBotTimers = new Map();
+    this.perkDeadlineAt = 0;
+    this.pauseStartedAt = 0;
+    this.pauseMs = 0;
+    this.pauseTicks = 0;
   }
 
   get db() {
-    return this.mgr.db;
+    return this.levelDb || this.mgr.db;
   }
 
   get bot() {
@@ -311,6 +341,8 @@ export class Room {
     this.timers.clear();
     this.draftTimer = null;
     this.botPickTimers.clear();
+    this.perkTimer = null;
+    this.perkBotTimers.clear();
   }
 
   full() {
@@ -338,7 +370,8 @@ export class Room {
   }
 
   deckOk(seat) {
-    return this.mode.deckSource === 'draft' || validateDeck(this.db, this.decks[seat]).ok;
+    if (this.mode.deckSource === 'draft') return true;
+    return validateDeck(this.db, this.decks[seat]).ok && !this.mgr.checkPool(this.mode, this.decks[seat]);
   }
 
   lobbyState(seat) {
@@ -381,7 +414,7 @@ export class Room {
   setDeck(s, deck) {
     if (this.state !== 'lobby' && this.state !== 'countdown' && this.state !== 'ended') return { ok: false, code: 'ROOM_BUSY', message: ERRORS.ROOM_BUSY };
     if (this.mode.deckSource === 'draft') return { ok: true }; // Draft-Modi: Deck entsteht im Draft
-    const bad = this.mgr.checkDeck(deck);
+    const bad = this.mgr.checkDeck(deck) || this.mgr.checkPool(this.mode, deck);
     if (bad) return bad;
     this.decks[s.side] = deck.slice();
     if (this.state === 'countdown') this.cancelCountdown();
@@ -674,6 +707,7 @@ export class Room {
       training: this.training,
       matchNo: this.matchNo,
       mode: modeSummary(this.mode),
+      ...(this.perkRounds ? { chaos: this.chaosInfo() } : {}),
       rules: {
         tickRate: R.tickRate,
         regularSeconds: R.regularSeconds,
@@ -704,6 +738,8 @@ export class Room {
     this.takenOver.clear();
     const seed = Math.floor(this.mgr.random() * 2 ** 31);
     this.match = new Match({ db: this.db, rules: this.rules, decks: this.matchDecks(), seed });
+    this.perkRounds = this.mode.chaos ? new PerkRounds(this.mgr.chaos, this.match, { seed: seed ^ 0x6c6c }) : null;
+    this.pauseMs = 0;
     this.bots = new Map();
     this.players.forEach((p, i) => {
       if (!p) return;
@@ -734,7 +770,7 @@ export class Room {
   sendSnapshots() {
     const m = this.match;
     const common = JSON.stringify(m.snapshotCommon());
-    const body = common.slice(1, -1);
+    const body = common.slice(1, -1) + this.chaosSnapExtra();
     this.players.forEach((p, i) => {
       if (!p || p.isBot || !p.connected || !p.sendFn) return;
       p.sendFn(`{"type":"s",${body},"me":${JSON.stringify(m.meState(i))}}`, true);
@@ -744,14 +780,176 @@ export class Room {
 
   tick() {
     const m = this.match;
+    if (this.perkRounds?.current) return this.pauseTick();
     for (const b of this.bots.values()) b.update();
     m.step();
+    // Chaos: Auswahlrunde erst nach einem vollständig abgeschlossenen Tick (Tote verarbeitet, Uhr/Phase aktuell)
+    if (this.perkRounds && !m.result) {
+      const r = this.perkRounds.due();
+      if (r >= 0) this.startPerkRound(r);
+    }
     this.sendSnapshots();
     if (m.result) this.finishMatch();
   }
 
+  // ─────────────── Chaos: Auswahlrunden ───────────────
+
+  /** Gesamte Pausenzeit in Sekunden (abgeschlossene Pausen + laufende). */
+  pauseSeconds() {
+    const running = this.perkRounds?.current ? this.mgr.now() - this.pauseStartedAt : 0;
+    return Math.round((this.pauseMs + running) / 100) / 10;
+  }
+
+  /** Restzeit der laufenden Auswahl in Sekunden. */
+  perkTimeLeft() {
+    return Math.max(0, Math.round((this.perkDeadlineAt - this.mgr.now()) / 100) / 10);
+  }
+
+  /** Snapshot-Zusatz im Chaos-Modus: pt = Pausenzeit gesamt, pz = [Runde, Restzeit] während einer Auswahlpause. */
+  chaosSnapExtra() {
+    if (!this.perkRounds) return '';
+    const c = this.perkRounds.current;
+    return `,"pt":${this.pauseSeconds()}` + (c ? `,"pz":[${c.index + 1},${this.perkTimeLeft()}]` : '');
+  }
+
+  /** Chaos-Teil von matchInit: Regeln, Rundenplan und bisher gewählte Perks (auch nach Reconnect). */
+  chaosInfo() {
+    const c = this.mgr.chaos.config;
+    return {
+      towerHpMultiplier: c.towerHpMultiplier,
+      elixirRateMultiplier: c.elixirRateMultiplier,
+      fixedLevel: c.fixedLevel,
+      rounds: this.perkRounds.total,
+      schedule: this.perkRounds.times,
+      lastRoundOvertimeOnly: c.lastRoundOvertimeOnly,
+      pickSeconds: c.pickTimeSeconds,
+      chosen: this.chosenPerks(),
+      pauseTotal: this.pauseSeconds(),
+    };
+  }
+
+  /** Gewählte Perks je Spieler (Anzeige: Runde, Perk, automatisch gewählt?). */
+  chosenPerks() {
+    if (!this.perkRounds) return null;
+    return this.perkRounds.chosen().map((list) => list.map((x) => ({ round: x.round, auto: x.auto, ...perkSummary(this.mgr.chaos.perk(x.perk)) })));
+  }
+
+  /** Pause während einer Auswahlrunde: keine Simulation, alle 0,5 s ein Snapshot mit Pausenmarke (Verbindung bleibt „lebendig“). */
+  pauseTick() {
+    this.pauseTicks++;
+    if (this.pauseTicks % Math.max(1, Math.round(this.rules.tickRate / 2)) === 0) this.sendSnapshots();
+  }
+
+  startPerkRound(index) {
+    const cur = this.perkRounds.start(index);
+    if (!cur) {
+      // kein Spieler hat noch eine perk-freie Karte: Runde entfällt ohne Pause
+      this.broadcast({ type: S2C.PERK_RESULT, round: index + 1, rounds: this.perkRounds.total, skipped: true, picks: this.players.map(() => null), auto: this.players.map(() => false), chosen: this.chosenPerks(), pauseTotal: this.pauseSeconds() });
+      return;
+    }
+    const cfg = this.mgr.chaos.config;
+    const ms = cfg.pickTimeSeconds * 1000;
+    this.match.paused = true;
+    this.pauseStartedAt = this.mgr.now();
+    this.pauseTicks = 0;
+    this.perkDeadlineAt = this.pauseStartedAt + ms;
+    this.perkTimer = this.later(ms, () => this.perkTimeout());
+    const rng = mulberry32((this.matchNo * 7919 + index * 104729) | 0);
+    for (const seat of this.perkRounds.pending()) {
+      const p = this.players[seat];
+      if (!p?.isBot) continue;
+      // menschlich wirkende Bedenkzeit (bot.pickDelaySeconds), immer vor Ablauf der Frist
+      const [lo, hi] = cfg.bot.pickDelaySeconds;
+      const delay = Math.min(ms - 300, (lo + rng() * (hi - lo)) * 1000);
+      const h = this.later(Math.max(100, delay), () => {
+        this.perkBotTimers.delete(seat);
+        const c = this.perkRounds?.current;
+        if (!c || c !== cur || c.picks[seat]) return;
+        const id = choosePerk(this.mgr.chaos, this.match, seat, c.offers[seat], p.difficulty || this.difficulty, rng);
+        if (!this.perkRounds.pick(seat, id).ok) this.perkRounds.autoPick(seat);
+        this.afterPerkPick();
+      });
+      this.perkBotTimers.set(seat, h);
+    }
+    this.broadcastPerkRound();
+  }
+
+  /** Laufende Auswahlrunde aus Sicht eines Spielers (nur die eigenen Optionen). */
+  perkRoundFor(seat) {
+    const c = this.perkRounds.current;
+    const offer = c.offers[seat];
+    return {
+      type: S2C.PERK_ROUND,
+      round: c.index + 1,
+      rounds: this.perkRounds.total,
+      timeLeft: this.perkTimeLeft(),
+      pickSeconds: this.mgr.chaos.config.pickTimeSeconds,
+      weights: this.mgr.chaos.config.rarityByRound[c.index],
+      options: offer ? offer.map((id) => perkSummary(this.mgr.chaos.perk(id))) : [],
+      skipped: !offer,
+      picked: c.picks[seat],
+      done: c.offers.map((o, i) => !o || !!c.picks[i]),
+      pauseTotal: this.pauseSeconds(),
+    };
+  }
+
+  broadcastPerkRound() {
+    this.players.forEach((p, i) => p && !p.isBot && p.send(this.perkRoundFor(i)));
+  }
+
+  /** Wahl eines Spielers (C2S perkPick) – nur einer der zwei angebotenen Perks. */
+  perkPick(s, perkId) {
+    if (this.state !== 'playing' || !this.perkRounds?.current) return { ok: false, code: 'NO_ROUND', message: PERK_REJECTS.NO_ROUND };
+    const r = this.perkRounds.pick(s.side, perkId);
+    if (!r.ok) {
+      s.send(this.perkRoundFor(s.side));
+      return r;
+    }
+    this.afterPerkPick();
+    return { ok: true };
+  }
+
+  afterPerkPick() {
+    if (this.perkRounds.done) this.endPerkRound();
+    else this.broadcastPerkRound();
+  }
+
+  perkTimeout() {
+    this.perkTimer = null;
+    if (this.state !== 'playing' || !this.perkRounds?.current) return;
+    this.endPerkRound();
+  }
+
+  /** Runde beenden: fehlende Wahl zufällig, Perks anwenden, Simulation fortsetzen. */
+  endPerkRound() {
+    this.cancel(this.perkTimer);
+    this.perkTimer = null;
+    for (const h of this.perkBotTimers.values()) this.cancel(h);
+    this.perkBotTimers.clear();
+    const rec = this.perkRounds.finish();
+    this.pauseMs += this.mgr.now() - this.pauseStartedAt;
+    this.match.paused = false;
+    this.broadcast({
+      type: S2C.PERK_RESULT,
+      round: rec.index + 1,
+      rounds: this.perkRounds.total,
+      skipped: false,
+      picks: rec.picks.map((id) => perkSummary(this.mgr.chaos.perk(id))),
+      auto: rec.auto.slice(),
+      chosen: this.chosenPerks(),
+      pauseTotal: this.pauseSeconds(),
+    });
+    this.sendSnapshots();
+  }
+
   finishMatch() {
     this.clearTimers();
+    if (this.perkRounds?.current) {
+      // Kampf endet mitten in einer Auswahlpause (Aufgabe, Abbruch): Runde verwerfen
+      this.pauseMs += this.mgr.now() - this.pauseStartedAt;
+      this.perkRounds.abort();
+      this.match.paused = false;
+    }
     this.state = 'ended';
     const r = this.match.result;
     this.lastResult = r;
@@ -784,6 +982,7 @@ export class Room {
       training: this.training,
       mode: modeSummary(this.mode),
       decks: this.mode.deckSource === 'draft' ? this.draftDecks : null,
+      ...(this.perkRounds ? { perks: this.chosenPerks(), pauseTotal: this.pauseSeconds() } : {}),
     };
   }
 
@@ -946,6 +1145,8 @@ export class Room {
       case 'playing':
         s.send({ ...this.matchInitFor(seat), resume: true });
         s.send({ type: S2C.MATCH_START, resume: true });
+        // Chaos: laufende Auswahlrunde mit exakter Restzeit und denselben Optionen wiederherstellen
+        if (this.perkRounds?.current) s.send(this.perkRoundFor(seat));
         break;
       case 'ended':
         if (this.lastResult) s.send(this.resultFor(seat));

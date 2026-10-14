@@ -12,7 +12,7 @@ const ctx = loadAll();
 const BOT_MODES = ctx.modes.list.filter((m) => m.botsAllowed).map((m) => m.id);
 
 test('Jeder Bot-fähige Modus mit jeder Stufe läuft vollständig durch (ohne Fehler, ohne Hänger)', () => {
-  assert.deepEqual(BOT_MODES, ['classic', 'infinite-elixir', 'triple-draft', 'mega-draft']);
+  assert.deepEqual(BOT_MODES, ['classic', 'infinite-elixir', 'triple-draft', 'mega-draft', 'chaos']);
   for (const mode of BOT_MODES) {
     for (const diffs of [['easy', 'easy'], ['medium', 'medium'], ['hard', 'hard'], ['easy', 'hard']]) {
       const { result, ticks } = botMatch(ctx, mode, diffs, 7);
