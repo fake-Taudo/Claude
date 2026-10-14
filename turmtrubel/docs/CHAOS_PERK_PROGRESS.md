@@ -1,6 +1,6 @@
 # Fortschritt Perk-Interview (Chaos-Modus)
 
-Stand: 14 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
+Stand: 19 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
 
 Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).
 
@@ -22,14 +22,14 @@ Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfol
 | 12 | Musketierin | Schnellfeuer | Kanonenkugel | Nachschub | eigene Idee |
 | 13 | Elektromagier | Dreifachblitz | Dauerblitz | Blitzherr | Interview, eigene Idee |
 | 14 | Goblin Demolisher | Weitwerfer | Zündkette | Dauerfeuerwerk | eigene Idee, Interview |
+| 15 | Magier | Großbrand | Feuerballwerfer | Magier-Trio | eigene Idee |
+| 16 | Hexe | Doppelritual | Wächterkreis | Evo-Beschwörung | eigene Idee |
+| 17 | Fledermäuse | Blutdurst | Teilung | Explosionsbisse | Interview, eigene Idee |
+| 18 | Lakaien | Vierter Lakai | Schockbiss | Megastaffel | Interview, eigene Idee |
+| 19 | Koboldgang | Großfamilie | Giftspeere | Riesenbande | eigene Idee |
 
 ## Offen
 
-15. Magier (`wizard`)
-16. Hexe (`witch`)
-17. Fledermäuse (`bats`)
-18. Lakaien (`minions`)
-19. Koboldgang (`goblin-gang`)
 20. Skelettarmee (`skeleton-army`)
 21. Barbaren (`barbarians`)
 22. Eisgeist (`ice-spirit`)

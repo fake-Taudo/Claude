@@ -864,6 +864,342 @@
       "elixirCostUnchanged": true,
       "balanceNote": "Eigene Idee aus dem Interview: Episch, weil er Bodentruppen in Sekunden einebnet; er trifft weiter keine Luft und wird bei halbem Leben zum Kamikaze.",
       "selection": "custom"
+    },
+    {
+      "id": "wizard.common",
+      "cardId": "wizard",
+      "rarityTier": "common",
+      "name": "Großbrand",
+      "description": "Seine Feuerbälle explodieren doppelt so weit: Explosionsradius 1,5 → 3 Felder (Schaden unverändert 304).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "mult": {
+          "splash": 2
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Trifft ganze Gruppen auf einmal, Schaden, Tempo und Leben bleiben aber gleich.",
+      "selection": "custom"
+    },
+    {
+      "id": "wizard.rare",
+      "cardId": "wizard",
+      "rarityTier": "rare",
+      "name": "Feuerballwerfer",
+      "description": "Jede Attacke ist ein Feuerball-Zauber auf sein Ziel (688 Schaden, Radius 2,5, Rückstoß, an Türmen 23 %) im normalen Takt alle 1,4 s.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "replaceAttack": {
+          "castSpell": "fireball",
+          "atTarget": true,
+          "usePerk": false
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Mehr als doppelter Schaden pro Treffer mit Rückstoß – sehr stark, aber der Magier bleibt mit 832 Leben verwundbar und braucht Schutz.",
+      "selection": "custom"
+    },
+    {
+      "id": "wizard.epic",
+      "cardId": "wizard",
+      "rarityTier": "epic",
+      "name": "Magier-Trio",
+      "description": "Mit dem Magier erscheinen ein Eismagier (688 Leben, verlangsamt) und ein Elektromagier (714 Leben, betäubt) – alle drei mit normalen Werten, die Begleiter ohne Perk.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "groups": [
+          {
+            "unit": "ice-wizard",
+            "count": 1,
+            "behind": 1
+          },
+          {
+            "unit": "electro-wizard",
+            "count": 1,
+            "behind": 1
+          }
+        ],
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil man für 5 Elixier rund 12 Elixier Wert bekommt; alle drei sind aber anfällig für Flächenzauber wie Feuerball oder Blitz.",
+      "selection": "custom"
+    },
+    {
+      "id": "witch.common",
+      "cardId": "witch",
+      "rarityTier": "common",
+      "name": "Doppelritual",
+      "description": "Die Hexe beschwört doppelt so oft: alle 3,5 s statt alle 7 s je 4 Skelette.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "spawner": {
+            "unit": "skeletons",
+            "count": 4,
+            "interval": 3.5,
+            "firstDelay": 1
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Doppelt so viele Skelette über die Zeit, aber jedes einzelne stirbt weiter an jedem Flächenschaden.",
+      "selection": "custom"
+    },
+    {
+      "id": "witch.rare",
+      "cardId": "witch",
+      "rarityTier": "rare",
+      "name": "Wächterkreis",
+      "description": "Statt 4 Skeletten beschwört sie alle 7 s 4 Wächter (81 Leben + 256 Schild, 117 Schaden, Reichweite 1,6).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "spawner": {
+            "unit": "guards",
+            "count": 4,
+            "interval": 7,
+            "firstDelay": 1
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Die Schilde halten Pfeile und Knall aus, damit überleben ihre Diener deutlich länger als normale Skelette.",
+      "selection": "custom"
+    },
+    {
+      "id": "witch.epic",
+      "cardId": "witch",
+      "rarityTier": "epic",
+      "name": "Evo-Beschwörung",
+      "description": "Sie beschwört alle 7 s 4 Evo-Skelette, die bei jedem Angriff ein weiteres Evo-Skelett erzeugen (bis zu 8 pro Beschwörung) – auch wenn Evolutionen im Chaos-Modus sonst aus sind.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "spawner": {
+            "unit": "skeletons",
+            "count": 4,
+            "interval": 7,
+            "firstDelay": 1,
+            "evo": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil sich jede Beschwörung auf bis zu 8 Skelette verdoppelt; ein Flächenzauber im richtigen Moment beendet die Vermehrung aber sofort.",
+      "selection": "custom"
+    },
+    {
+      "id": "bats.common",
+      "cardId": "bats",
+      "rarityTier": "common",
+      "name": "Blutdurst",
+      "description": "Jeder Biss heilt die Fledermaus um 40 Leben (höchstens bis zu ihren vollen 81 Leben).",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onHit",
+        "traits": {
+          "selfHealOnHit": {
+            "heal": 40,
+            "pulses": 1,
+            "interval": 0,
+            "maxHp": 81
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Fledermäuse halten im Dauerkampf länger durch, sterben aber weiterhin an jedem Flächenzauber auf einen Schlag.",
+      "selection": "interview"
+    },
+    {
+      "id": "bats.rare",
+      "cardId": "bats",
+      "rarityTier": "rare",
+      "name": "Teilung",
+      "description": "Jede sterbende Fledermaus zerfällt einmal in 2 Mini-Fledermäuse mit je 40 Leben und 40 Schaden, die sich nicht weiter teilen.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "traits": {
+          "deathSpawn": {
+            "unit": "bats",
+            "count": 2,
+            "scale": {
+              "hp": 0.5,
+              "damage": 0.5,
+              "radius": 0.7
+            }
+          }
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Aus 5 werden bis zu 15 Flieger – Einzelziel-Abwehr wird überfordert, ein zweiter Flächenzauber räumt die Minis aber ab.",
+      "selection": "interview"
+    },
+    {
+      "id": "bats.epic",
+      "cardId": "bats",
+      "rarityTier": "epic",
+      "name": "Explosionsbisse",
+      "description": "Jeder Biss explodiert und trifft alle Gegner im Umkreis von 1,5 Feldern (Boden und Luft) mit 100 Schaden statt 81 an einem einzelnen Ziel.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "set": {
+          "damage": 100,
+          "splash": 1.5
+        },
+        "traits": {
+          "onHit": {
+            "fx": "blast"
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil fünf fliegende Mini-Bomben ganze Schwärme zerlegen; die Fledermäuse selbst bleiben mit 81 Leben extrem zerbrechlich.",
+      "selection": "custom"
+    },
+    {
+      "id": "minions.common",
+      "cardId": "minions",
+      "rarityTier": "common",
+      "name": "Vierter Lakai",
+      "description": "Es kommen 4 statt 3 Lakaien, jeder mit vollen Werten (230 Leben, 107 Schaden).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "count": 4
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Ein Drittel mehr Schaden und Leben, aber dieselbe Anfälligkeit für Pfeile und andere Flächenzauber.",
+      "selection": "interview"
+    },
+    {
+      "id": "minions.rare",
+      "cardId": "minions",
+      "rarityTier": "rare",
+      "name": "Schockbiss",
+      "description": "Jeder Treffer eines Lakaien betäubt das Ziel 0,5 Sekunden.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "hook": "onHit",
+        "traits": {
+          "onHit": {
+            "stun": 0.5
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Drei Lakaien zusammen halten ein Einzelziel fast dauerhaft betäubt und setzen Infernos zurück – taktisch neu, aber an Flächenschaden ändert sich nichts.",
+      "selection": "custom"
+    },
+    {
+      "id": "minions.epic",
+      "cardId": "minions",
+      "rarityTier": "epic",
+      "name": "Megastaffel",
+      "description": "Statt der 3 Lakaien erscheinen 3 Megalakaien (je 837 Leben, 312 Schaden alle 1,5 s, fliegen, Boden & Luft).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "replaceUnit": "mega-minion",
+        "count": 3,
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (nach Rückfrage: Megalakaien): Episch, weil man rund 9 Elixier Wert für 3 bekommt; gegen Pfeile und Feuerball bleiben die Megalakaien aber deutlich robuster als normale Lakaien, also ist Luftabwehr Pflicht.",
+      "selection": "custom"
+    },
+    {
+      "id": "goblin-gang.common",
+      "cardId": "goblin-gang",
+      "rarityTier": "common",
+      "name": "Großfamilie",
+      "description": "Je 2 Kobolde und 2 Speerkobolde mehr: 5 Kobolde und 5 Speerkobolde statt je 3.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "groups": [
+          {
+            "unit": "goblins",
+            "count": 5
+          },
+          {
+            "unit": "spear-goblins",
+            "count": 5,
+            "behind": 1.2
+          }
+        ],
+        "replaceGroups": true
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Zwei Drittel mehr Einheiten, die aber genauso zerbrechlich bleiben – ein Flächenzauber trifft weiterhin fast alle.",
+      "selection": "custom"
+    },
+    {
+      "id": "goblin-gang.rare",
+      "cardId": "goblin-gang",
+      "rarityTier": "rare",
+      "name": "Giftspeere",
+      "description": "Statt der gemischten Gang kommen 6 Speerkobolde, deren Speere wie beim Evo-Blasrohrkobold vergiften: Gift im Radius 1,5, das mit jedem Treffer auf dasselbe Ziel stärker wird (nach 1/4/7 Treffern 51/115/307 Schaden pro Sekunde, an Türmen 25 %).",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "groups": [
+          {
+            "unit": "spear-goblins",
+            "count": 6
+          }
+        ],
+        "replaceGroups": true,
+        "groupTraits": {
+          "spear-goblins": {
+            "poisonDart": {
+              "radius": 1.5,
+              "duration": 1,
+              "towerDamage": 0.25,
+              "stages": [
+                [
+                  1,
+                  51
+                ],
+                [
+                  4,
+                  115
+                ],
+                [
+                  7,
+                  307
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Sechs Fernkämpfer mit wachsendem Flächengift zermürben Tanks und Gruppen – stark, aber ohne Nahkämpfer steht nichts zwischen ihnen und dem Gegner.",
+      "selection": "custom"
+    },
+    {
+      "id": "goblin-gang.epic",
+      "cardId": "goblin-gang",
+      "rarityTier": "epic",
+      "name": "Riesenbande",
+      "description": "Statt der Gang erscheinen 1 Koboldriese (3022 Leben, greift Gebäude an, 2 Speerkobolde auf dem Rücken) und 2 Blasrohrkobolde (je 261 Leben, 156 Schaden, Reichweite 6,5) mit normalen Werten.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "groups": [
+          {
+            "unit": "goblin-giant",
+            "count": 1
+          },
+          {
+            "unit": "dart-goblin",
+            "count": 2,
+            "behind": 1.2
+          }
+        ],
+        "replaceGroups": true,
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil aus 3 Elixier rund 12 Elixier Wert mit Tank und Unterstützung werden; der Koboldriese ist langsam und die Blasrohrkobolde fallen jedem Zauber zum Opfer.",
+      "selection": "custom"
     }
   ]
 }
