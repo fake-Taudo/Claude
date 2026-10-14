@@ -27,7 +27,7 @@ function check(p, cardId) {
 function writeProgress() {
   const chaos = read('data/chaos.json');
   const cards = new Map(read('data/cards.json').cards.map((c) => [c.id, c]));
-  const { perks } = read('data/chaos_perks.json');
+  const { perks, approved } = read('data/chaos_perks.json');
   const by = new Map();
   for (const p of perks) {
     if (!by.has(p.cardId)) by.set(p.cardId, {});
@@ -40,6 +40,7 @@ function writeProgress() {
   L.push('# Fortschritt Perk-Interview (Chaos-Modus)', '');
   L.push(`Stand: ${done.length} von ${pool.length} Karten erledigt. Die Datei wird von \`node tools/chaos/perks.mjs\` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in \`data/chaos_perks.json\`.`, '');
   L.push('Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).', '');
+  if (approved) L.push(`**Freigegeben am ${approved}** – alle Perks wurden in der Schlussrunde des Interviews bestätigt.`, '');
   L.push('## Erledigt', '');
   if (!done.length) L.push('_noch keine_');
   else {

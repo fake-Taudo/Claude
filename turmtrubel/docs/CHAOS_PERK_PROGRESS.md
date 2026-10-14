@@ -4,6 +4,8 @@ Stand: 40 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs
 
 Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).
 
+**Freigegeben am 14.10.2026** – alle Perks wurden in der Schlussrunde des Interviews bestätigt.
+
 ## Erledigt
 
 | Nr. | Karte | Gewöhnlich | Selten | Episch | Auswahl |

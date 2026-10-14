@@ -27,6 +27,8 @@
   "lastRoundOvertimeOnly": true,
   "pickTimeSeconds": 6,
   "offersPerRound": 2,
+  "offerMode": "twoCards",
+  "_offerModeInfo": "Im Interview entschieden (14.10.2026): Jede der zwei Optionen ist eine eigene perk-freie Karte des Decks mit unabhängig gewürfelter Seltenheit. Ist nur noch eine Karte frei, bekommt sie zwei verschiedene Stufen zur Wahl (zweite Stufe nach den übrigen Gewichten, sonst die nächstliegende).",
   "rarityByRound": [
     { "common": 90, "rare": 10, "epic": 0 },
     { "common": 20, "rare": 80, "epic": 0 },

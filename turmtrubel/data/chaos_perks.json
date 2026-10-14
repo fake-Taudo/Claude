@@ -23,6 +23,7 @@
     "selection": "interview (aus den Vorschlägen gewählt) | custom (eigene Idee im Interview) | auto (automatisch gewählt: empfohlene Option)"
   },
   "version": 1,
+  "approved": "14.10.2026",
   "perks": [
     {
       "id": "giant.common",
