@@ -1,6 +1,6 @@
 # Fortschritt Perk-Interview (Chaos-Modus)
 
-Stand: 32 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
+Stand: 35 von 40 Karten erledigt. Die Datei wird von `node tools/chaos/perks.mjs` nach jeder Antwort neu geschrieben; die vollständigen Perks stehen in `data/chaos_perks.json`.
 
 Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfolge = `cardPool` in `data/chaos.json`).
 
@@ -40,12 +40,12 @@ Bei Abbruch oder Neustart geht es mit der ersten offenen Karte weiter (Reihenfol
 | 30 | Tesla | Viererspule | Zermürbungsstrom | Dr. Frankens Erbe | eigene Idee |
 | 31 | Koboldhütte | Speer-Doppelpack | Koboldpartyhütte | Demolisher-Werkstatt | Interview, eigene Idee |
 | 32 | Infernoturm | Turbo-Glut | Dreifachstrahl | Weißglut | eigene Idee, Interview |
+| 33 | Knall | Schwächungsknall | Blitznachschlag | Knall-Kette | eigene Idee |
+| 34 | Kampfholz | Weitroller | Doppelstamm | Holzfäller-Überraschung | eigene Idee, Interview |
+| 35 | Pfeile | Vierte Welle | Feuerregen | Königin des Hagels | Interview, eigene Idee |
 
 ## Offen
 
-33. Knall (`zap`)
-34. Kampfholz (`the-log`)
-35. Pfeile (`arrows`)
 36. Koboldfass (`goblin-barrel`)
 37. Feuerball (`fireball`)
 38. Gift (`poison`)

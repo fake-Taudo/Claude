@@ -2050,6 +2050,197 @@
       "elixirCostUnchanged": true,
       "balanceNote": "Eigene Idee aus dem Interview: Episch und extrem stark gegen alles in Reichweite; der Turm steht aber nur 30 s und lässt sich mit Zaubern und Gebäude-Angreifern von außerhalb zerstören.",
       "selection": "custom"
+    },
+    {
+      "id": "zap.common",
+      "cardId": "zap",
+      "rarityTier": "common",
+      "name": "Schwächungsknall",
+      "description": "Getroffene Gegner verlieren zusätzlich sofort 30 % ihrer aktuellen Leben und machen dauerhaft 50 % weniger Schaden (gilt für Truppen und Gebäude, nicht für Kronentürme).",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "spell": {
+          "onHitTarget": {
+            "currentHpLoss": 0.3,
+            "damageMult": 0.5,
+            "permanent": true,
+            "excludeTowers": true
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview, sehr stark für Gewöhnlich: Ein günstiger Knall halbiert ganze Gruppen in ihrer Wirkung; Kronentürme sind ausgenommen, damit kein 2-Elixier-Zauber Türme zerlegt.",
+      "selection": "custom"
+    },
+    {
+      "id": "zap.rare",
+      "cardId": "zap",
+      "rarityTier": "rare",
+      "name": "Blitznachschlag",
+      "description": "Zusätzlich schlägt ein Blitz wie beim Blitz-Zauber in die gegnerische Truppe mit den meisten Leben im Umkreis von 3,5 Feldern ein: 1057 Schaden und 0,5 s Betäubung.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "spell": {
+          "after": {
+            "strike": {
+              "pick": "highestHpTroop",
+              "radius": 3.5,
+              "damage": 1057,
+              "stun": 0.5,
+              "towerDamage": 0.27,
+              "fx": "storm"
+            }
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Der Knall wird zum Konter gegen schwere Truppen; trifft aber nur ein Ziel und braucht eine Truppe in der Nähe.",
+      "selection": "custom"
+    },
+    {
+      "id": "zap.epic",
+      "cardId": "zap",
+      "rarityTier": "epic",
+      "name": "Knall-Kette",
+      "description": "5 Knalle schlagen nacheinander in einer Linie ein – ab dem Zielpunkt Richtung Gegnerseite, je 2,5 Felder auseinander und 0,3 s versetzt – jeder mit 192 Schaden, 0,5 s Betäubung und Radius 2,5.",
+      "mechanicType": "newAbility",
+      "effectParameters": {
+        "spell": {
+          "repeat": {
+            "count": 5,
+            "spacing": 2.5,
+            "interval": 0.3,
+            "direction": "forward"
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil eine ganze Spur bis zu 5-mal betäubt und getroffen wird; außerhalb der Linie wirkt der Knall gar nicht.",
+      "selection": "custom"
+    },
+    {
+      "id": "the-log.common",
+      "cardId": "the-log",
+      "rarityTier": "common",
+      "name": "Weitroller",
+      "description": "Der Stamm rollt doppelt so weit: 10,1 → 20,2 Felder (Schaden, Breite und Rückstoß unverändert).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "spell": {
+          "mult": {
+            "roll.length": 2
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Er räumt fast die ganze Spur ab, macht aber nicht mehr Schaden und trifft weiterhin keine Luft.",
+      "selection": "custom"
+    },
+    {
+      "id": "the-log.rare",
+      "cardId": "the-log",
+      "rarityTier": "rare",
+      "name": "Doppelstamm",
+      "description": "Es rollen 2 Stämme hintereinander im Abstand von 1 Sekunde, jeder mit 266 Schaden und Rückstoß.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "spell": {
+          "repeat": {
+            "count": 2,
+            "interval": 1,
+            "spacing": 0
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Selten: Doppelter Schaden in derselben Spur – erledigt auch Truppen, die einen Stamm überleben, ist aber berechenbar.",
+      "selection": "interview"
+    },
+    {
+      "id": "the-log.epic",
+      "cardId": "the-log",
+      "rarityTier": "epic",
+      "name": "Holzfäller-Überraschung",
+      "description": "Wenn der Stamm ausgerollt ist, springt an seinem Ende ein Holzfäller heraus (1282 Leben, 256 Schaden, sehr schnell), der beim Tod wie gewohnt Wut hinterlässt.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "spell": {
+          "spawnAtEnd": {
+            "unit": "lumberjack",
+            "count": 1
+          }
+        },
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Episch, weil der 2-Elixier-Zauber zusätzlich einen 4-Elixier-Nahkämpfer mitten in die gegnerische Hälfte bringt.",
+      "selection": "custom"
+    },
+    {
+      "id": "arrows.common",
+      "cardId": "arrows",
+      "rarityTier": "common",
+      "name": "Vierte Welle",
+      "description": "Es fallen 4 statt 3 Pfeilwellen (je 122 Schaden im Radius 3,5).",
+      "mechanicType": "statBoost",
+      "effectParameters": {
+        "spell": {
+          "set": {
+            "waves": 4
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Gewöhnlich: Ein Drittel mehr Schaden, damit fallen auch etwas zähere Schwärme; der Radius bleibt gleich.",
+      "selection": "interview"
+    },
+    {
+      "id": "arrows.rare",
+      "cardId": "arrows",
+      "rarityTier": "rare",
+      "name": "Feuerregen",
+      "description": "Statt Pfeilen regnen 3 Wellen kleiner Feuerbälle: je 150 Schaden im Radius 3,5 mit leichtem Rückstoß (0,4), Getroffene brennen 2 s lang mit 25 Schaden pro Sekunde.",
+      "mechanicType": "behaviorChange",
+      "effectParameters": {
+        "spell": {
+          "set": {
+            "damage": 150,
+            "knockback": 0.4,
+            "fx": "fireRain"
+          },
+          "onHitTarget": {
+            "burn": {
+              "dps": 25,
+              "duration": 2
+            }
+          }
+        }
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview: Rund ein Drittel mehr Schaden plus Brand und Rückstoß – deutlich stärker gegen mittlere Truppen als normale Pfeile.",
+      "selection": "custom"
+    },
+    {
+      "id": "arrows.epic",
+      "cardId": "arrows",
+      "rarityTier": "epic",
+      "name": "Königin des Hagels",
+      "description": "Am Einschlagort erscheint zusätzlich eine Bogenschützen-Königin (1000 Leben, 232 Schaden, Reichweite 5, Boden & Luft) – ohne ihre Champion-Fähigkeit.",
+      "mechanicType": "spawnChange",
+      "effectParameters": {
+        "spell": {
+          "spawn": {
+            "unit": "archer-queen",
+            "count": 1,
+            "deployTime": 1
+          }
+        },
+        "noAbility": true,
+        "inheritPerk": false
+      },
+      "elixirCostUnchanged": true,
+      "balanceNote": "Eigene Idee aus dem Interview (Bogenschützen-Königin statt 3 Bogenschützinnen): Episch, weil ein 3-Elixier-Zauber zusätzlich einen Champion aufs Feld bringt – auch in der gegnerischen Hälfte.",
+      "selection": "custom"
     }
   ]
 }
