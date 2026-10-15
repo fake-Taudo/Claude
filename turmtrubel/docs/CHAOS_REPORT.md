@@ -1,6 +1,6 @@
 # Bericht: Modus „Chaos“ (Modifikator-Kampf)
 
-Neuer 1v1-Modus mit eigenem Kartenpool (40 Karten), festem Kartenlevel und doppelten Türmen. Elixier lädt 1,5-mal so schnell. Fünf Auswahlrunden pausieren den Kampf, in jeder bekommt man einen Perk für eine Karte des eigenen Decks. Der Modus läuft im Multiplayer per Einladungscode und im Einzelspieler gegen Bots in allen drei Stufen.
+Neuer 1v1-Modus mit eigenem Kartenpool (40 Karten), festem Kartenlevel und doppelten Türmen. Elixier lädt 1,5-mal so schnell. Sechs Auswahlrunden (eine Startrunde zu Kampfbeginn plus fünf weitere) pausieren den Kampf, in jeder bekommt man einen Perk für eine Karte des eigenen Decks. Der Modus läuft im Multiplayer per Einladungscode und im Einzelspieler gegen Bots in allen drei Stufen.
 
 Klassisch und die übrigen Modi sind unverändert. Die Regressions-Aufzeichnung (12 Kämpfe, Prüfsumme über jeden Snapshot) bleibt Tick für Tick gleich. Alle 410 Tests sind grün.
 
@@ -27,12 +27,13 @@ Alle Werte sind Daten. Eine Änderung wirkt nach einem Server-Neustart, ohne Cod
 | `towerHpMultiplier` | 2 | Prinzessinnen- und Königsturm doppelte Leben |
 | `elixirRateMultiplier` | 1,5 | gilt zusätzlich zu Doppel- und Dreifach-Elixier (×3 bzw. ×4,5) |
 | `evos` | `false` | keine Evolutionen (Interview: der Perk ist das Upgrade) |
-| `rounds` | 5 | Auswahlrunden je Kampf |
-| `firstRoundSeconds` / `roundIntervalSeconds` | 36 / 36 | Runden bei 0:36, 1:12, 1:48, 2:24 Spielzeit; Interview-Entscheidung statt der 45 s aus dem Auftrag |
-| `lastRoundOvertimeOnly` | `true` | Runde 5 (3:00) gibt es nur in der Verlängerung |
+| `rounds` | 6 | Auswahlrunden je Kampf, Startrunde mitgezählt |
+| `openingRound` | `true` | zusätzliche Startrunde direkt zu Kampfbeginn (0:00), nur gewöhnliche Perks (nachträglich gewünscht am 15.10.2026) |
+| `firstRoundSeconds` / `roundIntervalSeconds` | 36 / 36 | nach der Startrunde Runden bei 0:36, 1:12, 1:48, 2:24 Spielzeit; Interview-Entscheidung statt der 45 s aus dem Auftrag |
+| `lastRoundOvertimeOnly` | `true` | die letzte Runde (3:00) gibt es nur in der Verlängerung |
 | `pickTimeSeconds` | 6 | Auswahlzeit; danach wählt der Server zufällig |
 | `offersPerRound` / `offerMode` | 2 / `twoCards` | zwei verschiedene perk-freie Karten, Seltenheit je Option unabhängig gewürfelt (Interview 14.10.2026) |
-| `rarityByRound` | 90/10/0 · 20/80/0 · 0/50/50 · 0/20/80 · 0/0/100 | Gewöhnlich/Selten/Episch in % je Runde |
+| `rarityByRound` | 100/0/0 (Startrunde) · 90/10/0 · 20/80/0 · 0/50/50 · 0/20/80 · 0/0/100 | Gewöhnlich/Selten/Episch in % je Runde |
 | `bot.pickDelaySeconds` | 1–4 | menschlich wirkende Bedenkzeit der Bots |
 
 Ist nur noch eine Karte perk-frei, bekommt sie zwei verschiedene Stufen zur Wahl. Ist keine mehr frei, wird die Runde für diesen Spieler übersprungen und der Gegner wartet nicht. Haben beide keine freie Karte mehr, entfällt die Pause ganz.
@@ -228,9 +229,9 @@ Die Protokollversion bleibt 2. Alle neuen Felder gibt es nur in Chaos-Räumen. K
 
 | Datei | Tests | Was geprüft wird |
 |---|---|---|
-| `test/chaos-rounds.test.js` | 15 | Daten (40 Karten, 3 Stufen, Pflichtfelder, keine Kostenänderung); Regeln (Türme ×2, Elixier ×1,5 mal Doppel/Dreifach, Level, keine Evos, Klassisch unverändert); Seltenheits-Staffelung über viele Runden gegen chaos.json; Angebote; Rundenplan inklusive fünfter Runde nur in der Verlängerung; synchrone Pause (Spielzeit, Elixier, Hand stehen, Eingaben abgewiesen); Auto-Wahl; Überspringen ohne Wartezeit für den Gegner; Reconnect in der Pause (gleiche Optionen, exakte Restzeit); Training mit Pool-Deck; manipulierter Client; Aufgabe in der Pause; Matchkopie statt cards.json; jede Bot-Stufe spielt ein ganzes Chaos-Match; Perk-Wahl je Bot-Stufe |
+| `test/chaos-rounds.test.js` | 15 | Daten (40 Karten, 3 Stufen, Pflichtfelder, keine Kostenänderung); Regeln (Türme ×2, Elixier ×1,5 mal Doppel/Dreifach, Level, keine Evos, Klassisch unverändert); Seltenheits-Staffelung über viele Runden gegen chaos.json; Angebote; Rundenplan inklusive Startrunde (nur gewöhnlich) und letzter Runde nur in der Verlängerung; synchrone Pause (Spielzeit, Elixier, Hand stehen, Eingaben abgewiesen); Auto-Wahl; Überspringen ohne Wartezeit für den Gegner; Reconnect in der Pause (gleiche Optionen, exakte Restzeit); Training mit Pool-Deck; manipulierter Client; Aufgabe in der Pause; Matchkopie statt cards.json; jede Bot-Stufe spielt ein ganzes Chaos-Match; Perk-Wahl je Bot-Stufe |
 | `test/chaos-perks.test.js` | 49 | Grundsätze (Matchkopie statt cards.json, Perk nur für die Karte des wählenden Spielers und nicht für dieselbe Karte des Gegners, Elixierkosten gleich, Markierung im Snapshot); je ein Test pro Baustein `statBoost`, `behaviorChange`, `newAbility`, `spawnChange` mit echten Perks aus chaos_perks.json; je Karte ein Test, der alle drei Perks in der Simulation nachweist (40 Tests); ein Test, dass alle 120 Perks eine eigene Prüfung haben |
-| `test/chaos-e2e.test.js` | 2 | Zwei echte Clients über WebSocket spielen ein komplettes Match mit Verlängerung und fünfter Runde. Ein Client trennt mitten in einer Auswahlpause und verbindet neu. Es gibt keinen Desync (gemeinsamer Zustand je Tick bei beiden Clients gleich, Spielzeit steht in der Pause still) und keinen Serverfehler. Zweiter Test: manipulierte Clients mit Deck außerhalb des Pools, Perk ohne Runde, Platzieren außerhalb des Decks |
+| `test/chaos-e2e.test.js` | 2 | Zwei echte Clients über WebSocket spielen ein komplettes Match mit Startrunde, Verlängerung und letzter Runde (6 Perks je Spieler). Ein Client trennt mitten in einer Auswahlpause und verbindet neu. Es gibt keinen Desync (gemeinsamer Zustand je Tick bei beiden Clients gleich, Spielzeit steht in der Pause still) und keinen Serverfehler. Zweiter Test: manipulierte Clients mit Deck außerhalb des Pools, Perk ohne Runde, Platzieren außerhalb des Decks |
 
 **Sicherheit:** Der Server weist ab:
 
@@ -242,6 +243,8 @@ Die Protokollversion bleibt 2. Alle neuen Felder gibt es nur in Chaos-Räumen. K
 
 ### Balance-Stichprobe
 
+Gemessen am 14.10.2026, also noch ohne die Startrunde (5 Runden).
+
 `node tools/chaos/balance.mjs --games=20 --out=docs/chaos_balance.json`: 20 Kämpfe Bot gegen Bot (Mittel gegen Mittel), Zufallsdecks aus dem Pool, Auswahlrunden wie im Raum, Laufzeit 5,7 s.
 
 - **Siege:** Blau 8, Rot 12, Unentschieden 0. Ein Kampf dauert im Schnitt 197 s Spielzeit.
@@ -250,7 +253,7 @@ Die Protokollversion bleibt 2. Alle neuen Felder gibt es nur in Chaos-Räumen. K
   - Sudden Death 9;
   - Zeit 10.
 
-  Die doppelten Türme verlängern die Kämpfe also deutlich. 10 von 20 Kämpfen erreichen die Verlängerung und damit die fünfte Runde.
+  Die doppelten Türme verlängern die Kämpfe also deutlich. 10 von 20 Kämpfen erreichen die Verlängerung und damit die letzte Runde.
 - **Perks:** 8,8 je Kampf (176), davon 33 Gewöhnlich, 53 Selten, 90 Episch. Die späten Runden sind fast nur episch.
 - **Auffällige Karten** (mindestens 4 Kämpfe, Siegquote ≥ 75 % oder ≤ 25 %):
   - Megaritter 4/4 (100 %)

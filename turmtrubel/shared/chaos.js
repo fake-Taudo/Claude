@@ -45,6 +45,8 @@ export function validateChaos(json, db = null) {
   if (!(Number.isInteger(json.rounds) && json.rounds >= 0 && json.rounds <= 10)) errors.push('rounds: 0–10');
   if (!(num(json.firstRoundSeconds) && json.firstRoundSeconds > 0)) errors.push('firstRoundSeconds: > 0');
   if (!(num(json.roundIntervalSeconds) && json.roundIntervalSeconds > 0)) errors.push('roundIntervalSeconds: > 0');
+  if (json.openingRound != null && typeof json.openingRound !== 'boolean') errors.push('openingRound: true oder false');
+  if (json.openingRound && !(json.rounds >= 1)) errors.push('openingRound: braucht rounds ≥ 1');
   if (typeof json.lastRoundOvertimeOnly !== 'boolean') errors.push('lastRoundOvertimeOnly: true oder false');
   if (!(num(json.pickTimeSeconds) && json.pickTimeSeconds >= 1 && json.pickTimeSeconds <= 60)) errors.push('pickTimeSeconds: 1–60');
   if (json.offersPerRound !== 2) errors.push('offersPerRound: 2');
@@ -143,9 +145,14 @@ export function cardsOutsidePool(chaos, deck) {
   return (Array.isArray(deck) ? deck : []).filter((id) => !chaos.poolSet.has(id));
 }
 
-/** Zeitpunkte (Sekunden Spielzeit) der Auswahlrunden. Die letzte Runde hängt ggf. an der Verlängerung. */
+/**
+ * Zeitpunkte (Sekunden Spielzeit) der Auswahlrunden. Mit `openingRound` kommt die erste Runde direkt zu Kampfbeginn (0 s),
+ * die übrigen folgen ab `firstRoundSeconds`. Die letzte Runde hängt ggf. an der Verlängerung.
+ */
 export function roundSchedule(config) {
-  return Array.from({ length: config.rounds }, (_, i) => config.firstRoundSeconds + i * config.roundIntervalSeconds);
+  const opening = config.openingRound ? 1 : 0;
+  const regular = Array.from({ length: Math.max(0, config.rounds - opening) }, (_, i) => config.firstRoundSeconds + i * config.roundIntervalSeconds);
+  return opening ? [0, ...regular] : regular;
 }
 
 /** Würfelt eine Seltenheit nach Gewichten { common, rare, epic } (Summe beliebig > 0). */

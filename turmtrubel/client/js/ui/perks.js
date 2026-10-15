@@ -56,7 +56,7 @@ export function openPerksModal(app, game) {
     'div',
     { class: 'perk-list-modal' },
     h('h3', { class: 'perk-list-title blue' }, ico('shield'), 'Deine Perks'),
-    list(mine, 'Noch keine Perks – die erste Auswahl kommt bei 0:36 Spielzeit.'),
+    list(mine, 'Noch keine Perks.'),
     h('h3', { class: 'perk-list-title red' }, ico('swords'), `Perks von ${game.names[1 - game.seat] || 'Gegner'}`),
     list(opp, 'Dein Gegner hat noch keine Perks.'),
   );
@@ -82,7 +82,7 @@ export function chaosInfo(app) {
           'li',
           { class: 'chaos-round' },
           h('span', { class: 'chaos-round-time' }, fmtTime(t)),
-          h('span', { class: 'chaos-round-label' }, i === times.length - 1 && c.lastRoundOvertimeOnly ? 'nur in der Verlängerung' : `Runde ${i + 1}`),
+          h('span', { class: 'chaos-round-label' }, i === times.length - 1 && c.lastRoundOvertimeOnly ? 'nur in der Verlängerung' : i === 0 && c.openingRound ? 'zum Kampfbeginn' : `Runde ${i + 1}`),
           h('span', { class: 'chaos-round-pct' }, pct(c.rarityByRound[i])),
         ),
       ),

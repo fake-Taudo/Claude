@@ -189,8 +189,11 @@ test('Angebote: zwei verschiedene perk-freie Karten; eine freie Karte → zwei S
   assert.equal(makeOffer(chaos, DECK, all, 2, rng), null);
 });
 
-test('Rundenplan: 0:36, 1:12, 1:48, 2:24; die fünfte Runde nur in der Verlängerung', () => {
-  assert.deepEqual(roundSchedule(cfg), [36, 72, 108, 144, 180]);
+test('Rundenplan: Startrunde zu Kampfbeginn, dann 0:36, 1:12, 1:48, 2:24; die letzte Runde nur in der Verlängerung', () => {
+  assert.deepEqual(roundSchedule(cfg), [0, 36, 72, 108, 144, 180]);
+  assert.deepEqual(roundSchedule({ ...cfg, openingRound: false, rounds: 5 }), [36, 72, 108, 144, 180], 'ohne Startrunde wie bisher');
+  assert.deepEqual(cfg.rarityByRound[0], { common: 100, rare: 0, epic: 0 }, 'Startrunde nur gewöhnlich');
+  assert.ok(validateChaos({ ...cfg, openingRound: 'ja' }, db).length, 'openingRound muss true/false sein');
   const R = resolveRules(rules(), MODE, { chaos });
   const m = new Match({ db, rules: R, decks: [DECK, DECK], seed: 9 });
   m.started = true;
@@ -206,22 +209,23 @@ test('Rundenplan: 0:36, 1:12, 1:48, 2:24; die fünfte Runde nur in der Verlänge
     }
   }
   assert.deepEqual(
-    startedAt.slice(0, 4).map((x) => Math.round(x[1] * 100) / 100),
-    [36, 72, 108, 144],
+    startedAt.slice(0, 5).map((x) => Math.round(x[1] * 100) / 100),
+    [0.05, 36, 72, 108, 144],
+    'Startrunde nach dem ersten Tick, danach die bisherigen Zeiten',
   );
-  if (m.result && m.result.time <= 180) assert.equal(startedAt.length, 4, 'ohne Verlängerung keine fünfte Runde');
-  // erzwungene Verlängerung: fünfte Runde bei 3:00
+  if (m.result && m.result.time <= 180) assert.equal(startedAt.length, 5, 'ohne Verlängerung keine letzte Runde');
+  // erzwungene Verlängerung: letzte Runde bei 3:00
   const m2 = new Match({ db, rules: R, decks: [DECK, DECK], seed: 9 });
   m2.started = true;
   const pr2 = new PerkRounds(chaos, m2, { seed: 4 });
-  pr2.next = 4;
+  pr2.next = 5;
   for (const t of m2.towers) t.hp = t.maxHp = 1e9; // niemand verliert einen Turm → Gleichstand → Verlängerung
   while (m2.time < 179.9) m2.step();
   assert.equal(pr2.due(), -1);
   while (pr2.due() < 0 && m2.time < 181) m2.step();
   assert.equal(m2.phase, 'overtime');
   close(m2.time, 180, 1e-6);
-  assert.equal(pr2.due(), 4);
+  assert.equal(pr2.due(), 5);
 });
 
 test('Auswahlrunde: Pause für beide synchron – Spielzeit, Elixier und Handkarten stehen still, Eingaben werden abgewiesen', () => {
@@ -229,14 +233,15 @@ test('Auswahlrunde: Pause für beide synchron – Spielzeit, Elixier und Handkar
   const { a, b, room, clock } = env;
   const m = room.match;
   run(env, 40, () => !!room.perkRounds.current);
-  assert.ok(room.perkRounds.current, 'Runde 1 hat begonnen');
-  close(m.time, 36);
+  assert.ok(room.perkRounds.current, 'Startrunde hat begonnen');
+  close(m.time, 0.05, 1e-9);
   assert.equal(m.paused, true);
   const ra = a.last('perkRound');
   const rb = b.last('perkRound');
   assert.equal(ra.round, 1);
-  assert.equal(ra.rounds, 5);
+  assert.equal(ra.rounds, 6);
   assert.equal(ra.options.length, 2);
+  assert.ok([...ra.options, ...rb.options].every((o) => o.tier === 'common'), 'Startrunde: nur gewöhnliche Perks');
   assert.equal(rb.options.length, 2);
   assert.ok(ra.timeLeft > 5.9 && ra.timeLeft <= 6);
   // jeder sieht nur seine eigenen Optionen
@@ -278,7 +283,7 @@ test('Auswahlrunde: Pause für beide synchron – Spielzeit, Elixier und Handkar
   assert.ok(res.pauseTotal >= 3 && res.pauseTotal < 3.2, `Pausenzeit ${res.pauseTotal}`);
   // weiter geht's: Spielzeit läuft wieder, Pausenzeit separat im Snapshot
   run(env, 1);
-  assert.ok(m.time > 36.9);
+  assert.ok(m.time > 0.9);
   const snap = a.last('s');
   assert.ok(!snap.pz);
   assert.equal(snap.pt, res.pauseTotal);
@@ -295,7 +300,7 @@ test('Auswahlrunde: Zeit abgelaufen → der Server wählt zufällig eine der zwe
   const res = a.last('perkResult');
   assert.deepEqual(res.auto, [true, true]);
   res.picks.forEach((p, i) => assert.ok(offers[i].includes(p.id)));
-  close(room.match.time, 36 + 0.2 + 0.05, 0.11);
+  close(room.match.time, 0.05 + 0.2 + 0.05, 0.11);
 });
 
 test('Auswahlrunde überspringen: ohne perk-freie Karte wartet der Gegner nicht auf dich', () => {
@@ -334,7 +339,7 @@ test('Reconnect mitten in einer Auswahlpause: gleiche Optionen, exakte Restzeit,
   const init = inbox.find((m) => m.type === 'matchInit');
   assert.ok(init.resume && init.chaos, 'matchInit mit Chaos-Teil');
   assert.equal(init.chaos.towerHpMultiplier, 2);
-  assert.deepEqual(init.chaos.schedule, [36, 72, 108, 144, 180]);
+  assert.deepEqual(init.chaos.schedule, [0, 36, 72, 108, 144, 180]);
   const round = inbox.find((m) => m.type === 'perkRound');
   assert.ok(round, 'Auswahlrunde nach Reconnect');
   assert.deepEqual(round.options.map((o) => o.id), mine);

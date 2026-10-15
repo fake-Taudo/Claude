@@ -8,6 +8,15 @@
 
 export const UPDATES = [
   {
+    id: '2026-10-15.1',
+    version: '1.9',
+    date: '15.10.2026',
+    title: 'Chaos: Startrunde',
+    items: [
+      { icon: 'sparkles', title: 'Perk zum Kampfbeginn', text: 'Im Chaos-Modus gibt es jetzt eine zusätzliche Auswahlrunde direkt zu Beginn des Kampfs – nur mit gewöhnlichen Perks. Die Runden bei 0:36, 1:12, 1:48, 2:24 und in der Verlängerung bei 3:00 bleiben wie bisher.' },
+    ],
+  },
+  {
     id: '2026-10-14.1',
     version: '1.8',
     date: '14.10.2026',

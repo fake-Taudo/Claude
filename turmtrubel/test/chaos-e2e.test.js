@@ -70,7 +70,7 @@ async function client(name, deck, seed) {
   return c;
 }
 
-test('Chaos: zwei Clients spielen ein komplettes Match mit Verlängerung, fünfter Runde und Reconnect in der Pause', { timeout: 240000 }, async () => {
+test('Chaos: zwei Clients spielen ein komplettes Match mit Startrunde, Verlängerung, letzter Runde und Reconnect in der Pause', { timeout: 240000 }, async () => {
   const a = await client('Anna', DECK_A, 21);
   const b = await client('Ben', DECK_B, 22);
   let a2 = null;
@@ -88,7 +88,7 @@ test('Chaos: zwei Clients spielen ein komplettes Match mit Verlängerung, fünft
       assert.equal(init.chaos.towerHpMultiplier, 2);
       assert.equal(init.chaos.elixirRateMultiplier, 1.5);
       assert.equal(init.rules.elixir.rate, 1.5);
-      assert.deepEqual(init.chaos.schedule, [36, 72, 108, 144, 180]);
+      assert.deepEqual(init.chaos.schedule, [0, 36, 72, 108, 144, 180]);
     }
     assert.deepEqual(ib.deck, DECK_B, 'Chaos-Deck des Beitretenden');
 
@@ -132,18 +132,19 @@ test('Chaos: zwei Clients spielen ein komplettes Match mit Verlängerung, fünft
     assert.ok(endA.time >= 299, `bis zum Ende der Verlängerung (${endA.time})`);
     // fünf Runden, die letzte nur episch, Staffelung je Runde
     const results = b.msgs.filter((m) => m.type === 'perkResult');
-    assert.deepEqual(results.map((r) => r.round), [1, 2, 3, 4, 5]);
+    assert.deepEqual(results.map((r) => r.round), [1, 2, 3, 4, 5, 6]);
     for (const r of results) {
       const tiers = r.picks.map((p) => p.tier);
-      if (r.round <= 2) assert.ok(!tiers.includes('epic'), `Runde ${r.round}: ${tiers}`);
-      if (r.round >= 3) assert.ok(!tiers.includes('common'), `Runde ${r.round}: ${tiers}`);
-      if (r.round === 5) assert.deepEqual(tiers, ['epic', 'epic']);
+      if (r.round === 1) assert.deepEqual(tiers, ['common', 'common'], 'Startrunde nur gewöhnlich');
+      if (r.round <= 3) assert.ok(!tiers.includes('epic'), `Runde ${r.round}: ${tiers}`);
+      if (r.round >= 4) assert.ok(!tiers.includes('common'), `Runde ${r.round}: ${tiers}`);
+      if (r.round === 6) assert.deepEqual(tiers, ['epic', 'epic']);
     }
     for (const end of [endA, endB]) {
-      assert.equal(end.perks[0].length, 5);
-      assert.equal(end.perks[1].length, 5);
+      assert.equal(end.perks[0].length, 6);
+      assert.equal(end.perks[1].length, 6);
       assert.ok(end.pauseTotal > 0);
-      assert.equal(new Set(end.perks[0].map((p) => p.card)).size, 5, 'je Karte höchstens ein Perk');
+      assert.equal(new Set(end.perks[0].map((p) => p.card)).size, 6, 'je Karte höchstens ein Perk');
     }
     // kein Desync: gleicher gemeinsamer Zustand je Tick bei beiden Clients, Spielzeit steht in der Pause
     let same = 0;
