@@ -137,6 +137,31 @@ p {
   margin: 0;
 }
 
+/* Deutsche Silbentrennung für Fließtext und Überschriften (lange Komposita auf dem Handy) */
+p,
+li,
+h1,
+h2,
+h3,
+blockquote,
+address,
+td,
+th {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* Bedienelemente nie trennen */
+.btn,
+.text-link,
+.site-nav,
+.choice,
+label,
+legend {
+  hyphens: manual;
+  -webkit-hyphens: manual;
+}
+
 p + p {
   margin-top: 1rem;
 }

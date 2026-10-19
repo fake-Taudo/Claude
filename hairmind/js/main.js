@@ -25,7 +25,7 @@
 
   var DAY_SHORT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   var TIME_ZONE = 'Europe/Berlin';
-  var PHONE = '02161 5640891';
+  var PHONE = '02161\u00a05640891';
 
   function berlinNow() {
     var parts = {};

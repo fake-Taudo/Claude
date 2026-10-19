@@ -23,6 +23,7 @@ index.html          Startseite, alle Texte stehen hier
 impressum.html      Impressum (Platzhalter, § 5 DDG)
 datenschutz.html    Datenschutzerklärung (Platzhalter)
 CONTENT-TODO.md     offene Inhalte, vor dem Livegang leer
+DESIGN.md           Gestaltungsentscheidungen und Begründungen, vor Änderungen lesen
 robots.txt, sitemap.xml
 css/style.css       Gestaltung; Farben und Abstände oben in :root
 js/main.js          Live-Status, Menü, Einblenden, Terminanfrage
