@@ -1,0 +1,14 @@
+# Render Blueprint: Website Friseur HairMind als statische Seite (Ordner hairmind/)
+# Einrichten: Render Dashboard → New → Blueprint → dieses Repository wählen.
+services:
+  - type: web
+    name: hairmind
+    runtime: static
+    branch: claude/hairmind-salon-website-9pydt8
+    buildCommand: echo "Statische Seite, kein Build"
+    staticPublishPath: ./hairmind
+    headers:
+      # Vorschau nicht in Suchmaschinen aufnehmen, solange CONTENT-TODO.md offen ist
+      - path: /*
+        name: X-Robots-Tag
+        value: noindex
