@@ -30,7 +30,8 @@ abstand:
   gutter: "1.25rem / 2rem ab 48rem / 3rem ab 60rem"
   textbreite: "40rem"
 radius:
-  steuerelemente: "4px"   # Buttons, Eingaben
+  buttons: "0"            # feste Vorgabe, immer eckig
+  steuerelemente: "0"     # Eingaben und Auswahlfelder, passend zu den Buttons
   flaechen: "keine Flächen – Linien statt Kästen"
   medien: "0"
 schatten:
@@ -92,8 +93,8 @@ icons: { set: "keine" }
 - Rhythmus: Abstände 96–128 px; Tabellen dicht, Zitate luftig.
 
 ## Komponenten-Regeln
-- Buttons: 4 px Radius, min. 48 px hoch. Pro Bildschirm eine Hauptaktion: Start = schwarz „Jetzt anrufen“, Termin = gold „Wunschtermin anfragen“, Kopfzeile = Gold-Umriss.
-- Eingabefelder: heller Grund auf Schwarz, 4 px Radius, Fehler als Rahmen plus Text, per `aria-describedby` verknüpft.
+- Buttons: eckig (`border-radius: 0`, feste Vorgabe), min. 48 px hoch. Pro Bildschirm eine Hauptaktion: Start = schwarz „Jetzt anrufen“, Termin = gold „Wunschtermin anfragen“, Kopfzeile = Gold-Umriss.
+- Eingabefelder: heller Grund auf Schwarz, eckig wie die Buttons, Fehler als Rahmen plus Text, per `aria-describedby` verknüpft.
 - Auswahlfelder (Wunschtag, Wunschzeit, Leistung): antippbare Felder mit 1-px-Rahmen `#6E665C`, gewählt = heller Grund. Wunschtag zeigt die nächsten 5 Öffnungstage (erster vorgewählt) plus „Anderer Tag“ mit Kalender. Ist Samstag gewählt, ist „Nachmittag“ deaktiviert. Leistung wird nie vorgewählt.
 - Hauptbutton der Anfrage: „Wunschtermin anfragen“ mit Zusammenfassung der Auswahl in zweiter Zeile. Nie „freie Termine“ oder Verfügbarkeit andeuten.
 - Bilder: rechteckig ohne Radius, ruhige Zuschnitte (Startbild 4:5), AVIF/WebP/JPG, `width`/`height` gesetzt.

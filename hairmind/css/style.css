@@ -50,7 +50,7 @@
   --container: 70rem;
   --measure: 40rem;
   --section-space: clamp(6rem, 4.5rem + 4vw, 8rem);
-  --radius: 4px;
+  --radius: 0;                /* eckig: Buttons, Eingaben, Auswahlfelder */
 
   --focus: var(--c-gold-ink);
 }
@@ -99,6 +99,18 @@ body {
 
 [hidden] {
   display: none !important;
+}
+
+/* Feste Vorgabe: Buttons immer eckig (auch iOS-Safari-Formularbuttons) */
+button,
+[type="button"],
+[type="submit"],
+[type="reset"],
+.btn,
+[role="button"] {
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 img {
@@ -943,7 +955,7 @@ textarea.input {
   }
 }
 
-.chip {
+.field .chip {
   position: relative;
   display: flex;
   margin: 0 !important;
