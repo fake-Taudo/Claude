@@ -104,5 +104,6 @@ sowie mit „Bewegung reduzieren“:
 - keine Konsolenfehler, keine externen Anfragen, kein horizontales Scrollen
 - alle Anker und internen Links erreichbar
 - Live-Status zu festen Zeitpunkten (auch bei fremder Zeitzone des Browsers)
-- Formular: Pflichtfelder, Montag/Sonntag, Samstagnachmittag, Datum in der Vergangenheit,
-  Versand über Endpunkt (Erfolg und Fehler), `mailto:`, Spam-Falle
+- Formular: Tagesauswahl (nur Öffnungstage, erster vorgewählt), Samstagnachmittag gesperrt,
+  „Anderer Tag“ mit Kalender (Montag/Sonntag und Vergangenheit abgelehnt), Zusammenfassung im
+  Button, Versand über Endpunkt (Erfolg und Fehler), `mailto:`, Spam-Falle

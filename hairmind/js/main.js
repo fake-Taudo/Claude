@@ -207,7 +207,112 @@
   var dateInput = form.elements.wunschtag;
   var timeGroup = document.getElementById('f-zeit');
 
-  dateInput.min = isoDate(berlinNow().day);
+  var dayChips = form.querySelector('[data-day-chips]');
+  var dayOther = form.querySelector('[data-day-other]');
+  var timeHint = document.getElementById('f-zeit-hinweis');
+  var afternoon = form.querySelector('input[name="wunschzeit"][value="Nachmittag"]');
+  var summary = form.querySelector('[data-summary]');
+  var DAY_LONG = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+  var CHIP_COUNT = 5;
+  var firstChipIso = '';
+
+  function parseIso(value) {
+    var p = value.split('-').map(Number);
+    return new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+  }
+
+  function shortDate(day) {
+    return day.getUTCDate() + '.' + (day.getUTCMonth() + 1) + '.';
+  }
+
+  /* Die nächsten Öffnungstage als Auswahl, der erste ist vorgewählt.
+     Heute zählt nur, solange der Salon noch geöffnet hat. */
+  function nextOpenDays() {
+    var now = berlinNow();
+    var days = [];
+    for (var i = 0; days.length < CHIP_COUNT && i < 60; i++) {
+      var day = addDays(now.day, i);
+      var h = hoursFor(day);
+      if (!h || (i === 0 && now.minutes >= h[1])) continue;
+      days.push({ day: day, today: i === 0 });
+    }
+    return days;
+  }
+
+  function chip(value, labelHtml) {
+    var label = document.createElement('label');
+    label.className = 'chip';
+    label.innerHTML = '<input type="radio" name="tag" value="' + value + '"><span>' + labelHtml + '</span>';
+    return label;
+  }
+
+  function renderDayChips() {
+    dateInput.min = isoDate(berlinNow().day);
+    var days = nextOpenDays();
+    if (!days.length || isoDate(days[0].day) === firstChipIso) return;
+    firstChipIso = isoDate(days[0].day);
+
+    var previous = form.querySelector('input[name="tag"]:checked');
+    var keep = previous ? previous.value : '';
+    dayChips.innerHTML = '';
+    days.forEach(function (d) {
+      var wd = d.day.getUTCDay();
+      var dayLabel = d.today ? 'Heute' : DAY_SHORT[wd];
+      dayChips.appendChild(chip(isoDate(d.day),
+        '<span class="chip__day" aria-hidden="true">' + dayLabel + '</span>' +
+        '<span class="visually-hidden">' + (d.today ? 'Heute, ' : '') + DAY_LONG[wd] + ', </span>' +
+        '<span class="chip__date">' + shortDate(d.day) + '</span>'));
+    });
+    dayChips.appendChild(chip('anders', '<span class="chip__date">Anderer Tag</span>'));
+
+    var target = form.querySelector('input[name="tag"][value="' + keep + '"]') ||
+      form.querySelector('input[name="tag"]');
+    target.checked = true;
+    applyDayChoice();
+  }
+
+  function applyDayChoice() {
+    var checked = form.querySelector('input[name="tag"]:checked');
+    var other = checked && checked.value === 'anders';
+    dayOther.hidden = !other;
+    if (!other && checked) dateInput.value = checked.value;
+    if (other && form.querySelector('input[name="tag"][value="' + dateInput.value + '"]')) dateInput.value = '';
+    applySaturday();
+  }
+
+  /* Samstags nur bis 14:00: Nachmittag gar nicht erst anbieten */
+  function applySaturday() {
+    var saturday = !!dateInput.value && parseIso(dateInput.value).getUTCDay() === 6;
+    afternoon.disabled = saturday;
+    if (saturday && afternoon.checked) afternoon.checked = false;
+    timeHint.hidden = !saturday;
+    updateSummary();
+  }
+
+  function selectedServices() {
+    return Array.prototype.map.call(form.querySelectorAll('input[name="leistung"]:checked'), function (el) {
+      return el.value;
+    });
+  }
+
+  function updateSummary() {
+    var parts = [];
+    if (dateInput.value && !isNaN(parseIso(dateInput.value).getTime())) {
+      var day = parseIso(dateInput.value);
+      parts.push(DAY_SHORT[day.getUTCDay()] + ' ' + shortDate(day));
+    }
+    if (selectedTime()) parts.push(selectedTime());
+    var services = selectedServices();
+    if (services.length) parts.push(services.join(', '));
+    summary.textContent = parts.join(' · ');
+  }
+
+  dayChips.addEventListener('change', applyDayChoice);
+  dateInput.addEventListener('input', applySaturday);
+  dateInput.addEventListener('change', applySaturday);
+  form.addEventListener('change', updateSummary);
+  renderDayChips();
+  window.setInterval(renderDayChips, 60000);
 
   function configured(value) {
     value = (value || '').trim();
@@ -270,7 +375,7 @@
       }],
       [dateInput, function () {
         var value = dateInput.value;
-        if (!value) return 'Bitte wählen Sie einen Wunschtag.';
+        if (!value) return dayOther.hidden ? 'Bitte wählen Sie einen Wunschtag.' : 'Bitte wählen Sie einen Tag im Kalender.';
         var parts = value.split('-').map(Number);
         var day = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
         if (isNaN(day.getTime())) return 'Bitte wählen Sie einen Wunschtag.';
@@ -301,7 +406,18 @@
       setError(pair[0], message);
       if (message && !firstInvalid) firstInvalid = pair[0];
     });
+    if (dateInput.getAttribute('aria-invalid') === 'true' && dayOther.hidden) {
+      dayChips.setAttribute('data-invalid', 'true');
+    } else {
+      dayChips.removeAttribute('data-invalid');
+    }
     return firstInvalid;
+  }
+
+  function focusTarget(field) {
+    if (field === timeGroup) return timeGroup.querySelector('input:not(:disabled)');
+    if (field === dateInput && dayOther.hidden) return form.querySelector('input[name="tag"]:checked') || form.querySelector('input[name="tag"]');
+    return field;
   }
 
   var attempted = false;
@@ -329,7 +445,7 @@
       'Wunschtag: ' + formatDay(f.wunschtag.value),
       'Wunschzeit: ' + selectedTime()
     ];
-    if (f.leistung.value) lines.push('Leistung: ' + f.leistung.value);
+    if (selectedServices().length) lines.push('Leistung: ' + selectedServices().join(', '));
     if (f.nachricht.value.trim()) lines.push('', 'Nachricht:', f.nachricht.value.trim());
     return 'mailto:' + address +
       '?subject=' + encodeURIComponent('Terminanfrage: ' + f.name.value.trim()) +
@@ -356,7 +472,7 @@
 
     var invalid = validate();
     if (invalid) {
-      (invalid === timeGroup ? timeGroup.querySelector('input') : invalid).focus();
+      focusTarget(invalid).focus();
       return;
     }
 
@@ -367,9 +483,11 @@
     if (endpoint) {
       button.disabled = true;
       statusOut.textContent = 'Wird gesendet …';
+      var data = new FormData(form);
+      data.delete('tag'); // nur Hilfsauswahl, der Wunschtag steht in „wunschtag“
       fetch(endpoint, {
         method: 'POST',
-        body: new FormData(form),
+        body: data,
         headers: { Accept: 'application/json' }
       }).then(function (response) {
         if (!response.ok) throw new Error('HTTP ' + response.status);

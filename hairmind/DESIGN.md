@@ -69,11 +69,14 @@ icons: { set: "keine" }
 **Verworfene Richtungen und warum:** nicht erarbeitet – Richtung war durch das Briefing vorgegeben.
 
 ## Signatur-Element
-- **Offen.** Vorschlag: die geschwungene Haarlinie aus dem Logo als SVG-Trennlinie vor dem Abschnitt „Termin anfragen“. Erst nach Freigabe umsetzen.
+- Was: die zwei goldenen Haarsträhnen aus dem Logo, quer gelegt als Trennlinie. Die Umrisse sind per Skript direkt aus `assets/logo.jpg` ausgelesen (Goldpixel je Zeile), nicht frei gezeichnet. Inline-SVG mit `fill: var(--c-gold)`.
+- Wo: einmal, oben im Abschnitt „Termin anfragen“. Nirgends sonst.
+- Funktion: leitet in die Hauptaktion über und verbindet die Seite mit dem Logo. Rein dekorativ (`aria-hidden`).
+- Verhalten mobil / bei Reduced Motion: skaliert auf Containerbreite (Höhe 28–48 px), keine Bewegung.
 
 ## Farbe
 - Quelle der Palette: Logo (Schwarz, Weiß, Gold).
-- Der Akzent Gold wird ausschließlich für den Hauptbutton auf Schwarz („Anfrage senden“), den Umriss-Button in der Kopfzeile und feine Linien verwendet. Auf hellem Grund erscheint Gold nur als `#7E6036`.
+- Der Akzent Gold wird ausschließlich für den Hauptbutton auf Schwarz („Wunschtermin anfragen“), den Umriss-Button in der Kopfzeile, die Haarlinie und Unterstreichungen auf Schwarz verwendet. Die Linie über der Fußzeile ist bewusst dunkel, damit die Haarlinie das einzige goldene Schmuckelement bleibt. Auf hellem Grund erscheint Gold nur als `#7E6036`.
 - Kontrast geprüft am 2026-10-19 mit `contrast.py --css css/style.css` und eigener Paarprüfung: alle genutzten Text- und UI-Paare ≥ AA. Der Fund „Gold-Schrift auf Gold“ (2,4:1) ist kein echtes Paar und kommt auf der Seite nicht vor.
 
 ## Typografie
@@ -85,12 +88,14 @@ icons: { set: "keine" }
 ## Layout
 - Raster: auf Desktop Überschrift links (1 Teil), Inhalt rechts (2 Teile), Inhalt höchstens 40rem breit.
 - Seitenstruktur (aus Besucherfragen): 1. Wer, wo, offen? Anrufen 2. Was kostet es? 3. Was sagen andere? 4. Wie sieht es aus? 5. Wann offen, wie hinkommen? 6. Termin anfragen.
-- Bewusster Bruch: **offen** – derzeit haben alle Abschnitte dasselbe Raster (siehe Audit).
+- Bewusster Bruch: die Haarlinie über die volle Containerbreite vor dem dunklen Termin-Abschnitt. Ein Umbau weiterer Abschnitte folgt, sobald echte Salonfotos da sind.
 - Rhythmus: Abstände 96–128 px; Tabellen dicht, Zitate luftig.
 
 ## Komponenten-Regeln
-- Buttons: 4 px Radius, min. 48 px hoch. Pro Bildschirm eine Hauptaktion: Start = schwarz „Jetzt anrufen“, Termin = gold „Anfrage senden“, Kopfzeile = Gold-Umriss.
+- Buttons: 4 px Radius, min. 48 px hoch. Pro Bildschirm eine Hauptaktion: Start = schwarz „Jetzt anrufen“, Termin = gold „Wunschtermin anfragen“, Kopfzeile = Gold-Umriss.
 - Eingabefelder: heller Grund auf Schwarz, 4 px Radius, Fehler als Rahmen plus Text, per `aria-describedby` verknüpft.
+- Auswahlfelder (Wunschtag, Wunschzeit, Leistung): antippbare Felder mit 1-px-Rahmen `#6E665C`, gewählt = heller Grund. Wunschtag zeigt die nächsten 5 Öffnungstage (erster vorgewählt) plus „Anderer Tag“ mit Kalender. Ist Samstag gewählt, ist „Nachmittag“ deaktiviert. Leistung wird nie vorgewählt.
+- Hauptbutton der Anfrage: „Wunschtermin anfragen“ mit Zusammenfassung der Auswahl in zweiter Zeile. Nie „freie Termine“ oder Verfügbarkeit andeuten.
 - Bilder: rechteckig ohne Radius, ruhige Zuschnitte (Startbild 4:5), AVIF/WebP/JPG, `width`/`height` gesetzt.
 - Karten: keine. Linien, Tabellen und Listen statt Kästen.
 
@@ -99,7 +104,7 @@ icons: { set: "keine" }
 - Icons: keine.
 
 ## Motion
-- Seitenauftritt: Abschnitte blenden beim Scrollen ein (400 ms, Versatz 12 px). Nur Elemente unterhalb des sichtbaren Bereichs.
+- Seitenauftritt: nur „Bewertungen“ und „Termin anfragen“ blenden beim Scrollen ein (400 ms, Versatz 12 px), alle anderen Abschnitte stehen sofort da. Nur Elemente unterhalb des sichtbaren Bereichs.
 - Zustände: Hover und Focus-visible an allen interaktiven Elementen, keine Übergangsanimationen.
 - Reduced Motion und ohne JavaScript: alles sofort sichtbar.
 
@@ -120,7 +125,7 @@ icons: { set: "keine" }
 | Muster | Wo | Begründung |
 |---|---|---|
 | Heller Papierton + Serifen-Überschriften + feine Linien | ganze Seite | Aus Logo und Briefing abgeleitet, nicht aus einem Standardstil |
-| Gleiches Einblenden für jede Sektion | `data-reveal` in index.html | Vom Briefing verlangt; Kandidat für Reduktion (siehe Audit) |
+| Einblenden beim Scrollen | `data-reveal` an Bewertungen und Termin | Vom Briefing verlangt; auf zwei Abschnitte reduziert |
 | Roboto in der Schriftliste | `--font-sans` in css/style.css | Nur Systemersatz, falls Archivo nicht lädt |
 
 ## Offene Inhalte

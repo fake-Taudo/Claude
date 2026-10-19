@@ -770,6 +770,18 @@ a:hover {
   color: var(--c-gold);
 }
 
+/* Signatur: Haarsträhnen aus dem Logo als Trennlinie */
+.hair-divider {
+  margin-bottom: clamp(3rem, 2rem + 4vw, 5rem);
+}
+
+.hair-line {
+  display: block;
+  width: 100%;
+  height: clamp(1.75rem, 1rem + 2.5vw, 3rem);
+  fill: var(--c-gold);
+}
+
 .muted-on-dark {
   color: var(--c-on-dark-muted);
 }
@@ -838,15 +850,6 @@ textarea.input {
   resize: vertical;
 }
 
-select.input {
-  appearance: none;
-  padding-right: 2.5rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23161412' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-position: right 0.9rem center;
-  background-size: 0.75rem 0.5rem;
-  background-repeat: no-repeat;
-}
-
 .input[aria-invalid="true"] {
   border-color: var(--c-error);
 }
@@ -860,7 +863,7 @@ select.input {
 /* Wunschzeit als Auswahlreihe */
 .choice {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* slop-ok: Wunschzeit als Auswahlreihe, keine Inhaltskarten */
   border: 1px solid var(--c-line-dark);
   border-radius: var(--radius);
 }
@@ -908,6 +911,110 @@ select.input {
 
 .choice[data-invalid="true"] {
   border-color: var(--c-error-on-dark);
+}
+
+.choice__item input:disabled {
+  cursor: not-allowed;
+}
+
+.choice__item input:disabled + span {
+  color: var(--c-line-dark);
+  text-decoration: line-through;
+}
+
+.field__hint--below {
+  margin: 0.5rem 0 0;
+}
+
+/* Antippbare Auswahl: Wunschtag (Radio) und Leistung (Checkbox) */
+.chips {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* slop-ok: Auswahlfelder eines Formulars, keine Inhaltskarten */
+  gap: 0.5rem;
+}
+
+@media (min-width: 40rem) {
+  .chips--days {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .chips--services {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.chip {
+  position: relative;
+  display: flex;
+  margin: 0 !important;
+}
+
+.chip input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.chip > span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.375rem 0.25rem;
+  border: 1px solid var(--c-line-dark);
+  border-radius: var(--radius);
+  font-weight: 400;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.chip input:checked + span {
+  border-color: var(--c-paper);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  font-weight: 500;
+}
+
+.chip input:focus-visible + span {
+  outline: 2px solid var(--c-gold);
+  outline-offset: 2px;
+}
+
+.chip__day {
+  font-size: 0.8125rem;
+}
+
+.chip__date {
+  font-weight: 500;
+}
+
+.chips[data-invalid="true"] .chip > span {
+  border-color: var(--c-error-on-dark);
+}
+
+.field__other {
+  margin-top: 0.75rem;
+}
+
+.btn--summary {
+  flex-direction: column;
+  min-height: 3.5rem;
+  padding: 0.5rem 1.5rem;
+}
+
+.btn__meta {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.btn__meta:empty {
+  display: none;
 }
 
 .form__submit {
@@ -962,7 +1069,7 @@ select.input {
   display: grid;
   gap: 2rem;
   padding-block: 3.5rem 4rem;
-  border-top: 1px solid var(--c-gold);
+  border-top: 1px solid #2f2b27;
 }
 
 .site-footer__logo img {
