@@ -1,0 +1,30 @@
+{
+  "name": "planet-rng",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Planet RNG – a Sol's-RNG-style idle aura roller, shipped as a single offline HTML file",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "balance": "tsx scripts/balance.ts",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "22.20.5",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vite": "7.3.7",
+    "vite-plugin-singlefile": "2.3.4",
+    "vitest": "3.2.7"
+  },
+  "dependencies": {
+    "@fontsource/fredoka": "5.3.0",
+    "preact": "10.29.8"
+  }
+}
