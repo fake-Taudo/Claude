@@ -18,6 +18,8 @@ export interface ToastSpec {
 /** Everything other systems (UI, renderer, audio) can listen to. */
 export type BusEvents = {
   game: GameEvent;
+  /** Every roll start (manual, auto, quick). */
+  rollStart: { aura: string; quick: boolean; auto: boolean; suspenseMs: number; duration: number };
   /** A roll animation starts (normal mode). */
   rollAnim: { duration: number; aura: string; lucky: boolean };
   /** A result is revealed to the player. */

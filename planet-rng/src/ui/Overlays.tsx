@@ -119,7 +119,6 @@ function SellModal({ auraId }: { auraId: string }) {
               onClick={(e) => {
                 const events = game.apply((s, ctx) => sellAura(s, auraId, qty, ctx.now), 'now');
                 if (!events.some((x) => x.type === 'error')) {
-                  sfx('sell');
                   game.bus.emit('fx', { kind: 'coins', x: e.clientX, y: e.clientY, amount: Math.min(24, 6 + qty) });
                   ui.closeModal();
                 }
@@ -147,7 +146,6 @@ function BulkSellModal() {
       onConfirm: () => {
         const ev = game.apply((s, ctx) => sellBulk(s, tier, keepOne, ctx.now), 'now');
         if (!ev.some((x) => x.type === 'error')) {
-          sfx('sell');
           game.bus.emit('fx', { kind: 'coins', x: window.innerWidth / 2, y: window.innerHeight / 2, amount: 24 });
         }
       },

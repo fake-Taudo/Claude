@@ -25,7 +25,6 @@ export function initNotifier(): void {
       case 'achievement': {
         const a = ACHIEVEMENTS.find((x) => x.id === e.id);
         if (!a) break;
-        sfx('claim');
         const reward = rewardText(a.reward);
         ui.pushToast({ text: `Erfolg: ${a.name}${reward ? ` · ${reward}` : ''}`, kind: 'success', icon: 'trophy', color: '#ffd23f' });
         break;

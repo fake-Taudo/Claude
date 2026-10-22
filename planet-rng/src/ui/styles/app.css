@@ -116,6 +116,15 @@ kbd {
   z-index: var(--z-stage);
 }
 
+.cutscene-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-cutscene);
+  touch-action: none;
+}
+
 .fx-canvas {
   position: absolute;
   inset: 0;

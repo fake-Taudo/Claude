@@ -85,6 +85,13 @@ export class RollController {
     const needsCutscene = !!aura.cutscene && this.game.settings.cutscenes;
 
     this.cycleStart = now;
+    this.game.bus.emit('rollStart', {
+      aura: pending.aura,
+      quick: this.quick,
+      auto,
+      suspenseMs: this.quick ? 0 : tier.staging.suspenseMs,
+      duration: this.quick ? 0 : base + tier.staging.suspenseMs,
+    });
     if (this.quick) {
       this.cycleMs = base * GAME.roll.quickFactor;
       this.setPhase('cooldown');

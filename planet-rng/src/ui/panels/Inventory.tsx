@@ -317,7 +317,6 @@ function PotionsTab() {
                   variant="success"
                   data-testid={`drink-${p.id}`}
                   onClick={() => {
-                    sfx('drink');
                     game.apply((s, ctx) => drinkPotion(s, p.id, 1, ctx.now), 'now');
                   }}
                 >
@@ -394,7 +393,6 @@ function ItemsTab() {
                       variant="success"
                       data-testid={`use-${it.id}`}
                       onClick={() => {
-                        sfx('drink');
                         game.apply((s, ctx) => useItem(s, it.id, ctx.now), 'now');
                       }}
                     >
@@ -406,7 +404,6 @@ function ItemsTab() {
                       variant={isEq ? 'ghost' : 'primary'}
                       data-testid={`equip-${it.id}`}
                       onClick={() => {
-                        sfx('equip');
                         game.apply((s) => equipItem(s, it.id), 'now');
                       }}
                     >
