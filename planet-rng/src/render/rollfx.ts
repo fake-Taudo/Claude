@@ -112,6 +112,23 @@ export class RollFx {
     this.bump = reduced ? 0.3 : 1;
   }
 
+  /** Rebirth: implosion, then a huge spectral burst. */
+  rebirth(): void {
+    this.charge = null;
+    const q = this.quality();
+    for (let w = 0; w < 6; w++) {
+      this.waves.push({ age: 0, delay: w * 0.08, max: R * 6, color: spectral(w * 60), width: 5, dir: -1 });
+      this.waves.push({ age: 0, delay: 0.9 + w * 0.12, max: R * (5 + w), color: spectral(w * 60 + 30), width: 6, dir: 1 });
+    }
+    const n = Math.round(160 * q);
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * TAU;
+      const speed = 200 + Math.random() * 500;
+      this.parts.push({ x: Math.cos(a) * R, y: Math.sin(a) * R, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: -0.9, max: 1.6, size: 5 + Math.random() * 8, color: spectral(Math.random() * 360), shape: 'star4', rot: a, drag: 1.8 });
+    }
+    this.bump = this.reduced() ? 0.5 : 2.2;
+  }
+
   update(dt: number): void {
     if (this.charge) {
       this.charge.t += dt;
@@ -140,9 +157,10 @@ export class RollFx {
         });
       }
     }
-    this.bump = Math.max(0, this.bump - dt * 3);
+    this.bump = Math.max(0, this.bump - dt * (this.bump > 1 ? 1.2 : 3));
     for (const p of this.parts) {
       p.life += dt;
+      if (p.life < 0) continue;
       if (p.inward) {
         p.vx *= 1 + 3.2 * dt;
         p.vy *= 1 + 3.2 * dt;
@@ -179,6 +197,7 @@ export class RollFx {
       ctx.globalAlpha = 1;
     }
     for (const p of this.parts) {
+      if (p.life < 0) continue;
       const k = p.life / p.max;
       const a = p.inward ? Math.min(1, k * 4) : Math.pow(1 - k, 1.2);
       ctx.globalAlpha = a;

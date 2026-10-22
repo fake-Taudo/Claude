@@ -80,6 +80,7 @@ export class Stage {
         if (!game.settings.quickRoll) this.rollFx.startCharge(duration, aura);
       }),
       game.bus.on('reveal', ({ aura, quick }) => this.rollFx.reveal(aura, quick)),
+      game.bus.on('rebirthFx', () => this.rollFx.rebirth()),
       game.bus.on('settings', (s) => {
         if (s.vfxQuality !== this.quality) {
           this.quality = s.vfxQuality;

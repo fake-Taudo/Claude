@@ -58,12 +58,22 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
 - Die Shop-Rotation ist eine Funktion aus Spielstand-Seed und Rotationsnummer: Neu laden würfelt
   das Angebot nicht neu.
 
-## Wirtschaft (Startwerte, siehe BALANCING.md)
+## Wirtschaft und Rebirth (Details und Simulation in BALANCING.md)
 
 - Verkaufspreis ≈ `0,0062 · Odds^0,6`, gerundet: Staub 0,01, Urlicht 1, Omniversum 400,
-  Weltenkern 3.000. Ziel: etwa 70 Gold pro Stunde Auto Roll bei Luck 1, große Drops als Jackpot.
+  Weltenkern 3.000. Etwa 80 Gold pro Stunde Auto Roll am Anfang, große Drops sind Jackpots.
+- Shop-Preise des Prototyps bleiben (15/15/100/1.000). Zusätzliche Items, damit die Rotation
+  abwechslungsreich ist: Sonnenphiole (40, ein fertiger Sonnen-Trank), Chrono-Sanduhr (60,
+  +30 % Tempo für 5 Min.), Kometen-Kompass (400, Ausrüstung +30 % Glück / +20 % Tempo). Weitere
+  Shop-Stufen: Ungewöhnlich, Selten, Legendär.
+- Rebirth-Anforderungen neu: R1 = 400 Gold + 5 Eklipse + 2 Urlicht, R2 = 4.000 Gold +
+  3 Singularität + 1 Ewigkeit, R3 = 30.000 Gold + 3 Ewigkeit + 1 Quasar. Multiplikatoren,
+  Stufenzahl und Reset-Regeln wie im Prototyp. Simuliert: Rebirth 1 nach 2,5–4,5 h,
+  Rebirth 3 nach 32–69 h Auto Roll (je nach Spielweise), also über viele Tage verteilt.
 - Der Rebirth-Gold-Bonus wirkt auf Verkäufe und den Gauntlet-Bonus, nicht auf feste Belohnungen
   aus Quests und Erfolgen.
+- Erfolge zahlen Belohnungen sofort aus (Gold, Tränke, teils dauerhaft +1–10 % Glück).
+  Stufen-Erfolge zählen auch, wenn man direkt eine seltenere Stufe findet.
 
 ## Inventar
 

@@ -7,6 +7,10 @@ import { useUi } from './hooks';
 import { Overlays } from './Overlays';
 import { InventoryPanel } from './panels/Inventory';
 import { SettingsPanel } from './panels/Settings';
+import { ShopPanel } from './panels/Shop';
+import { EffectsPanel } from './panels/Effects';
+import { ForgePanel, PotionsPanel } from './panels/Crafting';
+import { RebirthPanel } from './panels/Rebirth';
 import { Nameplate, Reveal, RollNames, ScreenFx } from './Reveal';
 import { RollControls } from './RollControls';
 import { MENU, Sidebar } from './Sidebar';
@@ -41,6 +45,16 @@ function Panels() {
       return <InventoryPanel />;
     case 'settings':
       return <SettingsPanel />;
+    case 'shop':
+      return <ShopPanel />;
+    case 'effects':
+      return <EffectsPanel />;
+    case 'potions':
+      return <PotionsPanel />;
+    case 'forge':
+      return <ForgePanel />;
+    case 'rebirth':
+      return <RebirthPanel />;
     default:
       return null;
   }

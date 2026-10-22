@@ -1713,6 +1713,385 @@ kbd {
 }
 
 /* --------------------------------------------------------------------------
+   Shop and effects
+   -------------------------------------------------------------------------- */
+
+.shop-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.restock {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: var(--r-md);
+  background: rgba(255, 179, 64, 0.08);
+  border: 1px solid rgba(255, 179, 64, 0.25);
+  color: var(--gold);
+  font-size: var(--fs-sm);
+}
+
+.restock b {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.restock__bar {
+  grid-column: 1 / -1;
+}
+
+.restock__bar .progress {
+  height: 8px;
+}
+
+.card-grid--shop {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+
+.shop-card {
+  cursor: default;
+  padding-top: 26px;
+  gap: 6px;
+}
+
+.shop-card:hover {
+  transform: none;
+}
+
+.shop-card__tier {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 9px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--c) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c) 60%, transparent);
+  color: var(--c);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.shop-card .card__name {
+  white-space: normal;
+  line-height: 1.15;
+}
+
+.shop-card__desc {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  line-height: 1.4;
+  min-height: 2.8em;
+}
+
+.shop-card__meta {
+  margin: 0;
+  font-size: 10.5px;
+  color: var(--accent-2);
+}
+
+.shop-card__stock {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.shop-card.is-disabled .item-ico {
+  filter: grayscale(0.4);
+}
+
+.price {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.price__state {
+  font-size: 10px;
+  opacity: 0.85;
+  margin-left: 4px;
+}
+
+.shop-legend {
+  margin-top: 16px;
+}
+
+.shop-legend summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+}
+
+.legend-grid {
+  display: grid;
+  gap: 4px;
+}
+
+.legend-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  font-size: var(--fs-sm);
+}
+
+.legend-row b {
+  color: var(--c);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.section-title {
+  margin: 14px 0 8px;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.effect-row.is-muted {
+  opacity: 0.6;
+}
+
+.effect-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+  color: var(--c);
+}
+
+.effect-left .muted {
+  font-size: var(--fs-xs);
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Crafting and rebirth
+   -------------------------------------------------------------------------- */
+
+.craft-row {
+  align-items: flex-start;
+}
+
+.craft-row.is-ready {
+  border-color: color-mix(in srgb, var(--c) 60%, transparent);
+}
+
+.ingredients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ing {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 9px 0 5px;
+  border-radius: var(--r-pill);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--line);
+  font-size: var(--fs-xs);
+}
+
+.ing__name {
+  color: var(--c);
+  font-weight: 600;
+}
+
+.ing__count {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.ing.is-ok .ing__count {
+  color: var(--success);
+}
+
+.ing.is-missing .ing__count {
+  color: var(--danger);
+}
+
+.forge-note {
+  margin-top: 14px;
+}
+
+.rebirth-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.rebirth-step {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.rebirth-step__dot {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 2px solid var(--line-strong);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.rebirth-step.is-done {
+  color: var(--text);
+}
+
+.rebirth-step.is-done .rebirth-step__dot {
+  background: linear-gradient(180deg, #ff8acb, #ff3d9a);
+  border-color: #ffb3dc;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(255, 90, 180, 0.5);
+}
+
+.rebirth-step.is-next .rebirth-step__dot {
+  border-color: #ff5ab4;
+  color: #ff8acb;
+  animation: badge-pop 1.4s ease-in-out infinite alternate;
+}
+
+.bonus-compare {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bonus-box {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.bonus-box--next {
+  border-color: rgba(255, 90, 180, 0.5);
+  box-shadow: 0 0 18px rgba(255, 90, 180, 0.15);
+}
+
+.bonus-box__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  margin-bottom: 6px;
+  color: var(--text-dim);
+}
+
+.bonus-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  min-height: 24px;
+}
+
+.bonus-line b {
+  margin-left: auto;
+  font-family: var(--font-display);
+}
+
+.bonus-arrow {
+  color: #ff5ab4;
+  flex: none;
+}
+
+.req-list {
+  display: grid;
+  gap: 10px;
+}
+
+.req {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.req__ico {
+  width: 26px;
+  height: 26px;
+}
+
+.req__main {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+
+.req__label {
+  font-size: var(--fs-sm);
+}
+
+.req__ok {
+  color: var(--success);
+}
+
+.warn-box {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: rgba(255, 84, 112, 0.1);
+  border: 1px solid rgba(255, 84, 112, 0.4);
+  color: #ffc2cc;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+.warn-box .icon {
+  color: var(--danger);
+  flex: none;
+}
+
+.rebirth-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.max-box {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  color: #ffd76a;
+}
+
+/* --------------------------------------------------------------------------
    Progress, toggles, sliders, steppers
    -------------------------------------------------------------------------- */
 

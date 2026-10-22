@@ -67,6 +67,7 @@ export function Hud() {
 }
 
 export function Breakdown({ title, icon, result, color, note, inline }: { title: string; icon: 'clover' | 'bolt' | 'coin'; result: ModResult; color: string; note?: string; inline?: boolean }) {
+  const showRule = icon !== 'coin';
   const active = result.categories.filter((c) => c.factor !== 1 || c.parts.length > 0);
   return (
     <div class={inline ? 'breakdown breakdown--inline' : 'popover breakdown'} style={css({ '--c': color })} data-testid="breakdown">
@@ -76,7 +77,7 @@ export function Breakdown({ title, icon, result, color, note, inline }: { title:
         <b>{formatMult(result.total)}</b>
       </div>
       {active.length === 0 ? (
-        <p class="breakdown__empty">Keine Boni aktiv. Tränke, Amulette, Ausrüstung, Rebirth und Biome erhöhen diesen Wert.</p>
+        <p class="breakdown__empty">{showRule ? 'Keine Boni aktiv. Tränke, Amulette, Ausrüstung, Rebirth und Biome erhöhen diesen Wert.' : 'Rebirths erhöhen den Verkaufswert deiner Auren.'}</p>
       ) : (
         <ul>
           {active.map((c) => (
@@ -95,7 +96,7 @@ export function Breakdown({ title, icon, result, color, note, inline }: { title:
           ))}
         </ul>
       )}
-      <p class="breakdown__rule">Trank: nur der stärkste zählt · Amulette, Ausrüstung, Erfolge: addieren sich · Kategorien multiplizieren sich.</p>
+      {showRule && <p class="breakdown__rule">Trank: nur der stärkste zählt · Amulette, Ausrüstung, Erfolge: addieren sich · Kategorien multiplizieren sich.</p>}
       {note && <p class="breakdown__rule">{note}</p>}
       {icon === 'clover' && <GoldLine />}
     </div>
