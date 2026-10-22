@@ -9,17 +9,30 @@ function useForceUpdate(): () => void {
   return force as () => void;
 }
 
+/**
+ * Subscribes to an observable store. Changes that happen between the first render and
+ * the (deferred) subscription are caught by comparing the version afterwards.
+ */
+function useObservable(store: { version: number; subscribe(fn: () => void): () => void }): void {
+  const force = useForceUpdate();
+  const seen = useRef(store.version);
+  seen.current = store.version;
+  useEffect(() => {
+    const unsub = store.subscribe(force);
+    if (store.version !== seen.current) force();
+    return unsub;
+  }, []);
+}
+
 /** Re-renders whenever the game state changes. */
 export function useGame(): GameState {
-  const force = useForceUpdate();
-  useEffect(() => game.subscribe(force), []);
+  useObservable(game);
   return game.state;
 }
 
 /** Re-renders whenever the UI state changes. */
 export function useUi(): UiStore {
-  const force = useForceUpdate();
-  useEffect(() => ui.subscribe(force), []);
+  useObservable(ui);
   return ui;
 }
 

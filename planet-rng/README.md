@@ -1,0 +1,80 @@
+# Planet RNG
+
+Ein Idle-/Gacha-Spiel im Stil der Roblox-RNG-Spiele (Hauptreferenz: Sol's RNG): Auren rollen,
+seltenen Drops hinterherjagen, Tränke brauen, handeln, Rebirths machen und große Funde mit
+Cutscenes feiern.
+
+**Spielen:** `planet-rng.html` herunterladen und per Doppelklick öffnen. Die Datei ist komplett
+selbstenthalten (Code, Schrift, Sounds), läuft offline auf Handy, Tablet und PC und speichert
+den Fortschritt im Browser.
+
+## Steuerung
+
+| Taste | Aktion |
+|---|---|
+| Leertaste | Rollen (gedrückt halten rollt weiter) |
+| A / Q | Auto Roll / Quick Roll an/aus |
+| I / C | Inventar / Sammlung (Index) |
+| S / F / P | Shop / Aura-Schmiede / Tränke-Werkstatt |
+| E / R / U | Aktive Effekte / Rebirth / Quests |
+| O | Einstellungen |
+| Esc | Schließen |
+
+## Entwicklung
+
+Voraussetzung: Node 20+.
+
+```bash
+npm install
+npm run dev        # Entwicklungsserver mit Hot Reload
+npm run build      # Typecheck + Build -> planet-rng.html (und dist/planet-rng.html)
+npm test           # Unit-Tests (Vitest)
+npm run e2e        # Playwright-Smoke-Tests gegen dist/planet-rng.html (vorher bauen)
+npm run balance    # Balancing-Simulation, schreibt BALANCING.md
+```
+
+### Aufbau
+
+```
+src/config/   Alle Inhalte und Zahlen: Auren (auras.ts), Stufen (tiers.ts), Tränke und Rezepte
+              (potions.ts), Shop (shop.ts), Rebirth (rebirth.ts), Biome (biomes.ts),
+              Erfolge und Quests (meta.ts), Planet (planet.ts), Timings (game.ts)
+src/core/     Reine Spiellogik ohne DOM: Zufall, Roll-Modell, Modifikatoren, Aktionen,
+              Shop-Rotation, Biome, Quests, Offline-Nachholen, Speicherformat, Formatierung
+src/store/    Zustand, Event-Bus, Persistenz, Einstellungen, UI-Zustand
+src/game/     Roll-Ablauf (manuell/Auto/Quick, Cutscene-Sperre), Zeit- und Seiten-Lebenszyklus
+src/render/   Canvas: Hintergrund und Biome, Planet, Aura-VFX, Roll-Effekte, Cutscenes
+src/audio/    Web Audio: Samples, prozedurale Effekte, Ambient-Musik
+src/ui/       Preact-Oberfläche (rendert reaktiv aus dem Zustand)
+tests/        Unit-Tests      e2e/  Playwright      scripts/  Balancing + Entwickler-Helfer
+```
+
+### Zahlen anpassen
+
+Alle Werte stehen in `src/config/`. Beispiele:
+
+- Chance einer Aura: `odds` in `auras.ts` („1 in X“). Die Normierung auf 100 % passiert
+  automatisch (Staub erhält den Rest).
+- Verkaufspreis: `sell` in `auras.ts`. Shop-Preise und Erscheinungschancen: `shop.ts`.
+- Trank-Rezepte und Wirkungen: `potions.ts`. Schmiede-Rezepte: `RECIPES` in derselben Datei.
+- Rebirth-Kosten und Multiplikatoren: `rebirth.ts`.
+- Roll-Dauer, Auto-Faktor, Glücks-Roll, Cutscene-Timings: `game.ts`.
+
+Nach einer Änderung `npm test` und `npm run balance` laufen lassen.
+
+### Entwickler-Helfer
+
+`scripts/dev/` enthält Playwright-Skripte für Screenshots und Prüfungen (immer aus diesem
+Ordner heraus und nach `npm run build` starten), z. B.:
+
+- `node scripts/dev/gallery.mjs <ordner>`: jede Aura auf der Bühne fotografieren
+- `node scripts/dev/cutscene-all.mjs <ordner> 11500`: ein Bild jeder Cutscene
+- `node scripts/dev/panels.mjs <ordner> 844 390 land`: alle Menüs in einer Bildschirmgröße
+- `node scripts/dev/soak.mjs 4`: Dauerlauf mit Auto Roll (Speicher, Bildrate, Fehler)
+
+## Dokumente
+
+- [DECISIONS.md](DECISIONS.md): alle Entscheidungen, wo die Vorgabe offen war
+- [BALANCING.md](BALANCING.md): Verteilung, Gold pro Stunde, Spieler-Simulation, Tränke
+- [ABSCHLUSSBERICHT.md](ABSCHLUSSBERICHT.md): was gebaut ist und was offen bleibt
+- [PLAN.md](PLAN.md): Architektur und Phasen

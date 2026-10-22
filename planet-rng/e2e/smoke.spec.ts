@@ -56,7 +56,8 @@ test('full loop: roll, equip, sell, shop, brew, drink, craft, rebirth, reload', 
   await expect.poll(() => game<string | null>(page, 'p.game.state.pendingRoll && p.game.state.pendingRoll.aura'), { timeout: 10_000 }).toBeNull();
 
   // Equip another aura from the inventory.
-  await setup(page, "p.game.state.auras.flut = 3; p.game.state.discovered.flut = { first: 0, total: 3, seen: true }");
+  // (Flut must not already be equipped, otherwise the tap would unequip it.)
+  await setup(page, "p.game.state.auras.flut = 3; p.game.state.discovered.flut = { first: 0, total: 3, seen: true }; if (p.game.state.equippedAura === 'flut') p.game.state.equippedAura = null");
   await page.getByTestId('menu-inventory').click();
   await page.getByTestId('aura-card-flut').click();
   await expect.poll(() => game<string>(page, 'p.game.state.equippedAura')).toBe('flut');
@@ -148,4 +149,26 @@ test('settings, export and import round trip', async ({ page }) => {
   await page.getByTestId('import-confirm').click();
   await page.getByTestId('confirm-ok').click();
   await expect.poll(() => game<number>(page, 'p.game.state.gold')).toBe(123456);
+});
+
+test('a corrupt save falls back to the backup with a warning', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await setup(page, 'p.game.state.tutorial = { done: true, step: 9 }; p.game.state.gold = 77000');
+  const good = await page.evaluate(() => {
+    const p = (window as never as { __prng: { game: { saveNow(): void } } }).__prng;
+    p.game.saveNow();
+    return localStorage.getItem('planet-rng.save');
+  });
+  await page.addInitScript((backup) => {
+    if (sessionStorage.getItem('corrupted')) return;
+    sessionStorage.setItem('corrupted', '1');
+    localStorage.setItem('planet-rng.save.backup', backup as string);
+    localStorage.setItem('planet-rng.save', '{"kaputt": ');
+  }, good);
+  await page.reload();
+  await expect(page.getByText('Spielstand war beschädigt')).toBeVisible();
+  expect(await game<number>(page, 'p.game.state.gold')).toBe(77000);
+  expect(await page.evaluate(() => localStorage.getItem('planet-rng.save.corrupt'))).toBe('{"kaputt": ');
 });

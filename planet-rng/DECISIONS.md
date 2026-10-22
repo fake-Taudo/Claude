@@ -95,3 +95,35 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   verzögert hat. Der Nutzinhalt bleibt vollständig, mit 50 ms Fade-out. Als WAV eingebettet (exakt,
   ohne MP3-Encoder-Verzögerung).
 - `Deep Boom 3` unverändert, startet exakt mit der Cutscene.
+- Ambient-Musik ist ein prozeduraler Akkord-Loop (Tonart und Helligkeit je Biom), während
+  Cutscenes wird sie ausgeblendet. Abschalten über Musik-Lautstärke 0 oder „Stumm“.
+- Längere Cutscenes seltener Stufen dauern länger als die 12,7 s von Deep Boom: ein prozeduraler
+  Drone mit Riser trägt die Klimax-Phase.
+
+## Darstellung
+
+- **Avatar:** ein stilisierter Planet (passend zum Namen). Er wächst und verwandelt sich mit
+  jedem Rebirth: Felsplanet → Ozeanwelt mit Ring → Gaia mit Mond → Gasriese mit zwei Monden.
+  Die Atmosphäre nimmt die Farbe der ausgerüsteten Aura an.
+- Rendering mit Canvas 2D und vorgerenderten Glow-Sprites (kein `shadowBlur`), Partikel aus einem
+  Objekt-Pool. VFX-Qualität steuert Partikelanzahl (35/65/100 %), Glow-Durchgänge und
+  Pixeldichte. Beim ersten Start wird die Qualität grob nach Gerät gewählt.
+- Gekippte Ringe und Umlaufbahnen werden in eine hintere und vordere Hälfte geteilt, damit der
+  Planet sie verdeckt (räumlicher Eindruck).
+- Reveal-Dauer skaliert mit der Stufe (1,7 s bei Gewöhnlich, 2,6 s bei Legendär, bis 6,5 s
+  bei Unendlich) statt pauschal 2,6 s. Ab Mythisch gibt es einen Vollbild-Reveal.
+- Während eines Rolls laufen Aura-Namen wie bei einem Spielautomaten durch (Sol's-RNG-Stil).
+  Unentdeckte Auren erscheinen dabei als „???“, damit nichts vorweggenommen wird. Vor einer
+  Cutscene wird der Name nicht gezeigt.
+- Icons sind eigene SVG-Vektoren statt Emojis (einheitlich auf allen Geräten).
+
+## Meta
+
+- Erfolge werden automatisch vergeben, tägliche Aufträge (3 pro Tag, Wechsel um Mitternacht
+  Ortszeit) und Daueraufträge (Stufen mit steigendem Ziel) holt man per Knopf ab.
+- Der globale Feed ist erkennbar simuliert („SIMULIERT“-Label) und zeigt erfundene Spieler ab
+  „1 in 1.000“ sowie eigene Drops ab Legendär. Abschaltbar.
+- Das Tutorial blockiert nichts (Spotlight ohne Klicksperre), ist jederzeit überspringbar und
+  lässt sich in den Einstellungen neu starten.
+- Test-Hook: Mit `?debug` in der URL stellt das Spiel `window.__prng` bereit (für Playwright).
+  Ohne den Parameter gibt es keinen globalen Zugriff.

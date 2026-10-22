@@ -101,8 +101,18 @@ function useKeyboard() {
   }, []);
 }
 
+/** Mirrors the "reduce effects" setting as a CSS class (stops pulsing, wiggling, rotating UI). */
+function useReducedClass() {
+  useEffect(() => {
+    const apply = () => document.querySelector('.game-root')?.classList.toggle('reduced', game.settings.reducedEffects);
+    apply();
+    return game.bus.on('settings', apply);
+  }, []);
+}
+
 export function App() {
   useKeyboard();
+  useReducedClass();
   return (
     <div class="game-root">
       <StageCanvas />

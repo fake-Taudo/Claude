@@ -346,7 +346,7 @@ function OfflineModal() {
       {s.newAuras.length > 0 && <p class="modal__text">Neu entdeckt: {s.newAuras.map((id) => AURA_BY_ID[id].name).join(', ')}</p>}
       {s.goldBonus > 0 && (
         <p class="modal__text">
-          Gold-Bonus: <GoldAmount milli={s.goldBonus} />
+          Gold erhalten (Erfolge, Boni): <GoldAmount milli={s.goldBonus} />
         </p>
       )}
       <div class="modal__actions">
@@ -362,9 +362,10 @@ function OfflineModal() {
 
 function Toasts() {
   const u = useUi();
+  const covered = !!(u.panel || u.modal || u.dialog || u.offline || u.auraDetail);
   return (
-    <div class={`toasts${u.panel || u.modal ? ' toasts--top' : ''}`} aria-live="polite">
-      {(u.panel || u.modal ? u.toasts.slice(-1) : u.toasts).map((t) => (
+    <div class={`toasts${covered ? ' toasts--top' : ''}`} aria-live="polite">
+      {(covered ? u.toasts.slice(-1) : u.toasts).map((t) => (
         <div key={t.id} class={`toast toast--${t.kind ?? 'info'}`} style={css(t.color ? { '--c': t.color } : {})} onClick={() => ui.dismissToast(t.id)}>
           {t.icon && <Icon name={t.icon} size={18} />}
           <span>{t.text}</span>

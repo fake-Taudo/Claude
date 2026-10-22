@@ -189,7 +189,7 @@ kbd {
 }
 
 .btn--sm {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 12px;
   font-size: var(--fs-sm);
   border-radius: var(--r-sm);
@@ -253,8 +253,8 @@ kbd {
 }
 
 .icon-btn--sm {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--r-sm);
 }
 
@@ -283,10 +283,11 @@ kbd {
 }
 
 .mini-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 30px;
+  height: 36px;
   padding: 0 10px;
   border-radius: var(--r-sm);
   background: rgba(255, 207, 74, 0.12);
@@ -312,7 +313,22 @@ kbd {
   border-color: var(--line);
 }
 
+/* Invisible hit-area extension so small controls still have a 44 px touch target. */
+.mini-btn::after,
+.chip::after,
+.icon-btn--sm::after,
+.history__chip::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+}
+
+.history__chip {
+  position: relative;
+}
+
 .link {
+  min-height: 32px;
   color: var(--accent-2);
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -1267,7 +1283,7 @@ kbd {
 .tab {
   position: relative;
   flex: 1;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 10px;
   border-radius: var(--r-sm);
   font-family: var(--font-display);
@@ -1312,7 +1328,7 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  height: 44px;
   padding: 0 10px;
   border-radius: var(--r-sm);
   background: var(--surface-2);
@@ -1341,7 +1357,8 @@ kbd {
 }
 
 .chip {
-  height: 34px;
+  position: relative;
+  height: 38px;
   padding: 0 12px;
   border-radius: var(--r-pill);
   background: var(--surface-2);
@@ -1509,10 +1526,10 @@ kbd {
 
 .star-btn {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 40px;
-  height: 40px;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   color: var(--text-faint);
@@ -2500,8 +2517,8 @@ kbd {
 
 .stepper__btn,
 .stepper__max {
-  height: 40px;
-  min-width: 40px;
+  height: 44px;
+  min-width: 44px;
   padding: 0 10px;
   display: grid;
   place-items: center;
@@ -2519,7 +2536,7 @@ kbd {
 
 .stepper__val {
   width: 70px;
-  height: 40px;
+  height: 44px;
   text-align: center;
   border-radius: var(--r-sm);
   background: rgba(0, 0, 0, 0.35);
@@ -2956,6 +2973,37 @@ kbd {
   }
 }
 
+/* Small portrait phones (iPhone SE and similar): two-column sidebar without labels. */
+@media (max-height: 740px) and (orientation: portrait) {
+  .sidebar {
+    grid-template-columns: repeat(2, 46px);
+    gap: 6px;
+    transform: translateY(-50%);
+  }
+
+  .side-btn {
+    width: 46px;
+  }
+
+  .side-btn__tile {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+  }
+
+  .side-btn__label {
+    display: none;
+  }
+
+  .roll-btn {
+    height: 70px;
+  }
+
+  .side-toggle {
+    height: 58px;
+  }
+}
+
 /* Short screens (phones in landscape): compact sidebar in two columns, roll controls to the right. */
 @media (max-height: 560px) {
   .sidebar {
@@ -3056,6 +3104,24 @@ kbd {
     width: 200px;
     height: 84px;
   }
+}
+
+/* "Effekte reduzieren": no pulsing, wiggling or spinning UI, no shake. */
+.reduced .roll-btn,
+.reduced .roll-btn.is-lucky,
+.reduced .badge-new,
+.reduced .big-reveal__rays,
+.reduced .big-reveal__name,
+.reduced .orb--spectral,
+.reduced .biome-pill.is-active,
+.reduced .tutorial__spot,
+.reduced .side-toggle--auto.is-on .icon,
+.reduced .rebirth-step.is-next .rebirth-step__dot {
+  animation: none !important;
+}
+
+.reduced.is-shaking {
+  animation: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
