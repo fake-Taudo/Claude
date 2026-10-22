@@ -11,6 +11,9 @@ import { ShopPanel } from './panels/Shop';
 import { EffectsPanel } from './panels/Effects';
 import { ForgePanel, PotionsPanel } from './panels/Crafting';
 import { RebirthPanel } from './panels/Rebirth';
+import { QuestsPanel } from './panels/Quests';
+import { Feed } from './Feed';
+import { Tutorial } from './Tutorial';
 import { Nameplate, Reveal, RollNames, ScreenFx } from './Reveal';
 import { RollControls } from './RollControls';
 import { MENU, Sidebar } from './Sidebar';
@@ -55,6 +58,8 @@ function Panels() {
       return <ForgePanel />;
     case 'rebirth':
       return <RebirthPanel />;
+    case 'quests':
+      return <QuestsPanel />;
     default:
       return null;
   }
@@ -104,6 +109,7 @@ export function App() {
       <Nameplate />
       <RollNames />
       <Hud />
+      <Feed />
       <Sidebar />
       <Reveal />
       <RollControls />
@@ -111,6 +117,7 @@ export function App() {
       <Overlays />
       <ScreenFx />
       <FxCanvas />
+      <Tutorial />
     </div>
   );
 }

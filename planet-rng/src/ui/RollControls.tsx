@@ -77,7 +77,8 @@ export function RollControls() {
 
 function History() {
   const state = useGame();
-  const items = state.history.slice(0, 6);
+  const narrow = typeof window !== 'undefined' && window.innerWidth < 430;
+  const items = state.history.slice(0, narrow ? 5 : 6);
   if (!items.length) return <div class="history history--empty" />;
   return (
     <div class="history" data-testid="history">
@@ -94,7 +95,7 @@ function History() {
             onClick={() => ui.open('inventory', 'auras')}
           >
             <AuraOrb aura={a} size={14} />
-            <span>{a.name}</span>
+            {(!narrow || i < 3) && <span>{a.name}</span>}
             {h.lucky && <Icon name="clover" size={12} />}
           </button>
         );
