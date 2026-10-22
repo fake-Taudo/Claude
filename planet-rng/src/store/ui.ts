@@ -9,12 +9,18 @@ export type PanelId = 'inventory' | 'shop' | 'forge' | 'potions' | 'effects' | '
 
 export interface DialogSpec {
   title: string;
-  body: string | (() => unknown);
+  body: string;
   confirm: string;
   cancel?: string;
   danger?: boolean;
   onConfirm: () => void;
 }
+
+export type ModalSpec =
+  | { kind: 'sell'; aura: string }
+  | { kind: 'bulkSell' }
+  | { kind: 'export' }
+  | { kind: 'import' };
 
 export interface Toast extends ToastSpec {
   id: number;
@@ -25,6 +31,7 @@ export class UiStore extends Observable {
   panel: PanelId | null = null;
   tab: Record<string, string> = {};
   dialog: DialogSpec | null = null;
+  modal: ModalSpec | null = null;
   toasts: Toast[] = [];
   popover: 'luck' | 'speed' | 'biome' | null = null;
   offline: OfflineSummary | null = null;
@@ -40,10 +47,14 @@ export class UiStore extends Observable {
   }
 
   close(): void {
-    if (this.auraDetail) {
-      this.auraDetail = null;
-    } else if (this.dialog) {
+    if (this.dialog) {
       this.dialog = null;
+    } else if (this.modal) {
+      this.modal = null;
+    } else if (this.auraDetail) {
+      this.auraDetail = null;
+    } else if (this.popover) {
+      this.popover = null;
     } else {
       this.panel = null;
     }
@@ -52,6 +63,16 @@ export class UiStore extends Observable {
 
   setTab(panel: PanelId, tab: string): void {
     this.tab[panel] = tab;
+    this.changed();
+  }
+
+  openModal(spec: ModalSpec): void {
+    this.modal = spec;
+    this.changed();
+  }
+
+  closeModal(): void {
+    this.modal = null;
     this.changed();
   }
 

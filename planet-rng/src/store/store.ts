@@ -51,12 +51,15 @@ export class GameStore extends Observable {
     return this.clock();
   }
 
-  /** Runs an engine action and dispatches its events. */
-  apply(action: (state: GameState, ctx: Ctx) => GameEvent[], save: 'none' | 'soon' | 'now' = 'soon'): GameEvent[] {
+  /**
+   * Runs an engine action and dispatches its events. `quiet` skips the UI
+   * notification when the action produced no events (periodic ticks).
+   */
+  apply(action: (state: GameState, ctx: Ctx) => GameEvent[], save: 'none' | 'soon' | 'now' = 'soon', quiet = false): GameEvent[] {
     const events = action(this.state, { now: this.now(), rng: this.rng });
     this.state.rng = this.rng.getState();
     this.dirty = true;
-    this.changed();
+    if (!quiet || events.length) this.changed();
     for (const e of events) this.bus.emit('game', e);
     if (save === 'now') this.saveNow();
     else if (save === 'soon') this.scheduleSave();
