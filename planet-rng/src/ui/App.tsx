@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { controller, game, ui } from '../game/app';
 import { Stage } from '../render/stage';
+import { UiFx } from '../render/uifx';
 import { Hud } from './Hud';
 import { useUi } from './hooks';
 import { Overlays } from './Overlays';
@@ -12,6 +13,7 @@ import { MENU, Sidebar } from './Sidebar';
 import { sfx } from './sound';
 
 export let stage: Stage | null = null;
+export const stageRef = () => stage;
 
 function StageCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -22,6 +24,14 @@ function StageCanvas() {
     return () => stage?.destroy();
   }, []);
   return <canvas ref={ref} class="stage" aria-hidden="true" />;
+}
+
+function FxCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    new UiFx(ref.current!, game);
+  }, []);
+  return <canvas ref={ref} class="fx-canvas" aria-hidden="true" />;
 }
 
 function Panels() {
@@ -86,6 +96,7 @@ export function App() {
       <Panels />
       <Overlays />
       <ScreenFx />
+      <FxCanvas />
     </div>
   );
 }

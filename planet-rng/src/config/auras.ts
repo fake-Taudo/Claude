@@ -31,7 +31,7 @@ export const AURAS: AuraDef[] = [
     description: 'Feiner Planetenstaub, der sanft im Orbit treibt.',
     vfx: {
       rings: [{ radius: 1.5, width: 1.2, style: 'dotted', speed: 0.12, alpha: 0.35 }],
-      emitters: [{ shape: 'dot', count: 26, behavior: 'drift', radius: [1.25, 2.1], size: [1.6, 3.2], speed: [4, 10], alpha: 0.7 }],
+      emitters: [{ shape: 'dot', count: 34, behavior: 'drift', radius: [1.25, 2.2], size: [1.6, 3.2], speed: [4, 10], alpha: 0.75 }],
     },
   },
   {
@@ -63,8 +63,8 @@ export const AURAS: AuraDef[] = [
     vfx: {
       rings: [{ radius: 1.55, width: 1.4, style: 'dashed', speed: -0.2, alpha: 0.45 }],
       emitters: [
-        { shape: 'ember', count: 24, behavior: 'rise', radius: [0.9, 1.6], size: [2, 3.5], speed: [18, 34], life: [1.4, 2.6], fadeTo: '#3a1a10' },
-        { shape: 'spark', count: 12, behavior: 'flicker', radius: [1.5, 1.9], size: [2.5, 4], speed: [0.3, 0.5] },
+        { shape: 'ember', count: 30, behavior: 'rise', radius: [1.0, 1.7], size: [2.4, 4], speed: [18, 34], life: [1.4, 2.6], fadeTo: '#5a1a10' },
+        { shape: 'spark', count: 14, behavior: 'flicker', radius: [1.5, 1.9], size: [3, 4.5], speed: [0.3, 0.5] },
       ],
     },
   },
@@ -332,7 +332,10 @@ export const AURAS: AuraDef[] = [
     vfx: {
       core: { size: 2, pulse: 0.4, pulseHz: 1.2 },
       rings: [{ radius: 1.6, width: 2, style: 'double', speed: 0.4, alpha: 0.55 }],
-      emitters: [{ shape: 'flare', count: 28, behavior: 'outward', radius: [1.1, 1.3], size: [4, 8], speed: [40, 70], life: [0.9, 1.6], colors: ['#ff9a3d', '#fff1c4', '#ff3d7a'] }],
+      emitters: [
+        { shape: 'flare', count: 40, behavior: 'outward', radius: [1.1, 1.3], size: [5, 9], speed: [45, 80], life: [1.1, 1.8], colors: ['#ff9a3d', '#fff1c4', '#ff3d7a'] },
+        { shape: 'ember', count: 20, behavior: 'orbit', radius: [1.4, 1.9], size: [2, 3.5], speed: [0.4, 0.7], colors: ['#ffb36b'] },
+      ],
       specials: [{ kind: 'pulseRings', interval: 1.4, radius: 3, alpha: 0.45 }],
     },
   },
@@ -589,7 +592,7 @@ export const AURAS: AuraDef[] = [
       mood: { dim: 0.4, veil: '#2a1a6b', veilAlpha: 0.2 },
       rings: [],
       emitters: [
-        { shape: 'dot', count: 170, behavior: 'galaxy', radius: [1.2, 3.2], size: [1.2, 3], speed: [0.25, 0.25], tilt: 0.5, colors: ['#ffc6f2', '#6b5bff', '#ffffff', '#ffe6a8'], param: 2, param2: 1.6 },
+        { shape: 'dot', count: 190, behavior: 'galaxy', radius: [1.25, 3.7], size: [1.3, 3.2], speed: [0.25, 0.25], tilt: 0.45, colors: ['#ffc6f2', '#6b5bff', '#ffffff', '#ffe6a8'], param: 2, param2: 1.35 },
         { shape: 'star4', count: 14, behavior: 'flicker', radius: [1.4, 3], size: [3, 5], speed: [0.05, 0.1], colors: ['#ffffff'] },
       ],
     },
@@ -726,7 +729,10 @@ export const AURAS: AuraDef[] = [
         { radius: 1.55, width: 2, style: 'cracked', speed: 0.12, alpha: 0.55, color: '#8a92a5' },
         { radius: 2.0, width: 1.2, style: 'cracked', speed: -0.08, alpha: 0.4, color: '#5a6478' },
       ],
-      emitters: [{ shape: 'fragment', count: 60, behavior: 'decay', radius: [1.3, 2.6], size: [2.5, 5.5], speed: [3, 9], life: [3, 5.5], colors: ['#8a92a5', '#5a6478', '#c0c6d4'], fadeTo: '#1a1a22', additive: false, spin: 0.4 }],
+      emitters: [
+        { shape: 'fragment', count: 60, behavior: 'decay', radius: [1.3, 2.6], size: [3, 6], speed: [3, 9], life: [3, 5.5], colors: ['#b8bfcc', '#8a92a5', '#d8dce6'], fadeTo: '#2a2a33', additive: false, spin: 0.4 },
+        { shape: 'dot', count: 24, behavior: 'decay', radius: [1.2, 2.4], size: [1.5, 3], speed: [2, 6], life: [2.5, 4.5], colors: ['#c0c6d4'], fadeTo: '#3a3a44' },
+      ],
     },
     cutscene: {
       palette: ['#8a92a5', '#5a6478', '#c0c6d4'],
@@ -746,7 +752,7 @@ export const AURAS: AuraDef[] = [
       core: { size: 1.6, pulse: 0.25, pulseHz: 0.25, color: '#ff8a5c' },
       mood: { desaturate: 0.6, dim: 0.45, veil: '#1a2a3a', veilAlpha: 0.25 },
       rings: [{ radius: 1.7, width: 1.6, style: 'solid', speed: 0.2, alpha: 0.45, color: '#6a7480' }],
-      emitters: [{ shape: 'ember', count: 50, behavior: 'decay', radius: [1.2, 2.5], size: [2.5, 5], speed: [4, 12], life: [3, 5], colors: ['#ff8a5c', '#ffb36b'], fadeTo: '#4a5060' }],
+      emitters: [{ shape: 'ember', count: 56, behavior: 'decay', radius: [1.2, 2.5], size: [3.5, 6], speed: [4, 12], life: [3, 5], colors: ['#ff8a5c', '#ffb36b'], fadeTo: '#6a7480' }],
       specials: [{ kind: 'timeDilation', interval: 12 }],
     },
     cutscene: {

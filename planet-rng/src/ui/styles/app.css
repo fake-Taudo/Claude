@@ -1088,6 +1088,10 @@ kbd {
   from { transform: scale(0.6); opacity: 0; }
 }
 
+.big-reveal .reveal__badges {
+  margin-bottom: 12px;
+}
+
 .big-reveal__tier {
   font-family: var(--font-display);
   font-weight: 700;

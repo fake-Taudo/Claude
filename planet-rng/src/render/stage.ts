@@ -1,14 +1,33 @@
 // Main stage renderer (canvas behind the UI). Owns the frame loop, layout and DPR handling.
-// Layers: background (stars, biome) -> aura back layer -> planet -> aura front layer -> roll fx.
+// Draw order: background -> mood -> aura back -> planet -> aura front -> roll fx -> tint -> post.
 
 import { AURA_BY_ID } from '../config';
 import { activeBiome } from '../core/biomes';
 import type { GameStore } from '../store/store';
+import type { VfxQuality } from '../store/settings';
+import { AuraRenderer, drawMood } from './aura';
+import { Background } from './background';
+import { REF_R, type View } from './particles';
+import { Planet } from './planet';
+import { RollFx } from './rollfx';
 
 export interface PlanetLayout {
   x: number;
   y: number;
   r: number;
+}
+
+export const QUALITY_FACTOR: Record<VfxQuality, number> = { low: 0.35, medium: 0.65, high: 1 };
+const DPR_CAP: Record<VfxQuality, number> = { low: 1, medium: 1.5, high: 2 };
+
+function supportsSaturation(): boolean {
+  try {
+    const c = document.createElement('canvas').getContext('2d')!;
+    c.globalCompositeOperation = 'saturation';
+    return c.globalCompositeOperation === 'saturation';
+  } catch {
+    return false;
+  }
 }
 
 export class Stage {
@@ -18,10 +37,18 @@ export class Stage {
   dpr = 1;
   time = 0;
   planet: PlanetLayout = { x: 0, y: 0, r: 50 };
+  readonly aura: AuraRenderer;
+  readonly bg = new Background();
+  readonly planetFx = new Planet();
+  readonly rollFx: RollFx;
   private raf = 0;
   private last = 0;
   private running = false;
-  private stars: { x: number; y: number; r: number; tw: number }[] = [];
+  private canDesaturate = supportsSaturation();
+  private unsubs: (() => void)[] = [];
+  private quality: VfxQuality;
+  /** Frame time average for the adaptive quality guard. */
+  private frameAvg = 16;
 
   constructor(
     readonly canvas: HTMLCanvasElement,
@@ -29,14 +56,50 @@ export class Stage {
     private game: GameStore,
   ) {
     this.ctx = canvas.getContext('2d', { alpha: false })!;
+    this.quality = game.settings.vfxQuality;
+    const q = () => QUALITY_FACTOR[this.game.settings.vfxQuality];
+    const reduced = () => this.game.settings.reducedEffects;
+    this.aura = new AuraRenderer(q, reduced);
+    this.rollFx = new RollFx(q, reduced);
+    this.planetFx.setLevel(game.state.rebirth, false);
+    this.syncAura();
     this.resize();
     window.addEventListener('resize', this.resize);
+    window.addEventListener('orientationchange', this.resize);
     document.addEventListener('visibilitychange', this.onVisibility);
+    this.unsubs.push(
+      game.bus.on('game', (e) => {
+        if (e.type === 'equipChanged' || e.type === 'rebirth') this.syncAura();
+        if (e.type === 'rebirth') this.planetFx.setLevel(e.level, true);
+      }),
+      game.bus.on('stateReplaced', () => {
+        this.planetFx.setLevel(game.state.rebirth, false);
+        this.syncAura();
+      }),
+      game.bus.on('rollAnim', ({ duration, aura }) => {
+        if (!game.settings.quickRoll) this.rollFx.startCharge(duration, aura);
+      }),
+      game.bus.on('reveal', ({ aura, quick }) => this.rollFx.reveal(aura, quick)),
+      game.bus.on('settings', (s) => {
+        if (s.vfxQuality !== this.quality) {
+          this.quality = s.vfxQuality;
+          this.aura.setQuality(QUALITY_FACTOR[s.vfxQuality]);
+          this.resize();
+        }
+      }),
+    );
+  }
+
+  syncAura(): void {
+    const id = this.game.state.equippedAura;
+    this.aura.setAura(id ? AURA_BY_ID[id] ?? null : null);
   }
 
   destroy(): void {
     this.stop();
+    for (const u of this.unsubs) u();
     window.removeEventListener('resize', this.resize);
+    window.removeEventListener('orientationchange', this.resize);
     document.removeEventListener('visibilitychange', this.onVisibility);
   }
 
@@ -60,8 +123,7 @@ export class Stage {
   resize = (): void => {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const cap = this.game.settings.vfxQuality === 'low' ? 1 : this.game.settings.vfxQuality === 'medium' ? 1.5 : 2;
-    this.dpr = Math.min(window.devicePixelRatio || 1, cap);
+    this.dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP[this.game.settings.vfxQuality]);
     this.w = w;
     this.h = h;
     this.canvas.width = Math.round(w * this.dpr);
@@ -69,62 +131,74 @@ export class Stage {
     this.canvas.style.width = `${w}px`;
     this.canvas.style.height = `${h}px`;
     const portrait = h >= w;
-    const r = Math.max(34, Math.min(96, Math.min(w, h) * (portrait ? 0.11 : 0.1)));
-    this.planet = { x: w / 2, y: h * (portrait ? 0.43 : 0.47), r };
+    const short = h < 560;
+    const r = Math.max(30, Math.min(92, Math.min(w, h) * (portrait ? 0.105 : short ? 0.13 : 0.1)));
+    this.planet = { x: short ? w * 0.5 : w / 2, y: h * (portrait ? 0.43 : short ? 0.52 : 0.47), r };
     this.root.style.setProperty('--px', `${this.planet.x}px`);
     this.root.style.setProperty('--py', `${this.planet.y}px`);
-    this.root.style.setProperty('--pr', `${this.planet.r}px`);
-    this.stars = Array.from({ length: Math.round((w * h) / 5000) }, () => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.3 + 0.2, tw: Math.random() * 6 }));
+    this.root.style.setProperty('--pr', `${this.planet.r * this.planetFx.scale()}px`);
+    this.bg.resize(w, h, this.dpr);
   };
 
-  private frame = (t: number): void => {
+  private frame = (now: number): void => {
     if (!this.running) return;
-    const dt = Math.min(0.05, (t - this.last) / 1000);
-    this.last = t;
+    const dtMs = now - this.last;
+    const dt = Math.min(0.05, dtMs / 1000);
+    this.last = now;
+    this.frameAvg = this.frameAvg * 0.95 + dtMs * 0.05;
     this.time += dt;
-    this.draw(dt);
+    this.update(dt);
+    this.draw();
     this.raf = requestAnimationFrame(this.frame);
   };
 
-  private draw(_dt: number): void {
-    const { ctx, w, h, dpr } = this;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const bg = ctx.createLinearGradient(0, 0, 0, h);
+  private lastPr = 0;
+
+  private update(dt: number): void {
+    const pr = this.planet.r * this.planetFx.scale();
+    if (Math.abs(pr - this.lastPr) > 0.5) {
+      this.lastPr = pr;
+      this.root.style.setProperty('--pr', `${pr}px`);
+    }
     const biome = activeBiome(Date.now());
-    bg.addColorStop(0, biome ? biome.colors.sky : '#070a1a');
-    bg.addColorStop(1, '#02030a');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, w, h);
-    for (const s of this.stars) {
-      ctx.globalAlpha = 0.4 + 0.4 * Math.sin(this.time * 1.3 + s.tw);
-      ctx.fillStyle = '#cfd8ff';
-      ctx.fillRect(s.x, s.y, s.r, s.r);
-    }
+    this.bg.setBiome(biome, QUALITY_FACTOR[this.game.settings.vfxQuality]);
+    this.bg.update(dt, this.time);
+    this.aura.update(dt);
+    this.planetFx.update(dt);
+    this.rollFx.update(dt);
+  }
+
+  private draw(): void {
+    const { ctx, dpr } = this;
+    const reduced = this.game.settings.reducedEffects;
+    const glowPasses = this.game.settings.vfxQuality === 'high' ? 3 : this.game.settings.vfxQuality === 'medium' ? 2 : 1;
+    this.bg.draw(ctx, this.time, dpr, reduced);
+
+    const pscale = this.planetFx.scale() * this.rollFx.planetScale();
+    const mood = this.aura.mood();
+    mood.dim = Math.max(mood.dim, this.rollFx.suspenseDim());
+    drawMood(ctx, mood, this.canvas.width, this.canvas.height, this.planet.x * dpr, this.planet.y * dpr, this.time, this.canDesaturate);
+
+    const s = (this.planet.r / REF_R) * dpr;
+    const view: View = { s, tx: this.planet.x * dpr, ty: this.planet.y * dpr };
+    // Aura effects scale with the planet growth from rebirths.
+    const auraView: View = { ...view, s: s * this.planetFx.scale() };
+
+    this.aura.drawBack(ctx, auraView, glowPasses);
+    this.planetFx.drawBack(ctx, view, pscale);
+    this.planetFx.drawBody(ctx, view, pscale, this.aura.atmosphere());
+    this.planetFx.drawFront(ctx, view, pscale);
+    this.aura.drawFront(ctx, auraView, glowPasses);
+    this.rollFx.draw(ctx, auraView);
+    this.bg.drawTint(ctx, dpr);
+    this.aura.drawPost(ctx, this.canvas.width, this.canvas.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
-    const { x, y, r } = this.planet;
-    const aura = this.game.state.equippedAura ? AURA_BY_ID[this.game.state.equippedAura] : null;
-    if (aura) {
-      ctx.strokeStyle = aura.colors.glow;
-      ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.6;
-      ctx.beginPath();
-      ctx.arc(x, y, r * 1.6, 0, Math.PI * 2);
-      ctx.stroke();
-      for (let i = 0; i < 12; i++) {
-        const a = this.time * 0.6 + (i / 12) * Math.PI * 2;
-        ctx.fillStyle = aura.colors.glow;
-        ctx.beginPath();
-        ctx.arc(x + Math.cos(a) * r * 1.6, y + Math.sin(a) * r * 1.6, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-    }
-    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
-    g.addColorStop(0, '#9fb4ff');
-    g.addColorStop(1, '#24306a');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  /** Average frame time in ms (for diagnostics / adaptive quality). */
+  get frameTime(): number {
+    return this.frameAvg;
   }
 }

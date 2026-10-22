@@ -3,7 +3,8 @@ import './ui/styles/tokens.css';
 import './ui/styles/app.css';
 import * as app from './game/app';
 import * as engine from './core/engine';
-import { App } from './ui/App';
+import { App, stageRef } from './ui/App';
+import { AURAS } from './config';
 import { loadFonts } from './ui/fonts';
 import { initNotifier } from './ui/notify';
 
@@ -20,6 +21,8 @@ function boot(): void {
   // Test hook (only with ?debug in the URL): lets the smoke test set up states quickly.
   if (/[?&#]debug/.test(location.search + location.hash)) {
     (window as unknown as Record<string, unknown>).__prng = { ...app, game: app.game, ui: app.ui, controller: app.controller, engine };
+    (window as unknown as Record<string, unknown>).__prngIds = AURAS.map((a) => a.id);
+    (window as unknown as Record<string, unknown>).__prngStage = stageRef;
   }
 }
 
