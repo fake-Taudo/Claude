@@ -277,3 +277,64 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   Teilen des Symbols.
 - Drehung halbiert: 110°/s → 260°/s statt 220°/s → 520°/s (etwa 5,5 statt 11 Umdrehungen).
   Die Aura-Effekte selbst brauchten dafür keine Änderung.
+
+## Cutscene-System (Neuaufbau)
+
+### Bestandsaufnahme (Phase 1): was bleibt, was ersetzt wird
+
+1. **Auslöser bleibt:** `GAME.cutscene.minOdds` (1 in 10.000), Roll-Button gesperrt
+   (`phase === 'cutscene'`), Auto Roll wartet auf `cycleDone`, „Cutscene abspielen“ aus der Sammlung.
+2. **Ersetzt:** `render/cutscene.ts` (ein fester Ablauf Schwarz → Symbol → Klimax-Enum → Weiß) wird
+   zur Timeline-Engine `render/cutscene/` mit Bausteinen; die Klimax-Varianten entfallen.
+3. **Übernommen als Kernmotiv „Kreis-Stern“:** die 22 Symbol-Ebenen (glow, star, wings, clock, …)
+   wandern unverändert als `circleStar`-Ebenen in die Cutscene-Daten; Wachstum linear,
+   Drehbeschleunigung mit derselben Formel (`cutsceneAngle`).
+4. **Spiellogik:** bisher wurde die Aura erst *nach* der Cutscene gutgeschrieben (`completeRoll`
+   im `then`). Neu: gutschreiben, zählen und sofort speichern *vor* dem Start; die Cutscene ist
+   reine Darstellung. Die Spielereignisse (Toasts, Anlegen) werden bis zur Enthüllung gehalten.
+5. **Zeitbasis:** bisher `requestAnimationFrame`-Deltas, neu `AudioContext.currentTime`
+   (geglättet; ohne entsperrtes Audio `performance.now()`).
+6. **Audio bleibt:** Deep Boom startet mit der Cutscene, Musik wird gedämpft (`setDuck`). Ersetzt:
+   der pauschale Drone/Riser für lange Cutscenes durch Hinweise (Cues) je Definition
+   (Jingle, Wind, Motivklang, Stille, Impact, Musik mit Beats).
+7. **Reveal-Übergabe bleibt:** das Ereignis `reveal` mit `afterCutscene` (kein Doppelblitz),
+   danach blendet das Overlay weich aus. Neu: Übergabe zu `duration`, Ausklang aus einem
+   Standbild des letzten Bildes (kein Sprung).
+8. **Überspringen:** bisher Tippen irgendwo (wenn erlaubt). Neu: Schaltfläche nach 2 s oder
+   langes Drücken; beim erneuten Ansehen aus der Sammlung überspringt weiterhin ein Tippen.
+9. **Tab-Wechsel:** bisher Pause. Neu: Pause, nach mehr als 2 s im Hintergrund springt die
+   Cutscene beim Zurückkommen zur Enthüllung.
+10. **Einstellungen bleiben:** „Cutscenes abspielen“, „Überspringen erlauben“. Neu: „Cutscenes
+    bis Seltenheit … überspringen“, „Lichtblitze reduzieren“, Cutscene-Lautstärke.
+11. **Entfällt:** `cutsceneExtraMs` der Stufen und die Klimax-/Hintergrund-Enums der Auren; die
+    Aura-Konfiguration verweist nur noch auf ihre Cutscene-Definition.
+
+### Engine (Phase 1)
+
+- **Kreis-Stern-Tempo:** Der Auftrag nennt 220 → 520°/s (etwa 11 Umdrehungen). Das ist der Stand
+  vor der letzten Rückmeldung; dort wurde die Drehung ausdrücklich halbiert. Es bleibt bei
+  110 → 260°/s (etwa 5,5 Umdrehungen), die Werte stehen weiter in `GAME.cutscene` und werden vom
+  T1-Template gelesen.
+- **Zeiten:** `duration` ist die Übergabe an den Reveal (Überspringen landet dort),
+  `reveal.at` der Beginn der Enthüllung (z. B. Weißblende), `signature.at` der Bruch. Danach
+  blendet das Overlay ein Standbild des letzten Bildes aus (Weißblende 0,7 s, Randglühen 0,6 s,
+  Schnitt 0,15 s), darunter erscheint schon der Reveal.
+- **Bausteine sind Funktionen der Zeit:** jeder Baustein zeichnet aus Fortschritt und Parametern,
+  Partikel werden geschlossen berechnet statt simuliert. Darum kann das Labor an jede Stelle
+  springen und rückwärts scrubben. Nur Frame-Snapshots (Shatter, SplitSlash, TimeFreeze) hängen
+  von einem früheren Bild ab; beim Springen wird dieses Bild zuerst gezeichnet.
+- **Zeitbasis:** `AudioContext.currentTime` minus Ausgabelatenz, damit Bild und Ton zusammen
+  sind; eine `performance.now()`-Uhr wird weich nachgezogen (Sprünge über 0,2 s werden
+  übernommen). Ohne entsperrtes Audio läuft die Cutscene stumm auf `performance.now()`; wird
+  Audio mitten in der Cutscene entsperrt, setzen Klangbetten mit passendem Versatz ein.
+- **Tab-Wechsel:** Die Cutscene pausiert (Audio wird ohnehin angehalten). War der Tab länger als
+  2 s weg, springt sie beim Zurückkommen zur Enthüllung (mit dem kurzen Aura-Blitz des
+  Überspringens): eine halb gesehene Spannungskurve wieder aufzunehmen wirkt schlechter als
+  direkt die Belohnung zu zeigen. Der Spielstand ist davon nicht betroffen.
+- **Spielereignisse während der Cutscene:** werden gesammelt und bei der Enthüllung ausgegeben
+  (`GameStore.apply(…, emit = false)` + `dispatch`). Gespeichert ist schon vorher.
+- **Stufen-Zuordnung:** `cutsceneTier` an der Aura überschreibt die Stufe nach Chance; die
+  Stufe steuert Nachhall-Stärke und ob Überspringen immer erlaubt ist (T3).
+- **Überspringen erlaubt:** wenn „Überspringen erlauben“ an ist, bei T3 immer (lange Filme),
+  beim erneuten Ansehen aus der Sammlung immer (dort genügt Tippen). Sonst Schaltfläche nach
+  2 s, langes Drücken (0,6 s) oder Esc.

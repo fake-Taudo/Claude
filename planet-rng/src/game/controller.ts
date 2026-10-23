@@ -1,12 +1,20 @@
 // Roll loop: manual roll, auto roll, quick roll, suspense timing and cutscene gating.
 // The engine decides *what* is rolled, this controller decides *when* things happen.
 
-import { AURA_BY_ID, GAME, tierOf } from '../config';
+import { AURA_BY_ID, GAME, tierOf, type AuraDef } from '../config';
 import { activeBiome } from '../core/biomes';
-import { beginRoll, completeRoll, markCutsceneSeen } from '../core/engine';
+import { beginRoll, completeRoll, markCutsceneSeen, type GameEvent } from '../core/engine';
 import { computeSpeed, rollDurationMs } from '../core/modifiers';
+import type { Settings } from '../store/settings';
 import type { GameStore } from '../store/store';
 import type { UiStore } from '../store/ui';
+
+/** Whether rolling this aura plays its cutscene with these settings. */
+export function wantsCutscene(aura: AuraDef, settings: Settings): boolean {
+  return !!aura.cutscene && settings.cutscenes && aura.odds >= settings.cutsceneSkipBelow;
+}
+
+type RollResult = Extract<GameEvent, { type: 'rollCompleted' }>;
 
 export interface CutscenePlayer {
   /**
@@ -87,7 +95,7 @@ export class RollController {
     const biome = activeBiome(now)?.id ?? null;
     const speed = computeSpeed(this.game.state, now, biome).total;
     const base = rollDurationMs(speed, auto);
-    const needsCutscene = !!aura.cutscene && this.game.settings.cutscenes;
+    const needsCutscene = wantsCutscene(aura, this.game.settings);
 
     this.cycleStart = now;
     this.game.bus.emit('rollStart', {
@@ -123,8 +131,17 @@ export class RollController {
     return true;
   }
 
+  /**
+   * Logic first: the aura is granted, counted and saved before the cutscene starts. The
+   * cutscene is presentation only; skipping or a closed tab cannot lose the roll. The game
+   * events (toasts, equip) are held back until the reveal so nothing spoils it.
+   */
   private playCutscene(auraId: string, quick: boolean): void {
     this.setPhase('cutscene');
+    const held: GameEvent[] = [];
+    const done = this.grant(held);
+    held.push(...this.game.apply((s, ctx) => markCutsceneSeen(s, ctx.now), 'none', false, false));
+    this.game.saveNow();
     this.ui.cutsceneActive = true;
     this.ui.changed();
     this.game.bus.emit('cutscene', { aura: auraId, phase: 'start' });
@@ -132,8 +149,8 @@ export class RollController {
       .play(auraId)
       .catch(() => undefined)
       .then(() => {
-        this.game.apply((s, ctx) => markCutsceneSeen(s, ctx.now), 'none');
-        this.complete(quick, true);
+        this.game.dispatch(held);
+        if (done) this.announce(done, quick, true);
         this.game.bus.emit('cutscene', { aura: auraId, phase: 'reveal' });
         this.ui.cutsceneActive = false;
         this.ui.changed();
@@ -141,15 +158,22 @@ export class RollController {
       });
   }
 
+  /** Grants the pending aura. With `held`, its events are collected instead of announced. */
+  private grant(held?: GameEvent[]): RollResult | null {
+    if (!this.game.state.pendingRoll) return null;
+    const events = this.game.apply((s, ctx) => completeRoll(s, ctx), 'soon', false, !held);
+    held?.push(...events);
+    return (events.find((e) => e.type === 'rollCompleted') as RollResult | undefined) ?? null;
+  }
+
+  private announce(done: RollResult, quick: boolean, afterCutscene: boolean): void {
+    this.game.bus.emit('reveal', { aura: done.aura, isNew: done.isNew, lucky: done.lucky, luck: done.luck, quick, afterCutscene });
+  }
+
   /** Grants the pending aura and announces the reveal. */
   private complete(quick: boolean, afterCutscene: boolean): void {
-    const pending = this.game.state.pendingRoll;
-    if (!pending) return;
-    const events = this.game.apply((s, ctx) => completeRoll(s, ctx), 'soon');
-    const done = events.find((e) => e.type === 'rollCompleted');
-    if (done && done.type === 'rollCompleted') {
-      this.game.bus.emit('reveal', { aura: done.aura, isNew: done.isNew, lucky: done.lucky, luck: done.luck, quick, afterCutscene });
-    }
+    const done = this.grant();
+    if (done) this.announce(done, quick, afterCutscene);
   }
 
   private cycleDone(): void {

@@ -57,15 +57,20 @@ export class GameStore extends Observable {
    * Runs an engine action and dispatches its events. `quiet` skips the UI
    * notification when the action produced no events (periodic ticks).
    */
-  apply(action: (state: GameState, ctx: Ctx) => GameEvent[], save: 'none' | 'soon' | 'now' = 'soon', quiet = false): GameEvent[] {
+  apply(action: (state: GameState, ctx: Ctx) => GameEvent[], save: 'none' | 'soon' | 'now' = 'soon', quiet = false, emit = true): GameEvent[] {
     const events = action(this.state, { now: this.now(), rng: this.rng });
     this.state.rng = this.rng.getState();
     this.dirty = true;
     if (!quiet || events.length) this.changed();
-    for (const e of events) this.bus.emit('game', e);
+    if (emit) this.dispatch(events);
     if (save === 'now') this.saveNow();
     else if (save === 'soon') this.scheduleSave();
     return events;
+  }
+
+  /** Announces events of an action that ran with emit = false (held during a cutscene). */
+  dispatch(events: GameEvent[]): void {
+    for (const e of events) this.bus.emit('game', e);
   }
 
   /** Notify listeners after a direct mutation (rare, e.g. tutorial flags). */

@@ -1,4 +1,5 @@
 import { AURAS } from './auras';
+import { CUTSCENE_BY_AURA } from './cutscenes';
 import { BIOMES } from './biomes';
 import { ACHIEVEMENTS, QUEST_CHAINS, QUEST_TEMPLATES } from './meta';
 import { POTIONS, RECIPES } from './potions';
@@ -15,6 +16,12 @@ export { NPC_NAMES } from './feed';
 
 function byId<T extends { id: string }>(list: T[]): Record<string, T> {
   return Object.fromEntries(list.map((x) => [x.id, x]));
+}
+
+// Every aura from 1 in 10.000 gets its cutscene definition attached.
+for (const a of AURAS) {
+  const def = CUTSCENE_BY_AURA[a.id];
+  if (def) a.cutscene = a.cutsceneTier ? { ...def, tier: a.cutsceneTier } : def;
 }
 
 export const AURA_BY_ID: Record<string, AuraDef> = byId(AURAS);

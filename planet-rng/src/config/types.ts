@@ -2,6 +2,8 @@
 // Every number that affects gameplay or presentation lives in src/config/*,
 // logic and UI code only read from here.
 
+import type { CutsceneDef } from './cutscenes/types';
+
 export type TierId =
   | 'common'
   | 'uncommon'
@@ -37,8 +39,6 @@ export interface StagingDef {
   shockwaves: number;
   /** How long the reveal banner stays. */
   bannerMs: number;
-  /** Extra cutscene climax time (only used for level 4). */
-  cutsceneExtraMs: number;
   /** Vibration pattern on mobile (ms). */
   vibrate?: number[];
 }
@@ -51,67 +51,6 @@ export interface TierDef {
   color2: string;
   rank: number;
   staging: StagingDef;
-}
-
-// ---------------------------------------------------------------------------
-// Cutscenes
-// ---------------------------------------------------------------------------
-
-export type CsLayerKind =
-  | 'circle'
-  | 'star'
-  | 'shards'
-  | 'cracks'
-  | 'prismRings'
-  | 'orbiters'
-  | 'wings'
-  | 'clock'
-  | 'spiral'
-  | 'fieldLines'
-  | 'web'
-  | 'cells'
-  | 'mobius'
-  | 'rays'
-  | 'polygon'
-  | 'lemniscate'
-  | 'glow'
-  | 'jets'
-  | 'moon'
-  | 'rift'
-  | 'pixels'
-  | 'sparkles';
-
-export interface CsLayer {
-  kind: CsLayerKind;
-  /** Size in symbol units (the base symbol is about 60 units wide). */
-  r?: number;
-  width?: number;
-  /** Index into the cutscene palette, or 'spectrum'. */
-  color?: number | 'spectrum';
-  color2?: number;
-  count?: number;
-  points?: number;
-  inner?: number;
-  dash?: number[];
-  offset?: [number, number];
-  /** Own rotation speed relative to the symbol (rad/s). */
-  spin?: number;
-  alpha?: number;
-  fill?: boolean;
-  /** Generic extra parameter. */
-  param?: number;
-}
-
-export type CsBackdrop = 'none' | 'stars' | 'void' | 'streaks' | 'embers' | 'spectrum' | 'static' | 'snow' | 'blood';
-
-export type CsClimax = 'none' | 'stall' | 'converge' | 'shatter' | 'pulse' | 'invert' | 'supernova' | 'rewind';
-
-export interface CutsceneDef {
-  layers: CsLayer[];
-  /** Palette used by the layers (index 0 = primary). */
-  palette: string[];
-  backdrop: CsBackdrop;
-  climax: CsClimax;
 }
 
 // ---------------------------------------------------------------------------
@@ -142,6 +81,9 @@ export interface AuraDef {
   /** Title tag shown above the planet while equipped. */
   title?: string;
   description: string;
+  /** Overrides the cutscene tier derived from the odds (see config/cutscenes). */
+  cutsceneTier?: 1 | 2 | 3;
+  /** The aura's cutscene (attached from config/cutscenes for every aura from 1 in 10.000). */
   cutscene?: CutsceneDef;
 }
 

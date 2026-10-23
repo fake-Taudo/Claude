@@ -3,6 +3,7 @@ import { AURA_BY_ID, AURAS, TIER_BY_ID, tierOf, type AuraDef } from '../config';
 import { formatMult, formatOdds } from '../core/format';
 import { displayOdds } from '../core/odds';
 import { game } from '../game/app';
+import { wantsCutscene } from '../game/controller';
 import { css, TierTag } from './common';
 import { useBus, useGame } from './hooks';
 import { Icon } from './icons';
@@ -59,7 +60,7 @@ export function RollNames() {
     clear();
     const result = AURA_BY_ID[aura];
     const rank = tierOf(result).rank;
-    const cutscene = !!result.cutscene && game.settings.cutscenes;
+    const cutscene = wantsCutscene(result, game.settings);
     let t = 0;
     const finalAt = duration * (cutscene ? 1 : 0.86);
     while (t < finalAt) {

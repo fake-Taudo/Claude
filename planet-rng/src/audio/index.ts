@@ -1,6 +1,6 @@
 // Connects the audio engine to the game: unlock on first gesture, react to bus events.
 
-import { AURA_BY_ID, BIOME_BY_ID, GAME, tierOf } from '../config';
+import { AURA_BY_ID, BIOME_BY_ID, tierOf } from '../config';
 import { activeBiome } from '../core/biomes';
 import type { GameStore } from '../store/store';
 import { registerSfx } from '../ui/sound';
@@ -38,17 +38,10 @@ export function initAudio(game: GameStore): AudioEngine {
     engine.stinger(rank, e.afterCutscene);
   });
 
+  // The cutscene plays its own sounds (render/cutscene); the music ducks meanwhile.
   game.bus.on('cutscene', (e) => {
-    const aura = AURA_BY_ID[e.aura];
-    const tier = tierOf(aura);
-    if (e.phase === 'start') {
-      engine.setDuck(true);
-      const c = GAME.cutscene;
-      const total = (c.blackMs + c.growMs + tier.staging.cutsceneExtraMs + c.fillMs) / 1000;
-      engine.cutsceneStart(total, tier.rank);
-    } else if (e.phase === 'end') {
-      engine.setDuck(false);
-    }
+    if (e.phase === 'start') engine.setDuck(true);
+    else if (e.phase === 'end') engine.setDuck(false);
   });
 
   game.bus.on('game', (e) => {

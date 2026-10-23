@@ -18,8 +18,7 @@ function boot(): void {
   app.lifecycle.restore();
   app.lifecycle.start();
   const audio = initAudio(app.game);
-  const cutscenes = new CutsceneRunner(app.game, document.getElementById('app')!);
-  cutscenes.setSkipHandler(() => audio.stopBoom(0.4));
+  const cutscenes = new CutsceneRunner(app.game, document.getElementById('app')!, audio);
   app.controller.cutscenes = cutscenes;
   render(<App />, document.getElementById('app')!);
   if (app.loadWarning) app.ui.pushToast({ text: app.loadWarning, kind: 'warn', icon: 'info' });

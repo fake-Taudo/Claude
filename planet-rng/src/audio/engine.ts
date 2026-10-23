@@ -27,7 +27,6 @@ export class AudioEngine {
   private noiseBuf: AudioBuffer | null = null;
   private boom: AudioBuffer | null = null;
   private plop: AudioBuffer | null = null;
-  private boomSource: { src: AudioBufferSourceNode; gain: GainNode } | null = null;
   private settings: Settings;
   private music: Music | null = null;
   private lastPlop = 0;
@@ -156,6 +155,26 @@ export class AudioEngine {
   setDuck(on: boolean): void {
     this.duck = on ? 0 : 1;
     if (this.ctx) this.musicBus.gain.setTargetAtTime(this.settings.musicVolume * 0.55 * this.duck, this.ctx.currentTime, on ? 0.2 : 1.2);
+  }
+
+  /** Output for cutscene sounds (goes through the effects volume, master and limiter). */
+  get cutsceneOut(): AudioNode | null {
+    return this.ctx ? this.sfxBus : null;
+  }
+
+  /** Send into the shared reverb. */
+  get reverbIn(): AudioNode | null {
+    return this.ctx ? this.reverb : null;
+  }
+
+  /** The decoded Deep Boom sample (null until loaded or if decoding failed). */
+  get boomBuffer(): AudioBuffer | null {
+    return this.boom;
+  }
+
+  /** One second of white noise (shared). */
+  noiseBuffer(): AudioBuffer | null {
+    return this.ctx ? this.noise() : null;
   }
 
   setBiome(root: number, bright: number): void {
@@ -312,48 +331,6 @@ export class AudioEngine {
         [0, 7, 12, 16].forEach((n) => this.tone({ type: 'sawtooth', freq: midi(base - 12 + n), dur: 4, gain: 0.035, attack: 0.6, filter: 1200, reverb: 0.5, detune: 8 }));
       }
     });
-  }
-
-  cutsceneStart(totalSeconds: number, rank: number): void {
-    this.safe(() => {
-      const ctx = this.ctx!;
-      this.stopBoom(0);
-      if (this.boom) {
-        const src = ctx.createBufferSource();
-        src.buffer = this.boom;
-        const g = ctx.createGain();
-        g.gain.value = 1;
-        src.connect(g);
-        g.connect(this.sfxBus);
-        src.start();
-        this.boomSource = { src, gain: g };
-        src.onended = () => {
-          if (this.boomSource?.src === src) this.boomSource = null;
-        };
-      } else {
-        this.tone({ freq: 55, to: 30, dur: 10, gain: 0.5, attack: 3 });
-      }
-      // Longer (rarer) cutscenes get a drone + riser that carries past the sample.
-      const extra = totalSeconds - (this.boom?.duration ?? 12.7);
-      if (extra > 0.3) {
-        const startAt = Math.max(0, totalSeconds - extra - 2);
-        this.tone({ type: 'sawtooth', freq: midi(36 + rank), dur: extra + 2.2, gain: 0.08, attack: 1.5, filter: 900, at: startAt });
-        this.hiss({ at: startAt, dur: extra + 2.2, gain: 0.08, freq: 200, to: 5000, q: 3, attack: extra + 1.8 });
-      }
-    });
-  }
-
-  stopBoom(fade = 0.4): void {
-    if (!this.boomSource || !this.ctx) return;
-    const { src, gain } = this.boomSource;
-    try {
-      const t = this.ctx.currentTime;
-      gain.gain.setTargetAtTime(0, t, Math.max(0.01, fade / 3));
-      src.stop(t + fade + 0.05);
-    } catch {
-      /* ignore */
-    }
-    this.boomSource = null;
   }
 
   ui(name: string): void {

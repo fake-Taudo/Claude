@@ -19,6 +19,7 @@ import { RollControls } from './RollControls';
 import { MENU, Sidebar } from './Sidebar';
 import { sfx } from './sound';
 import { AuraLab } from './AuraLab';
+import { CUTSCENE_LAB, CutsceneLab } from './CutsceneLab';
 import { LAB_ENABLED } from './lab';
 
 export let stage: Stage | null = null;
@@ -131,6 +132,7 @@ export function App() {
       <FxCanvas />
       <Tutorial />
       {LAB_ENABLED && <AuraLab />}
+      {CUTSCENE_LAB && <CutsceneLab />}
     </div>
   );
 }
