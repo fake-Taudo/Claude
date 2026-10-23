@@ -66,8 +66,9 @@ Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.
   Speicherstand).
 - Balancing-Skript mit Monte-Carlo (5 Mio. Rolls je Luck-Stufe) und Spieler-Simulation auf der
   echten Engine → `BALANCING.md`.
-- Dauerlauf: 4 Minuten Auto Roll mit der aufwendigsten Aura, Speicher stabil (ca. 4,8 MB Heap),
-  konstant 60 FPS im Test-Browser, keine Konsolenfehler.
+- Dauerlauf: 5 Minuten Auto Roll mit wechselnden aufwendigen Auren, Speicher stabil
+  (6,8–10,5 MB Heap, Textur-Cache im Budget), keine Konsolenfehler (Details im Abschnitt
+  „Aura-VFX-Neuentwurf“).
 
 ## Aura-VFX-Neuentwurf
 
@@ -155,6 +156,13 @@ in [docs/vfx/aura-review.md](docs/vfx/aura-review.md).
 - Behoben dabei: Ein Wechsel der Qualität setzte die Pixeldichte nicht neu (von Niedrig auf
   Hoch blieb das Bild unscharf).
 
+**Dauerlauf** (`scripts/dev/soak.mjs 5`): 5 Minuten Auto Roll (abwechselnd normal und Quick
+Roll, 263 Würfe), dabei alle 30 s eine andere aufwendige Aura angelegt (Weltenkern, Singularität,
+Urlicht, Omniversum, Seraph, Multiversum, Äon, Supernova, Ursuppe, Andromeda, Nullpunkt).
+JS-Heap 6,8–10,5 MB ohne Anstieg, DOM 133–169 Knoten, der Textur-Cache füllt sich bis an sein
+Budget von 14 Megapixeln und bleibt dort, keine Konsolenfehler. Die automatische Anpassung
+stand auf „Niedrig“ (Gerätestandard bei 4 Kernen), 17–25 ms pro Bild.
+
 **Effekte reduzieren** geprüft (`scripts/dev/reduced.mjs`): kein Kamera-Zoom, Bewegung auf
 25 %, keine Bildschirm-Schockwellen, keine Blitze und keine Umkehr bei Nullpunkt;
 Bodenwellen und das Aufleuchten des Heros bleiben.
@@ -165,8 +173,8 @@ Bodenwellen und das Aufleuchten des Heros bleiben.
   automatische Qualitätsanpassung greift.
 - Das Vorbacken verschiebt die Arbeit in die Roll-Animation; dort kann ein einzelnes Bild
   von 50–65 ms entstehen (eine Nebel-Schicht lässt sich nicht weiter aufteilen).
-- Die Effekte sind auf Hochformat abgestimmt; im Querformat ist die Bühne breiter und die
-  V6-Auren reichen dort nicht über den Rand.
+- Die Effekte sind auf Hochformat abgestimmt. Im Querformat (geprüft mit 844×390) füllen die
+  V5/V6-Auren die Höhe, reichen seitlich aber nicht bis an den Rand.
 
 ## Wichtigste Entscheidungen (Details in DECISIONS.md)
 
