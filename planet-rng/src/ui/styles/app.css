@@ -2802,6 +2802,13 @@ kbd {
   height: 100%;
 }
 
+.aura-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .aura-detail__info p {
   margin: 10px 0;
   color: var(--text-dim);

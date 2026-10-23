@@ -9,8 +9,11 @@ import type { GameStore } from '../store/store';
 import type { UiStore } from '../store/ui';
 
 export interface CutscenePlayer {
-  /** Plays the cutscene of an aura. Resolves at the moment the aura is revealed. */
-  play(auraId: string): Promise<void>;
+  /**
+   * Plays the cutscene of an aura. Resolves at the moment the aura is revealed.
+   * `replay`: watched again from the collection (always skippable by tapping).
+   */
+  play(auraId: string, opts?: { replay?: boolean }): Promise<void>;
 }
 
 export type RollPhase = 'idle' | 'rolling' | 'cutscene' | 'cooldown';
@@ -22,6 +25,8 @@ export class RollController {
   cycleMs = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private suspended = false;
+  /** Cutscene the player wants to watch again; starts as soon as no roll is running. */
+  private pendingReplay: string | null = null;
   private listeners = new Set<() => void>();
   cutscenes: CutscenePlayer = { play: () => Promise.resolve() };
 
@@ -150,7 +155,40 @@ export class RollController {
   private cycleDone(): void {
     this.timer = null;
     this.setPhase('idle');
+    if (this.pendingReplay && !this.suspended) {
+      const id = this.pendingReplay;
+      this.pendingReplay = null;
+      this.replayCutscene(id);
+      return;
+    }
     if (this.auto && !this.suspended) this.roll(true);
+  }
+
+  /**
+   * Watches the cutscene of an aura again (collection). Grants and counts nothing. While a
+   * roll is running (e.g. Auto Roll) it starts right after that roll; Auto Roll continues
+   * afterwards. Returns false if the aura has no cutscene.
+   */
+  replayCutscene(auraId: string): boolean {
+    if (!AURA_BY_ID[auraId]?.cutscene) return false;
+    if (this.phase !== 'idle' || this.suspended) {
+      this.pendingReplay = auraId;
+      return true;
+    }
+    this.setPhase('cutscene');
+    this.ui.cutsceneActive = true;
+    this.ui.changed();
+    this.game.bus.emit('cutscene', { aura: auraId, phase: 'start' });
+    this.cutscenes
+      .play(auraId, { replay: true })
+      .catch(() => undefined)
+      .then(() => {
+        this.game.bus.emit('cutscene', { aura: auraId, phase: 'reveal' });
+        this.ui.cutsceneActive = false;
+        this.ui.changed();
+        this.cycleDone();
+      });
+    return true;
   }
 
   private schedule(ms: number, fn: () => void): void {

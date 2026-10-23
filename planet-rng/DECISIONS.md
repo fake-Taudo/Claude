@@ -255,3 +255,13 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   - Erststart: Niedrig nur bei höchstens 2 gemeldeten Kernen, Mittel bei 3–4, sonst Hoch.
   - Die Vorschau in der Sammlung backt dieselben Texturen wie die Bühne (gleiche Größe), damit
     das Anlegen danach weiter ohne Ruckler bleibt.
+
+## Cutscenes erneut ansehen
+
+- Jede entdeckte Aura mit Cutscene hat in der Detailansicht der Sammlung den Knopf „Cutscene
+  abspielen“. Ein erneutes Ansehen vergibt und zählt nichts (keine Aura, kein Wurf, kein Fund).
+- Es läuft auch, wenn „Cutscenes abspielen“ in den Einstellungen aus ist (der Spieler fordert es
+  ausdrücklich an), und lässt sich immer per Tippen überspringen, auch wenn „Überspringen
+  erlauben“ aus ist.
+- Läuft gerade ein Wurf (z. B. Auto Roll), startet die Cutscene direkt nach diesem Wurf;
+  Auto Roll geht danach weiter.

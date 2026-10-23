@@ -6,7 +6,7 @@ import { activeBiome } from '../core/biomes';
 import { auraProbability, displayOdds, getRollTable } from '../core/odds';
 import { computeLuck, isNextRollLucky } from '../core/modifiers';
 import { decodeExport, encodeExport } from '../core/save';
-import { game, ui } from '../game/app';
+import { controller, game, ui } from '../game/app';
 import { AuraOrb, Btn, css, GoldAmount, Stepper, TierTag, Toggle } from './common';
 import { useGame, useUi } from './hooks';
 import { Icon } from './icons';
@@ -222,17 +222,33 @@ function AuraDetail({ id }: { id: string }) {
               </>
             )}
           </dl>
-          {d && (state.auras[id] ?? 0) > 0 && (
-            <Btn
-              variant={state.equippedAura === id ? 'ghost' : 'primary'}
-              onClick={() => {
-                sfx('equip');
-                game.apply((s) => equipAura(s, id));
-              }}
-            >
-              {state.equippedAura === id ? 'Ablegen' : 'Ausrüsten'}
-            </Btn>
-          )}
+          <div class="aura-detail__actions">
+            {d && (state.auras[id] ?? 0) > 0 && (
+              <Btn
+                variant={state.equippedAura === id ? 'ghost' : 'primary'}
+                onClick={() => {
+                  sfx('equip');
+                  game.apply((s) => equipAura(s, id));
+                }}
+              >
+                {state.equippedAura === id ? 'Ablegen' : 'Ausrüsten'}
+              </Btn>
+            )}
+            {d && aura.cutscene && (
+              <Btn
+                variant="ghost"
+                icon="film"
+                title="Die Cutscene dieser Aura noch einmal ansehen (Tippen überspringt)"
+                data-testid="replay-cutscene"
+                onClick={() => {
+                  ui.showAura(null);
+                  controller.replayCutscene(id);
+                }}
+              >
+                Cutscene abspielen
+              </Btn>
+            )}
+          </div>
         </div>
       </div>
     </Modal>

@@ -30,6 +30,8 @@ Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.
   Burst, Decay, Duality, Prism) sind nachgebaut, jede neue Aura hat ein eigenes Symbol.
 - Deep Boom startet exakt mit der Cutscene, Roll gesperrt, Auto Roll wartet, Überspringen per
   Tipp, wenn erlaubt.
+- Jede entdeckte Aura mit Cutscene lässt sich in der Sammlung über „Cutscene abspielen“ erneut
+  ansehen (vergibt nichts, immer überspringbar).
 
 **Aura-Optik** (komplett neu entworfen, siehe Abschnitt „Aura-VFX-Neuentwurf“ unten)
 - Schicht-Engine auf Canvas 2D mit einer eigenen Spec und einem eigenen Hero-Motiv pro Aura,
@@ -61,9 +63,9 @@ Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.
   max. 8 h) mit Zusammenfassung.
 - 79 Unit-Tests (RNG, Roll-Modell, Stapelregeln, Buffs, Crafting, Shop-Rotation, Rebirth,
   Speicherstand, Biome, Offline, Formatierung, Cutscene-Zeitkurve, Prüfliste der
-  Aura-Effekte, automatische VFX-Qualität), 3 Playwright-Szenarien auf
+  Aura-Effekte, automatische VFX-Qualität), 4 Playwright-Szenarien auf
   Handy- und Desktop-Viewport (kompletter Spielablauf bis Reload, Export/Import, beschädigter
-  Speicherstand).
+  Speicherstand, Cutscene erneut ansehen).
 - Balancing-Skript mit Monte-Carlo (5 Mio. Rolls je Luck-Stufe) und Spieler-Simulation auf der
   echten Engine → `BALANCING.md`.
 - Dauerlauf: 5 Minuten Auto Roll mit wechselnden aufwendigen Auren, Speicher stabil

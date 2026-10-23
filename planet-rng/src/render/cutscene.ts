@@ -51,6 +51,7 @@ export class CutsceneRunner implements CutscenePlayer {
   private revealed = false;
   private motes: Mote[] = [];
   private onSkip: (() => void) | null = null;
+  private replay = false;
 
   constructor(
     private game: GameStore,
@@ -62,10 +63,11 @@ export class CutsceneRunner implements CutscenePlayer {
     this.onSkip = fn;
   }
 
-  play(auraId: string): Promise<void> {
+  play(auraId: string, opts: { replay?: boolean } = {}): Promise<void> {
     const aura = AURA_BY_ID[auraId];
     if (!aura?.cutscene) return Promise.resolve();
     this.cleanup();
+    this.replay = !!opts.replay;
     this.aura = aura;
     this.def = aura.cutscene;
     this.extraMs = tierOf(aura).staging.cutsceneExtraMs;
@@ -106,7 +108,7 @@ export class CutsceneRunner implements CutscenePlayer {
   }
 
   private skip = (): void => {
-    if (!this.game.settings.cutsceneSkip || this.t >= this.fillStart) return;
+    if ((!this.game.settings.cutsceneSkip && !this.replay) || this.t >= this.fillStart) return;
     this.t = this.fillStart;
     this.onSkip?.();
   };

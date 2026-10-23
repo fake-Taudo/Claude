@@ -174,3 +174,40 @@ test('a corrupt save falls back to the backup with a warning', async ({ page }) 
   expect(await game<number>(page, 'p.game.state.gold')).toBe(77000);
   expect(await page.evaluate(() => localStorage.getItem('planet-rng.save.corrupt'))).toBe('{"kaputt": ');
 });
+
+test('a cutscene can be watched again from the collection', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await setup(page, "p.game.state.tutorial = { done: true, step: 9 }; p.game.state.discovered.singularitaet = { first: Date.now(), total: 1, seen: true }; p.game.state.auras.singularitaet = 1");
+  const snapshot = 'JSON.stringify({ rolls: p.game.state.stats.rolls, owned: p.game.state.auras.singularitaet, found: p.game.state.discovered.singularitaet.total })';
+  const before = await game<string>(page, snapshot);
+
+  // Auras without a cutscene have no button.
+  await setup(page, "p.game.state.discovered.staub = { first: Date.now(), total: 1, seen: true }");
+  await page.evaluate(() => (window as never as { __prng: { ui: { showAura(id: string): void } } }).__prng.ui.showAura('staub'));
+  await expect(page.getByTestId('aura-detail')).toBeVisible();
+  await expect(page.getByTestId('replay-cutscene')).toHaveCount(0);
+
+  await page.evaluate(() => (window as never as { __prng: { ui: { showAura(id: string): void } } }).__prng.ui.showAura('singularitaet'));
+  await page.getByTestId('replay-cutscene').click();
+  await expect(page.getByTestId('aura-detail')).toBeHidden();
+  await expect(page.locator('.cutscene-layer')).toBeVisible();
+  // A replay can always be skipped by tapping, even with skipping disabled in the settings.
+  await page.waitForTimeout(500);
+  await page.locator('.cutscene-layer').click();
+  await expect(page.locator('.cutscene-layer')).toBeHidden({ timeout: 5000 });
+  expect(await game<string>(page, 'p.controller.phase')).toBe('idle');
+  // Watching again grants and counts nothing.
+  expect(await game<string>(page, snapshot)).toBe(before);
+
+  // During Auto Roll the replay starts after the running roll; Auto Roll goes on afterwards.
+  await setup(page, 'p.game.setSettings({ cutscenes: false }); p.controller.setAuto(true); p.controller.replayCutscene("singularitaet")');
+  await expect(page.locator('.cutscene-layer')).toBeVisible({ timeout: 10000 });
+  await page.waitForTimeout(300);
+  await page.locator('.cutscene-layer').click();
+  await expect(page.locator('.cutscene-layer')).toBeHidden({ timeout: 5000 });
+  expect(await game<boolean>(page, 'p.game.state.auto')).toBe(true);
+  const rolls = await game<number>(page, 'p.game.state.stats.rolls');
+  await expect.poll(() => game<number>(page, 'p.game.state.stats.rolls'), { timeout: 10000 }).toBeGreaterThan(rolls);
+});
