@@ -38,9 +38,11 @@ function cached(key: string, make: () => Tex): Tex {
   cache.set(key, t);
   keyOf.set(t, key);
   pixels += t.width * t.height;
+  // Least recently used first. Textures of the aura on screen stay alive in its layers anyway;
+  // dropping them here only means a rebake if they are requested again.
   const budget = VFX.textureBudgetMp * 1e6;
   for (const [k, v] of cache) {
-    if (pixels <= budget || cache.size <= 32) break;
+    if (pixels <= budget || cache.size <= 8) break;
     cache.delete(k);
     pixels -= v.width * v.height;
   }
@@ -676,11 +678,11 @@ export const BAND_PAD = 1.6;
  * Soft light band ring. ratio = width / radius. The texture half size equals
  * radius + BAND_PAD * width. Brightness varies around the ring; the inner line is hot.
  */
-export function bandTex(color: string, color2: string, ratio: number, variation: number, seed: number): Tex {
+export function bandTex(color: string, color2: string, ratio: number, variation: number, seed: number, size = 512): Tex {
   const q = Math.round(ratio * 50) / 50;
   const vq = Math.round(variation * 10) / 10;
-  return cached(`band|${color}|${color2}|${q}|${vq}|${seed}`, () => {
-    const S = 512;
+  return cached(`band|${color}|${color2}|${q}|${vq}|${seed}|${size}`, () => {
+    const S = size;
     const half = 1 + BAND_PAD * q;
     const centre = 1 / half;
     const sigma = (q / 2.3) / half;
@@ -836,11 +838,11 @@ export function spiralTex(color: string, color2: string, arms: number, twist: nu
 }
 
 /** Soft ripple ring (thin version of a band, no variation). */
-export function ringTex(color: string, sharp: number): Tex {
-  return cached(`ring|${color}|${sharp}`, () => {
+export function ringTex(color: string, sharp: number, size = sharp > 24 ? 512 : 256): Tex {
+  return cached(`ring|${color}|${sharp}|${size}`, () => {
     // Gaussian band around 0.85 of the half size with a white-hot centre line, drawn as a
     // radial gradient (sampled densely around the band) instead of pixel by pixel.
-    const S = sharp > 24 ? 512 : 256;
+    const S = size;
     const c = canvas(S, S);
     const ctx = c.getContext('2d')!;
     const g = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);

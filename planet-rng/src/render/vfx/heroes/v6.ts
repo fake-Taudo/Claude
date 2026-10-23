@@ -658,7 +658,8 @@ export class MirrorRings extends Hero {
     const l = this.colorStatic('left', 'p0');
     const r = this.colorStatic('right', 'p1');
     const ratio = this.num('width', 0.09) / this.num('radius', 1.5);
-    this.bands = [bandTex(l, mix(l, '#ffffff', 0.3), ratio, 0.5, inst.seed % 31), bandTex(r, mix(r, '#ffffff', 0.3), ratio, 0.5, inst.seed % 37)];
+    const size = inst.texPx(2 * (this.num('radius', 1.5) + BAND_PAD * this.num('width', 0.09)));
+    this.bands = [bandTex(l, mix(l, '#ffffff', 0.3), ratio, 0.5, inst.seed % 31, size), bandTex(r, mix(r, '#ffffff', 0.3), ratio, 0.5, inst.seed % 37, size)];
     this.mote = [spriteTex('mote', l), spriteTex('mote', r)];
   }
 

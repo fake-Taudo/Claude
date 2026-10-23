@@ -168,10 +168,12 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
 - **Kamera:** V5 zoomt 6 %, V6 10 % heraus (1,2 s Ease-out), danach ruhig. Bei „Effekte
   reduzieren“ keine Kamerabewegung, keine Flashes, Rotation und Atmen auf 25 %.
 - **Qualität:** Niedrig 30 %, Mittel 60 %, Hoch 100 % der Partikel; einzelne Schichten nur ab
-  Mittel/Hoch. Die automatische Anpassung senkt die Stufe, wenn die Bildrate drei Sekunden lang
-  unter ~45 FPS liegt, und regelt nie selbst hoch (erst wieder nach einer Änderung in den
-  Einstellungen).
-- **Pixeldichte:** Hoch 2, Mittel 1,5, Niedrig 1; auf Touch-Geräten bei V5/V6 höchstens 1,5.
+  Mittel/Hoch. Die automatische Anpassung dünnt nur die Effekte aus (Partikel, optionale
+  Schichten, Bloom), nie die Auflösung, und regelt nach 12 s flüssiger Darstellung wieder hoch,
+  höchstens bis zur gewählten Stufe (siehe „Schärfe“ unten).
+- **Pixeldichte:** Hoch 3 (native Auflösung heutiger Handys), Mittel 2, Niedrig 1,5; auf
+  Touch-Geräten bei V5/V6 höchstens 2,5. Zuerst waren es 2 / 1,5 / 1 (bei V5/V6 auf Handys 1,5),
+  wie in der Vorgabe; das sah auf Handys mit DPR 3 verwaschen aus (siehe „Schärfe“ unten).
 - **Titelzeile** bleibt unverändert. Ab V3 liegt im Canvas ein weicher dunkler Verlauf dahinter.
 - **Aura-Labor:** `?lab=1` (zusammen mit `?debug` für Skripte). Zeigt eine Aura auf der Bühne,
   ohne den Speicherstand zu ändern; `window.__lab` erlaubt deterministische Aufnahmen mit
@@ -233,3 +235,23 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
 - **Prüfbilder:** Kontaktbogen und Silhouetten zeigen den Ruhezustand (das Labor sucht mit
   `idle` einen Zeitpunkt ohne laufenden oder bevorstehenden Akzent). Die Silhouetten sind
   Graustufen mit erhöhtem Kontrast; jede Aura muss an ihrer Form erkennbar sein.
+- **Schärfe (Rückmeldung: „pixelig“, „VFX-Qualität ohne Funktion“):** Nachgestellt auf einem
+  emulierten Handy (DPR 3). Ursachen: (1) Der Erststart wählte bei 4 gemeldeten Kernen „Niedrig“,
+  also DPR 1 – jedes Pixel dreifach gestreckt. (2) Die automatische Anpassung senkte nach
+  Mittel/Hoch innerhalb von 4–8 s wieder auf Niedrig und damit auf DPR 1, regelte nie hoch und
+  reagierte auch auf Browser, die zum Stromsparen auf 30 FPS begrenzen. Die Einstellung wirkte
+  dadurch wie ohne Funktion. (3) Hoch war auf DPR 2 begrenzt, Sigille und Lichtbänder wurden fest
+  mit 512 px gebacken. Lösung, ohne die Designs zu ändern:
+  - Die Auflösung folgt nur der Einstellung (Niedrig 1,5, Mittel 2, Hoch bis 3).
+  - Die automatische Anpassung (`src/render/quality.ts`, Unit-Tests in `tests/quality.test.ts`)
+    dünnt nur Effekte aus. Als langsam gilt: viel JS-Zeit, oder lange Bilder zusammen mit viel
+    JS-Zeit oder unregelmäßigen Abständen. Gleichmäßig lange Bilder (30-FPS-Begrenzung) zählen
+    nicht. Nach 12 s flüssiger Darstellung geht sie wieder eine Stufe hoch.
+  - Sigille, Lichtbänder und Schockwellen-Ringe werden in der Auflösung gebacken, in der sie auf
+    dem Bildschirm erscheinen (Schritte von 256 px, höchstens 1536 px). Die Linienbreiten skalieren
+    mit, das Aussehen bleibt gleich. Sigille laufen jetzt durch den gemeinsamen Textur-Cache mit
+    Megapixel-Budget (vorher eigener Cache mit 24 Einträgen ohne Größenlimit); der Cache räumt
+    jetzt auch unter 32 Einträgen auf, sobald das Budget überschritten ist.
+  - Erststart: Niedrig nur bei höchstens 2 gemeldeten Kernen, Mittel bei 3–4, sonst Hoch.
+  - Die Vorschau in der Sammlung backt dieselben Texturen wie die Bühne (gleiche Größe), damit
+    das Anlegen danach weiter ohne Ruckler bleibt.

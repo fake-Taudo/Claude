@@ -4,12 +4,10 @@
 import type { SigilElement } from '../../config/vfx/types';
 import { mix, rgba } from '../color';
 import { Rng, TAU } from './math';
+import { bakeTex } from './tex';
 
-const SIZE = 512;
 /** Texture half size relative to the sigil radius (room for the glow). */
 export const SIGIL_PAD = 1.12;
-
-const cache = new Map<string, HTMLCanvasElement>();
 
 type Stroke = (ctx: CanvasRenderingContext2D) => void;
 
@@ -119,10 +117,15 @@ function zodiac(ctx: CanvasRenderingContext2D, i: number, s: number): void {
  * Bakes a sigil. Element radii and widths are fractions of the sigil radius.
  * resolve maps colour references to hex.
  */
-export function sigilTex(key: string, pattern: SigilElement[], color: string, glow: number, resolve: (c: string) => string): HTMLCanvasElement {
-  const k = `${key}|${color}|${glow}`;
-  const hit = cache.get(k);
-  if (hit) return hit;
+/**
+ * Bakes a sigil pattern into a square texture of `size` pixels (line widths scale with it,
+ * so a larger texture only adds sharpness). Cached in the shared texture cache.
+ */
+export function sigilTex(key: string, pattern: SigilElement[], color: string, glow: number, resolve: (c: string) => string, size = 512): HTMLCanvasElement {
+  return bakeTex(`sigil|${key}|${color}|${glow}|${size}`, () => bakeSigil(pattern, color, glow, resolve, size));
+}
+
+function bakeSigil(pattern: SigilElement[], color: string, glow: number, resolve: (c: string) => string, SIZE: number): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = SIZE;
   c.height = SIZE;
@@ -449,9 +452,6 @@ export function sigilTex(key: string, pattern: SigilElement[], color: string, gl
         break;
     }
   }
-  cache.set(k, c);
-  // Keep the sigil cache small; textures are cheap to rebake.
-  if (cache.size > 24) cache.delete(cache.keys().next().value!);
   return c;
 }
 

@@ -697,6 +697,7 @@ export class ClockPortal extends Hero {
       gold,
       1,
       (c) => inst.colStatic(c),
+      inst.texPx(this.num('radius', 1.65) * 2 * 1.12 * 1.05),
     );
     this.bloom = bloomOf(this.dial);
     this.gear = [spriteTex('gear', gold), spriteTex('gear', this.colorStatic('light', 'core'))];

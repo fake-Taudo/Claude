@@ -4,7 +4,7 @@
 //   aura front/particles -> roll fx -> aura screen front -> biome tint -> title scrim
 
 import { AURA_BY_ID } from '../config';
-import { QUALITY_SHARE, VFX, VTIERS, vfxOf } from '../config/vfx';
+import { DPR_OF_QUALITY, QUALITY_SHARE, VFX, VTIERS, vfxOf } from '../config/vfx';
 import type { Quality } from '../config/vfx/types';
 import { activeBiome } from '../core/biomes';
 import type { GameStore } from '../store/store';
@@ -15,6 +15,7 @@ import { RollFx } from './rollfx';
 import { REF_R, type View } from './view';
 import type { FrameEnv } from './vfx/core';
 import { VfxRenderer } from './vfx/renderer';
+import { QualityGuard } from './quality';
 
 export interface PlanetLayout {
   x: number;
@@ -24,8 +25,6 @@ export interface PlanetLayout {
 
 /** Particle / layer share per VFX quality (also used by the background and roll fx). */
 export const QUALITY_FACTOR: Record<VfxQuality, number> = QUALITY_SHARE;
-const DPR_CAP: Record<VfxQuality, number> = { low: 1, medium: 1.5, high: 2 };
-const QUALITIES: Quality[] = ['low', 'medium', 'high'];
 /** Clock epoch: animations run on wall time so nothing restarts on reload. */
 const EPOCH = Date.UTC(2026, 0, 1);
 
@@ -53,11 +52,8 @@ export class Stage {
   private running = false;
   private unsubs: (() => void)[] = [];
   private quality: VfxQuality;
-  /** Frame time average for the adaptive quality guard. */
-  private frameAvg = 16;
-  private slowFor = 0;
-  /** Quality ceiling chosen by the auto quality guard (only ever steps down). */
-  autoQuality: Quality = 'high';
+  /** Automatic effect quality (thins effects when rendering is slow, never the resolution). */
+  readonly guard = new QualityGuard();
   /** Lab: disables the auto quality guard. */
   autoQualityEnabled = true;
   /** Lab: manual stepping with a fixed clock (deterministic screenshots). */
@@ -92,8 +88,9 @@ export class Stage {
       stage: { left: 0, right: 0, top: 0, bottom: 0 },
     };
     this.planetFx.setLevel(game.state.rebirth, false);
-    this.syncAura(false);
+    // Resize first: the aura bakes its textures for the planet size on screen.
     this.resize();
+    this.syncAura(false);
     window.addEventListener('resize', this.resize);
     window.addEventListener('orientationchange', this.resize);
     document.addEventListener('visibilitychange', this.onVisibility);
@@ -119,18 +116,16 @@ export class Stage {
       game.bus.on('settings', (s) => {
         if (s.vfxQuality !== this.quality) {
           this.quality = s.vfxQuality;
-          this.autoQuality = 'high';
-          this.slowFor = 0;
+          this.guard.reset();
           this.updateDprCap(true);
         }
       }),
     );
   }
 
-  /** User quality limited by the auto quality guard. */
+  /** Effect quality: the player's setting, limited by the auto quality guard. */
   effectiveQuality(): Quality {
-    const user = this.game.settings.vfxQuality;
-    return QUALITIES[Math.min(QUALITIES.indexOf(user), QUALITIES.indexOf(this.autoQuality))];
+    return this.autoQualityEnabled ? this.guard.effective(this.game.settings.vfxQuality) : this.game.settings.vfxQuality;
   }
 
   /** Lab override: the aura shown regardless of the equipped one. */
@@ -142,9 +137,12 @@ export class Stage {
     this.updateDprCap();
   }
 
-  /** DPR cap of the quality; phones get a lower DPR while a V5/V6 aura is shown. */
+  /**
+   * Render resolution of the player's quality setting (the auto guard never lowers it);
+   * phones get a slightly lower DPR while a V5/V6 aura is shown.
+   */
   updateDprCap(force = false): void {
-    let cap = DPR_CAP[this.effectiveQuality()];
+    let cap: number = DPR_OF_QUALITY[this.game.settings.vfxQuality];
     if (coarse()) cap = Math.min(cap, VTIERS[this.vfx.maxTier()].mobileDpr);
     if (cap !== this.dprCap || force) {
       this.dprCap = cap;
@@ -194,6 +192,7 @@ export class Stage {
     this.root.style.setProperty('--px', `${this.planet.x}px`);
     this.root.style.setProperty('--py', `${this.planet.y}px`);
     this.root.style.setProperty('--pr', `${this.visualR()}px`);
+    this.vfx.pxPerD = 2 * this.planet.r * this.planetFx.scale() * this.dpr;
     this.bg.resize(w, h, this.dpr);
   };
 
@@ -212,29 +211,13 @@ export class Stage {
     const dtMs = now - this.last;
     const dt = Math.min(0.05, dtMs / 1000);
     this.last = now;
-    this.frameAvg = this.frameAvg * 0.95 + dtMs * 0.05;
-    this.guardQuality(dt);
     this.time += dt;
+    const t0 = performance.now();
     this.update(dt);
     this.draw();
+    if (this.autoQualityEnabled) this.guard.tick(dtMs, performance.now() - t0, this.game.settings.vfxQuality);
     this.raf = requestAnimationFrame(this.frame);
   };
-
-  /** Steps down the quality when frames stay slow for a few seconds; never steps up. */
-  private guardQuality(dt: number): void {
-    if (!this.autoQualityEnabled) return;
-    if (this.frameAvg > VFX.autoQualityMs) this.slowFor += dt;
-    else this.slowFor = Math.max(0, this.slowFor - dt * 0.5);
-    if (this.slowFor > VFX.autoQualitySec) {
-      const i = QUALITIES.indexOf(this.effectiveQuality());
-      if (i > 0) {
-        this.autoQuality = QUALITIES[i - 1];
-        this.updateDprCap();
-      }
-      this.slowFor = 0;
-      this.frameAvg = 16;
-    }
-  }
 
   /** Lab: advance the simulation manually by dt seconds in steps of 1/60 s. */
   step(seconds: number): void {
@@ -355,6 +338,11 @@ export class Stage {
 
   /** Average frame time in ms (for diagnostics / adaptive quality). */
   get frameTime(): number {
-    return this.frameAvg;
+    return this.guard.frameAvg;
+  }
+
+  /** Average JS time spent in update + draw per frame (ms). */
+  get workTime(): number {
+    return this.guard.workAvg;
   }
 }

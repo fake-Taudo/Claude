@@ -244,6 +244,8 @@ export interface InstanceOptions {
   tier?: VTier;
   /** Build no layers in the constructor (texture pre-baking creates them one by one). */
   lazy?: boolean;
+  /** Device pixels per D on screen when the instance is created (sizes the baked textures). */
+  pxPerD?: number;
 }
 
 export class AuraInstance {
@@ -291,6 +293,15 @@ export class AuraInstance {
 
   get reduced(): boolean {
     return this.reducedNow;
+  }
+
+  /**
+   * Edge length in pixels for a baked texture that covers `spanD` D on screen: the texture
+   * matches the screen resolution (in steps of 256 for the cache), so lines stay sharp.
+   */
+  texPx(spanD: number, min = 256, max = 1536): number {
+    const px = spanD * this.sizeScale * (this.opts.pxPerD ?? 240);
+    return Math.max(min, Math.min(max, Math.ceil(px / 256) * 256));
   }
 
   /** Overall size multiplier from the spec size override. */

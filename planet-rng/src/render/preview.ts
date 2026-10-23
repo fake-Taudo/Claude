@@ -1,7 +1,7 @@
 // Small standalone scene for the collection detail view: one planet with one aura.
 
 import type { AuraDef } from '../config';
-import { QUALITY_SHARE, VTIERS, vfxOf } from '../config/vfx';
+import { DPR_OF_QUALITY, QUALITY_SHARE, VTIERS, vfxOf } from '../config/vfx';
 import type { Quality } from '../config/vfx/types';
 import { Planet } from './planet';
 import { REF_R, type View } from './view';
@@ -19,6 +19,7 @@ export class AuraPreviewScene {
   private env: FrameEnv;
   private view: View = { s: 1, tx: 0, ty: 0 };
   private extent: number;
+  private dprCap: number;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -26,10 +27,14 @@ export class AuraPreviewScene {
     quality: Quality,
     reduced: boolean,
     planetLevel: number,
+    /** Pixels per D of the main stage: the preview bakes the same textures (shared cache). */
+    pxPerD?: number,
   ) {
     this.ctx = canvas.getContext('2d', { alpha: false })!;
     this.vfx = new VfxRenderer(() => quality, () => reduced);
+    if (pxPerD) this.vfx.pxPerD = pxPerD;
     this.vfx.setAura(aura, { skipIntro: true });
+    this.dprCap = DPR_OF_QUALITY[quality];
     const spec = vfxOf(aura);
     this.extent = spec.size ?? VTIERS[spec.tier].extent;
     this.planet.setLevel(planetLevel, false);
@@ -55,7 +60,7 @@ export class AuraPreviewScene {
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
     const c = this.canvas;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, this.dprCap);
     const w = c.clientWidth || 260;
     const h = c.clientHeight || 260;
     if (c.width !== Math.round(w * dpr)) {

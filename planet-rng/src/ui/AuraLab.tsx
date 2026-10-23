@@ -77,7 +77,7 @@ function install(): void {
       st.backdrop = b;
       st.step(0);
     },
-    stats: () => ({ ...stage()?.vfx.stats(), textures: textureStats(), frameMs: stage()?.frameTime }),
+    stats: () => ({ ...stage()?.vfx.stats(), textures: textureStats(), frameMs: stage()?.frameTime, workMs: stage()?.workTime }),
     /** Cost of `frames` simulated frames in ms (update + draw, rasterisation forced by a 1 px readback). */
     perf: (frames = 120) => {
       const st = stage();

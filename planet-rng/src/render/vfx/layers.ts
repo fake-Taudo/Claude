@@ -161,7 +161,9 @@ export class SigilLayer extends Layer<SigilSpec> {
 
   constructor(spec: SigilSpec, inst: AuraInstance, index: number) {
     super(spec, inst, index);
-    this.tex = sigilTex(`${inst.spec.id}|${index}`, spec.pattern, inst.colStatic(spec.color), spec.glow ?? 1, (c) => inst.colStatic(c));
+    // Texture at screen resolution (breathing and the intro overshoot add up to ~5 %).
+    const size = inst.texPx(spec.radius * 2 * SIGIL_PAD * 1.05);
+    this.tex = sigilTex(`${inst.spec.id}|${index}`, spec.pattern, inst.colStatic(spec.color), spec.glow ?? 1, (c) => inst.colStatic(c), size);
     this.glint = glintTex(mix(inst.colStatic(spec.color), '#ffffff', 0.5));
   }
 
@@ -252,7 +254,7 @@ export class RippleLayer extends Layer<RippleSpec> {
     const a = this.alpha();
     if (a <= 0.003) return;
     const ctx = env.ctx;
-    this.tex ??= ringTex(this.inst.colStatic(s.color), 12);
+    this.tex ??= ringTex(this.inst.colStatic(s.color), 12, this.inst.texPx((2 * s.radius) / 0.85, 256, 512));
     const [ax, ay] = anchor(s);
     const ground = (s.plane ?? 'ground') === 'ground';
     setBlend(ctx, 'add');
@@ -346,7 +348,8 @@ export class BandLayer extends Layer<BandSpec> {
     super(spec, inst, index);
     const c1 = inst.colStatic(spec.color);
     const c2 = inst.colStatic(spec.color2 ?? spec.color);
-    this.tex = bandTex(c1, c2, spec.width / spec.radius, spec.variation ?? 0.6, (inst.seed + index * 13) % 991);
+    const size = inst.texPx(2 * (spec.radius + BAND_PAD * spec.width));
+    this.tex = bandTex(c1, c2, spec.width / spec.radius, spec.variation ?? 0.6, (inst.seed + index * 13) % 991, size);
     this.glint = glintTex(mix(c1, '#ffffff', 0.4));
     const rng = new Rng(inst.seed + index * 31);
     for (let i = 0; i < (spec.glints ?? 0); i++) this.glints.push({ phase: (i / (spec.glints ?? 1)) * TAU + rng.range(-0.4, 0.4), speed: rng.range(0.85, 1.25), size: rng.range(0.7, 1.2) });
@@ -930,7 +933,8 @@ export class ShockwaveLayer extends Layer<ShockSpec> {
     super(spec, inst, index);
     // Ring sharpness from the band width at the final radius (quantised for the cache).
     const sharp = Math.min(48, Math.max(12, Math.round((2 * spec.radius) / spec.width / 4) * 4));
-    this.tex = ringTex(inst.colStatic(spec.color), sharp);
+    // Thin rings need texels at screen resolution (cheap: the ring is a radial gradient).
+    this.tex = ringTex(inst.colStatic(spec.color), sharp, inst.texPx((2 * spec.radius) / 0.85, 256, sharp > 24 ? 1536 : 512));
   }
 
   protected override defaultSlot(): Slot {

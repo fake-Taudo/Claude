@@ -41,6 +41,8 @@ export class VfxRenderer {
   disabledLayers = new Set<number>();
   /** Aura whose textures are being baked ahead of time, one slice per frame. */
   private warm: { inst: AuraInstance; next: number } | null = null;
+  /** Device pixels per D (avatar diameter) on screen; baked textures are sized from it. */
+  pxPerD = 240;
 
   constructor(
     private quality: () => Quality,
@@ -67,6 +69,7 @@ export class VfxRenderer {
         reduced: this.reduced,
         skipIntro: opts.skipIntro,
         tier: this.tierOverride,
+        pxPerD: this.pxPerD,
       });
       inst.layers.forEach((l, i) => (l.enabled = !this.disabledLayers.has(i)));
       this.instances.push(inst);
@@ -122,7 +125,7 @@ export class VfxRenderer {
    */
   prewarm(aura: AuraDef): void {
     if (aura.id === this.currentId || this.warm?.inst.aura.id === aura.id) return;
-    const inst = new AuraInstance(aura, vfxOf(aura), createLayer, { quality: this.quality, reduced: this.reduced, lazy: true });
+    const inst = new AuraInstance(aura, vfxOf(aura), createLayer, { quality: this.quality, reduced: this.reduced, lazy: true, pxPerD: this.pxPerD });
     this.warm = { inst, next: 0 };
   }
 

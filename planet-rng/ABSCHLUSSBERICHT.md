@@ -59,9 +59,9 @@ Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.
 - Speicherstand mit Version, Migrationen, Bereinigung, Backup-Slot, Autosave, Export-Code.
 - Zeitbasiertes über absolute Zeitstempel; AFK-Nachholen (Hintergrund 100 %, geschlossen 50 %,
   max. 8 h) mit Zusammenfassung.
-- 73 Unit-Tests (RNG, Roll-Modell, Stapelregeln, Buffs, Crafting, Shop-Rotation, Rebirth,
+- 79 Unit-Tests (RNG, Roll-Modell, Stapelregeln, Buffs, Crafting, Shop-Rotation, Rebirth,
   Speicherstand, Biome, Offline, Formatierung, Cutscene-Zeitkurve, Prüfliste der
-  Aura-Effekte), 3 Playwright-Szenarien auf
+  Aura-Effekte, automatische VFX-Qualität), 3 Playwright-Szenarien auf
   Handy- und Desktop-Viewport (kompletter Spielablauf bis Reload, Export/Import, beschädigter
   Speicherstand).
 - Balancing-Skript mit Monte-Carlo (5 Mio. Rolls je Luck-Stufe) und Spieler-Simulation auf der
@@ -130,7 +130,8 @@ dunkler Mond gewollt kontrastarm.
 Software-Rasterung (4 Kerne), Hochformat 390×844; Werte in ms pro Bild, gemittelt je Stufe.
 Absolut sind das Werte ohne Grafikkarte, echte Geräte rastern auf der GPU deutlich schneller;
 aussagekräftig ist der Vergleich zwischen den Stufen und Qualitäten. Einzelwerte je Aura stehen
-in [docs/vfx/aura-review.md](docs/vfx/aura-review.md).
+in [docs/vfx/aura-review.md](docs/vfx/aura-review.md). Gemessen mit den damaligen Pixeldichten
+1 / 1,5 / 2; inzwischen rendern die Stufen schärfer (1,5 / 2 / 3, siehe unten).
 
 | Stufe | Niedrig (DPR 1) | Mittel (DPR 1,5) | Hoch (DPR 2) | Anlegen, kalter Cache (Ø / max) |
 |---|---|---|---|---|
@@ -147,21 +148,40 @@ in [docs/vfx/aura-review.md](docs/vfx/aura-review.md).
   Die Messung je Schicht (`scripts/dev/layer-cost.mjs`) ist hier verrauscht (±10 ms), zeigt
   aber keine Schicht, die heraussticht: Die Kosten verteilen sich auf die großflächigen
   Schichten (Rauch, Strahlenkränze, Mandalas, Himmel).
-- Niedrig ist rund 3,7-mal billiger als Hoch (weniger Partikel und Rauchwolken, kein Bloom,
-  eine statt zwei Nebelebenen, DPR 1). Die automatische Anpassung schaltet herunter, wenn ein
-  Bild drei Sekunden lang über 22 ms braucht.
+- Niedrig war in dieser Messung rund 3,7-mal billiger als Hoch (weniger Partikel und
+  Rauchwolken, kein Bloom, eine statt zwei Nebelebenen, kleinere Pixeldichte).
 - Anlegen ohne Vorbereitung kostet bis zu 270 ms (Texturen backen). Seltene Würfe (ab V3)
   backen ihre Texturen deshalb schon während der Roll-Animation in Häppchen von 8 ms; das
   Anlegen danach dauert 10–16 ms.
 - Behoben dabei: Ein Wechsel der Qualität setzte die Pixeldichte nicht neu (von Niedrig auf
   Hoch blieb das Bild unscharf).
 
+**Schärfe und VFX-Qualität (Nachtrag nach Rückmeldung).** Auf Handys sah das Bild pixelig aus,
+und die Einstellung „VFX-Qualität“ schien nichts zu bewirken. Nachgestellt auf einem emulierten
+Handy mit DPR 3: Der Erststart wählte „Niedrig“ (DPR 1, jedes Pixel dreifach gestreckt), und die
+automatische Anpassung drehte „Mittel“ und „Hoch“ nach 4–8 s wieder auf DPR 1 zurück. Jetzt:
+
+| Einstellung | Pixeldichte vorher | Pixeldichte jetzt | Effekte |
+|---|---|---|---|
+| Niedrig | 1 | 1,5 | 30 % Partikel, kein Bloom, eine Nebelebene |
+| Mittel | 1,5 | 2 | 60 % Partikel |
+| Hoch | 2 | bis 3 (nativ) | 100 % |
+
+- Die Einstellung bleibt, wie gewählt (geprüft mit `scripts/dev/quality-check.mjs`). Die
+  automatische Anpassung dünnt bei Bedarf nur noch die Effekte aus, nie die Auflösung, und
+  regelt nach flüssigen Phasen wieder hoch. Eine 30-FPS-Begrenzung zum Stromsparen gilt nicht
+  mehr als „zu langsam“.
+- Sigille, Lichtbänder und Ringe werden in Bildschirmauflösung gebacken statt fest mit 512 px.
+- An den Designs hat sich nichts geändert.
+
+![Schärfe vorher/nachher](docs/vfx/schaerfe-vorher-nachher.png)
+
 **Dauerlauf** (`scripts/dev/soak.mjs 5`): 5 Minuten Auto Roll (abwechselnd normal und Quick
 Roll, 263 Würfe), dabei alle 30 s eine andere aufwendige Aura angelegt (Weltenkern, Singularität,
 Urlicht, Omniversum, Seraph, Multiversum, Äon, Supernova, Ursuppe, Andromeda, Nullpunkt).
 JS-Heap 6,8–10,5 MB ohne Anstieg, DOM 133–169 Knoten, der Textur-Cache füllt sich bis an sein
-Budget von 14 Megapixeln und bleibt dort, keine Konsolenfehler. Die automatische Anpassung
-stand auf „Niedrig“ (Gerätestandard bei 4 Kernen), 17–25 ms pro Bild.
+Budget von 14 Megapixeln und bleibt dort, keine Konsolenfehler. Die VFX-Qualität stand auf
+„Niedrig“ (damals Gerätestandard bei 4 Kernen), 17–25 ms pro Bild.
 
 **Effekte reduzieren** geprüft (`scripts/dev/reduced.mjs`): kein Kamera-Zoom, Bewegung auf
 25 %, keine Bildschirm-Schockwellen, keine Blitze und keine Umkehr bei Nullpunkt;

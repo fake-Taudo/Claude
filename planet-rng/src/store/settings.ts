@@ -52,10 +52,11 @@ export function deviceDefaults(): Partial<Settings> {
   const out: Partial<Settings> = {};
   try {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) out.reducedEffects = true;
+    // Core counts are only a rough hint (browsers report capped values). Mittel already
+    // renders sharp (DPR 2); Niedrig is left for very weak devices.
     const cores = navigator.hardwareConcurrency ?? 8;
-    const small = Math.min(window.innerWidth, window.innerHeight) < 500;
-    if (cores <= 4) out.vfxQuality = 'low';
-    else if (small && cores <= 6) out.vfxQuality = 'medium';
+    if (cores <= 2) out.vfxQuality = 'low';
+    else if (cores <= 4) out.vfxQuality = 'medium';
   } catch {
     /* ignore */
   }

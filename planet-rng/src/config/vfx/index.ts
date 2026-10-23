@@ -10,7 +10,7 @@ import { SPECS_V5 } from './specs/v5';
 import { SPECS_V6 } from './specs/v6';
 
 export * from './types';
-export { VTIERS, VTIER_OF, QUALITY_SHARE, VFX } from './tiers';
+export { VTIERS, VTIER_OF, QUALITY_SHARE, DPR_OF_QUALITY, VFX } from './tiers';
 
 export const VFX_SPECS: AuraVfxSpec[] = [...SPECS_V0_V2, ...SPECS_V3, ...SPECS_V4, ...SPECS_V5, ...SPECS_V6];
 
