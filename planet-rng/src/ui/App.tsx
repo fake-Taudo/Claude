@@ -18,6 +18,8 @@ import { Nameplate, Reveal, RollNames, ScreenFx } from './Reveal';
 import { RollControls } from './RollControls';
 import { MENU, Sidebar } from './Sidebar';
 import { sfx } from './sound';
+import { AuraLab } from './AuraLab';
+import { LAB_ENABLED } from './lab';
 
 export let stage: Stage | null = null;
 export const stageRef = () => stage;
@@ -128,6 +130,7 @@ export function App() {
       <ScreenFx />
       <FxCanvas />
       <Tutorial />
+      {LAB_ENABLED && <AuraLab />}
     </div>
   );
 }

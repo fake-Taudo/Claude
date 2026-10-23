@@ -1,8 +1,32 @@
 // Pre-rendered glowing particle sprites (one canvas per shape + color), so particles are
 // drawn with a single drawImage instead of paths and shadows.
 
-import type { ParticleShape } from '../config';
 import { parseColor, rgba } from './color';
+
+/** Shapes used by the roll effects, cutscenes, UI effects and background. */
+export type ParticleShape =
+  | 'dot'
+  | 'orb'
+  | 'drop'
+  | 'spark'
+  | 'shard'
+  | 'bolt'
+  | 'flare'
+  | 'cloud'
+  | 'star4'
+  | 'star5'
+  | 'hex'
+  | 'fragment'
+  | 'lens'
+  | 'feather'
+  | 'crystal'
+  | 'ember'
+  | 'petal'
+  | 'ring'
+  | 'diamond'
+  | 'streak'
+  | 'bubble'
+  | 'square';
 
 export const SPRITE_SIZE = 64;
 /** Fraction of the sprite occupied by the solid core (rest is glow). */

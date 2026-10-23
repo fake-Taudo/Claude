@@ -3,8 +3,10 @@
 
 import { PLANETS, type PlanetStyle } from '../config/planet';
 import { hash01, mix, rgba } from './color';
-import { REF_R, TILT_ANGLE, type View } from './particles';
 import { glowSprite } from './sprites';
+import { REF_R, TILT_ANGLE, type View } from './view';
+import type { AvatarLight } from './vfx/core';
+import { rimTex, shadowTex } from './vfx/tex';
 
 const TAU = Math.PI * 2;
 const TEX_W = 512;
@@ -261,11 +263,15 @@ export class Planet {
     }
   }
 
-  /** The planet body with shading and atmosphere rim. */
-  drawBody(ctx: CanvasRenderingContext2D, view: View, scale: number, atmosphere: { color: string; alpha: number } | null): void {
+  /**
+   * The planet body with shading and atmosphere rim. The equipped aura lights it: colour
+   * cast, soft shadows of orbiting objects, rim light from the light source and a short
+   * brightening on accents. The planet keeps its own style underneath.
+   */
+  drawBody(ctx: CanvasRenderingContext2D, view: View, scale: number, light: AvatarLight | null): void {
     const r = REF_R * scale;
     const style = this.style();
-    const atmoColor = atmosphere ? mix(style.atmosphere, atmosphere.color, 0.55 * atmosphere.alpha) : style.atmosphere;
+    const atmoColor = light ? mix(style.atmosphere, light.rim, Math.min(0.7, 0.35 + light.rimAlpha)) : style.atmosphere;
     ctx.setTransform(view.s, 0, 0, view.s, view.tx, view.ty);
     // Outer atmosphere glow.
     ctx.globalCompositeOperation = 'lighter';
@@ -283,6 +289,10 @@ export class Planet {
     ctx.fillRect(-r, -r, 2 * r, 2 * r);
     if (this.morph < 1) this.drawSurface(ctx, r, this.prevLevel, 1);
     this.drawSurface(ctx, r, this.level, this.morph < 1 ? this.morph : 1);
+    if (light && light.tintAlpha > 0.003) {
+      ctx.fillStyle = rgba(light.tint, light.tintAlpha);
+      ctx.fillRect(-r, -r, 2 * r, 2 * r);
+    }
     // Day/night shading.
     const shade = ctx.createRadialGradient(-r * 0.45, -r * 0.5, r * 0.1, -r * 0.1, -r * 0.1, r * 1.45);
     shade.addColorStop(0, 'rgba(255,255,255,0.18)');
@@ -290,6 +300,13 @@ export class Planet {
     shade.addColorStop(1, 'rgba(2,3,15,0.82)');
     ctx.fillStyle = shade;
     ctx.fillRect(-r, -r, 2 * r, 2 * r);
+    if (light) {
+      for (const sh of light.shadows) {
+        ctx.globalAlpha = Math.min(1, sh.a);
+        ctx.drawImage(shadowTex(), sh.x - sh.r, sh.y - sh.r, sh.r * 2, sh.r * 2);
+      }
+      ctx.globalAlpha = 1;
+    }
     // Atmosphere scattering at the limb.
     const limb = ctx.createRadialGradient(0, 0, r * 0.72, 0, 0, r);
     limb.addColorStop(0, rgba(atmoColor, 0));
@@ -297,7 +314,20 @@ export class Planet {
     ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = limb;
     ctx.fillRect(-r, -r, 2 * r, 2 * r);
+    if (light && light.rimAlpha + light.flash > 0.01) {
+      // Rim light on the side facing the aura's light source.
+      ctx.save();
+      ctx.rotate(light.angle);
+      ctx.globalAlpha = Math.min(1, light.rimAlpha * 1.4 + light.flash);
+      ctx.drawImage(rimTex(light.rim), -r, -r, 2 * r, 2 * r);
+      ctx.restore();
+    }
+    if (light && light.flash > 0.01) {
+      ctx.fillStyle = rgba(mix(light.rim, '#ffffff', 0.5), Math.min(0.5, light.flash * 0.35));
+      ctx.fillRect(-r, -r, 2 * r, 2 * r);
+    }
     ctx.restore();
+    ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     // Thin rim highlight on the lit side.
     ctx.strokeStyle = rgba(atmoColor, 0.75);

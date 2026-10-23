@@ -35,18 +35,20 @@ test('full loop: roll, equip, sell, shop, brew, drink, craft, rebirth, reload', 
   expect(first).toBeTruthy();
 
   // Auto roll keeps rolling; rolling never restarts the equipped aura's animation.
+  type Inst = { age: number; marker?: number; dying: boolean };
   const layerBefore = await page.evaluate(() => {
-    const st = (window as never as { __prngStage: () => { aura: { layers: { time: number }[] } } }).__prngStage();
-    (st.aura.layers[0] as unknown as { marker: number }).marker = 42;
-    return st.aura.layers[0].time;
+    const st = (window as never as { __prngStage: () => { vfx: { instances: Inst[] } } }).__prngStage();
+    const inst = st.vfx.instances.filter((i) => !i.dying)[0];
+    inst.marker = 42;
+    return inst.age;
   });
   await page.getByTestId('btn-auto').click();
   await expect.poll(() => game<number>(page, 'p.game.state.stats.rolls'), { timeout: 15_000 }).toBeGreaterThanOrEqual(5);
   await page.getByTestId('btn-auto').click();
   const layerAfter = await page.evaluate(() => {
-    const st = (window as never as { __prngStage: () => { aura: { layers: { time: number; marker?: number; dying: boolean }[] } } }).__prngStage();
-    const live = st.aura.layers.filter((l) => !l.dying);
-    return { n: live.length, marker: live[0]?.marker, time: live[0]?.time };
+    const st = (window as never as { __prngStage: () => { vfx: { instances: Inst[] } } }).__prngStage();
+    const live = st.vfx.instances.filter((i) => !i.dying);
+    return { n: live.length, marker: live[0]?.marker, time: live[0]?.age };
   });
   if ((await game<string>(page, 'p.game.state.equippedAura')) === first) {
     expect(layerAfter.n).toBe(1);

@@ -25,7 +25,6 @@ describe('roster', () => {
   it('gives every aura from 1 in 10.000 a cutscene and no aura below', () => {
     for (const a of AURAS) {
       expect(!!a.cutscene, a.id).toBe(a.odds >= GAME.cutscene.minOdds);
-      expect(a.vfx.rings.length, a.id).toBeLessThanOrEqual(3);
     }
   });
 

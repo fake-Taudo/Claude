@@ -1,9 +1,10 @@
 // Roll charge animation and reveal bursts. Intensity scales with the rarity tier.
 
 import { AURA_BY_ID, tierOf, type AuraDef } from '../config';
+import { vfxOf } from '../config/vfx';
 import { glowSprite, sprite } from './sprites';
 import { rgba, spectral, visible } from './color';
-import { REF_R, type View } from './particles';
+import { REF_R, type View } from './view';
 
 const TAU = Math.PI * 2;
 const R = REF_R;
@@ -247,12 +248,7 @@ function colorsOf(aura: AuraDef): string[] {
 }
 
 function burstShape(aura: AuraDef): FxParticle['shape'] {
-  const s = aura.vfx.emitters[0]?.shape;
-  if (s === 'fragment' || s === 'shard') return 'fragment';
-  if (s === 'star4' || s === 'star5' || s === 'hex' || s === 'diamond' || s === 'crystal') return 'star4';
-  if (s === 'spark' || s === 'bolt') return 'spark';
-  if (s === 'orb' || s === 'bubble') return 'orb';
-  return 'dot';
+  return vfxOf(aura).burst ?? 'dot';
 }
 
 /** Special reveal choreography from the prototype (collapse, 3 rings, 10 prism rings). */

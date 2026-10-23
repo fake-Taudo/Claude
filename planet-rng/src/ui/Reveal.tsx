@@ -6,6 +6,7 @@ import { game } from '../game/app';
 import { css, TierTag } from './common';
 import { useBus, useGame } from './hooks';
 import { Icon } from './icons';
+import { labState } from './lab';
 
 function gradientOf(a: AuraDef): string {
   const pal = a.colors.palette && a.colors.palette.length >= 2 ? a.colors.palette : [a.colors.glow, a.colors.main === '#000000' ? '#ffffff' : a.colors.main, a.colors.accent ?? a.colors.glow];
@@ -105,7 +106,9 @@ export function RollNames() {
 
 export function Nameplate() {
   const state = useGame();
-  const id = state.equippedAura;
+  const [, force] = useState(0);
+  useEffect(() => labState.subscribe(() => force((x) => x + 1)), []);
+  const id = labState.aura ?? state.equippedAura;
   if (!id) return null;
   const a = AURA_BY_ID[id];
   if (!a) return null;

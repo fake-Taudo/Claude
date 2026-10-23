@@ -105,11 +105,7 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
 - **Avatar:** ein stilisierter Planet (passend zum Namen). Er wächst und verwandelt sich mit
   jedem Rebirth: Felsplanet → Ozeanwelt mit Ring → Gaia mit Mond → Gasriese mit zwei Monden.
   Die Atmosphäre nimmt die Farbe der ausgerüsteten Aura an.
-- Rendering mit Canvas 2D und vorgerenderten Glow-Sprites (kein `shadowBlur`), Partikel aus einem
-  Objekt-Pool. VFX-Qualität steuert Partikelanzahl (35/65/100 %), Glow-Durchgänge und
-  Pixeldichte. Beim ersten Start wird die Qualität grob nach Gerät gewählt.
-- Gekippte Ringe und Umlaufbahnen werden in eine hintere und vordere Hälfte geteilt, damit der
-  Planet sie verdeckt (räumlicher Eindruck).
+- Aura-VFX: siehe Abschnitt „Aura-VFX (Neuentwurf)“ weiter unten.
 - Reveal-Dauer skaliert mit der Stufe (1,7 s bei Gewöhnlich, 2,6 s bei Legendär, bis 6,5 s
   bei Unendlich) statt pauschal 2,6 s. Ab Mythisch gibt es einen Vollbild-Reveal.
 - Während eines Rolls laufen Aura-Namen wie bei einem Spielautomaten durch (Sol's-RNG-Stil).
@@ -127,3 +123,63 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   lässt sich in den Einstellungen neu starten.
 - Test-Hook: Mit `?debug` in der URL stellt das Spiel `window.__prng` bereit (für Playwright).
   Ohne den Parameter gibt es keinen globalen Zugriff.
+
+## Aura-VFX (Neuentwurf)
+
+**Bestandsaufnahme vor dem Umbau – was bleibt, was ersetzt wird**
+
+- Bleibt: Bühne (Sternenhimmel, Biom-Wetter), Roll-Effekte, Cutscenes, der Planet als Avatar
+  mit Rebirth-Wachstum, Titelzeile und Menüs.
+- Bleibt: Canvas 2D als Zeichenfläche, Referenz-Koordinaten (Planetenradius = 60 Einheiten),
+  Aufteilung hinter/vor dem Avatar, Pause bei verstecktem Tab, Qualitätsstufen und „Effekte
+  reduzieren“ in den Einstellungen.
+- Bleibt: Namen, Beinamen, Chancen und Farben aus `config/auras.ts`.
+- Ersetzt: der alte Aura-Renderer (`aura.ts`, `particles.ts`, `rings.ts`, `specials.ts`) durch
+  die Schicht-Engine in `src/render/vfx/`.
+- Ersetzt: der `vfx`-Block jeder Aura (Ringe + Emitter + Spezialeffekte) durch eine eigene,
+  deklarative Spec pro Aura in `src/config/vfx/specs/` (alle Zahlen dort, in D, °/s, s).
+- Ersetzt: die Hintergrund-„Stimmung“ durch eine Bühnen-Dimmung je VFX-Stufe (V0 kaum, V6 stark)
+  mit Entsättigung, Tönung und Vignette.
+- Ersetzt: die Atmosphären-Tönung des Planeten durch echte Beleuchtung: Randlicht aus Richtung
+  der Lichtquelle, Farbstich, Aufhellen beim Akzent, weiche Schatten von Orbit-Objekten.
+- Ersetzt: die Zeit pro Aura durch eine durchlaufende Uhr (siehe unten).
+
+**Entscheidungen**
+
+- **Renderer: Canvas 2D statt WebGL2.** Hintergrund, Planet, Aura und Roll-Effekte teilen sich
+  eine Zeichenfläche, es gibt keinen Kontextverlust-Pfad, und Playwright ohne GPU rendert exakt
+  das, was Spieler sehen. Das Budget (bis 450 Partikel und 14 Schichten bei V6) liegt gut im
+  Rahmen von `drawImage`. Statt Shadern gibt es vorgebackene Texturen: FBM-Rauschen mit
+  Domain-Warping für Nebel und Rauch, Spiralen für Wirbel, Strahlenkränze, weiche Lichtbänder,
+  Lichtsäulen mit fließendem Rauschen. Bloom entsteht beim Backen durch Downsample-Blur.
+- **Boden („Orbit-Ebene“):** eine schwebende Ebene 0,62 D unter der Planetenmitte, als Ellipse
+  (Stauchung 0,34). Der Planet sitzt in seinem Sigil, die hintere Hälfte verdeckt er selbst.
+- **Einheit D** (Avatar-Durchmesser) für alle Größen. Die Tabelle der VFX-Stufen V0–V6
+  (Ausdehnung, Partikel, Schichten, Intro-Dauer, Dimmung, Vignette, Kamera) steht in
+  `src/config/vfx/tiers.ts`. Seltenheit → Stufe: Gewöhnlich V0, Ungewöhnlich V1, Selten V2,
+  Episch V3, Legendär/Mythisch V4, Göttlich bis Galaktisch V5, ab Universell V6.
+- **Zeitbasis:** Wanduhr (Sekunden seit 1.1.2026). Rotationen, Atmen und der Akzent-Zeitplan
+  hängen nur an dieser Uhr. Rolls, Auto Roll, Menüs und sogar ein Neuladen setzen nichts zurück.
+  Akzente kommen deterministisch alle 5–9 s (Periode ± Zufall aus einer Hash-Funktion).
+- **Intro:** Sigil zeichnet sich mit einem Licht-Stift, Säule schießt hoch, Bodenwelle läuft
+  nach außen, Hero skaliert 0,6 → 1,05 → 1, Partikel setzen ein. Dauer V0–V1 0,5 s,
+  V2–V3 1,2 s, V4 2 s, V6 2,4 s. Ab V5 ein weicher weißer Flash am Ende.
+- **Wechsel:** alte Aura 0,4 s ausblenden und auf 90 % schrumpfen, neue baut sich auf.
+- **Kamera:** V5 zoomt 6 %, V6 10 % heraus (1,2 s Ease-out), danach ruhig. Bei „Effekte
+  reduzieren“ keine Kamerabewegung, keine Flashes, Rotation und Atmen auf 25 %.
+- **Qualität:** Niedrig 30 %, Mittel 60 %, Hoch 100 % der Partikel; einzelne Schichten nur ab
+  Mittel/Hoch. Die automatische Anpassung senkt die Stufe, wenn die Bildrate drei Sekunden lang
+  unter ~45 FPS liegt, und regelt nie selbst hoch (erst wieder nach einer Änderung in den
+  Einstellungen).
+- **Pixeldichte:** Hoch 2, Mittel 1,5, Niedrig 1; auf Touch-Geräten bei V5/V6 höchstens 1,5.
+- **Titelzeile** bleibt unverändert. Ab V3 liegt im Canvas ein weicher dunkler Verlauf dahinter.
+- **Aura-Labor:** `?lab=1` (zusammen mit `?debug` für Skripte). Zeigt eine Aura auf der Bühne,
+  ohne den Speicherstand zu ändern; `window.__lab` erlaubt deterministische Aufnahmen mit
+  angehaltener Uhr.
+- **Test angepasst:** Die Prüfung „höchstens 3 Ringe“ im Roll-Modell-Test las den alten
+  `vfx`-Block. Sie ist nach `tests/vfx.test.ts` umgezogen (höchstens 3 Lichtbänder pro Aura)
+  und wird dort durch die Checkliste je Aura ergänzt.
+- **Referenz-Aura Urlicht (V4):** Heiligenschein-Mandala aus weichen Lichtbändern und goldenen
+  Lichtblättern, Lichtsäule über die ganze Bühnenhöhe, Boden-Mandala, aufsteigende Lichtfedern,
+  dunkler Gegenlicht-Rauch. Akzent alle 6–8 s: Strahlen-Sweep, Mandala hellt auf, Bodenwelle,
+  Mond leuchtet kurz auf.
