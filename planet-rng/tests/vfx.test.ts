@@ -96,8 +96,7 @@ describe('aura VFX specs', () => {
     }
   });
 
-  // Enabled once every aura has its spec (phase 5 of the VFX rebuild).
-  it.skip('cover every aura of the roster', () => {
+  it('cover every aura of the roster', () => {
     const ids = new Set(VFX_SPECS.map((s) => s.id));
     const missing = AURAS.filter((a) => !ids.has(a.id)).map((a) => a.id);
     expect(missing).toEqual([]);

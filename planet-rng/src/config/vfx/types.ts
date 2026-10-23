@@ -108,6 +108,8 @@ export type SigilElement =
   | { e: 'numerals'; r: number; n: number; size: number; w: number; a?: number; c?: Col }
   | { e: 'zodiac'; r: number; n: number; size: number; w: number; a?: number; c?: Col }
   | { e: 'grid'; r: number; n: number; w: number; a?: number; c?: Col }
+  /** Cartesian grid of n x n cells inside the circle r. */
+  | { e: 'lattice'; r: number; n: number; w: number; a?: number; c?: Col }
   | { e: 'waves'; r: number; n: number; amp: number; w: number; a?: number; c?: Col };
 
 export interface SigilLayer extends LayerCommon {

@@ -407,6 +407,29 @@ export function sigilTex(key: string, pattern: SigilElement[], color: string, gl
           glow,
         );
         break;
+      case 'lattice':
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, el.r * R, 0, TAU);
+        ctx.clip();
+        glowStroke(
+          ctx,
+          (x) => {
+            for (let i = -el.n; i <= el.n; i++) {
+              const v = (i / el.n) * el.r * R;
+              x.moveTo(v, -el.r * R);
+              x.lineTo(v, el.r * R);
+              x.moveTo(-el.r * R, v);
+              x.lineTo(el.r * R, v);
+            }
+          },
+          el.w * R,
+          col,
+          a,
+          glow,
+        );
+        ctx.restore();
+        break;
       case 'waves':
         glowStroke(
           ctx,

@@ -27,7 +27,7 @@ import { glowStroke, Hero } from './base';
 const tmp = { x: 0, y: 0, z: 0 };
 
 /** Sun disc with limb darkening and granulation. */
-function sunTex(hot: string, mid: string, deep: string, seed: number): Tex {
+export function sunTex(hot: string, mid: string, deep: string, seed: number): Tex {
   return bakeTex(`sun|${hot}|${mid}|${deep}|${seed}`, () => {
     const g = noiseGrid(4, 12, seed);
     const g2 = noiseGrid(3, 3, seed + 5);

@@ -807,7 +807,8 @@ export function spiralTex(color: string, color2: string, arms: number, twist: nu
 /** Soft ripple ring (thin version of a band, no variation). */
 export function ringTex(color: string, sharp: number): Tex {
   return cached(`ring|${color}|${sharp}`, () => {
-    const S = 256;
+    // Thin rings need more texels or they turn to mush when scaled up.
+    const S = sharp > 24 ? 512 : 256;
     const [r, g, b] = rgb01(color);
     return paint(S, S, (u, v) => {
       const d = Math.sqrt(u * u + v * v);

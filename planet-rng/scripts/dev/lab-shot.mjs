@@ -1,5 +1,5 @@
 // Dev helper: deterministic lab screenshots of single auras.
-// Usage: node scripts/dev/lab-shot.mjs <outDir> <ids comma separated> [WxH] [quality] [extra: accent|intro]
+// Usage: [CLOCK=s] [CROP=1] node scripts/dev/lab-shot.mjs <outDir> <ids comma separated> [WxH] [quality] [extra: accent|intro]
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -25,7 +25,7 @@ await page.evaluate(() => {
 });
 for (const id of ids) {
   const t0 = Date.now();
-  await page.evaluate(([id, q]) => window.__lab.show(id, { quality: q, settle: 5 }), [id, quality]);
+  await page.evaluate(([id, q, c]) => window.__lab.show(id, { quality: q, settle: 5, clock: c }), [id, quality, Number(process.env.CLOCK ?? 1000)]);
   const ms = Date.now() - t0;
   let suffix = '';
   if (extra.startsWith('accent')) {

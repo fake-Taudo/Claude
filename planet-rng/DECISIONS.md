@@ -183,3 +183,34 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   Lichtblättern, Lichtsäule über die ganze Bühnenhöhe, Boden-Mandala, aufsteigende Lichtfedern,
   dunkler Gegenlicht-Rauch. Akzent alle 6–8 s: Strahlen-Sweep, Mandala hellt auf, Bodenwelle,
   Mond leuchtet kurz auf.
+- **V5 (Göttlich bis Galaktisch):** Heroes, die über die Bühnenränder reichen (Schwarzes Loch
+  mit Linseneffekt, Gezeitenstrom, Blutmond, sechs Flügel, Zeitriss, Lemniskate,
+  Zifferblatt-Portal, Gargantua, Doppeljet, Supernova-Hülle, Spiralgalaxie, Feldlinien).
+  Sieben V5-Specs setzen `size` auf 5,6–6,2 D, weil ihr Hero schmal oder seitlich versetzt ist
+  und bei 4,8 D zu klein wirkte.
+- **V6 (ab Universell) – neuer Himmel:** Jede V6-Aura hat eine Schicht „Himmel“ im Slot
+  `screenBack`. Sie liegt hinter allem, aber nach der Bühnen-Dimmung, und färbt den ganzen
+  Hintergrund um (Nebel in den Aura-Farben; bei Paradoxon links Orange, rechts Cyan).
+  Nullpunkt hat keinen Himmel, dort wird die Bühne vollständig entsättigt.
+- **V6-Heroes:** Blasenuniversen (Multiversum), 3D-Filamentnetz (Kosmisches Netz), Kollaps
+  und Urknall aus dem Planeten heraus (Urknall), Urzelle mit DNA-Helix (Ursuppe),
+  zerfallendes Kristallgitter (Entropie), letzte Glut neben dem Planeten (Wärmetod),
+  verschränkte Spiegelringe (Paradoxon), Möbiusband mit zwei Farbseiten (Möbius),
+  Spektral-Mandala (Omniversum), kosmischer Lotus (Schöpfung), die Null um eine schwarze Leere
+  (Nullpunkt), verschachtelte platonische Körper (Archetyp), Ouroboros (Äon), Weltenherz mit
+  kreisenden Welten (Weltenkern). Omniversum braucht keine eigene Hero-Klasse: sein Hero ist ein
+  Sigil, dessen Elemente je eine Spektralfarbe (`p0`–`p4`) tragen.
+- **Titel bleibt frei:** Heroes, die sonst auf dem Titel lägen, sitzen tiefer oder seitlich
+  (Urknall-Kern im Planeten statt darüber, Wärmetod-Glut links neben dem Planeten, Null und
+  Urzelle leicht abgesenkt).
+- **Nullpunkt-Akzent:** Das Innere der Null kehrt sich um (Ellipse mit Differenz-Mischung,
+  wächst aus der Leere und zieht sich zurück). Zuerst war eine Vollbild-Umkehr geplant; die
+  lief beim Überblenden durch ein flaches Grau, überdeckte den Titel und war als
+  Vollbild-Helligkeitssprung zu hart. Bei „Effekte reduzieren“ entfällt die Umkehr.
+- **Akzent-Vielfalt:** Wenn der Hero den Akzent schon selbst trägt (Universen tauschen die
+  Plätze, Impulswelle durchs Netz, Körper verwandeln sich), gibt es nur eine Bodenwelle statt
+  eines Bildschirmrings, damit nicht jede V6-Aura gleich aufleuchtet.
+- **Schockwellen-Breite wirkt jetzt:** Die Ringtextur der Schockwelle hatte eine feste Dicke,
+  der Spec-Wert `width` wurde ignoriert. Die Schärfe ergibt sich jetzt aus Endradius und
+  Breite (12–48, gerundet für den Textur-Cache, 512 px ab Schärfe 24). Das betrifft alle Stufen:
+  Akzent-Ringe sind schmaler und klarer.

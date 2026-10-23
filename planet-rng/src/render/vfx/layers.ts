@@ -928,7 +928,9 @@ export class ShockwaveLayer extends Layer<ShockSpec> {
 
   constructor(spec: ShockSpec, inst: AuraInstance, index: number) {
     super(spec, inst, index);
-    this.tex = ringTex(inst.colStatic(spec.color), 16);
+    // Ring sharpness from the band width at the final radius (quantised for the cache).
+    const sharp = Math.min(48, Math.max(12, Math.round((2 * spec.radius) / spec.width / 4) * 4));
+    this.tex = ringTex(inst.colStatic(spec.color), sharp);
   }
 
   protected override defaultSlot(): Slot {
