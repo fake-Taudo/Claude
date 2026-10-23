@@ -230,6 +230,8 @@ export interface ParticleParams {
   roll?: number;
   /** Blend mode: light adds up (default), 'over' paints. */
   blend?: 'light' | 'over';
+  /** One burst: every particle starts at the track start and lives once. */
+  burst?: boolean;
   seed?: number;
 }
 

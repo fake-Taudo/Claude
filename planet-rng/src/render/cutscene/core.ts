@@ -145,3 +145,25 @@ export interface Block<B extends keyof BlockParams, S = unknown> {
 }
 
 export type AnyBlock = Block<keyof BlockParams, unknown>;
+
+/**
+ * Event times (local seconds) of a rate that ramps linearly from r0 to r1 events/s over dur:
+ * the k-th event happens when the integrated rate reaches k.
+ */
+export function rampTimes(r0: number, r1: number, dur: number, max = 400): number[] {
+  const out: number[] = [];
+  const a = (r1 - r0) / (2 * Math.max(1e-6, dur));
+  const b = r0;
+  for (let k = 0; k < max; k++) {
+    let t: number;
+    if (Math.abs(a) < 1e-9) t = b > 0 ? k / b : Infinity;
+    else {
+      const disc = b * b + 4 * a * k;
+      if (disc < 0) break;
+      t = (-b + Math.sqrt(disc)) / (2 * a);
+    }
+    if (!(t < dur)) break;
+    out.push(t);
+  }
+  return out;
+}

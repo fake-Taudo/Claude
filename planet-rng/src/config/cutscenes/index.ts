@@ -1,15 +1,17 @@
 // Cutscene registry: all definitions, looked up by id or by aura.
 
 import { T1 } from './t1';
+import { T2 } from './t2';
+import { T3 } from './t3';
 import type { CutsceneDef, Track } from './types';
 
 export * from './types';
 export { CUTSCENE, tierByOdds } from './constants';
 export { beatsIn, flashEvents, maxFlashRate, trackFlashes } from './flash';
 export { SYMBOLS } from './symbols';
-export { T1_TIMES, accelerating, beatGrid } from './template';
+export { T1_TIMES, accelerating, beatGrid, kreisStern } from './template';
 
-const RAW: CutsceneDef[] = [...T1];
+const RAW: CutsceneDef[] = [...T1, ...T2, ...T3];
 const RAW_BY_ID: Record<string, CutsceneDef> = Object.fromEntries(RAW.map((d) => [d.id, d]));
 
 /**

@@ -1,26 +1,9 @@
 // 3 CoreMotif: the central object. It grows (size curve), spins ever faster (spin), and
 // can cover the screen at the end (progress for circleStar). Positions in u from the centre.
 
-import type { CoreMotifParams, MotifKind } from '../../../config/cutscenes';
 import { glowTex } from '../../vfx/tex';
-import { color, curve, DEG, spinAngle, type Block, type Env } from '../core';
-import { drawSymbol } from '../symbol';
-
-/** Default symbol: the prototype's soft glow with a four-pointed star. */
-const CLASSIC = [
-  { kind: 'glow', r: 46, color: 0, alpha: 0.35 },
-  { kind: 'glow', r: 24, color: 0, alpha: 0.5 },
-  { kind: 'star', points: 4, r: 21, inner: 0.32, color: 0, fill: true },
-] as CoreMotifParams['layers'];
-
-/** Kind specific painters, drawn around the origin in symbol units (60 = base size). */
-type Painter = (ctx: CanvasRenderingContext2D, prm: CoreMotifParams, env: Env, pal: string[], prog: number, aux: number) => void;
-
-export const PAINTERS: Partial<Record<MotifKind, Painter>> = {
-  circleStar(ctx, prm, env, pal) {
-    drawSymbol(ctx, prm.layers ?? CLASSIC!, pal, env.time);
-  },
-};
+import { color, curve, DEG, spinAngle, type Block } from '../core';
+import { PAINTERS } from '../motifs';
 
 export const CoreMotif: Block<'CoreMotif'> = {
   space: 'world',
@@ -54,7 +37,6 @@ export const CoreMotif: Block<'CoreMotif'> = {
     const cos = Math.cos(angle) * scale;
     const sin = Math.sin(angle) * scale;
     ctx.transform(cos, sin, -sin, cos, x, y);
-    const paint = PAINTERS[prm.kind] ?? PAINTERS.circleStar!;
-    paint(ctx, prm, env, pal, prog, aux);
+    PAINTERS[prm.kind](ctx, prm, env, pal, prog, aux, scale);
   },
 };

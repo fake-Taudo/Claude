@@ -60,8 +60,10 @@ export interface T1Options {
   edge?: EdgeGlowParams | false;
   /** The small signature break: tracks with absolute times, drawn above the motif. */
   brk: { name: string; at: number; tracks: Track[] };
-  /** Tracks drawn below the motif (backdrops). */
+  /** Tracks drawn below the particles (backdrops). */
   under?: Track[];
+  /** Tracks drawn between the particles and the motif (lens, rays behind the motif). */
+  mid?: Track[];
   reveal?: 'whiteout' | 'edgeglow' | 'cut';
   audio?: Partial<AudioSpec>;
   cues?: Cue[];
@@ -93,8 +95,12 @@ export function t1(o: T1Options): CutsceneDef {
   for (const p of o.particles ?? []) {
     tracks.push({ t: T.motifAt, dur: duration - T.motifAt, block: 'ThemeParticles', params: p, fade: [1.2, 0], name: 'Partikel' });
   }
+  tracks.push(...(o.mid ?? []));
   if (o.pulse !== false) {
-    tracks.push({ t: T.pulseAt, dur: 2.2, block: 'DoublePulse', params: { symbol: 'star4', count: 2, interval: 0.75, size: 34, color: 'primary', ...o.pulse }, name: 'Doppelpuls' });
+    const pulse: PulseParams = { symbol: 'star4', count: 2, interval: 0.75, size: 34, color: 'primary', ...o.pulse };
+    const times = pulse.at ?? Array.from({ length: pulse.count ?? 2 }, (_, i) => i * (pulse.interval ?? 0.75));
+    const dur = Math.max(...times) + (pulse.life ?? Math.max(0.5, (pulse.interval ?? 0.75) * 1.15));
+    tracks.push({ t: T.pulseAt, dur: Math.min(dur, duration - T.pulseAt), block: 'DoublePulse', params: pulse, name: 'Doppelpuls' });
   }
   tracks.push({ t: T.motifAt, dur: duration - T.motifAt, block: 'CoreMotif', params: motif, name: 'Kernmotiv' });
   tracks.push(...o.brk.tracks);

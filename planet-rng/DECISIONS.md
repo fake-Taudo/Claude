@@ -338,3 +338,19 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
 - **Überspringen erlaubt:** wenn „Überspringen erlauben“ an ist, bei T3 immer (lange Filme),
   beim erneuten Ansehen aus der Sammlung immer (dort genügt Tippen). Sonst Schaltfläche nach
   2 s, langes Drücken (0,6 s) oder Esc.
+
+### T1 (Phase 2)
+
+- Deep Boom ist ein Einschlag am Anfang, der über rund 10 s ausklingt. Das Ende jeder T1-Cutscene
+  trägt deshalb ein eigener Aufbau (Sog, Chor, Riser, Ticken, Herzschlag), dann 0,35–0,55 s Stille
+  und ein Impact auf dem Bruch; die Weißblende folgt danach wie bisher bei 13 s.
+- Jede T1-Aura hat ein eigenes Motiv oder ihr Prototyp-Symbol (Kreis-Stern), eigene Partikel, ein
+  eigenes Pulssymbol und einen eigenen kleinen Bruch (Kollaps, Sog, Verfinsterung, Lichtsäule,
+  Zeitriss, Stillstand mit Spektrum-Blüte, Mitternacht, Horizont, Jet-Flare, Kernbruch,
+  Galaxienkollision, Magnetsturm). Kreis-Stern behalten Akkretion, Seraph, Zeitriss, Supernova
+  und Magnetar; Singularität, Blutmond, Ewigkeit, Chronosphäre, Ereignishorizont, Quasar und
+  Andromeda haben eigene Kernmotive (schwarzes Loch, Mond, Lemniskate, Uhr, Jets, Galaxie).
+- Blutmond und Ereignishorizont enden mit Randglühen statt Weißblende, Quasar mit einer
+  längeren Weißsättigung.
+- Einige Bausteine aus späteren Phasen (Strahlen, Ticker, SplitSlash, TimeFreeze, Zähler, Linse)
+  sind schon jetzt gebaut, weil die T1-Brüche sie brauchen.
