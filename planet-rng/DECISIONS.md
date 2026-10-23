@@ -376,3 +376,28 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
 - Inversion im Beat nur auf jedem zweiten Schlag; der Unit-Test prüft das Flash-Limit über alle
   Definitionen. Ein weiterer Test stellt sicher, dass sich keine zwei Cutscenes nur in der Farbe
   unterscheiden (Vergleich der Tracks ohne Farbwerte).
+
+### T3 (Phase 4)
+
+- Jede Aura ab 1 in 100 Mio. hat ein eigenes Drehbuch von 28–36 s mit prozeduraler Musik
+  (Tempo, Tonart, Stimmung und Drop je Film) und Beat-Markern, auf denen Texte, Schnitte,
+  Inversionen und Herzschläge sitzen. Kein Template, keine geliehenen Brüche:
+  - **Omniversum:** Reprise – Miniaturen der anderen Motive in Kinobalken, erst jeden zweiten,
+    dann jeden Schlag; Spektral-Mandala, „Universen 1 → 100.000.000“, alles fällt in einen
+    Punkt, 0,6 s Stille, spektrale Schockwelle.
+  - **Schöpfung:** ein Lichtpunkt, eine graue Welt entsteht Schnitt für Schnitt („Farben 1 →
+    16.777.216“), dann flutet die Farbe von der Mitte aus die Welt; Sonnenaufgang.
+  - **Nullpunkt:** beginnt wie Singularität (Täuschung über `extends`), Schnitt auf Weiß,
+    eine schwarze Null, Schwarz-Weiß im Beat, „Rest 1.000.000 → 0“, Schwarz, Stille, ein
+    Lichtstrich öffnet das Bild.
+  - **Archetyp:** Formen bekommen im Beat immer mehr Ecken (3 → 64, also ein Kreis) und rasten
+    mit einem Strahlenkranz zur Urform ein, die zum goldenen Kristall wird.
+  - **Äon:** Zeitringe drehen sich durch die Zeitalter immer schneller („Jahre 0 → 13,8 Mrd.“),
+    dann läuft alles rückwärts durch dieselben Zeitalter bis zum Ursprung.
+  - **Weltenkern:** Reise nach innen (All, Orbit, Wolken, Mantel, Kern) in Kinobalken,
+    „Tiefe 0 → 6.371 km“, ein Herz schlägt mit der Musik und öffnet sich wie eine Blüte,
+    vier Herzschläge.
+- Helle Vollbild-Szenen (Himmel, Kern) sind bewusst gedämpft, damit Text und Motiv lesbar
+  bleiben und kein Vollbild minutenlang blendet. Schwarze Schrift auf Weiß ohne Leuchtschatten.
+- Ein Schnitt auf eine helle Szene zählt im Flash-Validator als Blitz (auch der erste Schnitt
+  eines Szenen-Tracks, wenn er mitten in der Cutscene beginnt).

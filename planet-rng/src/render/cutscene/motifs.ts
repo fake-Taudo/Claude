@@ -9,6 +9,7 @@ import { spiralTex } from '../vfx/tex';
 import { TAU, type Env } from './core';
 import { disc, glow, glowStroke } from './paint';
 import { T2_PAINTERS } from './motifs-t2';
+import { T3_PAINTERS } from './motifs-t3';
 import { drawSymbol } from './symbol';
 
 export type Painter = (ctx: CanvasRenderingContext2D, prm: CoreMotifParams, env: Env, pal: string[], prog: number, aux: number, scale: number) => void;
@@ -236,14 +237,6 @@ export const PAINTERS: Record<MotifKind, Painter> = {
     glow(ctx, '#ffffff', 5, 1, 'core');
   },
 
-  // Fallbacks until the remaining kinds are drawn individually.
-  planet: (c, p, e, pal) => PAINTERS.circleStar(c, p, e, pal, 0, 0, 1),
-  comet: (c, p, e, pal) => PAINTERS.circleStar(c, p, e, pal, 0, 0, 1),
-  crystal: (c, p, e, pal) => PAINTERS.circleStar(c, p, e, pal, 0, 0, 1),
-  ring: (c, p, e, pal) => PAINTERS.circleStar(c, p, e, pal, 0, 0, 1),
-  mandala: (c, p, e, pal) => PAINTERS.circleStar(c, p, e, pal, 0, 0, 1),
-  polygons: (c, p, e, pal) => PAINTERS.circleStar(c, p, e, pal, 0, 0, 1),
-  timeRings: (c, p, e, pal) => PAINTERS.circleStar(c, p, e, pal, 0, 0, 1),
-  heart: (c, p, e, pal) => PAINTERS.circleStar(c, p, e, pal, 0, 0, 1),
   ...T2_PAINTERS,
+  ...T3_PAINTERS,
 };

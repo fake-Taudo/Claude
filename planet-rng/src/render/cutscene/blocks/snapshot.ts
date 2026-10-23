@@ -239,20 +239,29 @@ export const SplitSlash: Block<'SplitSlash', { inv: HTMLCanvasElement | null; ou
 
 export const TimeFreeze: Block<'TimeFreeze'> = {
   space: 'screen',
-  snapshot: 'once',
+  snapshot: (p) => (p.live ? 'live' : 'once'),
   draw(ctx, _p, prm, theme, env, _st, snap) {
     if (!snap) return;
     const { W, H } = env;
     const k = Math.min(1, env.local / 0.12);
     ctx.globalAlpha = env.alpha;
     ctx.drawImage(snap, 0, 0, W, H);
-    // Grey: keep the luminosity, drop the saturation.
+    // Grey: keep the luminosity, drop the saturation (outside the colour circle, if any).
     const grey = (prm.desaturate ?? 1) * k;
-    if (grey > 0) {
+    const hole = curve(prm.hole, env.local, 0) * env.u;
+    if (grey > 0 && hole < env.diag) {
+      ctx.save();
+      if (hole > 0) {
+        ctx.beginPath();
+        ctx.rect(0, 0, W, H);
+        ctx.arc(env.cx, env.cy, hole, 0, TAU);
+        ctx.clip('evenodd');
+      }
       ctx.globalCompositeOperation = 'saturation';
       ctx.globalAlpha = env.alpha * grey;
       ctx.fillStyle = '#808080';
       ctx.fillRect(0, 0, W, H);
+      ctx.restore();
     }
     if (prm.tint) {
       ctx.globalCompositeOperation = 'soft-light';

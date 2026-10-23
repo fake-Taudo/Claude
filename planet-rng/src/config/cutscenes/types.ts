@@ -362,6 +362,10 @@ export interface FreezeParams {
   tint?: Color;
   /** Thin crack lines that grow over the frozen frame (0..1 of the track). */
   cracks?: number;
+  /** Keep the picture moving (only grey, not frozen). */
+  live?: boolean;
+  /** Radius in u of a circle around the centre that keeps its colour (a colour flood). */
+  hole?: Curve;
 }
 
 export type TextMode = 'words' | 'line' | 'type' | 'glitch';

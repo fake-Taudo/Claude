@@ -87,8 +87,7 @@ function shape(def: CutsceneDef): string {
   return JSON.stringify(strip(def.tracks));
 }
 
-// Cutscenes with their own design (T3 follows in a later phase).
-const DESIGNED = CUTSCENES.filter((d) => d.tier < 3);
+const DESIGNED = CUTSCENES;
 
 describe('cutscene dramaturgy', () => {
   it('keeps every tier inside its expected length', () => {
@@ -116,6 +115,13 @@ describe('cutscene dramaturgy', () => {
       const pause = (def.audio.silence ?? []).find(([a, b]) => Math.abs(b - def.signature.at) <= 0.05 && b - a >= 0.3 - 1e-9 && b - a <= 0.6 + 1e-9);
       expect(pause, `${def.id}: silence before ${def.signature.at} s`).toBeDefined();
       expect(def.audio.sting, def.id).toBeDefined();
+    }
+  });
+
+  it('puts T3 films on beat markers with music', () => {
+    for (const def of DESIGNED.filter((d) => d.tier === 3)) {
+      expect(def.audio.music, def.id).toBeDefined();
+      expect((def.audio.beats ?? []).length, def.id).toBeGreaterThan(16);
     }
   });
 

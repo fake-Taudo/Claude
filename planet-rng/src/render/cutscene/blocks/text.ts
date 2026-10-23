@@ -3,7 +3,7 @@
 
 import { beatsIn } from '../../../config/cutscenes/flash';
 import type { Cue, TextParams } from '../../../config/cutscenes';
-import { mix, rgba } from '../../color';
+import { luminance, mix, rgba } from '../../color';
 import { hash } from '../../vfx/math';
 import { color, ease, type Block, type Env } from '../core';
 
@@ -158,6 +158,8 @@ function drawCycle(ctx: CanvasRenderingContext2D, prm: TextParams, _accent: stri
 /** Text "ink": soft glow under crisp letters. */
 function ink(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, sp: number, col: string, a: number, size: number, flat = false): void {
   if (a <= 0.005) return;
+  // Dark ink on bright scenes stays crisp: no glow, no lightening.
+  if (luminance(col) < 0.3) flat = true;
   ctx.globalAlpha = a;
   if (!flat) {
     ctx.shadowColor = rgba(mix(col, '#ffffff', 0.2), 0.9);
@@ -203,9 +205,10 @@ export const Counter: Block<'Counter'> = {
       spaced(ctx, prm.label.toUpperCase(), env.W / 2, y - size * 0.75, size * 0.32 * 0.35);
     }
     ctx.font = `600 ${Math.round(size)}px ${FONT}`;
+    const dark = luminance(col) < 0.3;
     ctx.shadowColor = rgba(col, 0.8);
-    ctx.shadowBlur = size * 0.35;
-    ctx.fillStyle = mix(col, '#ffffff', 0.3);
+    ctx.shadowBlur = dark ? 0 : size * 0.35;
+    ctx.fillStyle = dark ? col : mix(col, '#ffffff', 0.3);
     spaced(ctx, formatNumber(v, prm.format), env.W / 2, y, size * 0.06);
     ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;

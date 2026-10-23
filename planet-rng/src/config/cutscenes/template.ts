@@ -178,17 +178,3 @@ export function symbolMotif(aura: string, over: Partial<CoreMotifParams> = {}): 
 
 /** Sound cues at the given times. */
 export const cuesAt = (times: number[], sfx: Cue['sfx'], extra: Partial<Cue> = {}): Cue[] => times.map((t) => ({ t, sfx, ...extra }));
-
-/** The prototype flow (Kreis-Stern, white-out) for an aura that has no own design yet. */
-export function prototype(aura: string, tier: 1 | 2 | 3): CutsceneDef {
-  const pal = SYMBOLS[aura].palette;
-  const def = t1({
-    aura,
-    theme: { primary: pal[0], secondary: pal[1 % pal.length], fog: pal[1 % pal.length], dark: '#05040a' },
-    fog: false,
-    pulse: false,
-    edge: false,
-    brk: { name: 'Weißblende', at: 13, tracks: [] },
-  });
-  return { ...def, tier };
-}

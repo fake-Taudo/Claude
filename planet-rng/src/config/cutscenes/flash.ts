@@ -25,7 +25,8 @@ export function trackFlashes(def: CutsceneDef, tr: Track): number[] {
       return local.filter((_, i) => i % (p.every ?? 1) === 0);
     }
     case 'SceneCut':
-      return tr.params.scenes.filter((s, i) => i > 0 && s.bright).map((s) => tr.t + s.at);
+      // A cut to a bright scene counts, also the first one when the track starts mid-cutscene.
+      return tr.params.scenes.filter((s, i) => s.bright && (i > 0 || tr.t > 0)).map((s) => tr.t + s.at);
     default:
       return [];
   }
