@@ -11,7 +11,8 @@ const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-await page.goto('file://' + resolve('dist/planet-rng.html') + '?debug&lab=1');
+// No ?lab=1 here: the lab panel would override the equipped aura.
+await page.goto('file://' + resolve('dist/planet-rng.html') + '?debug');
 await page.evaluate(() => localStorage.clear());
 await page.reload();
 await page.waitForTimeout(300);
@@ -32,7 +33,7 @@ const sample = () => page.evaluate(() => {
     rolls: window.__prng.game.state.stats.rolls,
     dom: document.getElementsByTagName('*').length,
     ...st.vfx.stats(),
-    texMP: window.__lab.stats().textures.megapixels,
+    texMP: window.__prngTextures().megapixels,
     quality: st.effectiveQuality(),
   };
 });

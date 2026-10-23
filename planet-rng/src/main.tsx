@@ -9,6 +9,7 @@ import { loadFonts } from './ui/fonts';
 import { initNotifier } from './ui/notify';
 import { initAudio } from './audio';
 import { CutsceneRunner } from './render/cutscene';
+import { textureStats } from './render/vfx/tex';
 
 function boot(): void {
   loadFonts();
@@ -31,6 +32,7 @@ function boot(): void {
     (window as unknown as Record<string, unknown>).__prngStage = stageRef;
     (window as unknown as Record<string, unknown>).__prngCutscene = cutscenes;
     (window as unknown as Record<string, unknown>).__prngAudio = audio;
+    (window as unknown as Record<string, unknown>).__prngTextures = textureStats;
   }
 }
 

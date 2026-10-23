@@ -1,7 +1,7 @@
 # Abschlussbericht – Planet RNG (Neuaufbau)
 
 Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.html`
-(ca. 700 KB, davon ca. 270 KB Deep Boom und ca. 65 KB Schrift), die per Doppelklick offline läuft.
+(ca. 890 KB, davon ca. 270 KB Deep Boom und ca. 65 KB Schrift), die per Doppelklick offline läuft.
 
 ## Was gebaut ist
 
@@ -31,12 +31,10 @@ Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.
 - Deep Boom startet exakt mit der Cutscene, Roll gesperrt, Auto Roll wartet, Überspringen per
   Tipp, wenn erlaubt.
 
-**Aura-Optik**
-- Canvas-Partikelsystem mit Objekt-Pool und vorgerenderten Glow-Sprites: 22 Partikelformen,
-  26 Bewegungsarten (kreisen, eingesogen, ruckartig geschleudert, zerfallen, umkehren,
-  ticken, teleportieren, Galaxie-Arme, Feldlinien, Möbiusband, Lemniskate …), 9 Ringstile
-  (maximal 3 Ringe pro Aura), 32 Spezialeffekte (Korona, Kometen, Leuchtturm-Kegel, Flügel,
-  Uhr, Netz, Zellen, Polarlicht, Inversion, Stern-Kern …), Hintergrund-Stimmungen.
+**Aura-Optik** (komplett neu entworfen, siehe Abschnitt „Aura-VFX-Neuentwurf“ unten)
+- Schicht-Engine auf Canvas 2D mit einer eigenen Spec und einem eigenen Hero-Motiv pro Aura,
+  sieben VFX-Stufen von dezent (Gewöhnlich) bis bildschirmfüllend mit neuem Himmel (ab
+  Universell), Beleuchtung des Planeten, Intro je Stufe, Aura-Labor unter `?lab=1`.
 - Animationen laufen durchgehend weiter und werden durch Rollen nie zurückgesetzt
   (im E2E-Test geprüft), Wechsel der Aura blendet weich über.
 - Planet als Avatar, der mit jedem Rebirth wächst und sich verwandelt.
@@ -61,14 +59,114 @@ Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.
 - Speicherstand mit Version, Migrationen, Bereinigung, Backup-Slot, Autosave, Export-Code.
 - Zeitbasiertes über absolute Zeitstempel; AFK-Nachholen (Hintergrund 100 %, geschlossen 50 %,
   max. 8 h) mit Zusammenfassung.
-- 66 Unit-Tests (RNG, Roll-Modell, Stapelregeln, Buffs, Crafting, Shop-Rotation, Rebirth,
-  Speicherstand, Biome, Offline, Formatierung, Cutscene-Zeitkurve), 3 Playwright-Szenarien auf
+- 73 Unit-Tests (RNG, Roll-Modell, Stapelregeln, Buffs, Crafting, Shop-Rotation, Rebirth,
+  Speicherstand, Biome, Offline, Formatierung, Cutscene-Zeitkurve, Prüfliste der
+  Aura-Effekte), 3 Playwright-Szenarien auf
   Handy- und Desktop-Viewport (kompletter Spielablauf bis Reload, Export/Import, beschädigter
   Speicherstand).
 - Balancing-Skript mit Monte-Carlo (5 Mio. Rolls je Luck-Stufe) und Spieler-Simulation auf der
   echten Engine → `BALANCING.md`.
 - Dauerlauf: 4 Minuten Auto Roll mit der aufwendigsten Aura, Speicher stabil (ca. 4,8 MB Heap),
   konstant 60 FPS im Test-Browser, keine Konsolenfehler.
+
+## Aura-VFX-Neuentwurf
+
+Das ganze Aura-Effektsystem ist neu gebaut: Renderer, Effekt-Definitionen, Bühne, Intro und
+Wechsel, Aura-Labor. Unverändert geblieben sind RNG, Glück, Wirtschaft, Shop, Tränke, Rebirth,
+Speicherstand, Cutscenes, Menüs sowie Namen, Chancen und Farben der Auren.
+
+Vorher (alter Renderer, alle Auren):
+
+![Kontaktbogen vorher](docs/vfx/aura-contact-sheet-before.png)
+
+Nachher (Ruhezustand ohne Akzent, gleiche Bühne):
+
+![Kontaktbogen nachher](docs/vfx/aura-contact-sheet-after.png)
+
+**Aufbau**
+- Schicht-Engine auf Canvas 2D (`src/render/vfx/`) mit acht Zeichen-Slots hinter und vor dem
+  Planeten, gebackenen Texturen statt Shadern (Rauschen, Nebel, Lichtbänder, Säulen, Strahlen,
+  Sigille mit Bloom) und einer durchlaufenden Wanduhr, die Rollen und Neuladen übersteht.
+- Jede der 54 Auren hat eine eigene, deklarative Spec (`src/config/vfx/specs/`, alle Zahlen in
+  D = Planetendurchmesser, °/s und s). 44 Auren haben eine eigene Hero-Klasse, bei 10 ist der
+  Hero aus den allgemeinen Schichten gebaut (Sigil, Lichtband, Nebel, Säule).
+- Rezept je Aura: ein Hero mit eigenem Motiv, ein Boden-Element, ein Bewegungsgesetz, ein
+  Akzent alle 5–9 s; ab V2 dazu dunkler Gegenlicht-Rauch und ein vertikales Element.
+  Ruhe-Budget: große Elemente höchstens 10 °/s (meist 2–5 °/s), Ringe höchstens 35 °/s,
+  Atmen 0,1–0,22 Hz, kein Flackern über 3 Hz. Die Checkliste ist ein Unit-Test
+  (`tests/vfx.test.ts`) und als Tabelle in [docs/vfx/aura-review.md](docs/vfx/aura-review.md).
+- Sieben VFX-Stufen V0–V6 mit Größe (1,2 D bis über den Bildrand), Partikel- und
+  Schichtbudget, Bühnen-Dimmung, Entsättigung, Vignette, Kamera-Zoom (V5 6 %, V6 10 %). Ab V6
+  färbt jede Aura den ganzen Himmel um.
+- Der Planet wird beleuchtet: Randlicht aus Richtung der Lichtquelle, Farbstich, Aufhellen
+  beim Akzent, weiche Schatten von Objekten, die vor ihm vorbeiziehen.
+- Intro je Stufe (0,5 s bis 2,4 s): Sigil zeichnet sich, Säule schießt hoch, Bodenwelle, Hero
+  wächst 0,6 → 1,05 → 1, ab V5 ein weicher Flash. Wechsel: alte Aura blendet in 0,4 s aus.
+- Aura-Labor unter `planet-rng.html?lab=1`.
+
+**Die drei Gegenbeispiele aus der Vorgabe**
+
+![Gegenbeispiele vorher/nachher](docs/vfx/gegenbeispiele.png)
+
+- **Pulsar ⟨Leuchtfeuer⟩:** vorher zwei Lichtkegel um den Planeten. Jetzt sitzt ein
+  Neutronenstern neben dem Mond und schwenkt zwei Leuchtturm-Strahlen über die ganze Bühne;
+  alle 6 s streift ein Strahl genau den Mond und hellt ihn auf.
+- **Gezeitenmond ⟨Gezeitenhüter⟩:** vorher drei kleine Monde auf einer Bahn. Jetzt wölbt sich
+  eine Wasserhülle um den Planeten zu den leuchtenden Monden hin; beim Akzent kommt die
+  Springflut.
+- **Meteorit ⟨Einschlag⟩:** vorher kreisende Brocken. Jetzt schlägt etwa alle 8 s ein
+  brennender Meteor ein: Druckwelle am Boden, Funkenfontäne, Trümmer; dazwischen glimmt der
+  Krater, und der nächste Meteor nähert sich hoch am Himmel.
+
+**Silhouetten-Test:** Alle Auren in Graustufen und klein, ohne Farbe als Unterscheidung. Ab V2
+ist jede Aura an ihrer Form erkennbar. Die Auren von V0 und V1 (Staub, Moos, Sternschnuppe,
+Nebelschleier) sind bewusst zurückhaltend und hier entsprechend schwach; Finsternis ist als
+dunkler Mond gewollt kontrastarm.
+
+![Silhouetten](docs/vfx/aura-silhouetten.png)
+
+**Leistung.** Gemessen mit `scripts/dev/perf.mjs` in Headless-Chromium mit
+Software-Rasterung (4 Kerne), Hochformat 390×844; Werte in ms pro Bild, gemittelt je Stufe.
+Absolut sind das Werte ohne Grafikkarte, echte Geräte rastern auf der GPU deutlich schneller;
+aussagekräftig ist der Vergleich zwischen den Stufen und Qualitäten. Einzelwerte je Aura stehen
+in [docs/vfx/aura-review.md](docs/vfx/aura-review.md).
+
+| Stufe | Niedrig (DPR 1) | Mittel (DPR 1,5) | Hoch (DPR 2) | Anlegen, kalter Cache (Ø / max) |
+|---|---|---|---|---|
+| V0 | 6,2 | 13,7 | 21,2 | 18 / 24 ms |
+| V1 | 9,0 | 19,1 | 33,3 | 45 / 103 ms |
+| V2 | 9,9 | 21,3 | 36,8 | 44 / 56 ms |
+| V3 | 12,7 | 25,2 | 45,9 | 67 / 157 ms |
+| V4 | 15,2 | 31,4 | 51,8 | 54 / 109 ms |
+| V5 | 16,0 | 34,2 | 58,0 | 100 / 267 ms |
+| V6 | 17,8 | 38,7 | 67,0 | 103 / 171 ms |
+
+- Auf Hoch kostet schon die leere Bühne gut 20 ms: Die Software-Rasterung ist durch die
+  Pixelmenge begrenzt (780×1688). Der Aufschlag der Aura wächst gleichmäßig mit der Stufe.
+  Die Messung je Schicht (`scripts/dev/layer-cost.mjs`) ist hier verrauscht (±10 ms), zeigt
+  aber keine Schicht, die heraussticht: Die Kosten verteilen sich auf die großflächigen
+  Schichten (Rauch, Strahlenkränze, Mandalas, Himmel).
+- Niedrig ist rund 3,7-mal billiger als Hoch (weniger Partikel und Rauchwolken, kein Bloom,
+  eine statt zwei Nebelebenen, DPR 1). Die automatische Anpassung schaltet herunter, wenn ein
+  Bild drei Sekunden lang über 22 ms braucht.
+- Anlegen ohne Vorbereitung kostet bis zu 270 ms (Texturen backen). Seltene Würfe (ab V3)
+  backen ihre Texturen deshalb schon während der Roll-Animation in Häppchen von 8 ms; das
+  Anlegen danach dauert 10–16 ms.
+- Behoben dabei: Ein Wechsel der Qualität setzte die Pixeldichte nicht neu (von Niedrig auf
+  Hoch blieb das Bild unscharf).
+
+**Effekte reduzieren** geprüft (`scripts/dev/reduced.mjs`): kein Kamera-Zoom, Bewegung auf
+25 %, keine Bildschirm-Schockwellen, keine Blitze und keine Umkehr bei Nullpunkt;
+Bodenwellen und das Aufleuchten des Heros bleiben.
+
+**Offen**
+- Echte Geräte fehlen: Die Messungen stammen aus Headless-Chromium mit Software-Rasterung.
+  Auf einem mittleren Handy sollte einmal von Hand geprüft werden, ab welcher Stufe die
+  automatische Qualitätsanpassung greift.
+- Das Vorbacken verschiebt die Arbeit in die Roll-Animation; dort kann ein einzelnes Bild
+  von 50–65 ms entstehen (eine Nebel-Schicht lässt sich nicht weiter aufteilen).
+- Die Effekte sind auf Hochformat abgestimmt; im Querformat ist die Bühne breiter und die
+  V6-Auren reichen dort nicht über den Rand.
 
 ## Wichtigste Entscheidungen (Details in DECISIONS.md)
 

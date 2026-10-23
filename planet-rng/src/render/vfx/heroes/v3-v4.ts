@@ -715,8 +715,9 @@ export class ShadowMoon extends Hero {
 
 // ---------------------------------------------------------------------------
 // Meteorit: a burning meteor flies in and hits the ground exactly when the accent fires;
-// afterwards the impact glows. p: flight (s), from [x, y], impact [x, y] (D, impact y on the
-// ground plane is added), size (D), color, fire, smoke.
+// afterwards the impact glows. Between impacts the next meteor hangs high in the sky and
+// creeps closer. p: flight (s), from [x, y], impact [x, y] (D, impact y on the ground plane
+// is added), approach (path fraction before `from` while waiting), size (D), color, fire, smoke.
 // ---------------------------------------------------------------------------
 
 export class Meteor extends Hero {
@@ -765,7 +766,8 @@ export class Meteor extends Hero {
       // Impact glow: builds up while the meteor approaches, then cools down.
       const pre = tt < flight ? easeIn(1 - tt / flight) * 0.5 : 0;
       const post = since < 4 ? Math.max(0, 1 - since / 4) : 0;
-      const g = Math.max(pre, post);
+      // The crater keeps smouldering between impacts.
+      const g = Math.max(pre, post, 0.22);
       if (g > 0.01) {
         xform(env, this.inst, ix, iy, 1, 0, 0, this.inst.groundSquash * 1.3);
         ctx.globalAlpha = Math.min(1, a * g);
@@ -775,11 +777,15 @@ export class Meteor extends Hero {
       ctx.globalCompositeOperation = 'source-over';
       return;
     }
-    if (tt > flight || this.inst.reduced) {
+    // Between impacts the next meteor hangs high in the sky as a small burning point and
+    // creeps closer (path before its start, k < 0); then it flies in (k 0 -> 1).
+    const flying = tt <= flight && !this.inst.reduced;
+    const k = flying ? easeIn(1 - tt / flight) : -this.num('approach', 0.25) * clamp01((tt - flight) / 6);
+    const vis = flying ? 1 : smooth(clamp01((since - 1.2) / 1.2)) * 0.85;
+    if (vis <= 0.01) {
       ctx.globalCompositeOperation = 'source-over';
       return;
     }
-    const k = easeIn(1 - tt / flight);
     const [x, y] = this.path(k);
     const [px, py] = this.path(Math.max(0, k - 0.06));
     const dx = x - px;
@@ -787,32 +793,34 @@ export class Meteor extends Hero {
     const l = Math.hypot(dx, dy) || 1;
     const ux = dx / l;
     const uy = dy / l;
-    const size = this.num('size', 0.22) * D * (0.45 + 0.55 * k);
+    const size = this.num('size', 0.22) * D * (flying ? 0.45 + 0.55 * k : 0.6);
     // Smoke trail behind (normal blend).
     ctx.globalCompositeOperation = 'source-over';
-    for (let j = 1; j <= 7; j++) {
-      const [sx, sy] = this.path(Math.max(0, k - j * 0.05));
-      ctx.globalAlpha = Math.min(1, a * 0.5 * (1 - j / 8));
+    for (let j = 1; j <= (flying ? 7 : 3); j++) {
+      const [sx, sy] = this.path(k - j * 0.05);
+      ctx.globalAlpha = Math.min(1, a * vis * 0.5 * (1 - j / 8));
       xform(env, this.inst, sx, sy);
       blit(ctx, this.puff, 0, 0, size * (2.2 + j * 0.5));
     }
     ctx.globalCompositeOperation = 'lighter';
     const S = env.view.s * this.inst.scale;
-    const len = Math.min(D * 2.2, D * 3 * k + size * 2);
-    ctx.globalAlpha = Math.min(1, a);
+    const len = Math.min(D * 2.2, D * 3 * Math.max(0, k) + size * 2.5);
+    ctx.globalAlpha = Math.min(1, a * vis);
     ctx.setTransform(S * ux, S * uy, -S * uy, S * ux, env.view.tx + S * x, env.view.ty + S * y);
     ctx.drawImage(this.tail, -len, -size * 0.6, len + size * 0.4, size * 1.2);
     xform(env, this.inst, x, y);
-    ctx.globalAlpha = Math.min(1, a * 0.9);
-    blit(ctx, this.fire, 0, 0, size * 3.4);
+    ctx.globalAlpha = Math.min(1, a * vis * 0.9);
+    blit(ctx, this.fire, 0, 0, size * (flying ? 3.4 : 4.6));
     ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = Math.min(1, a);
+    ctx.globalAlpha = Math.min(1, a * vis);
     xScreen(env, this.inst, x, y, env.clock * 4);
     blit(ctx, this.rock, 0, 0, size * 2.2);
     ctx.globalCompositeOperation = 'lighter';
     xform(env, this.inst, x, y);
-    ctx.globalAlpha = Math.min(1, a * 0.8);
-    blit(ctx, this.glint, 0, 0, size * 2.6);
+    // The distant meteor flickers gently like a star (0.7 Hz).
+    const tw = flying ? 1 : 0.75 + 0.25 * Math.sin(env.clock * 0.7 * Math.PI * 2);
+    ctx.globalAlpha = Math.min(1, a * vis * 0.8 * tw);
+    blit(ctx, this.glint, 0, 0, size * (flying ? 2.6 : 3.2));
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
   }

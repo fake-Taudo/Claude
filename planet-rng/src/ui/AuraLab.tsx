@@ -15,7 +15,7 @@ function stage() {
   return stageRef();
 }
 
-function show(id: string, opts: { settle?: number; quality?: Quality; tier?: VTier | null; clock?: number } = {}): void {
+function show(id: string, opts: { settle?: number; quality?: Quality; tier?: VTier | null; clock?: number; idle?: boolean } = {}): void {
   const st = stage();
   if (!st) return;
   if (opts.quality) game.setSettings({ vfxQuality: opts.quality });
@@ -32,6 +32,14 @@ function show(id: string, opts: { settle?: number; quality?: Quality; tier?: VTi
   labState.set(id);
   const inst = st.vfx.current;
   st.step((inst?.introDur ?? 1) + 0.6 + (opts.settle ?? 4));
+  // Idle: move on until no accent is playing or about to start (representative stills).
+  // Prefers a long quiet window (slow heroes like Entropie have settled by then).
+  if (opts.idle && inst) {
+    const quiet = (after: number, before: number) => inst.accent.since > after && inst.timeToNextAccent(st.clock()) > before;
+    let found = false;
+    for (let i = 0; i < 80 && !(found = quiet(5.3, 1)); i++) st.step(0.25);
+    for (let i = 0; !found && i < 80 && !quiet(3, 1.5); i++) st.step(0.25);
+  }
 }
 
 function install(): void {

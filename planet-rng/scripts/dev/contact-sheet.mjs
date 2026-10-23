@@ -34,7 +34,7 @@ const meta = [];
 const shots = [];
 for (const id of ids) {
   if (hasLab) {
-    await page.evaluate((id) => window.__lab.show(id, { settle: 6 }), id);
+    await page.evaluate((id) => window.__lab.show(id, { settle: 6, idle: true }), id);
   } else {
     await page.evaluate((id) => {
       const p = window.__prng;
@@ -43,7 +43,8 @@ for (const id of ids) {
     }, id);
     await page.waitForTimeout(1500);
   }
-  await page.waitForTimeout(60);
+  // Let the nameplate fade-in (420 ms) finish.
+  await page.waitForTimeout(900);
   const name = await page.evaluate(() => document.querySelector('[data-testid=nameplate] .nameplate__name')?.textContent ?? '');
   const tier = await page.evaluate(() => document.querySelector('[data-testid=nameplate] .nameplate__title')?.textContent ?? '');
   meta.push({ id, name: name || id, tier });

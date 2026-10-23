@@ -88,6 +88,9 @@ Ordner heraus und nach `npm run build` starten), z. B.:
 - `node scripts/dev/contact-sheet.mjs <bild.png>`: Kontaktbogen aller Auren
   (`HTML=…` für einen anderen Build, z. B. den alten Stand aus Git)
 - `node scripts/dev/perf.mjs <aus.json>`: Kosten je Aura und Qualität und Equip-Zeit
+  (`docs/vfx/perf.json` wird von `npm run vfx:review` in die Prüfliste übernommen)
+- `node scripts/dev/layer-cost.mjs urlicht`: Kosten je Schicht einer Aura
+- `node scripts/dev/reduced.mjs <ordner>`: Intro und Akzent mit und ohne „Effekte reduzieren“
 
 **Aura-Labor:** `planet-rng.html?lab=1` öffnet ein Labor-Panel: Aura wählen, VFX-Stufe und
 Qualität umschalten, Intro wiederholen, Akzent auslösen, Schichten einzeln an/aus, Hintergrund

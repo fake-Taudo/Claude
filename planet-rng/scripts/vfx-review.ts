@@ -12,7 +12,7 @@ import { VFX_BY_ID, VTIERS } from '../src/config/vfx';
 import type { AuraVfxSpec, LayerSpec } from '../src/config/vfx/types';
 
 type PerfRow = { id: string; equipMs: number; high: { avg: number; p95: number }; low: { avg: number } };
-const perfPath = resolve(__dirname, '../docs/vfx/perf.json');
+const perfPath = resolve('docs/vfx/perf.json');
 const perf: Record<string, PerfRow> = existsSync(perfPath) ? Object.fromEntries((JSON.parse(readFileSync(perfPath, 'utf8')) as PerfRow[]).map((r) => [r.id, r])) : {};
 
 const fx = (x: number, d = 1) => x.toFixed(d).replace('.', ',');
@@ -46,13 +46,14 @@ function row(spec: AuraVfxSpec, auraName: string, title: string): { line: string
     ok(standing <= t.layers + 2, true),
   ];
   const pass = !checks.includes('✗');
-  const accent = every ? `alle ${fx(every[0], 0)}–${fx(every[1], 0)} s${by('accent').length ? ` (${names(by('accent'))})` : ''}` : '–';
+  const sec = (x: number) => fx(x, x % 1 ? 1 : 0);
+  const accent = every ? `alle ${every[0] === every[1] ? sec(every[0]) : `${sec(every[0])}–${sec(every[1])}`} s${by('accent').length ? ` (${names(by('accent'))})` : ''}` : '–';
   const motion = `${fx(spec.motion.baseSpinDegPerSec)}°/s, Atmen ${fx(spec.motion.breatheHz, 2)} Hz`;
   const p = perf[spec.id];
   const cost = p ? `${fx(p.high.avg)} / ${fx(p.low.avg)}` : '–';
   const equip = p ? fx(p.equipMs, 0) : '–';
   const heroCell = hero[0] ? `${hero[0].name ?? hero[0].type} (\`${hero[0].motif}\`)` : '–';
-  const line = `| ${auraName} ⟨${title}⟩ | ${heroCell} | ${names(ground)} | ${motion} | ${accent} | ${names(vertical)} | ${steady}+${burst} / ${t.particles} | ${standing} / ${t.layers} | ${cost} | ${equip} | ${checks.join(' ')} |`;
+  const line = `| ${auraName}${title ? ` ⟨${title}⟩` : ''} | ${heroCell} | ${names(ground)} | ${motion} | ${accent} | ${names(vertical)} | ${steady}+${burst} / ${t.particles} | ${standing} / ${t.layers}+2 | ${cost} | ${equip} | ${checks.join(' ')} |`;
   return { line, pass };
 }
 
@@ -67,8 +68,8 @@ out.push('Prüfspalten (✓ erfüllt, ✗ verletzt, – für die Stufe nicht ver
 out.push('Hero mit eigenem Motiv · Boden (ab V1) · Gegenlicht-Rauch (ab V2) · vertikales Element (ab V2) ·');
 out.push('Akzent alle 5–9 s (ab V2) · Partikelbudget · Schichtbudget.');
 out.push('');
-out.push('Partikel: dauerhaft + zusätzlich beim Akzent / Budget der Stufe. Schichten: stehende Schichten');
-out.push('(ohne reine Akzent-Schichten) / Budget. Kosten: ms pro Bild auf Hoch / Niedrig im Headless-Chromium');
+out.push('Partikel: dauerhaft + zusätzlich beim Akzent / Budget der Stufe (mit Akzent bis 135 %). Schichten: stehende');
+out.push('Schichten (ohne reine Akzent-Schichten) / Budget + 2 Stützschichten. Kosten: ms pro Bild auf Hoch / Niedrig im Headless-Chromium');
 out.push('mit Software-Rasterung (390×844, DPR 2 bei Hoch); relativ vergleichen, echte Geräte sind schneller.');
 out.push('Equip: ms für Anlegen und erstes Bild mit kaltem Textur-Cache (nach einem Wurf vorgebacken).');
 out.push('');
@@ -94,5 +95,5 @@ for (let tier = 0; tier <= 6; tier++) {
 }
 out.push(fails ? `**${fails} Aura(s) verletzen die Prüfliste.**` : `Alle ${AURAS.length} Auren erfüllen die Prüfliste.`);
 out.push('');
-writeFileSync(resolve(__dirname, '../docs/vfx/aura-review.md'), out.join('\n'));
+writeFileSync(resolve('docs/vfx/aura-review.md'), out.join('\n'));
 console.log(`docs/vfx/aura-review.md written (${AURAS.length} auras, ${fails} failing)`);

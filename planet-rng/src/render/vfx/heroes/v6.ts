@@ -482,7 +482,7 @@ export class PrimordialCell extends Hero {
 
 // ---------------------------------------------------------------------------
 // Entropie: a crystalline lattice around the planet falls apart into drifting, fading
-// pieces after every accent and slowly reassembles before the next one.
+// pieces on every accent, hangs dissolved for a moment and reassembles within 2.4 s.
 // p: radius (D), rings, spokes, color.
 // ---------------------------------------------------------------------------
 
@@ -520,14 +520,12 @@ export class DecayLattice extends Hero {
     }
   }
 
-  /** 0 = intact, 1 = fully dissolved. */
-  private decay(clock: number): number {
+  /** 0 = intact, 1 = fully dissolved: falls apart on the accent, holds, reassembles. */
+  private decay(): number {
     const since = this.inst.accent.since;
-    const tt = this.inst.timeToNextAccent(clock);
-    if (since < 2.6) return easeIn(since / 2.6);
-    if (since < 3.6) return 1;
-    const left = tt + since - 3.6;
-    return Math.max(0, 1 - easeInOut((since - 3.6) / Math.max(1, left - 0.6)));
+    if (since < 2.2) return easeIn(since / 2.2);
+    if (since < 2.8) return 1;
+    return Math.max(0, 1 - easeInOut((since - 2.8) / 2.4));
   }
 
   draw(slot: Slot, env: FrameEnv): void {
@@ -535,7 +533,7 @@ export class DecayLattice extends Hero {
     const a = this.alpha();
     if (a <= 0.003) return;
     const ctx = env.ctx;
-    const c = this.inst.reduced ? this.decay(env.clock) * 0.4 : this.decay(env.clock);
+    const c = this.inst.reduced ? this.decay() * 0.4 : this.decay();
     const k = this.introScale();
     const hue = this.color('color', 'hue');
     const spin = env.clock * 2 * DEG * this.inst.motion;

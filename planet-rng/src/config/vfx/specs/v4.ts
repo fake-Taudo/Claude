@@ -345,8 +345,8 @@ const meteorit: AuraVfxSpec = {
   burst: 'fragment',
   layers: [
     { type: 'smoke', name: 'Gegenlicht', role: 'smoke', color: 'smoke', count: 12, radius: [1.2, 1.9], size: [1.0, 1.4], drift: 1.5, alpha: 0.6 },
-    { type: 'hero', name: 'Meteor', role: 'hero', motif: 'impact-meteor', kind: 'meteor', p: { flight: 1.5, from: [2.4, -2.8], impact: [0.75, 0], size: 0.24, color: 'hue', fire: 'accent', smoke: '#2a1a14' } },
-    { type: 'orbiters', name: 'Glühende Trümmer', role: 'orbit', sprite: 'chunk', color: ['accent', 'hue'], count: 6, radius: [1.0, 1.25], tilt: 0.3, roll: -12, speed: 10, size: [0.1, 0.16], spin: 40, trail: 0.25, halo: 1.4, shadow: true },
+    { type: 'hero', name: 'Meteor', role: 'hero', motif: 'impact-meteor', kind: 'meteor', p: { flight: 1.5, from: [1.9, -3.0], approach: 0.25, impact: [0.75, 0], size: 0.24, color: 'hue', fire: 'accent', smoke: '#2a1a14' } },
+    { type: 'orbiters', name: 'Glühende Trümmer', role: 'orbit', sprite: 'chunk', color: ['accent', 'hue'], count: 6, radius: [1.0, 1.3], tilt: 0.3, roll: -12, speed: 10, size: [0.13, 0.2], spin: 40, trail: 0.25, halo: 1.4, shadow: true },
     { type: 'smoke', name: 'Aschewolke', plane: 'ground', color: 'smoke', count: 8, radius: [0.3, 0.9], size: [0.6, 0.9], drift: 4, alpha: 0.6, at: [0.75, 0] },
     {
       type: 'sigil',

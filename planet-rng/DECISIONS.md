@@ -214,3 +214,22 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   der Spec-Wert `width` wurde ignoriert. Die Schärfe ergibt sich jetzt aus Endradius und
   Breite (12–48, gerundet für den Textur-Cache, 512 px ab Schärfe 24). Das betrifft alle Stufen:
   Akzent-Ringe sind schmaler und klarer.
+- **Anlegen ohne Ruckler:** Das Backen der Texturen beim Anlegen kostete bis zu 350 ms. Dagegen
+  helfen drei Dinge: billigere Texturen (Schockwellen-Ringe als radialer Verlauf statt Pixel
+  für Pixel, Strahlenkränze einmal weiß gebacken und per GPU eingefärbt, die zweite Nebelebene
+  in kleinerer Auflösung), geteilte Rauschgitter (8 Varianten je Oktaven-Satz statt eines Gitters
+  pro Textur) und Vorbacken: Bei einem Wurf ab V3 baut der Renderer die Schichten der Aura
+  während der Roll-Animation einzeln auf (höchstens 8 ms pro Bild), damit sind die Texturen im
+  Cache, wenn der Spieler sie anlegt. Ein Bild mit einer großen Nebel-Schicht kann dabei 50–65 ms
+  dauern; das liegt in der Lade-Animation, nicht im Intro der Aura.
+- **Pixeldichte folgt der Qualität:** Ein Wechsel der VFX-Qualität setzt jetzt die DPR-Grenze neu
+  (vorher blieb sie auf dem Wert vom Start).
+- **Meteorit wartet sichtbar:** Zwischen zwei Einschlägen hängt der nächste Meteor als kleiner
+  brennender Punkt hoch am Himmel und kommt langsam näher; der Krater glimmt weiter. Vorher war die
+  Aura zwischen den Einschlägen fast leer.
+- **Entropie ist meist intakt:** Das Gitter zerfällt beim Akzent in 2,2 s, hängt 0,6 s zerfallen
+  und setzt sich in 2,4 s wieder zusammen. Vorher dauerte das Zusammensetzen bis kurz vor den
+  nächsten Akzent, das Gitter war fast nie ganz.
+- **Prüfbilder:** Kontaktbogen und Silhouetten zeigen den Ruhezustand (das Labor sucht mit
+  `idle` einen Zeitpunkt ohne laufenden oder bevorstehenden Akzent). Die Silhouetten sind
+  Graustufen mit erhöhtem Kontrast; jede Aura muss an ihrer Form erkennbar sein.

@@ -1,5 +1,5 @@
 // Dev helper: deterministic lab screenshots of single auras.
-// Usage: [CLOCK=s] [CROP=1] node scripts/dev/lab-shot.mjs <outDir> <ids comma separated> [WxH] [quality] [extra: accent|intro]
+// Usage: [CLOCK=s] [IDLE=1] [CROP=1] node scripts/dev/lab-shot.mjs <outDir> <ids comma separated> [WxH] [quality] [extra: accent|intro]
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -25,7 +25,7 @@ await page.evaluate(() => {
 });
 for (const id of ids) {
   const t0 = Date.now();
-  await page.evaluate(([id, q, c]) => window.__lab.show(id, { quality: q, settle: 5, clock: c }), [id, quality, Number(process.env.CLOCK ?? 1000)]);
+  await page.evaluate(([id, q, c, idle]) => window.__lab.show(id, { quality: q, settle: 5, clock: c, idle }), [id, quality, Number(process.env.CLOCK ?? 1000), !!process.env.IDLE]);
   const ms = Date.now() - t0;
   let suffix = '';
   if (extra.startsWith('accent')) {
@@ -38,7 +38,8 @@ for (const id of ids) {
     await page.evaluate((a) => window.__lab.intro(a), after);
     suffix = '-intro';
   }
-  await page.waitForTimeout(450);
+  // Let the nameplate fade-in (420 ms) finish.
+  await page.waitForTimeout(900);
   const stats = await page.evaluate(() => window.__lab.stats());
   const crop = process.env.CROP ? { x: 0, y: Math.max(0, Math.round(vh * 0.43 - vw * 0.75)), width: vw, height: Math.round(vw * 1.35) } : undefined;
   await page.screenshot({ path: `${out}/${id}${suffix}-${vw}x${vh}.png`, clip: crop });
