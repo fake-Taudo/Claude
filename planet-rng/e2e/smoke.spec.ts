@@ -211,3 +211,50 @@ test('a cutscene can be watched again from the collection', async ({ page }) => 
   const rolls = await game<number>(page, 'p.game.state.stats.rolls');
   await expect.poll(() => game<number>(page, 'p.game.state.stats.rolls'), { timeout: 10000 }).toBeGreaterThan(rolls);
 });
+
+test('a rolled cutscene: logic first, roll locked, auto roll waits, skip and run-through', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await setup(page, 'p.game.state.tutorial = { done: true, step: 9 }; p.game.setSettings({ cutsceneSkip: true, flashHintShown: false })');
+  const force = (id: string) =>
+    setup(page, `p.game.state.pendingRoll = { aura: '${id}', lucky: false, luck: 1, biome: null, startedAt: Date.now(), auto: false }; p.controller.playCutscene('${id}', false)`);
+
+  await force('singularitaet');
+  await expect(page.locator('.cutscene-layer')).toBeVisible();
+  // The roll is granted, counted and saved before anything is shown.
+  expect(await game<number>(page, 'p.game.state.auras.singularitaet')).toBe(1);
+  expect(await game<number>(page, 'p.game.state.stats.cutscenes')).toBe(1);
+  expect(await game<unknown>(page, 'p.game.state.pendingRoll')).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('planet-rng.save') ?? '')).toContain('singularitaet');
+  // One-time flash warning in the black opening.
+  await expect(page.locator('.cutscene-hint')).toContainText('Lichtblitze');
+  // The roll button is locked and Auto Roll waits.
+  expect(await game<boolean>(page, 'p.controller.roll(false)')).toBe(false);
+  const rolls = await game<number>(page, 'p.game.state.stats.rolls');
+  await setup(page, 'p.controller.setAuto(true)');
+  await page.waitForTimeout(800);
+  expect(await game<string>(page, 'p.controller.phase')).toBe('cutscene');
+  expect(await game<number>(page, 'p.game.state.stats.rolls')).toBe(rolls);
+  // Skip: the button shows up after about 2 s and jumps to the reveal.
+  await expect(page.getByTestId('cutscene-skip')).toBeVisible({ timeout: 4000 });
+  await page.getByTestId('cutscene-skip').click();
+  await expect(page.getByTestId('reveal-big')).toBeVisible({ timeout: 3000 });
+  await expect(page.locator('.cutscene-layer')).toBeHidden({ timeout: 3000 });
+  expect(await game<number>(page, 'p.game.state.auras.singularitaet')).toBe(1);
+  expect(await game<boolean>(page, 'p.game.settings.flashHintShown')).toBe(true);
+  // Auto Roll goes on after the reveal.
+  await expect.poll(() => game<number>(page, 'p.game.state.stats.rolls'), { timeout: 10000 }).toBeGreaterThan(rolls);
+
+  // Run-through without skipping: the reveal follows the end of the cutscene by itself.
+  await setup(page, 'p.controller.setAuto(false); p.game.setSettings({ cutsceneSkip: false })');
+  await expect.poll(() => game<string>(page, 'p.controller.phase'), { timeout: 10000 }).toBe('idle');
+  await force('akkretion');
+  await expect(page.locator('.cutscene-layer')).toBeVisible();
+  await page.waitForTimeout(2600);
+  await expect(page.getByTestId('cutscene-skip')).toBeHidden();
+  await expect(page.locator('.cutscene-layer')).toBeHidden({ timeout: 20000 });
+  await expect(page.getByTestId('reveal-big')).toBeVisible();
+  expect(await game<number>(page, 'p.game.state.auras.akkretion')).toBe(1);
+  expect(await game<string>(page, 'p.controller.phase')).toBe('idle');
+});

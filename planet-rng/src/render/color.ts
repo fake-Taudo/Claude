@@ -87,6 +87,11 @@ function hslToRgb(h: number, s: number, l: number): RGB {
   return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
 }
 
+/** Hue of a colour in degrees (0..360). */
+export function hue(hex: string): number {
+  return rgbToHsl(parseColor(hex))[0];
+}
+
 const hueCache = new Map<string, string>();
 
 /** Rotates the hue of a color; quantised to 10° steps so results can be cached. */

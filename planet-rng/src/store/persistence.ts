@@ -100,7 +100,11 @@ export class Persistence {
     try {
       const raw = this.storage.getItem(GAME.save.settingsKey);
       if (!raw) return { ...DEFAULT_SETTINGS, ...deviceDefaults() };
-      return sanitizeSettings(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+      const s = sanitizeSettings(parsed);
+      // Settings saved before "Lichtblitze reduzieren" existed follow prefers-reduced-motion.
+      if (parsed && typeof parsed === 'object' && !('reduceFlashes' in parsed)) s.reduceFlashes = deviceDefaults().reduceFlashes ?? false;
+      return s;
     } catch {
       return { ...DEFAULT_SETTINGS };
     }

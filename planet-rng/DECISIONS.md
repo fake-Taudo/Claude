@@ -401,3 +401,29 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   bleiben und kein Vollbild minutenlang blendet. Schwarze Schrift auf Weiß ohne Leuchtschatten.
 - Ein Schnitt auf eine helle Szene zählt im Flash-Validator als Blitz (auch der erste Schnitt
   eines Szenen-Tracks, wenn er mitten in der Cutscene beginnt).
+
+### Nachhall, Übergabe, Einstellungen (Phase 5)
+
+- **GlobalEcho** startet mit der Übergabe an den Reveal, auch nach dem Überspringen und beim
+  erneuten Ansehen: CSS-Filter auf der Spielbühne (Graustufen, Farbtausch oder Tönung in der
+  Aurafarbe, 0,5/0,75/1 s je Stufe, weich zurück), Donner (ab T2) oder ein leiser Einschlag,
+  Schockwellen-Ringe (1/2/3 je Stufe) auf einer eigenen Ebene zwischen Bühne und HUD; T3 dazu
+  ein senkrechter Lichtstrahl und aufsteigende Partikel für etwa 3 s. Mit „Lichtblitze
+  reduzieren“ ist der Filter halb so stark und blendet langsamer ein.
+- **Banner und Feed:** der bestehende Vollbild-Reveal ist das Banner (Stufe, Name, „1 in X“,
+  Beiname), der simulierte Feed bekommt den eigenen Fund wie bisher über das Reveal-Ereignis.
+  Beim erneuten Ansehen gibt es weder Banner noch Feed-Eintrag (es wurde nichts gerollt).
+- **Übergabe „kommt aus Cutscene“:** `afterCutscene` unterdrückt wie bisher den Bildschirmblitz
+  des Reveals; das Overlay blendet sein letztes Bild aus, während darunter Reveal und Aura-Intro
+  starten. Die gehaltenen Spielereignisse (Erfolge, Anlegen) erscheinen genau dann.
+- **Einstellungen:** „Cutscenes überspringen bis …“ (Keine, unter 1 in 100.000 / 1 Mio. /
+  10 Mio. / 100 Mio.; die Aura bekommt dann den normalen Reveal), „Lichtblitze reduzieren“
+  (weiche Blenden statt Blitzen, Tönung statt Inversion, gedämpfte Weißblende, kein
+  Kamerawackeln mit „Effekte reduzieren“), Lautstärke „Cutscenes“ (wirkt sofort, auch während
+  einer laufenden Cutscene). Alles wird mit den Einstellungen gespeichert.
+- **prefers-reduced-motion:** setzt bei neuen Einstellungen „Effekte reduzieren“ und
+  „Lichtblitze reduzieren“; ältere gespeicherte Einstellungen ohne den neuen Schalter übernehmen
+  ihn ebenfalls aus dem System. Ohne Kamerabewegung läuft die Cutscene, wenn das System
+  weniger Bewegung wünscht.
+- **Hinweis vor der ersten Cutscene:** „Enthält Lichtblitze. In den Einstellungen reduzierbar.“
+  steht während der schwarzen Eröffnung (blockiert nichts) und wird danach nicht mehr gezeigt.

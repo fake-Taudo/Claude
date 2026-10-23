@@ -59,6 +59,8 @@ export class CutsceneRunner implements CutscenePlayer {
   private lastFrame = 0;
   /** Current cutscene time (debug / tests). */
   t = 0;
+  /** Called at the reveal handover (the GlobalEcho starts there). */
+  onHandover: ((def: CutsceneDef, skipped: boolean) => void) | null = null;
 
   constructor(
     private game: GameStore,
@@ -66,6 +68,7 @@ export class CutsceneRunner implements CutscenePlayer {
     audio: AudioEngine | null,
   ) {
     this.sound = new CutsceneSound(audio);
+    game.bus.on('settings', (s) => this.sound.setVolume(s.cutsceneVolume));
   }
 
   get playing(): boolean {
@@ -319,6 +322,11 @@ export class CutsceneRunner implements CutscenePlayer {
     const r = this.resolve;
     this.resolve = null;
     r?.();
+    try {
+      this.onHandover?.(def, skipped);
+    } catch {
+      /* the echo is decoration only */
+    }
   }
 
   private drawTail(now: number): void {

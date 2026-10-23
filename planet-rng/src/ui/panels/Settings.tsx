@@ -1,4 +1,6 @@
 import { GAME } from '../../config';
+import { CUTSCENE } from '../../config/cutscenes';
+import { formatOddsShort } from '../../core/format';
 import { createInitialState } from '../../core/state';
 import { game, storagePersistent, ui } from '../../game/app';
 import { randomSeed } from '../../store/persistence';
@@ -42,7 +44,35 @@ export function SettingsPanel() {
         <h3>Anzeige</h3>
         <Toggle checked={s.showReveal} onChange={(v) => set({ showReveal: v })} label="Gerollte Auren anzeigen" hint="Banner mit Name, Stufe und Chance nach jedem Roll" testid="set-reveal" />
         <Toggle checked={s.cutscenes} onChange={(v) => set({ cutscenes: v })} label="Cutscenes abspielen" hint="Für Auren ab 1 in 10.000" testid="set-cutscenes" />
-        <Toggle checked={s.cutsceneSkip} onChange={(v) => set({ cutsceneSkip: v })} label="Cutscenes überspringen erlauben" hint="Tippen beendet eine laufende Cutscene" testid="set-skip" />
+        <Toggle
+          checked={s.cutsceneSkip}
+          onChange={(v) => set({ cutsceneSkip: v })}
+          label="Cutscenes überspringen erlauben"
+          hint="„Überspringen“ nach 2 s oder lange drücken. Filme ab 1 in 100 Mio. sind immer überspringbar."
+          testid="set-skip"
+        />
+        <label class="setting-row">
+          <span class="toggle-row__text">
+            <span>Cutscenes überspringen bis</span>
+            <small>Seltenere Auren zeigen ihre Cutscene weiterhin</small>
+          </span>
+          <select
+            class="setting-select"
+            value={String(s.cutsceneSkipBelow)}
+            data-testid="set-skip-below"
+            onChange={(e) => {
+              sfx('toggle');
+              set({ cutsceneSkipBelow: Number((e.target as HTMLSelectElement).value) });
+            }}
+          >
+            {CUTSCENE.skipBelowOptions.map((v) => (
+              <option key={v} value={String(v)}>
+                {v === 0 ? 'Keine' : `unter ${formatOddsShort(v)}`}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Toggle checked={s.reduceFlashes} onChange={(v) => set({ reduceFlashes: v })} label="Lichtblitze reduzieren" hint="Weiche Blenden statt Blitzen, Inversion und harter Weißblende" testid="set-flashes" />
         <Toggle checked={s.feed} onChange={(v) => set({ feed: v })} label="Globaler Feed" hint="Simulierte Meldungen anderer Spieler plus deine eigenen Drops" />
         <div class="setting-row">
           <span>VFX-Qualität</span>
@@ -90,6 +120,7 @@ export function SettingsPanel() {
         <Slider label="Gesamt" value={s.masterVolume} onChange={(v) => set({ masterVolume: v })} disabled={s.muted} />
         <Slider label="Effekte" value={s.sfxVolume} onChange={(v) => set({ sfxVolume: v })} disabled={s.muted} />
         <Slider label="Musik" value={s.musicVolume} onChange={(v) => set({ musicVolume: v })} disabled={s.muted} />
+        <Slider label="Cutscenes" value={s.cutsceneVolume} onChange={(v) => set({ cutsceneVolume: v })} disabled={s.muted} />
       </section>
 
       <section class="settings-group">
