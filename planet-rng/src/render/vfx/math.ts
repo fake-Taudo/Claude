@@ -122,10 +122,16 @@ export interface Schedule {
   fired: boolean;
 }
 
-export function schedule(clock: number, prevClock: number, every: [number, number], seed: number): Schedule {
+/** Start time of event k of a schedule. */
+export function scheduleStart(k: number, every: [number, number], seed: number): number {
   const period = (every[0] + every[1]) / 2;
   const jitter = (every[1] - every[0]) / 2;
-  const start = (k: number) => k * period + (hash(k * 7919 + seed) * 2 - 1) * jitter;
+  return k * period + (hash(k * 7919 + seed) * 2 - 1) * jitter;
+}
+
+export function schedule(clock: number, prevClock: number, every: [number, number], seed: number): Schedule {
+  const period = (every[0] + every[1]) / 2;
+  const start = (k: number) => scheduleStart(k, every, seed);
   let k = Math.floor(clock / period) + 1;
   while (start(k) > clock) k--;
   const s = start(k);

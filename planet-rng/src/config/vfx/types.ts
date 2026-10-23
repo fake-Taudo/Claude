@@ -45,6 +45,8 @@ export interface LayerCommon {
   role?: 'hero' | 'ground' | 'smoke' | 'vertical' | 'orbit' | 'accent' | 'support';
   /** Unique motif name of the hero (no two auras share one). */
   motif?: string;
+  /** This layer provides the aura's vertical structure (when its role is something else). */
+  vertical?: boolean;
   depth?: Slot;
   /** Only drawn from this VFX quality upward. */
   minQuality?: 'medium' | 'high';

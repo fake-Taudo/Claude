@@ -258,6 +258,7 @@ export class Stage {
   }
 
   private update(dt: number): void {
+    this.lastDt = dt;
     const pr = this.visualR();
     if (Math.abs(pr - this.lastPr) > 0.5) {
       this.lastPr = pr;
@@ -291,11 +292,13 @@ export class Stage {
     env.stage.bottom = (this.canvas.height - this.auraView.ty) * k;
   }
 
+  /** dt of the last simulation step (drawing derives velocities from it). */
+  private lastDt = 1 / 60;
+
   private draw(): void {
     const { ctx, dpr } = this;
     const reduced = this.game.settings.reducedEffects;
-    const env = this.makeEnv(0);
-    env.dt = 0;
+    const env = this.makeEnv(this.lastDt);
     this.setViews(env);
     if (this.backdrop === 'normal') this.bg.draw(ctx, this.time, dpr, reduced);
     else {

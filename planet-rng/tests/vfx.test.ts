@@ -46,7 +46,7 @@ describe('aura VFX specs', () => {
       if (s.tier >= 1) expect(roles(s, 'ground').length, `${s.id} ground`).toBeGreaterThan(0);
       if (s.tier >= 2) {
         expect(roles(s, 'smoke').length, `${s.id} smoke`).toBeGreaterThan(0);
-        expect(roles(s, 'vertical').length, `${s.id} vertical`).toBeGreaterThan(0);
+        expect(s.layers.filter((l) => l.role === 'vertical' || l.vertical).length, `${s.id} vertical`).toBeGreaterThan(0);
         const every = s.motion.accent.every;
         expect(every, `${s.id} accent`).toBeDefined();
         expect(every![0], s.id).toBeGreaterThanOrEqual(5);

@@ -8,6 +8,7 @@ import type { Quality, Slot, VTier } from '../../config/vfx/types';
 import { vfxOf } from '../../config/vfx';
 import { rgba } from '../color';
 import { AuraInstance, type AvatarLight, type FrameEnv, mixLight } from './core';
+import './heroes/all';
 import { createLayer } from './layers';
 import { clamp01, easeOut, smooth } from './math';
 

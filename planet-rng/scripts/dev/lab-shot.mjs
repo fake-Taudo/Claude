@@ -30,7 +30,8 @@ for (const id of ids) {
   let suffix = '';
   if (extra.startsWith('accent')) {
     const after = Number(extra.split(':')[1] ?? 0.4);
-    await page.evaluate((a) => window.__lab.accent(a), after);
+    const lead = Number(extra.split(':')[2] ?? 0);
+    await page.evaluate(([a, l]) => window.__lab.accent(a, l), [after, lead]);
     suffix = '-accent';
   } else if (extra.startsWith('intro')) {
     const after = Number(extra.split(':')[1] ?? 0.6);
@@ -39,7 +40,8 @@ for (const id of ids) {
   }
   await page.waitForTimeout(450);
   const stats = await page.evaluate(() => window.__lab.stats());
-  await page.screenshot({ path: `${out}/${id}${suffix}-${vw}x${vh}.png` });
+  const crop = process.env.CROP ? { x: 0, y: Math.max(0, Math.round(vh * 0.43 - vw * 0.75)), width: vw, height: Math.round(vw * 1.35) } : undefined;
+  await page.screenshot({ path: `${out}/${id}${suffix}-${vw}x${vh}.png`, clip: crop });
   console.log(id, `${ms}ms`, JSON.stringify(stats));
 }
 console.log(errors.length ? errors.slice(0, 8) : 'no errors');

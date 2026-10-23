@@ -6,7 +6,7 @@ import type { SpriteKind } from '../../config/vfx/types';
 import { mix, parseColor, rgba } from '../color';
 import { clamp01, fbm, hash, noise1, Rng, TAU } from './math';
 
-export { sample as sampleNoise, grid as noiseGrid };
+export { sample as sampleNoise, grid as noiseGrid, cached as bakeTex, paint as paintTex, px as pxOut, NONE as PX_NONE, rgb01 };
 
 export type Tex = HTMLCanvasElement;
 
@@ -624,25 +624,29 @@ export function nebulaTex(colors: string[], seed: number): Tex {
     const gw = grid(3, 2, seed);
     const gn = grid(5, 3, seed + 21);
     const gm = grid(4, 2, seed + 33);
+    const gr = grid(4, 4, seed + 47);
     return paint(S, S, (u, v) => {
       const d = Math.sqrt(u * u + v * v);
       if (d >= 1) return NONE;
-      const mask = (1 - d) ** 1.3;
+      const mask = (1 - d) ** 1.2;
       const x = (u + 1) / 2;
       const y = (v + 1) / 2;
       const wx = sample(gw, x, y) - 0.5;
       const wy = sample(gw, x + 0.31, y + 0.17) - 0.5;
-      const n = sample(gn, x + wx * 0.5, y + wy * 0.5);
-      const m = sample(gm, x - wy * 0.4, y + wx * 0.4);
-      const ci = clamp01(m * 1.4 - 0.2) * (cols.length - 1);
+      const n = sample(gn, x + wx * 0.7, y + wy * 0.7);
+      const m = sample(gm, x - wy * 0.5, y + wx * 0.5);
+      // Ridged noise gives bright filaments, low values carve dark lanes.
+      const ridge = Math.pow(1 - Math.abs(sample(gr, x + wy * 0.6, y - wx * 0.6) * 2 - 1), 4);
+      const ci = clamp01(m * 1.5 - 0.25) * (cols.length - 1);
       const i0 = Math.floor(ci);
       const i1 = Math.min(cols.length - 1, i0 + 1);
       const f = ci - i0;
       const c0 = cols[i0];
       const c1 = cols[i1];
-      const dens = clamp01((n - 0.3) * 2.2) * mask;
-      const hot = clamp01((n - 0.62) * 3) * mask;
-      return px(c0[0] + (c1[0] - c0[0]) * f + hot * 0.5, c0[1] + (c1[1] - c0[1]) * f + hot * 0.5, c0[2] + (c1[2] - c0[2]) * f + hot * 0.5, dens);
+      const lane = clamp01((n - 0.42) * 3);
+      const dens = (clamp01((n - 0.33) * 2.4) * 0.75 + ridge * 0.55 * lane) * mask;
+      const hot = clamp01((n - 0.6) * 3) * ridge * mask;
+      return px(c0[0] + (c1[0] - c0[0]) * f + hot * 0.6, c0[1] + (c1[1] - c0[1]) * f + hot * 0.6, c0[2] + (c1[2] - c0[2]) * f + hot * 0.6, dens);
     });
   });
 }

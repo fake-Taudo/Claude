@@ -7,7 +7,7 @@ import type { AuraVfxSpec, Col, LayerSpec, Quality, Slot, VTier } from '../../co
 import { mix, spectral } from '../color';
 import { glowTex, ringTex } from './tex';
 import { REF_R, type View } from '../view';
-import { clamp01, easeOutBack, envelope, hashString, Rng, schedule, smooth, TAU, win } from './math';
+import { clamp01, easeOutBack, envelope, hashString, Rng, schedule, scheduleStart, smooth, TAU, win } from './math';
 
 /** Reference pixels per D (avatar diameter). */
 export const D = REF_R * 2;
@@ -365,12 +365,12 @@ export class AuraInstance {
       let { since, fired, index } = s;
       if (this.forcedAccentAt >= 0) {
         const fs = env.clock - this.forcedAccentAt;
-        if (fs < since) {
+        if (fs >= 0 && fs < since) {
           since = fs;
           fired = this.forcedPending;
           index = -1;
+          this.forcedPending = false;
         }
-        this.forcedPending = false;
         if (fs > dur) this.forcedAccentAt = -1;
       }
       this.accent.index = index;
@@ -384,6 +384,15 @@ export class AuraInstance {
     }
     this.prevClock = env.clock;
     for (const l of this.layers) l.update(env);
+  }
+
+  /** Seconds until the next scheduled accent (Infinity without accents). */
+  timeToNextAccent(clock: number): number {
+    const every = this.spec.motion.accent.every;
+    if (!every) return Infinity;
+    if (this.forcedAccentAt >= 0 && this.forcedAccentAt > clock) return this.forcedAccentAt - clock;
+    const s = schedule(clock, clock, every, this.seed);
+    return scheduleStart(s.index + 1, every, this.seed) - clock;
   }
 
   /** Forces an accent at the given clock (lab). */

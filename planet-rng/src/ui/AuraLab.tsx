@@ -37,10 +37,11 @@ function install(): void {
   (window as unknown as Record<string, unknown>).__lab = {
     show,
     step: (s: number) => stage()?.step(s),
-    accent: (after = 0.5) => {
+    /** Fires the accent `lead` seconds from now and steps `after` seconds. */
+    accent: (after = 0.5, lead = 0) => {
       const st = stage();
       if (!st) return;
-      st.vfx.triggerAccent(st.clock());
+      st.vfx.triggerAccent(st.clock() + lead);
       st.step(after);
     },
     intro: (after = 0) => {
@@ -166,7 +167,7 @@ export function AuraLab() {
       </div>
       <div class="lab__row">
         <button onClick={() => st?.vfx.replayIntro()}>Intro</button>
-        <button onClick={() => st && st.vfx.triggerAccent(st.clock())}>Akzent</button>
+        <button onClick={() => st && st.vfx.triggerAccent(st.clock() + 1.6)}>Akzent</button>
         <button
           onClick={() => {
             if (!st) return;
