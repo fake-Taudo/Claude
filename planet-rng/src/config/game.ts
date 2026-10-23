@@ -35,9 +35,9 @@ export const GAME = {
     /** White fades out to reveal the aura. */
     revealMs: 700,
     /** Rotation speed at the start and the end of the grow phase (deg/s). */
-    rotStartDegPerSec: 220,
-    rotEndDegPerSec: 520,
-    /** Shape of the acceleration curve, tuned so the symbol turns about 11 times. */
+    rotStartDegPerSec: 110,
+    rotEndDegPerSec: 260,
+    /** Shape of the acceleration curve, tuned so the symbol turns about 5.5 times. */
     rotCurve: 0.705,
     /** Symbol scale at start and end of the grow phase, relative to min(viewport) / 60. */
     scaleFrom: 0.05,

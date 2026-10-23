@@ -24,8 +24,9 @@ Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.
   Cutscene. Vibration bei seltenen Drops.
 
 **Cutscenes (26 Stück, ab 1 in 10.000)**
-- Baukasten mit Timeline: 3 s Schwarz, 10 s linear wachsendes Symbol mit Drehung von 220°/s auf
-  520°/s (etwa 11 Umdrehungen), Klimax-Phase je Stufe (länger und aufwendiger, je seltener),
+- Baukasten mit Timeline: 3 s Schwarz, 10 s linear wachsendes Symbol mit Drehung von 110°/s auf
+  260°/s (etwa 5,5 Umdrehungen), der Stern liegt immer vorne, keine Ringe um den Stern,
+  Klimax-Phase je Stufe (länger und aufwendiger, je seltener),
   Weißblende, Enthüllung. 22 wiederverwendbare Bausteine; die Stile des Prototyps (Classic,
   Burst, Decay, Duality, Prism) sind nachgebaut, jede neue Aura hat ein eigenes Symbol.
 - Deep Boom startet exakt mit der Cutscene, Roll gesperrt, Auto Roll wartet, Überspringen per

@@ -8,7 +8,7 @@ import type { AuraDef, CutsceneDef } from './types';
 
 const SPECTRUM = ['#ff5a5a', '#ffcf4a', '#5aff8f', '#4ac9ff', '#c94aff'];
 
-/** Classic prototype cutscene: circle with a four-pointed star. */
+/** Classic prototype cutscene: soft glow with a four-pointed star. */
 function classic(palette: string[], extra: CutsceneDef['layers'] = [], backdrop: CutsceneDef['backdrop'] = 'stars', climax: CutsceneDef['climax'] = 'none'): CutsceneDef {
   return {
     palette,
@@ -16,9 +16,9 @@ function classic(palette: string[], extra: CutsceneDef['layers'] = [], backdrop:
     climax,
     layers: [
       { kind: 'glow', r: 46, color: 0, alpha: 0.35 },
-      { kind: 'circle', r: 30, width: 3, color: 0, fill: true },
+      { kind: 'glow', r: 24, color: 0, alpha: 0.5 },
       ...extra,
-      { kind: 'star', points: 4, r: 15, inner: 0.32, color: 0, fill: true },
+      { kind: 'star', points: 4, r: 21, inner: 0.32, color: 0, fill: true },
     ],
   };
 }
@@ -186,8 +186,8 @@ export const AURAS: AuraDef[] = [
       backdrop: 'void', climax: 'none',
       layers: [
         { kind: 'orbiters', count: 40, r: 38, color: 0, param: 0.8 },
-        { kind: 'circle', r: 22, width: 3, color: 0, fill: true },
-        { kind: 'star', points: 4, r: 12, inner: 0.3, color: 1, fill: true },
+        { kind: 'glow', r: 18, color: 0, alpha: 0.5 },
+        { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 1, fill: true },
       ],
     },
   },
@@ -201,8 +201,7 @@ export const AURAS: AuraDef[] = [
       layers: [
         { kind: 'glow', r: 48, color: 0, alpha: 0.3 },
         { kind: 'moon', r: 26, color: 0, color2: 2 },
-        { kind: 'circle', r: 34, width: 2, color: 0 },
-        { kind: 'star', points: 4, r: 12, inner: 0.3, color: 0, fill: true },
+        { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 0, fill: true },
       ],
     },
   },
@@ -216,8 +215,7 @@ export const AURAS: AuraDef[] = [
       layers: [
         { kind: 'glow', r: 50, color: 0, alpha: 0.35 },
         { kind: 'wings', count: 6, r: 44, color: 1, color2: 2 },
-        { kind: 'circle', r: 24, width: 2.5, color: 0 },
-        { kind: 'star', points: 6, r: 14, inner: 0.45, color: 1, fill: true },
+        { kind: 'star', points: 6, r: 19.6, inner: 0.45, color: 1, fill: true },
       ],
     },
   },
@@ -229,10 +227,9 @@ export const AURAS: AuraDef[] = [
       palette: ['#00e5c0', '#ff3d9a', '#b8fff0'],
       backdrop: 'static', climax: 'none',
       layers: [
-        { kind: 'circle', r: 30, width: 3, color: 0, dash: [10, 6] },
         { kind: 'rift', r: 40, count: 3, color: 1 },
         { kind: 'pixels', r: 40, count: 18, color: 2 },
-        { kind: 'star', points: 4, r: 14, inner: 0.3, color: 0, fill: true },
+        { kind: 'star', points: 4, r: 19.6, inner: 0.3, color: 0, fill: true },
       ],
     },
   },
@@ -241,7 +238,7 @@ export const AURAS: AuraDef[] = [
     id: 'ewigkeit', name: 'Ewigkeit', tier: 'transcendent', odds: 100000, sell: 6, title: 'Ewig',
     colors: { main: '#ffd76a', glow: '#ffffff', accent: '#c9a7ff', palette: SPECTRUM },
     description: 'Durchläuft endlos das Farbspektrum, Ringe drehen gegeneinander.',
-    cutscene: classic(['#ffd76a', '#ffffff', '#c9a7ff'], [{ kind: 'circle', r: 30, width: 3, color: 'spectrum' }], 'stars', 'stall'),
+    cutscene: classic(['#ffd76a', '#ffffff', '#c9a7ff'], [], 'stars', 'stall'),
   },
   {
     id: 'chronosphaere', name: 'Chronosphäre', tier: 'transcendent', odds: 150000, sell: 8, title: 'Herr der Zeit',
@@ -253,7 +250,7 @@ export const AURAS: AuraDef[] = [
       layers: [
         { kind: 'glow', r: 46, color: 0, alpha: 0.3 },
         { kind: 'clock', r: 32, color: 1, color2: 0 },
-        { kind: 'star', points: 4, r: 8, inner: 0.35, color: 0, fill: true },
+        { kind: 'star', points: 4, r: 11.2, inner: 0.35, color: 0, fill: true },
       ],
     },
   },
@@ -266,10 +263,9 @@ export const AURAS: AuraDef[] = [
       backdrop: 'void', climax: 'converge',
       layers: [
         { kind: 'glow', r: 44, color: 1, alpha: 0.4 },
-        { kind: 'circle', r: 28, width: 4, color: 0 },
         { kind: 'circle', r: 25, width: 0, color: 2, fill: true },
         { kind: 'sparkles', count: 30, r: 70, color: 0, param: -1 },
-        { kind: 'star', points: 4, r: 10, inner: 0.3, color: 0, fill: true },
+        { kind: 'star', points: 4, r: 14, inner: 0.3, color: 0, fill: true },
       ],
     },
   },
@@ -305,7 +301,7 @@ export const AURAS: AuraDef[] = [
       layers: [
         { kind: 'spiral', r: 52, count: 2, color: 0, color2: 1 },
         { kind: 'glow', r: 26, color: 2, alpha: 0.7 },
-        { kind: 'star', points: 4, r: 12, inner: 0.3, color: 2, fill: true },
+        { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 2, fill: true },
       ],
     },
   },
@@ -318,8 +314,8 @@ export const AURAS: AuraDef[] = [
       backdrop: 'void', climax: 'pulse',
       layers: [
         { kind: 'fieldLines', r: 48, count: 6, color: 0, color2: 1 },
-        { kind: 'circle', r: 20, width: 3, color: 2, fill: true },
-        { kind: 'star', points: 4, r: 11, inner: 0.3, color: 2, fill: true },
+        { kind: 'glow', r: 16, color: 2, alpha: 0.5 },
+        { kind: 'star', points: 4, r: 15.4, inner: 0.3, color: 2, fill: true },
       ],
     },
   },
@@ -329,8 +325,6 @@ export const AURAS: AuraDef[] = [
     colors: { main: '#7a5cff', glow: '#b39dff', accent: '#4a2fbf', palette: ['#7a5cff', '#4ac9ff', '#ff4ad0'] },
     description: 'Drei Ringe in Violett, Cyan und Magenta, flackernde Linsen zwischen den Welten.',
     cutscene: classic(['#b39dff', '#4ac9ff', '#ff4ad0'], [
-      { kind: 'circle', r: 30, width: 2, color: 1, offset: [4, 0] },
-      { kind: 'circle', r: 30, width: 2, color: 2, offset: [-4, 0] },
     ], 'stars', 'pulse'),
   },
   {
@@ -342,8 +336,7 @@ export const AURAS: AuraDef[] = [
       backdrop: 'void', climax: 'converge',
       layers: [
         { kind: 'web', r: 46, count: 12, color: 0, color2: 1 },
-        { kind: 'circle', r: 20, width: 2.5, color: 0 },
-        { kind: 'star', points: 4, r: 11, inner: 0.3, color: 2, fill: true },
+        { kind: 'star', points: 4, r: 15.4, inner: 0.3, color: 2, fill: true },
       ],
     },
   },
@@ -371,8 +364,7 @@ export const AURAS: AuraDef[] = [
       backdrop: 'stars', climax: 'pulse',
       layers: [
         { kind: 'cells', r: 40, count: 6, color: 0, color2: 1 },
-        { kind: 'circle', r: 28, width: 2.5, color: 1 },
-        { kind: 'star', points: 4, r: 12, inner: 0.3, color: 2, fill: true },
+        { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 2, fill: true },
       ],
     },
   },
@@ -385,9 +377,8 @@ export const AURAS: AuraDef[] = [
       palette: ['#8a92a5', '#5a6478', '#c0c6d4'],
       backdrop: 'static', climax: 'shatter',
       layers: [
-        { kind: 'circle', r: 30, width: 2, color: 0, dash: [8, 5] },
         { kind: 'cracks', count: 5, r: 34, color: 2 },
-        { kind: 'star', points: 4, r: 12, inner: 0.3, color: 1, fill: true, alpha: 0.75 },
+        { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 1, fill: true, alpha: 0.75 },
       ],
     },
   },
@@ -400,9 +391,8 @@ export const AURAS: AuraDef[] = [
       backdrop: 'snow', climax: 'stall',
       layers: [
         { kind: 'glow', r: 40, color: 0, alpha: 0.4 },
-        { kind: 'circle', r: 30, width: 2.5, color: 1 },
         { kind: 'sparkles', count: 20, r: 50, color: 0, param: 1 },
-        { kind: 'star', points: 4, r: 13, inner: 0.3, color: 0, fill: true },
+        { kind: 'star', points: 4, r: 18.2, inner: 0.3, color: 0, fill: true },
       ],
     },
   },
@@ -415,10 +405,10 @@ export const AURAS: AuraDef[] = [
       palette: ['#ff5a3c', '#4ac9ff', '#ffffff'],
       backdrop: 'stars', climax: 'rewind',
       layers: [
-        { kind: 'circle', r: 24, width: 3, color: 0, fill: true, offset: [-16, 0] },
-        { kind: 'star', points: 4, r: 12, inner: 0.3, color: 0, fill: true, offset: [-16, 0] },
-        { kind: 'circle', r: 24, width: 3, color: 1, fill: true, offset: [16, 0] },
-        { kind: 'star', points: 4, r: 12, inner: 0.3, color: 1, fill: true, offset: [16, 0] },
+        { kind: 'glow', r: 19, color: 0, alpha: 0.5, offset: [-16, 0] },
+        { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 0, fill: true, offset: [-16, 0] },
+        { kind: 'glow', r: 19, color: 1, alpha: 0.5, offset: [16, 0] },
+        { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 1, fill: true, offset: [16, 0] },
       ],
     },
   },
@@ -431,7 +421,7 @@ export const AURAS: AuraDef[] = [
       backdrop: 'stars', climax: 'rewind',
       layers: [
         { kind: 'mobius', r: 40, color: 0, color2: 1 },
-        { kind: 'star', points: 4, r: 12, inner: 0.3, color: 2, fill: true },
+        { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 2, fill: true },
       ],
     },
   },
@@ -445,8 +435,7 @@ export const AURAS: AuraDef[] = [
       backdrop: 'spectrum', climax: 'pulse',
       layers: [
         { kind: 'glow', r: 48, color: 'spectrum', alpha: 0.35 },
-        { kind: 'prismRings', count: 3, r: 35 },
-        { kind: 'star', points: 4, r: 13, inner: 0.3, color: 'spectrum', fill: true },
+        { kind: 'star', points: 4, r: 18.2, inner: 0.3, color: 'spectrum', fill: true },
       ],
     },
   },
@@ -459,8 +448,7 @@ export const AURAS: AuraDef[] = [
       backdrop: 'spectrum', climax: 'supernova',
       layers: [
         { kind: 'rays', count: 16, r: 70, color: 0, alpha: 0.45 },
-        { kind: 'prismRings', count: 2, r: 30 },
-        { kind: 'star', points: 8, r: 18, inner: 0.4, color: 1, fill: true },
+        { kind: 'star', points: 8, r: 25.2, inner: 0.4, color: 1, fill: true },
       ],
     },
   },
@@ -473,10 +461,8 @@ export const AURAS: AuraDef[] = [
       palette: ['#ffffff', '#888888', '#000000'],
       backdrop: 'void', climax: 'invert',
       layers: [
-        { kind: 'circle', r: 34, width: 1.5, color: 0 },
         { kind: 'polygon', points: 4, r: 30, width: 1.5, color: 0, spin: 0.5 },
-        { kind: 'circle', r: 22, width: 1.5, color: 0 },
-        { kind: 'star', points: 4, r: 14, inner: 0.25, color: 0, fill: true },
+        { kind: 'star', points: 4, r: 19.6, inner: 0.25, color: 0, fill: true },
       ],
     },
   },
@@ -491,8 +477,7 @@ export const AURAS: AuraDef[] = [
         { kind: 'polygon', points: 3, r: 38, width: 2, color: 0, spin: 0.4 },
         { kind: 'polygon', points: 4, r: 30, width: 2, color: 2, spin: -0.5 },
         { kind: 'polygon', points: 6, r: 22, width: 2, color: 0, spin: 0.7 },
-        { kind: 'circle', r: 14, width: 2, color: 1 },
-        { kind: 'star', points: 4, r: 9, inner: 0.3, color: 1, fill: true },
+        { kind: 'star', points: 4, r: 12.6, inner: 0.3, color: 1, fill: true },
       ],
     },
   },
@@ -507,8 +492,7 @@ export const AURAS: AuraDef[] = [
       layers: [
         { kind: 'glow', r: 44, color: 0, alpha: 0.35 },
         { kind: 'lemniscate', r: 44, color: 0, color2: 1 },
-        { kind: 'circle', r: 16, width: 2, color: 1 },
-        { kind: 'star', points: 4, r: 10, inner: 0.3, color: 2, fill: true },
+        { kind: 'star', points: 4, r: 14, inner: 0.3, color: 2, fill: true },
       ],
     },
   },
@@ -522,9 +506,8 @@ export const AURAS: AuraDef[] = [
       layers: [
         { kind: 'rays', count: 18, r: 80, color: 1, alpha: 0.5 },
         { kind: 'glow', r: 46, color: 'spectrum', alpha: 0.5 },
-        { kind: 'prismRings', count: 3, r: 38 },
         { kind: 'orbiters', count: 8, r: 50, color: 'spectrum', param: 1.5 },
-        { kind: 'star', points: 8, r: 18, inner: 0.4, color: 0, fill: true },
+        { kind: 'star', points: 8, r: 25.2, inner: 0.4, color: 0, fill: true },
       ],
     },
   },

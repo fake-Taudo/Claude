@@ -1,7 +1,7 @@
 // Cutscene toolkit. Standard flow (from the prototype):
 //   1. 3 s completely black
 //   2. 10 s: a symbol in the aura colours grows linearly and spins ever faster
-//      (220°/s -> 520°/s, about 11 turns)
+//      (110°/s -> 260°/s, about 5.5 turns); its star is always drawn in front
 //   3. rarer tiers: an extra climax phase (stall, converge, shatter, pulse, ...)
 //   4. the symbol fills the screen while a white flash rises -> reveal
 // Each aura composes its symbol from reusable layers (config: aura.cutscene).
@@ -240,7 +240,9 @@ export class CutsceneRunner implements CutscenePlayer {
     ctx.setTransform(scale * Math.cos(rad), scale * Math.sin(rad), -scale * Math.sin(rad), scale * Math.cos(rad), cx + jx, cy + jy);
     ctx.globalAlpha = symbolAlpha;
     const time = t / 1000;
-    for (const layer of def.layers) this.drawLayer(ctx, layer, def.palette, time);
+    // The star sits in front of everything else in the symbol.
+    for (const layer of def.layers) if (layer.kind !== 'star') this.drawLayer(ctx, layer, def.palette, time);
+    for (const layer of def.layers) if (layer.kind === 'star') this.drawLayer(ctx, layer, def.palette, time);
     ctx.globalAlpha = 1;
 
     // Climax extras in screen space.

@@ -265,3 +265,15 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   erlauben“ aus ist.
 - Läuft gerade ein Wurf (z. B. Auto Roll), startet die Cutscene direkt nach diesem Wurf;
   Auto Roll geht danach weiter.
+
+## Cutscenes: Stern im Vordergrund (Rückmeldung)
+
+- Die Ringe um den Stern sind entfernt: reine Kreislinien, die Regenbogenringe (Omniversum,
+  Schöpfung, Weltenkern) und die Ränder gefüllter Kreise (Akkretion, Magnetar, Paradoxon und die
+  klassische Vorlage), die zu einem weichen Leuchten ohne Rand geworden sind. Massive Scheiben,
+  die selbst das Motiv sind (Urknall- und Supernova-Kern, das schwarze Loch des
+  Ereignishorizonts), bleiben.
+- Sterne sind 1,4-mal so groß und werden immer zuletzt gezeichnet, liegen also vor allen anderen
+  Teilen des Symbols.
+- Drehung halbiert: 110°/s → 260°/s statt 220°/s → 520°/s (etwa 5,5 statt 11 Umdrehungen).
+  Die Aura-Effekte selbst brauchten dafür keine Änderung.
