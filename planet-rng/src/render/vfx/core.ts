@@ -242,6 +242,8 @@ export interface InstanceOptions {
   skipIntro?: boolean;
   /** VFX tier override (lab). */
   tier?: VTier;
+  /** Build no layers in the constructor (texture pre-baking creates them one by one). */
+  lazy?: boolean;
 }
 
 export class AuraInstance {
@@ -284,7 +286,7 @@ export class AuraInstance {
       this.age = this.introDur;
       this.introT = 1;
     }
-    this.layers = spec.layers.map((l, i) => factory(l, this, i));
+    if (!opts.lazy) this.layers = spec.layers.map((l, i) => factory(l, this, i));
   }
 
   get reduced(): boolean {

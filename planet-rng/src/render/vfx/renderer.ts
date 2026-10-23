@@ -39,6 +39,8 @@ export class VfxRenderer {
   /** Lab overrides. */
   tierOverride: VTier | undefined;
   disabledLayers = new Set<number>();
+  /** Aura whose textures are being baked ahead of time, one slice per frame. */
+  private warm: { inst: AuraInstance; next: number } | null = null;
 
   constructor(
     private quality: () => Quality,
@@ -114,7 +116,32 @@ export class VfxRenderer {
     if (cur && cur.layers[index]) cur.layers[index].enabled = on;
   }
 
+  /**
+   * Bakes the textures of an aura that is likely to be equipped soon (a rare roll in
+   * progress), spread over the next frames, so the equip itself does not hitch.
+   */
+  prewarm(aura: AuraDef): void {
+    if (aura.id === this.currentId || this.warm?.inst.aura.id === aura.id) return;
+    const inst = new AuraInstance(aura, vfxOf(aura), createLayer, { quality: this.quality, reduced: this.reduced, lazy: true });
+    this.warm = { inst, next: 0 };
+  }
+
+  private warmSlice(): void {
+    const w = this.warm;
+    if (!w) return;
+    const specs = w.inst.spec.layers;
+    const t0 = performance.now();
+    // Constructing a layer bakes its textures into the shared cache; the layer is dropped.
+    // At least one layer per frame (the budget check passes right after t0).
+    while (w.next < specs.length && performance.now() - t0 < VFX.prewarmMsPerFrame) {
+      const i = w.next++;
+      createLayer(specs[i], w.inst, i);
+    }
+    if (w.next >= specs.length) this.warm = null;
+  }
+
   update(env: FrameEnv): void {
+    this.warmSlice();
     for (const i of this.instances) i.update(env);
     const dead = this.instances.filter((i) => i.dead);
     if (dead.length) {

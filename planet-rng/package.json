@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "balance": "tsx scripts/balance.ts",
+    "vfx:review": "tsx scripts/vfx-review.ts",
     "e2e": "playwright test"
   },
   "devDependencies": {

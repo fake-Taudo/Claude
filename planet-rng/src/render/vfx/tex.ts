@@ -12,6 +12,9 @@ export type Tex = HTMLCanvasElement;
 
 const cache = new Map<string, Tex>();
 let pixels = 0;
+/** Bake time per texture kind in ms (lab statistics). */
+const bakeMs = new Map<string, number>();
+const keyOf = new WeakMap<Tex, string>();
 
 function canvas(w: number, h: number): Tex {
   const c = document.createElement('canvas');
@@ -28,8 +31,12 @@ function cached(key: string, make: () => Tex): Tex {
     cache.set(key, hit);
     return hit;
   }
+  const t0 = performance.now();
   const t = make();
+  const kind = key.slice(0, key.indexOf('|') >>> 0);
+  bakeMs.set(kind, (bakeMs.get(kind) ?? 0) + performance.now() - t0);
   cache.set(key, t);
+  keyOf.set(t, key);
   pixels += t.width * t.height;
   const budget = VFX.textureBudgetMp * 1e6;
   for (const [k, v] of cache) {
@@ -40,8 +47,10 @@ function cached(key: string, make: () => Tex): Tex {
   return t;
 }
 
-export function textureStats(): { count: number; megapixels: number } {
-  return { count: cache.size, megapixels: Math.round(pixels / 1e4) / 100 };
+export function textureStats(): { count: number; megapixels: number; bakeMs: Record<string, number> } {
+  const by: Record<string, number> = {};
+  for (const [k, v] of [...bakeMs].sort((p, q) => q[1] - p[1])) by[k] = Math.round(v * 10) / 10;
+  return { count: cache.size, megapixels: Math.round(pixels / 1e4) / 100, bakeMs: by };
 }
 
 type Px = [number, number, number, number];
@@ -83,14 +92,19 @@ const NONE: Px = [0, 0, 0, 0];
 // ---------------------------------------------------------------------------
 
 const GRID = 128;
+/** Distinct noise variants per (octaves, base). Building a grid is the expensive part of a
+ * bake, so seeds map onto a small set that is shared by all textures and auras. Seeds that
+ * differ by less than this within one texture still get different grids. */
+const GRID_VARIANTS = 8;
 const grids = new Map<string, Float32Array>();
 
 function grid(octaves: number, base: number, seed: number): Float32Array {
-  const key = `${octaves}|${base}|${seed}`;
+  const variant = ((Math.round(seed) % GRID_VARIANTS) + GRID_VARIANTS) % GRID_VARIANTS;
+  const key = `${octaves}|${base}|${variant}`;
   let g = grids.get(key);
   if (!g) {
     g = new Float32Array(GRID * GRID);
-    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) g[y * GRID + x] = fbm(x / GRID, y / GRID, octaves, base, seed);
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) g[y * GRID + x] = fbm(x / GRID, y / GRID, octaves, base, variant * 97 + 11);
     grids.set(key, g);
   }
   return g;
@@ -617,9 +631,9 @@ export function puffTex(color: string, variant: number): Tex {
 }
 
 /** Nebula cloud: domain warped fractal noise in two or three colours. */
-export function nebulaTex(colors: string[], seed: number): Tex {
-  return cached(`nebula|${colors.join(',')}|${seed}`, () => {
-    const S = 256;
+export function nebulaTex(colors: string[], seed: number, size = 256): Tex {
+  return cached(`nebula|${colors.join(',')}|${seed}|${size}`, () => {
+    const S = size;
     const cols = colors.map(rgb01);
     const gw = grid(3, 2, seed);
     const gn = grid(5, 3, seed + 21);
@@ -755,9 +769,13 @@ export function coneTex(color: string, dust: boolean): Tex {
 
 /** Radial god rays around a centre. */
 export function raysTex(color: string, n: number, jitter: number, seed: number): Tex {
-  return cached(`rays|${color}|${n}|${jitter}|${seed}`, () => {
-    const S = 512;
-    const [r, g, b] = rgb01(color);
+  return tinted(raysShape(n, jitter, seed), color);
+}
+
+/** White ray crown; colour variants come from tinted(). */
+function raysShape(n: number, jitter: number, seed: number): Tex {
+  return cached(`raysShape|${n}|${jitter}|${seed}`, () => {
+    const S = 384;
     const widths: number[] = [];
     const lens: number[] = [];
     for (let i = 0; i < n; i++) {
@@ -775,8 +793,21 @@ export function raysTex(color: string, n: number, jitter: number, seed: number):
       const ray = Math.exp(-((local / w) ** 2) * 2) * clamp01(1 - d / lens[i]) ** 1.5;
       const inner = clamp01(d / 0.12);
       const glow = Math.exp(-d * d * 6) * 0.25;
-      return px(r, g, b, (ray * 0.9 + glow) * inner);
+      return px(1, 1, 1, (ray * 0.9 + glow) * inner);
     });
+  });
+}
+
+/** A white texture recoloured on the GPU (keeps its alpha, takes the colour). */
+function tinted(white: Tex, color: string): Tex {
+  return cached(`tint|${color}|${white.width}x${white.height}|${keyOf.get(white) ?? ''}`, () => {
+    const c = canvas(white.width, white.height);
+    const ctx = c.getContext('2d')!;
+    ctx.drawImage(white, 0, 0);
+    ctx.globalCompositeOperation = 'source-in';
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, c.width, c.height);
+    return c;
   });
 }
 
@@ -807,16 +838,25 @@ export function spiralTex(color: string, color2: string, arms: number, twist: nu
 /** Soft ripple ring (thin version of a band, no variation). */
 export function ringTex(color: string, sharp: number): Tex {
   return cached(`ring|${color}|${sharp}`, () => {
-    // Thin rings need more texels or they turn to mush when scaled up.
+    // Gaussian band around 0.85 of the half size with a white-hot centre line, drawn as a
+    // radial gradient (sampled densely around the band) instead of pixel by pixel.
     const S = sharp > 24 ? 512 : 256;
-    const [r, g, b] = rgb01(color);
-    return paint(S, S, (u, v) => {
-      const d = Math.sqrt(u * u + v * v);
-      const x = (d - 0.85) * sharp;
-      const a = Math.exp(-x * x);
+    const c = canvas(S, S);
+    const ctx = c.getContext('2d')!;
+    const g = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+    const span = 3 / sharp;
+    g.addColorStop(0, rgba(color, 0));
+    for (let i = 0; i <= 24; i++) {
+      const t = 0.85 - span + (2 * span * i) / 24;
+      if (t <= 0 || t >= 1) continue;
+      const x = (t - 0.85) * sharp;
       const hot = Math.exp(-x * x * 6) * 0.5;
-      return px(r + (1 - r) * hot, g + (1 - g) * hot, b + (1 - b) * hot, a);
-    });
+      g.addColorStop(t, rgba(mix(color, '#ffffff', hot), Math.exp(-x * x)));
+    }
+    g.addColorStop(1, rgba(color, 0));
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, S, S);
+    return c;
   });
 }
 

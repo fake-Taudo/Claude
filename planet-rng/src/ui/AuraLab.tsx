@@ -28,6 +28,7 @@ function show(id: string, opts: { settle?: number; quality?: Quality; tier?: VTi
   st.labAura = id;
   st.vfx.disabledLayers.clear();
   st.vfx.setAura(AURA_BY_ID[id] ?? null, { force: true });
+  st.updateDprCap();
   labState.set(id);
   const inst = st.vfx.current;
   st.step((inst?.introDur ?? 1) + 0.6 + (opts.settle ?? 4));
@@ -69,6 +70,33 @@ function install(): void {
       st.step(0);
     },
     stats: () => ({ ...stage()?.vfx.stats(), textures: textureStats(), frameMs: stage()?.frameTime }),
+    /** Cost of `frames` simulated frames in ms (update + draw, rasterisation forced by a 1 px readback). */
+    perf: (frames = 120) => {
+      const st = stage();
+      if (!st) return null;
+      const t: number[] = [];
+      for (let i = 0; i < frames; i++) {
+        const t0 = performance.now();
+        st.step(1 / 60);
+        st.ctx.getImageData(0, 0, 1, 1);
+        t.push(performance.now() - t0);
+      }
+      t.sort((a, b) => a - b);
+      const avg = t.reduce((s, v) => s + v, 0) / t.length;
+      return { avg: +avg.toFixed(2), p95: +t[Math.floor(t.length * 0.95)].toFixed(2), canvas: `${st.canvas.width}x${st.canvas.height}` };
+    },
+    /** Time to equip an aura and draw its first frame (texture baking included), in ms. */
+    equipCost: (id: string) => {
+      const st = stage();
+      if (!st) return null;
+      st.stop();
+      st.manual = true;
+      const t0 = performance.now();
+      st.vfx.setAura(AURA_BY_ID[id] ?? null, { force: true });
+      st.step(1 / 60);
+      st.ctx.getImageData(0, 0, 1, 1);
+      return +(performance.now() - t0).toFixed(1);
+    },
     meta: (id: string) => {
       const a = AURA_BY_ID[id];
       return a ? { name: a.name, title: a.title ?? '', tier: TIER_BY_ID[a.tier].name, vtier: vfxOf(a).tier } : null;

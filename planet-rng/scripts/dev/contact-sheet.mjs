@@ -1,5 +1,6 @@
 // Dev helper: renders every aura on a phone-portrait stage and composes a contact sheet.
-// Usage: node scripts/dev/contact-sheet.mjs <out.png> [tilesDir] [ids comma separated] [viewport WxH]
+// Usage: [HTML=path] node scripts/dev/contact-sheet.mjs <out.png> [tilesDir] [ids comma separated] [viewport WxH]
+// HTML points to another build (e.g. the old renderer extracted from git) for before/after.
 // Uses the aura lab API (window.__lab, deterministic clock) when the build has it,
 // otherwise equips each aura through the debug hook and waits (old renderer).
 import { chromium } from '@playwright/test';
@@ -17,7 +18,7 @@ const page = await browser.newPage({ viewport: { width: vw, height: vh }, device
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-await page.goto('file://' + resolve('dist/planet-rng.html') + '?debug&lab=1');
+await page.goto('file://' + resolve(process.env.HTML ?? 'dist/planet-rng.html') + '?debug&lab=1');
 await page.waitForTimeout(600);
 const hasLab = await page.evaluate(() => !!window.__lab);
 await page.evaluate(() => {

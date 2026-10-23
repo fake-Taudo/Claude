@@ -58,4 +58,7 @@ export const VFX = {
   reducedMotion: 0.25,
   /** Texture cache budget in megapixels. */
   textureBudgetMp: 14,
+  /** Pre-baking of a rolled aura: from this VFX tier up, with this time budget per frame (ms). */
+  prewarmFromTier: 3,
+  prewarmMsPerFrame: 8,
 };

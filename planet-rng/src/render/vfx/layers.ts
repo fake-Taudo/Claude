@@ -1026,7 +1026,8 @@ export class NebulaLayer extends Layer<NebulaSpec> {
     const cols = spec.colors.map((c) => inst.colStatic(c));
     const seed = spec.seed ?? (inst.seed % 500) + index;
     this.tex = nebulaTex(cols, seed);
-    this.tex2 = nebulaTex([...cols].reverse(), seed + 7);
+    // The second, counter-moving layer is drawn fainter and smaller: a lower resolution suffices.
+    this.tex2 = nebulaTex([...cols].reverse(), seed + 7, 160);
   }
 
   protected override defaultSlot(): Slot {

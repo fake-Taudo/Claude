@@ -4,7 +4,7 @@
 //   aura front/particles -> roll fx -> aura screen front -> biome tint -> title scrim
 
 import { AURA_BY_ID } from '../config';
-import { QUALITY_SHARE, VFX, VTIERS } from '../config/vfx';
+import { QUALITY_SHARE, VFX, VTIERS, vfxOf } from '../config/vfx';
 import type { Quality } from '../config/vfx/types';
 import { activeBiome } from '../core/biomes';
 import type { GameStore } from '../store/store';
@@ -106,6 +106,11 @@ export class Stage {
         this.planetFx.setLevel(game.state.rebirth, false);
         this.syncAura(false);
       }),
+      // A rare roll is on its way: bake its textures now so equipping it later is instant.
+      game.bus.on('rollStart', ({ aura }) => {
+        const a = AURA_BY_ID[aura];
+        if (a && vfxOf(a).tier >= VFX.prewarmFromTier) this.vfx.prewarm(a);
+      }),
       game.bus.on('rollAnim', ({ duration, aura }) => {
         if (!game.settings.quickRoll) this.rollFx.startCharge(duration, aura);
       }),
@@ -116,7 +121,7 @@ export class Stage {
           this.quality = s.vfxQuality;
           this.autoQuality = 'high';
           this.slowFor = 0;
-          this.resize();
+          this.updateDprCap(true);
         }
       }),
     );
@@ -137,11 +142,11 @@ export class Stage {
     this.updateDprCap();
   }
 
-  /** Phones get a lower DPR while a V5/V6 aura is shown. */
-  private updateDprCap(): void {
+  /** DPR cap of the quality; phones get a lower DPR while a V5/V6 aura is shown. */
+  updateDprCap(force = false): void {
     let cap = DPR_CAP[this.effectiveQuality()];
     if (coarse()) cap = Math.min(cap, VTIERS[this.vfx.maxTier()].mobileDpr);
-    if (cap !== this.dprCap) {
+    if (cap !== this.dprCap || force) {
       this.dprCap = cap;
       this.resize();
     }

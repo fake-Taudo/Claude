@@ -31,6 +31,7 @@ npm run build      # Typecheck + Build -> planet-rng.html (und dist/planet-rng.h
 npm test           # Unit-Tests (Vitest)
 npm run e2e        # Playwright-Smoke-Tests gegen dist/planet-rng.html (vorher bauen)
 npm run balance    # Balancing-Simulation, schreibt BALANCING.md
+npm run vfx:review # Prüfliste aller Aura-Effekte, schreibt docs/vfx/aura-review.md
 ```
 
 ### Aufbau
@@ -39,6 +40,11 @@ npm run balance    # Balancing-Simulation, schreibt BALANCING.md
 src/config/   Alle Inhalte und Zahlen: Auren (auras.ts), Stufen (tiers.ts), Tränke und Rezepte
               (potions.ts), Shop (shop.ts), Rebirth (rebirth.ts), Biome (biomes.ts),
               Erfolge und Quests (meta.ts), Planet (planet.ts), Timings (game.ts)
+src/config/vfx/  Aura-Effekte: eine Spec pro Aura (specs/v0-v2.ts … v6.ts), VFX-Stufen V0–V6
+              mit Budgets (tiers.ts), Spec-Format mit Einheiten (types.ts)
+src/render/vfx/  Schicht-Engine der Aura-Effekte: Instanzen, Slots, Licht (core.ts), Schichttypen
+              (layers.ts, particles.ts), gebackene Texturen (tex.ts, sigil.ts), Heroes je Aura
+              (heroes/), Bühnenbehandlung und Kamera (renderer.ts)
 src/core/     Reine Spiellogik ohne DOM: Zufall, Roll-Modell, Modifikatoren, Aktionen,
               Shop-Rotation, Biome, Quests, Offline-Nachholen, Speicherformat, Formatierung
 src/store/    Zustand, Event-Bus, Persistenz, Einstellungen, UI-Zustand
@@ -60,7 +66,12 @@ Alle Werte stehen in `src/config/`. Beispiele:
 - Rebirth-Kosten und Multiplikatoren: `rebirth.ts`.
 - Roll-Dauer, Auto-Faktor, Glücks-Roll, Cutscene-Timings: `game.ts`.
 
-Nach einer Änderung `npm test` und `npm run balance` laufen lassen.
+- Aura-Optik: die Spec der Aura in `src/config/vfx/specs/` (Größen in D = Planetendurchmesser,
+  Drehungen in °/s, Zeiten in s). Budgets je Stufe in `src/config/vfx/tiers.ts`. Eine neue Aura
+  braucht nur eine Spec; ein eigenes Hero-Motiv kommt nach `src/render/vfx/heroes/`.
+
+Nach einer Änderung `npm test` und `npm run balance` laufen lassen (bei Aura-Optik zusätzlich
+das Aura-Labor und `npm run vfx:review`).
 
 ### Entwickler-Helfer
 
@@ -70,7 +81,17 @@ Ordner heraus und nach `npm run build` starten), z. B.:
 - `node scripts/dev/gallery.mjs <ordner>`: jede Aura auf der Bühne fotografieren
 - `node scripts/dev/cutscene-all.mjs <ordner> 11500`: ein Bild jeder Cutscene
 - `node scripts/dev/panels.mjs <ordner> 844 390 land`: alle Menüs in einer Bildschirmgröße
-- `node scripts/dev/soak.mjs 4`: Dauerlauf mit Auto Roll (Speicher, Bildrate, Fehler)
+- `node scripts/dev/soak.mjs 5`: Dauerlauf mit Auto Roll und wechselnden Auren (Speicher,
+  Bildrate, Textur-Cache, Fehler)
+- `node scripts/dev/lab-shot.mjs <ordner> urlicht,seraph [390x844] [high] [accent|intro:1.2]`:
+  deterministische Bilder aus dem Aura-Labor (`CLOCK=…` für einen anderen Zeitpunkt)
+- `node scripts/dev/contact-sheet.mjs <bild.png>`: Kontaktbogen aller Auren
+  (`HTML=…` für einen anderen Build, z. B. den alten Stand aus Git)
+- `node scripts/dev/perf.mjs <aus.json>`: Kosten je Aura und Qualität und Equip-Zeit
+
+**Aura-Labor:** `planet-rng.html?lab=1` öffnet ein Labor-Panel: Aura wählen, VFX-Stufe und
+Qualität umschalten, Intro wiederholen, Akzent auslösen, Schichten einzeln an/aus, Hintergrund
+hell/dunkel, FPS und Partikelzahl. Der Speicherstand bleibt dabei unverändert.
 
 ## Dokumente
 
@@ -78,3 +99,4 @@ Ordner heraus und nach `npm run build` starten), z. B.:
 - [BALANCING.md](BALANCING.md): Verteilung, Gold pro Stunde, Spieler-Simulation, Tränke
 - [ABSCHLUSSBERICHT.md](ABSCHLUSSBERICHT.md): was gebaut ist und was offen bleibt
 - [PLAN.md](PLAN.md): Architektur und Phasen
+- [docs/vfx/aura-review.md](docs/vfx/aura-review.md): Prüfliste der Aura-Effekte je Aura

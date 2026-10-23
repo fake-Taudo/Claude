@@ -1256,7 +1256,8 @@ export class WorldHeart extends Hero {
     super(spec, inst, index);
     this.core = glowTex(mix(this.colorStatic('color', 'hue'), '#ffffff', 0.5), 'core');
     this.glow = glowTex(this.colorStatic('color', 'hue'), 'soft');
-    this.rays = [0, 120, 240].map((h, i) => raysTex(spectral(h), 18, 0.7, (inst.seed % 50) + i));
+    // One ray shape in three spectral tints; the three crowns turn at different speeds.
+    this.rays = [0, 120, 240].map((h) => raysTex(spectral(h), 18, 0.7, inst.seed % 50));
     const n = this.num('worlds', 7);
     for (let i = 0; i < n; i++) {
       const col = spectral((i / n) * 360);
