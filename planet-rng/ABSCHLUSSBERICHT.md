@@ -29,6 +29,11 @@ Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.
   Klimax-Phase je Stufe (länger und aufwendiger, je seltener),
   Weißblende, Enthüllung. 22 wiederverwendbare Bausteine; die Stile des Prototyps (Classic,
   Burst, Decay, Duality, Prism) sind nachgebaut, jede neue Aura hat ein eigenes Symbol.
+- Dramaturgie in fünf Akten nach dem Sol's-RNG-Bauplan (eigene Motive und Texte): Schwarz mit
+  Jingle, Nebel und Themenpartikel mit Wind, Texttafeln und eine Rampe (Blitze, Ticken, Zähler),
+  Doppelpuls und ein Bruch (Zerspringen in Scherben, Halbieren, Einfrieren …), glühende Ränder
+  und Weißblende; drei Ausbaustufen nach Seltenheit, die seltensten mit Kinobalken und einem
+  Nachhall auf der Bühne (Graustufen, Lichtsäule, Donner).
 - Deep Boom startet exakt mit der Cutscene, Roll gesperrt, Auto Roll wartet, Überspringen per
   Tipp, wenn erlaubt.
 - Jede entdeckte Aura mit Cutscene lässt sich in der Sammlung über „Cutscene abspielen“ erneut
@@ -62,9 +67,9 @@ Das Spiel ist komplett neu gebaut. Ergebnis ist eine einzige Datei, `planet-rng.
 - Speicherstand mit Version, Migrationen, Bereinigung, Backup-Slot, Autosave, Export-Code.
 - Zeitbasiertes über absolute Zeitstempel; AFK-Nachholen (Hintergrund 100 %, geschlossen 50 %,
   max. 8 h) mit Zusammenfassung.
-- 79 Unit-Tests (RNG, Roll-Modell, Stapelregeln, Buffs, Crafting, Shop-Rotation, Rebirth,
+- 86 Unit-Tests (RNG, Roll-Modell, Stapelregeln, Buffs, Crafting, Shop-Rotation, Rebirth,
   Speicherstand, Biome, Offline, Formatierung, Cutscene-Zeitkurve, Prüfliste der
-  Aura-Effekte, automatische VFX-Qualität), 4 Playwright-Szenarien auf
+  Aura-Effekte, automatische VFX-Qualität, Cutscene-Dramaturgie), 4 Playwright-Szenarien auf
   Handy- und Desktop-Viewport (kompletter Spielablauf bis Reload, Export/Import, beschädigter
   Speicherstand, Cutscene erneut ansehen).
 - Balancing-Skript mit Monte-Carlo (5 Mio. Rolls je Luck-Stufe) und Spieler-Simulation auf der

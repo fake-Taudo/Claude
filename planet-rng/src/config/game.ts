@@ -42,6 +42,21 @@ export const GAME = {
     /** Symbol scale at start and end of the grow phase, relative to min(viewport) / 60. */
     scaleFrom: 0.05,
     scaleTo: 0.5,
+    /**
+     * Template stages by rarity rank (see DECISIONS.md, "Cutscene-Dramaturgie"): from
+     * `plusFromRank` the first text line and the ramp, from `topFromRank` all text lines,
+     * letterbox bars and the after-echo on the stage.
+     */
+    plusFromRank: 9,
+    topFromRank: 13,
+    /** Double pulse of the symbol at these fractions of the grow phase. */
+    pulseAt: [0.86, 0.94],
+    /** The screen edges glow during this many ms before the white flash. */
+    edgeMs: 1600,
+    /** Shortest interval of the light-flash ramp (ms; 340 ms keeps flicker below 3 Hz). */
+    flashMinMs: 340,
+    /** After-echo on the stage (top stage): monochrome, beam of light, thunder (ms). */
+    echoMs: 1600,
   },
 
   offline: {

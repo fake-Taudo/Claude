@@ -25,6 +25,8 @@ export type BusEvents = {
   /** A result is revealed to the player. */
   reveal: { aura: string; isNew: boolean; lucky: boolean; luck: number; quick: boolean; afterCutscene: boolean };
   cutscene: { aura: string; phase: 'start' | 'reveal' | 'end' };
+  /** Timed moments inside a running cutscene (audio follows the picture). */
+  cutsceneCue: { aura: string; cue: 'jingle' | 'pulse' | 'tick' | 'flash' | 'break' | 'skip'; kind?: string };
   toast: ToastSpec;
   settings: Settings;
   /** UI feedback hooks (particles at a screen position). */

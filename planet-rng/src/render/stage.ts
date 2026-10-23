@@ -3,13 +3,14 @@
 //   background -> stage treatment -> aura smoke/hero/beams/ground -> planet ->
 //   aura front/particles -> roll fx -> aura screen front -> biome tint -> title scrim
 
-import { AURA_BY_ID } from '../config';
+import { AURA_BY_ID, GAME, tierOf } from '../config';
 import { DPR_OF_QUALITY, QUALITY_SHARE, VFX, VTIERS, vfxOf } from '../config/vfx';
 import type { Quality } from '../config/vfx/types';
 import { activeBiome } from '../core/biomes';
 import type { GameStore } from '../store/store';
 import type { VfxQuality } from '../store/settings';
 import { Background } from './background';
+import { rgba } from './color';
 import { Planet } from './planet';
 import { RollFx } from './rollfx';
 import { REF_R, type View } from './view';
@@ -25,6 +26,22 @@ export interface PlanetLayout {
 
 /** Particle / layer share per VFX quality (also used by the background and roll fx). */
 export const QUALITY_FACTOR: Record<VfxQuality, number> = QUALITY_SHARE;
+/** 'saturation' blending (after-echo) is missing in a few browsers; they get a grey veil. */
+const CAN_SATURATE = (() => {
+  try {
+    const c = document.createElement('canvas').getContext('2d')!;
+    c.globalCompositeOperation = 'saturation';
+    return c.globalCompositeOperation === 'saturation';
+  } catch {
+    return false;
+  }
+})();
+
+const smooth01 = (x: number) => {
+  const k = Math.max(0, Math.min(1, x));
+  return k * k * (3 - 2 * k);
+};
+
 /** Clock epoch: animations run on wall time so nothing restarts on reload. */
 const EPOCH = Date.UTC(2026, 0, 1);
 
@@ -111,7 +128,15 @@ export class Stage {
       game.bus.on('rollAnim', ({ duration, aura }) => {
         if (!game.settings.quickRoll) this.rollFx.startCharge(duration, aura);
       }),
-      game.bus.on('reveal', ({ aura, quick }) => this.rollFx.reveal(aura, quick)),
+      game.bus.on('reveal', ({ aura, quick, afterCutscene }) => {
+        this.rollFx.reveal(aura, quick);
+        // After-echo of the rarest auras: the stage goes monochrome, a beam of light stands.
+        const a = AURA_BY_ID[aura];
+        if (afterCutscene && a && tierOf(a).rank >= GAME.cutscene.topFromRank) {
+          this.echoT = 0;
+          this.echoColor = a.colors.glow;
+        }
+      }),
       game.bus.on('rebirthFx', () => this.rollFx.rebirth()),
       game.bus.on('settings', (s) => {
         if (s.vfxQuality !== this.quality) {
@@ -260,6 +285,10 @@ export class Stage {
     this.vfx.update(env);
     this.planetFx.update(dt);
     this.rollFx.update(dt);
+    if (this.echoT >= 0) {
+      this.echoT += dt * 1000;
+      if (this.echoT > GAME.cutscene.echoMs) this.echoT = -1;
+    }
   }
 
   private auraView: View = { s: 1, tx: 0, ty: 0 };
@@ -326,6 +355,7 @@ export class Stage {
     this.vfx.draw('particles', env);
     this.rollFx.draw(ctx, this.auraView);
     this.vfx.draw('screenFront', env);
+    this.drawEcho(ctx);
     this.bg.drawTint(ctx, dpr);
     const pr = this.visualR();
     this.vfx.drawTitleScrim(env, this.planet.x * dpr, (this.planet.y - pr * 2.75 - 24) * dpr, 300 * dpr, 92 * dpr);
@@ -335,6 +365,42 @@ export class Stage {
   }
 
   private planetView: View = { s: 1, tx: 0, ty: 0 };
+
+  /** After-echo (ms since it started, -1 = off) and its colour. */
+  private echoT = -1;
+  private echoColor = '#ffffff';
+
+  private drawEcho(ctx: CanvasRenderingContext2D): void {
+    if (this.echoT < 0) return;
+    const W = this.canvas.width;
+    const H = this.canvas.height;
+    const k = this.echoT / GAME.cutscene.echoMs;
+    const reduced = this.game.settings.reducedEffects;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const mono = (k < 0.12 ? k / 0.12 : 1 - smooth01((k - 0.12) / 0.88)) * (reduced ? 0.5 : 1);
+    if (CAN_SATURATE) {
+      ctx.globalCompositeOperation = 'saturation';
+      ctx.fillStyle = `rgba(128,128,128,${mono})`;
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = `rgba(40,42,50,${mono * 0.4})`;
+    }
+    ctx.fillRect(0, 0, W, H);
+    // A beam of light stands over the planet and fades.
+    const x = this.planet.x * this.dpr;
+    const w = this.visualR() * this.dpr * 2.4;
+    const g = ctx.createLinearGradient(x - w, 0, x + w, 0);
+    const a = Math.pow(Math.max(0, 1 - k), 1.5) * (reduced ? 0.35 : 0.8);
+    g.addColorStop(0, rgba(this.echoColor, 0));
+    g.addColorStop(0.42, rgba(this.echoColor, a * 0.6));
+    g.addColorStop(0.5, rgba('#ffffff', a));
+    g.addColorStop(0.58, rgba(this.echoColor, a * 0.6));
+    g.addColorStop(1, rgba(this.echoColor, 0));
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = g;
+    ctx.fillRect(x - w, 0, w * 2, H);
+    ctx.globalCompositeOperation = 'source-over';
+  }
 
   /** Average frame time in ms (for diagnostics / adaptive quality). */
   get frameTime(): number {

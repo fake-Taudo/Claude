@@ -29,19 +29,19 @@ export const TIERS: TierDef[] = [
   },
   {
     id: 'divine', name: 'Göttlich', color: '#c9a7ff', color2: '#fff6cf', rank: 6,
-    staging: { level: 4, suspenseMs: 1100, flash: 1, shake: 0.75, burst: 90, shockwaves: 4, bannerMs: 4200, cutsceneExtraMs: 0, vibrate: [80, 50, 120] },
+    staging: { level: 4, suspenseMs: 1100, flash: 1, shake: 0.75, burst: 90, shockwaves: 4, bannerMs: 4200, cutsceneExtraMs: 1000, vibrate: [80, 50, 120] },
   },
   {
     id: 'transcendent', name: 'Transzendent', color: '#fff2b8', color2: '#ffd76a', rank: 7,
-    staging: { level: 4, suspenseMs: 1100, flash: 1, shake: 0.8, burst: 100, shockwaves: 4, bannerMs: 4400, cutsceneExtraMs: 700, vibrate: [80, 50, 140] },
+    staging: { level: 4, suspenseMs: 1100, flash: 1, shake: 0.8, burst: 100, shockwaves: 4, bannerMs: 4400, cutsceneExtraMs: 1300, vibrate: [80, 50, 140] },
   },
   {
     id: 'galactic', name: 'Galaktisch', color: '#8ecfff', color2: '#3a6bff', rank: 8,
-    staging: { level: 4, suspenseMs: 1200, flash: 1, shake: 0.85, burst: 110, shockwaves: 5, bannerMs: 4600, cutsceneExtraMs: 1200, vibrate: [90, 50, 160] },
+    staging: { level: 4, suspenseMs: 1200, flash: 1, shake: 0.85, burst: 110, shockwaves: 5, bannerMs: 4600, cutsceneExtraMs: 1600, vibrate: [90, 50, 160] },
   },
   {
     id: 'universal', name: 'Universell', color: '#d9b3ff', color2: '#4ac9ff', rank: 9,
-    staging: { level: 4, suspenseMs: 1200, flash: 1, shake: 0.9, burst: 120, shockwaves: 5, bannerMs: 4800, cutsceneExtraMs: 1700, vibrate: [100, 50, 180] },
+    staging: { level: 4, suspenseMs: 1200, flash: 1, shake: 0.9, burst: 120, shockwaves: 5, bannerMs: 4800, cutsceneExtraMs: 1900, vibrate: [100, 50, 180] },
   },
   {
     id: 'primordial', name: 'Uranfänglich', color: '#ffb347', color2: '#ff4500', rank: 10,
