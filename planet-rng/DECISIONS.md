@@ -354,3 +354,25 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   längeren Weißsättigung.
 - Einige Bausteine aus späteren Phasen (Strahlen, Ticker, SplitSlash, TimeFreeze, Zähler, Linse)
   sind schon jetzt gebaut, weil die T1-Brüche sie brauchen.
+
+### T2 (Phase 3)
+
+- Rund 20 s: Entzug mit Jingle, prozeduralem Drone (eigener Grundton je Aura) und Wind,
+  Texttafel 1 (rätselhaft), Kernmotiv mit Rampe, 0,4–0,5 s Stille, Bruch mit Impact, Texttafel 2
+  (Gegenstück), Weißblende bzw. Randglühen. Texte haben je drei zufällige Varianten.
+- Brüche: Multiversum – die drei Kugel-Universen verschmelzen (Lichtbrücken, Schockwelle);
+  Kosmisches Netz – das Netz wird zu einem Faden gespannt, der reißt; Urknall – Kollaps,
+  Stille, das ganze Bild zerspringt nach außen, Glut-Schockwelle; Ursuppe – die Zellen
+  verschmelzen, ein Blitz schlägt den Lebensfunken ein; Entropie – Kollaps-Welle, danach setzt
+  sich das Gitter in Stille wieder zusammen; Wärmetod – die letzte Glut, gehaltene Stille, dann
+  blüht sie warm auf; Paradoxon – senkrechter Schnitt, beide Hälften tauschen Farbe und Zeit
+  (Partikel laufen rückwärts); Möbius – das ganze Bild stülpt sich zur anderen Seite um.
+- Rampen: schnellere Szenenschnitte (Multiversum), Impulse und ein Zähler „Verbindungen“
+  (Netz), Countdown mit immer schnellerem Herzschlag (Urknall), Zellteilung und Zähler (Ursuppe),
+  „Ordnung 100 % → 0 %“ mit Knistern (Entropie), „Temperatur 5.778 K → 3 K“ (Wärmetod),
+  beschleunigter Wahr/Falsch-Wechsel mit Inversion (Paradoxon), schnellere Läufer (Möbius).
+- Farbtausch beim Schnitt (Paradoxon): nicht als Inversion (das würde den dunklen Hintergrund
+  für Sekunden weiß machen), sondern als Drehung des Farbtons um 180° bei gleicher Helligkeit.
+- Inversion im Beat nur auf jedem zweiten Schlag; der Unit-Test prüft das Flash-Limit über alle
+  Definitionen. Ein weiterer Test stellt sicher, dass sich keine zwei Cutscenes nur in der Farbe
+  unterscheiden (Vergleich der Tracks ohne Farbwerte).

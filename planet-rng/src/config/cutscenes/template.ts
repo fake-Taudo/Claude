@@ -3,7 +3,7 @@
 
 import { GAME } from '../game';
 import { SYMBOLS } from './symbols';
-import type { AudioSpec, CoreMotifParams, Cue, CutsceneDef, EchoSpec, EdgeGlowParams, FogParams, ParticleParams, PulseParams, Theme, Track } from './types';
+import type { AudioSpec, Color, CoreMotifParams, Cue, CutsceneDef, EchoSpec, EdgeGlowParams, FogParams, ParticleParams, PulseParams, TextParams, Theme, Track } from './types';
 
 const C = GAME.cutscene;
 
@@ -139,4 +139,56 @@ export function accelerating(t0: number, t1: number, startGap: number, endGap: n
     t += startGap + (endGap - startGap) * k;
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Building pieces for T2 / T3 scripts (all times absolute)
+// ---------------------------------------------------------------------------
+
+/** The world fades to black and stays black underneath everything. */
+export const veil = (dur = 0.4): Track => ({ t: 0, dur, block: 'FadeVeil', params: { color: 'black', from: 0, to: 1 }, ease: 'outQuad', hold: true, name: 'Entzug' });
+
+/** Layered fog from t to end. */
+export const fog = (t: number, end: number, p: FogParams = {}): Track => ({
+  t,
+  dur: end - t,
+  block: 'FogLayers',
+  params: { layers: 3, colors: ['fog', 'dark'], speed: 1.2, density: [[0, 0], [2.5, 0.55, 'inQuad']], ...p },
+  name: 'Nebel',
+});
+
+/** A text card with random variants. */
+export const text = (t: number, dur: number, variants: string[][], p: Partial<TextParams> = {}): Track => ({
+  t,
+  dur,
+  block: 'TextCard',
+  params: { variants, mode: 'line', y: 0.76, size: 5, out: 0.5, ...p },
+  fade: [0, 0.2],
+  name: 'Text',
+});
+
+/** White-out to the reveal. */
+export const whiteOut = (t: number, end: number, color: Color = 'white'): Track => ({ t, dur: end - t, block: 'WhiteOut', params: { color, peak: 1 }, ease: 'inQuad', name: 'Weißblende' });
+
+/** The aura's prototype symbol as a motif (Kreis-Stern without the template timing). */
+export function symbolMotif(aura: string, over: Partial<CoreMotifParams> = {}): CoreMotifParams {
+  const sym = SYMBOLS[aura];
+  return { kind: 'circleStar', layers: sym?.layers, palette: sym?.palette, ...over };
+}
+
+/** Sound cues at the given times. */
+export const cuesAt = (times: number[], sfx: Cue['sfx'], extra: Partial<Cue> = {}): Cue[] => times.map((t) => ({ t, sfx, ...extra }));
+
+/** The prototype flow (Kreis-Stern, white-out) for an aura that has no own design yet. */
+export function prototype(aura: string, tier: 1 | 2 | 3): CutsceneDef {
+  const pal = SYMBOLS[aura].palette;
+  const def = t1({
+    aura,
+    theme: { primary: pal[0], secondary: pal[1 % pal.length], fog: pal[1 % pal.length], dark: '#05040a' },
+    fog: false,
+    pulse: false,
+    edge: false,
+    brk: { name: 'Weißblende', at: 13, tracks: [] },
+  });
+  return { ...def, tier };
 }

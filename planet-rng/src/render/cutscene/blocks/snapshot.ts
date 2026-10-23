@@ -151,11 +151,45 @@ export const Shatter: Block<'Shatter', { list: Shard[]; q: number }> = {
   },
 };
 
-export const SplitSlash: Block<'SplitSlash'> = {
+/**
+ * Hue-swapped copy of a frame with its brightness kept: the inverted frame lends its hue
+ * (rotated by 180°) to the original via the 'hue' blend mode.
+ */
+function hueSwapped(snap: HTMLCanvasElement, st: { inv: HTMLCanvasElement | null; out: HTMLCanvasElement | null }): HTMLCanvasElement {
+  const make = (c: HTMLCanvasElement | null) => {
+    if (c && c.width === snap.width && c.height === snap.height) return c;
+    const n = document.createElement('canvas');
+    n.width = snap.width;
+    n.height = snap.height;
+    return n;
+  };
+  st.inv = make(st.inv);
+  st.out = make(st.out);
+  const gi = st.inv.getContext('2d')!;
+  gi.globalCompositeOperation = 'copy';
+  gi.drawImage(snap, 0, 0);
+  gi.globalCompositeOperation = 'difference';
+  gi.fillStyle = '#ffffff';
+  gi.fillRect(0, 0, snap.width, snap.height);
+  const go = st.out.getContext('2d')!;
+  go.globalCompositeOperation = 'copy';
+  go.drawImage(snap, 0, 0);
+  go.globalCompositeOperation = 'hue';
+  go.drawImage(st.inv, 0, 0);
+  go.globalCompositeOperation = 'source-over';
+  return st.out;
+}
+
+export const SplitSlash: Block<'SplitSlash', { inv: HTMLCanvasElement | null; out: HTMLCanvasElement | null }> = {
   space: 'screen',
-  snapshot: 'once',
-  draw(ctx, p, prm, theme, env, _st, snap) {
+  snapshot: (p) => (p.live ? 'live' : 'once'),
+  init() {
+    return { inv: null, out: null };
+  },
+  draw(ctx, p, prm, theme, env, st, snap) {
     if (!snap) return;
+    const swap = prm.swap ?? 'none';
+    const swapped = swap !== 'none' && env.local >= (prm.swapAt ?? env.dur / 2) ? hueSwapped(snap, st) : null;
     const { W, H, cx, cy, diag, u } = env;
     const ang = (prm.angle ?? 0) * DEG;
     const dx = Math.cos(ang);
@@ -178,14 +212,8 @@ export const SplitSlash: Block<'SplitSlash'> = {
       ctx.lineTo(cx - dx * R + nx * side * R, cy - dy * R + ny * side * R);
       ctx.closePath();
       ctx.clip();
-      ctx.drawImage(snap, 0, 0, W, H);
-      const swap = prm.swap ?? 'none';
-      if (p >= 0.5 && (swap === 'both' || (swap === 'a' && side === 1) || (swap === 'b' && side === -1))) {
-        ctx.globalCompositeOperation = 'difference';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(-R, -R, W + 2 * R, H + 2 * R);
-        ctx.globalCompositeOperation = 'source-over';
-      }
+      const mine = swapped && (swap === 'both' || (swap === 'a' && side === 1) || (swap === 'b' && side === -1));
+      ctx.drawImage(mine ? swapped : snap, 0, 0, W, H);
       ctx.restore();
     }
     // Light in the gap.

@@ -1,50 +1,15 @@
 // 4 ThemeParticles: an emitter whose particles are computed in closed form from a particle
 // clock (no simulation): any time can be drawn, time can even run backwards.
 
-import type { Curve, Glyph, ParticleParams } from '../../../config/cutscenes';
+import type { Glyph, ParticleParams } from '../../../config/cutscenes';
 import type { SpriteKind } from '../../../config/vfx/types';
 import { rgba } from '../../color';
 import { hash } from '../../vfx/math';
 import { glowTex, spriteTex, streakTex } from '../../vfx/tex';
-import { color, curve, ease, TAU, type Block } from '../core';
+import { color, curve, integral, TAU, type Block } from '../core';
 import { glyphTex } from '../glyphs';
 
 const SPRITES = new Set<string>(['mote', 'spark', 'ember', 'glint', 'feather', 'shard', 'crystal', 'droplet', 'bubble', 'flake', 'ash', 'puff', 'petal', 'chunk', 'wisp', 'orb', 'rune', 'leaf', 'cell', 'gear', 'moon', 'bokeh']);
-
-/** Integral of a keyframed curve from 0 to t (the particle clock). */
-export function integral(c: Curve | undefined, t: number, fallback = 1): number {
-  if (c === undefined || typeof c === 'number') return (c ?? fallback) * t;
-  if (t <= 0) return 0;
-  let sum = 0;
-  // Before the first key the first value holds.
-  const first = c[0];
-  if (t <= first[0]) return first[1] * t;
-  sum += first[1] * Math.max(0, first[0]);
-  for (let i = 1; i < c.length; i++) {
-    const a = c[i - 1];
-    const b = c[i];
-    const t1 = Math.min(t, b[0]);
-    if (t1 <= a[0]) break;
-    if (!b[2] || b[2] === 'linear') {
-      const v1 = a[1] + ((b[1] - a[1]) * (t1 - a[0])) / Math.max(1e-6, b[0] - a[0]);
-      sum += ((a[1] + v1) / 2) * (t1 - a[0]);
-    } else {
-      // Eased segment: Simpson's rule.
-      const n = 8;
-      const h = (t1 - a[0]) / n;
-      let s = 0;
-      for (let k = 0; k <= n; k++) {
-        const x = a[0] + k * h;
-        const v = a[1] + (b[1] - a[1]) * ease(b[2], (x - a[0]) / Math.max(1e-6, b[0] - a[0]));
-        s += v * (k === 0 || k === n ? 1 : k % 2 ? 4 : 2);
-      }
-      sum += (s * h) / 3;
-    }
-    if (t <= b[0]) return sum;
-  }
-  const last = c[c.length - 1];
-  return sum + last[1] * (t - last[0]);
-}
 
 function spriteOf(kind: ParticleParams['sprite'], col: string): HTMLCanvasElement | null {
   if (kind === 'dot') return glowTex(col, 'core');

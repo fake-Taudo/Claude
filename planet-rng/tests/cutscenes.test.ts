@@ -75,6 +75,59 @@ describe('cutscene definitions', () => {
   });
 });
 
+/** Everything of a definition except its colours (theme slots, hex values, spectrum). */
+function shape(def: CutsceneDef): string {
+  const colorish = /^(#[0-9a-f]{3,8}|primary|secondary|fog|dark|white|black|spectrum)$/i;
+  const strip = (v: unknown): unknown => {
+    if (typeof v === 'string') return colorish.test(v) ? 'C' : v;
+    if (Array.isArray(v)) return v.map(strip);
+    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, strip(x)]));
+    return v;
+  };
+  return JSON.stringify(strip(def.tracks));
+}
+
+// Cutscenes with their own design (T3 follows in a later phase).
+const DESIGNED = CUTSCENES.filter((d) => d.tier < 3);
+
+describe('cutscene dramaturgy', () => {
+  it('keeps every tier inside its expected length', () => {
+    for (const def of DESIGNED) {
+      const [lo, hi] = CUTSCENE.durations[def.tier];
+      expect(def.duration, def.id).toBeGreaterThanOrEqual(lo);
+      expect(def.duration, def.id).toBeLessThanOrEqual(hi);
+    }
+  });
+
+  it('never lets two cutscenes differ only in colour', () => {
+    const seen = new Map<string, string>();
+    for (const def of DESIGNED) {
+      const key = shape(def);
+      expect(seen.get(key), `${def.id} looks like ${seen.get(key)}`).toBeUndefined();
+      seen.set(key, def.id);
+    }
+  });
+
+  it('gives every cutscene its own break with 0.3–0.6 s of silence and an impact right before it', () => {
+    const names = new Set<string>();
+    for (const def of DESIGNED) {
+      expect(names.has(def.signature.name), def.id).toBe(false);
+      names.add(def.signature.name);
+      const pause = (def.audio.silence ?? []).find(([a, b]) => Math.abs(b - def.signature.at) <= 0.05 && b - a >= 0.3 - 1e-9 && b - a <= 0.6 + 1e-9);
+      expect(pause, `${def.id}: silence before ${def.signature.at} s`).toBeDefined();
+      expect(def.audio.sting, def.id).toBeDefined();
+    }
+  });
+
+  it('has text cards and a frequency ramp from T2 on', () => {
+    for (const def of DESIGNED.filter((d) => d.tier >= 2)) {
+      expect(def.tracks.filter((tr) => tr.block === 'TextCard').length, def.id).toBeGreaterThanOrEqual(1);
+      const ramp = def.tracks.some((tr) => tr.block === 'Counter' || tr.block === 'Ticker' || tr.block === 'SceneCut' || tr.block === 'BeatInvert' || (tr.block === 'CoreMotif' && tr.params.rate !== undefined)) || (def.audio.cues ?? []).length > 6;
+      expect(ramp, def.id).toBe(true);
+    }
+  });
+});
+
 describe('timeline math', () => {
   it('evaluates keyframe curves with eases and holds the ends', () => {
     const c = [

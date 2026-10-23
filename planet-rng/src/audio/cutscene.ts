@@ -54,7 +54,7 @@ export function soundEvents(def: CutsceneDef, blockCues: Cue[]): Ev[] {
   const tail = CUTSCENE.tailSeconds[def.reveal.style];
   const ev: Ev[] = [];
   if ((a.bed ?? 'deepBoom') === 'deepBoom') ev.push({ t: 0, sfx: 'deepBoom' });
-  else if (a.bed === 'drone') ev.push({ t: 0, sfx: 'drone', dur: def.duration + tail, note: a.music?.key ?? 38 });
+  else if (a.bed === 'drone') ev.push({ t: 0, sfx: 'drone', dur: def.duration + tail, note: a.key ?? a.music?.key ?? 38 });
   if (a.jingle !== undefined) ev.push({ t: 0.05, sfx: 'jingle', variant: a.jingle });
   if (a.wind) ev.push({ t: 0, sfx: 'wind', dur: def.duration + tail, gain: a.wind });
   if (a.sting) ev.push({ t: def.signature.at, sfx: a.sting });

@@ -48,6 +48,41 @@ export function curve(c: Curve | undefined, t: number, fallback = 0): number {
   return c[c.length - 1][1];
 }
 
+/** Integral of a keyframed curve from 0 to t (the particle clock). */
+export function integral(c: Curve | undefined, t: number, fallback = 1): number {
+  if (c === undefined || typeof c === 'number') return (c ?? fallback) * t;
+  if (t <= 0) return 0;
+  let sum = 0;
+  // Before the first key the first value holds.
+  const first = c[0];
+  if (t <= first[0]) return first[1] * t;
+  sum += first[1] * Math.max(0, first[0]);
+  for (let i = 1; i < c.length; i++) {
+    const a = c[i - 1];
+    const b = c[i];
+    const t1 = Math.min(t, b[0]);
+    if (t1 <= a[0]) break;
+    if (!b[2] || b[2] === 'linear') {
+      const v1 = a[1] + ((b[1] - a[1]) * (t1 - a[0])) / Math.max(1e-6, b[0] - a[0]);
+      sum += ((a[1] + v1) / 2) * (t1 - a[0]);
+    } else {
+      // Eased segment: Simpson's rule.
+      const n = 8;
+      const h = (t1 - a[0]) / n;
+      let s = 0;
+      for (let k = 0; k <= n; k++) {
+        const x = a[0] + k * h;
+        const v = a[1] + (b[1] - a[1]) * ease(b[2], (x - a[0]) / Math.max(1e-6, b[0] - a[0]));
+        s += v * (k === 0 || k === n ? 1 : k % 2 ? 4 : 2);
+      }
+      sum += (s * h) / 3;
+    }
+    if (t <= b[0]) return sum;
+  }
+  const last = c[c.length - 1];
+  return sum + last[1] * (t - last[0]);
+}
+
 /**
  * Total rotation in degrees after `t` seconds of an accelerating spin: the speed goes from
  * `from` to `to` over `over` seconds (shape `curve`), then stays at `to`.
@@ -136,7 +171,7 @@ export interface Block<B extends keyof BlockParams, S = unknown> {
   /** 'world' blocks follow the camera, 'screen' blocks (veils, text, bars) do not. */
   space: 'world' | 'screen';
   /** 'once': the frame below is grabbed when the track starts; 'live': every frame. */
-  snapshot?: 'once' | 'live';
+  snapshot?: 'once' | 'live' | ((params: BlockParams[B]) => 'once' | 'live');
   /** Per-track state created when the cutscene starts (baking, geometry). */
   init?(params: BlockParams[B], track: Track & { block: B }, env: Env): S;
   draw(ctx: CanvasRenderingContext2D, p: number, params: BlockParams[B], theme: Theme, env: Env, state: S, snap: HTMLCanvasElement | null): void;

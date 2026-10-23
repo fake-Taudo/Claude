@@ -1,7 +1,7 @@
 // Registry of all cutscene building blocks.
 
 import type { BlockParams } from '../../../config/cutscenes';
-import type { AnyBlock, Block } from '../core';
+import type { AnyBlock } from '../core';
 import { FadeVeil, Flash, WhiteOut } from './basic';
 import { ScreenShake } from './camera';
 import { EdgeGlow } from './edge';
@@ -11,11 +11,10 @@ import { CoreMotif } from './motif';
 import { ThemeParticles } from './particles';
 import { DoublePulse } from './pulse';
 import { Rays, Ticker } from './rays';
+import { BeatInvert, Letterbox, SceneCut } from './scene';
 import { Shatter, SplitSlash, TimeFreeze } from './snapshot';
 import { Counter, TextCard } from './text';
 import { GravityRings } from './rings';
-
-const pending: Block<keyof BlockParams> = { space: 'screen', draw() {} };
 
 export const BLOCKS: Record<keyof BlockParams, AnyBlock> = {
   FadeVeil,
@@ -32,9 +31,9 @@ export const BLOCKS: Record<keyof BlockParams, AnyBlock> = {
   GravityRings,
   TextCard,
   Counter,
-  BeatInvert: pending,
-  Letterbox: pending,
-  SceneCut: pending,
+  BeatInvert,
+  Letterbox,
+  SceneCut,
   ScreenShake,
   Lens,
   Rays,

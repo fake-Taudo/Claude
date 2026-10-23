@@ -16,6 +16,7 @@ interface TrackState {
   /** Snapshot buffer and whether it holds the frame of this track's start. */
   buf: HTMLCanvasElement | null;
   taken: boolean;
+  snapshot: 'once' | 'live' | undefined;
 }
 
 export interface TimelineOptions {
@@ -78,7 +79,8 @@ export class Timeline {
       } catch {
         state = null;
       }
-      return { track, block, state, buf: null, taken: false };
+      const snapshot = typeof block.snapshot === 'function' ? block.snapshot(track.params) : block.snapshot;
+      return { track, block, state, buf: null, taken: false, snapshot };
     });
   }
 
@@ -123,7 +125,7 @@ export class Timeline {
 
   /** Before jumping to t: draws the start frames of snapshot tracks that t depends on. */
   ensureSnapshots(t: number): void {
-    const list = this.states.filter((s) => s.block.snapshot === 'once').sort((a, b) => a.track.t - b.track.t);
+    const list = this.states.filter((s) => s.snapshot === 'once').sort((a, b) => a.track.t - b.track.t);
     for (const s of list) {
       if (s.track.t > t) s.taken = false;
     }
@@ -179,13 +181,13 @@ export class Timeline {
       this.prepare(s, t);
       if (env.alpha <= 0.001) continue;
       let snap: HTMLCanvasElement | null = null;
-      if (s.block.snapshot === 'once') {
+      if (s.snapshot === 'once') {
         if (!s.taken) {
           s.buf = this.grab(s.buf ?? undefined);
           s.taken = true;
         }
         snap = s.buf;
-      } else if (s.block.snapshot === 'live') {
+      } else if (s.snapshot === 'live') {
         s.buf = this.grab(s.buf ?? undefined);
         snap = s.buf;
       }

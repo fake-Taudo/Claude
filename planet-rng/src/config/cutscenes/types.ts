@@ -194,8 +194,10 @@ export interface CoreMotifParams {
   glow?: Curve;
   /** Kind specific progress 0..1 (lemniscate drawing, crack, decay, jet length, merge, ...). */
   progress?: Curve;
-  /** Second kind specific value (e.g. pulse rate of a core, eclipse shadow). */
+  /** Second kind specific value (e.g. eclipse shadow, tension, merge). */
   aux?: Curve;
+  /** Speed of the motif's own animation (impulses, runners, heartbeat in Hz); integrated. */
+  rate?: Curve;
   /** Tilt of planar motifs (rings, discs) as y squash 0..1. */
   tilt?: number;
   /** Number of elements for kinds with several parts (bubbles, polygons, cells). */
@@ -343,8 +345,10 @@ export interface SplitParams {
   shift?: Curve;
   /** Colour of the light in the gap. */
   glow?: Color;
-  /** Colour inversion of one half ('a'/'b'/'both') from progress 0.5 on. */
+  /** Colour swap (hue turned by 180°, brightness kept) of one half ('a'/'b'/'both'). */
   swap?: 'none' | 'a' | 'b' | 'both';
+  /** Local time of the colour swap (default: half the track). */
+  swapAt?: number;
   /** Re-grab every frame (the halves stay alive) instead of freezing the first frame. */
   live?: boolean;
 }
@@ -378,6 +382,8 @@ export interface TextParams {
   spacing?: number;
   /** Fade-out time at the end of the track. */
   out?: number;
+  /** Alternating texts: at every word time the next one replaces the previous (text swap). */
+  cycle?: string[];
 }
 
 export interface CounterParams {
@@ -582,6 +588,8 @@ export interface MusicSpec {
 export interface AudioSpec {
   /** Sound bed: the Deep Boom sample (T1), a procedural drone or nothing. */
   bed?: 'deepBoom' | 'drone' | 'none';
+  /** Root note (MIDI) of the drone bed. */
+  key?: number;
   /** Jingle variant at the start (0 = rising, 1 = bell, 2 = dark, 3 = spectral, 4 = glitch). */
   jingle?: number;
   /** Continuous wind layer over the whole cutscene (gain, 0 = off). */

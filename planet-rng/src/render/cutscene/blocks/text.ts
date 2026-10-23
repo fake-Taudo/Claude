@@ -50,6 +50,10 @@ function wordTimes(prm: TextParams, words: number, env: Pick<Env, 'def' | 'time'
 export const TextCard: Block<'TextCard'> = {
   space: 'screen',
   draw(ctx, _p, prm, theme, env) {
+    if (prm.cycle?.length) {
+      drawCycle(ctx, prm, theme.primary, env, color(theme, prm.color ?? 'white', env.time));
+      return;
+    }
     const lines = textLines(prm, env.seed).map((l) => l.toUpperCase());
     if (!lines.length) return;
     const size = (prm.size ?? 5) * env.u;
@@ -127,6 +131,29 @@ export const TextCard: Block<'TextCard'> = {
     return out;
   },
 };
+
+/** Text swap: the shown word changes at every word time (e.g. on the beat). */
+function drawCycle(ctx: CanvasRenderingContext2D, prm: TextParams, _accent: string, env: Env, col: string): void {
+  const list = prm.cycle!;
+  const times = wordTimes(prm, Math.max(list.length, 64), env, env.time - env.local);
+  let i = -1;
+  for (let k = 0; k < times.length; k++) if (times[k] <= env.local) i = k;
+  if (i < 0) return;
+  const word = list[i % list.length].toUpperCase();
+  const size = (prm.size ?? 7) * env.u;
+  const t = env.local - times[i];
+  const out = prm.out ?? 0.3;
+  const a = env.alpha * Math.min(1, t / 0.06) * Math.min(1, Math.max(0, (env.dur - env.local) / out));
+  const pop = 1 + 0.18 * Math.max(0, 1 - t / 0.15);
+  ctx.font = `600 ${Math.round(size)}px ${FONT}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.save();
+  ctx.translate(env.W / 2, env.H * (prm.y ?? 0.72));
+  ctx.scale(pop, pop);
+  ink(ctx, word, 0, 0, (prm.spacing ?? 0.22) * size, col, a, size);
+  ctx.restore();
+}
 
 /** Text "ink": soft glow under crisp letters. */
 function ink(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, sp: number, col: string, a: number, size: number, flat = false): void {
