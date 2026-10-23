@@ -36,30 +36,6 @@ export function initAudio(game: GameStore): AudioEngine {
   game.bus.on('reveal', (e) => {
     const rank = tierOf(AURA_BY_ID[e.aura]).rank;
     engine.stinger(rank, e.afterCutscene);
-    if (e.afterCutscene && rank >= GAME.cutscene.topFromRank) engine.thunder();
-  });
-
-  game.bus.on('cutsceneCue', (e) => {
-    switch (e.cue) {
-      case 'jingle':
-        engine.csJingle(tierOf(AURA_BY_ID[e.aura]).rank);
-        break;
-      case 'pulse':
-        engine.csPulse();
-        break;
-      case 'tick':
-        engine.csTick();
-        break;
-      case 'flash':
-        engine.csFlash();
-        break;
-      case 'break':
-        engine.csBreak(e.kind ?? '');
-        break;
-      case 'skip':
-        engine.windStop(0.4);
-        break;
-    }
   });
 
   game.bus.on('cutscene', (e) => {
@@ -70,9 +46,6 @@ export function initAudio(game: GameStore): AudioEngine {
       const c = GAME.cutscene;
       const total = (c.blackMs + c.growMs + tier.staging.cutsceneExtraMs + c.fillMs) / 1000;
       engine.cutsceneStart(total, tier.rank);
-      engine.windStart(total);
-    } else if (e.phase === 'reveal') {
-      engine.windStop(0.6);
     } else if (e.phase === 'end') {
       engine.setDuck(false);
     }

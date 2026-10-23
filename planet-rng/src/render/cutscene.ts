@@ -1,48 +1,16 @@
-// Cutscene toolkit. Timeline (from the prototype), with the dramaturgy in five acts on top
-// (src/render/cutscene-acts.ts, DECISIONS.md "Cutscene-Dramaturgie"):
-//   1. 3 s black, a short jingle (top stage: first text card, letterbox bars)
-//   2. 10 s: coloured fog and theme particles; a symbol in the aura colours grows linearly
-//      and spins ever faster (110°/s -> 260°/s, about 5.5 turns); its star is always in
-//      front; text cards and a ramp (flashes, ticks, counter) build tension
-//   3. double pulse of the symbol, then the signature break in the climax window
-//      (shatter, split, freeze, stall, rewind, converge, pulse, invert, supernova)
-//   4. the edges glow, the symbol fills the screen while a white flash rises -> reveal
-//   5. top stage: after-echo on the stage (monochrome, beam of light, thunder)
+// Cutscene toolkit. Standard flow (from the prototype):
+//   1. 3 s completely black
+//   2. 10 s: a symbol in the aura colours grows linearly and spins ever faster
+//      (110°/s -> 260°/s, about 5.5 turns); its star is always drawn in front
+//   3. rarer tiers: an extra climax phase (stall, converge, shatter, pulse, ...)
+//   4. the symbol fills the screen while a white flash rises -> reveal
 // Each aura composes its symbol from reusable layers (config: aura.cutscene).
 
 import { AURA_BY_ID, GAME, tierOf, type AuraDef, type CsBackdrop, type CsLayer, type CutsceneDef } from '../config';
 import type { CutscenePlayer } from '../game/controller';
 import type { GameStore } from '../store/store';
-import { hash01, mix, noise1, rgba, spectral } from './color';
-import {
-  breakTime,
-  counterValue,
-  type CsCue,
-  type CsLine,
-  type CsStage,
-  cutsceneCues,
-  cutsceneLines,
-  cutsceneStage,
-  drawCounter,
-  drawCracks,
-  drawEdgeGlow,
-  drawFog,
-  drawLetterbox,
-  drawRampFlash,
-  drawTextCard,
-  drawTick,
-  FREEZE_SHATTER_AT,
-  formatCounter,
-  particleColor,
-  pulseTimes,
-  rampTimes,
-  Shatter,
-  SHATTER_AT,
-  SPLIT_AT,
-  ThemeParticles,
-} from './cutscene-acts';
+import { hash01, noise1, rgba, spectral } from './color';
 import { glowSprite, sprite } from './sprites';
-import { nebulaTex } from './vfx/tex';
 
 const TAU = Math.PI * 2;
 
@@ -59,17 +27,6 @@ function smooth(x: number): number {
   const k = Math.max(0, Math.min(1, x));
   return k * k * (3 - 2 * k);
 }
-
-/** 'saturation' blending (freeze) is missing in a few browsers; they get a grey veil. */
-const CAN_SATURATE = (() => {
-  try {
-    const c = document.createElement('canvas').getContext('2d')!;
-    c.globalCompositeOperation = 'saturation';
-    return c.globalCompositeOperation === 'saturation';
-  } catch {
-    return false;
-  }
-})();
 
 /** Total rotation (degrees) after fraction tau of the grow phase. */
 export function cutsceneAngle(tau: number): number {
@@ -95,18 +52,6 @@ export class CutsceneRunner implements CutscenePlayer {
   private motes: Mote[] = [];
   private onSkip: (() => void) | null = null;
   private replay = false;
-  // Dramaturgy (src/render/cutscene-acts.ts).
-  private stage: CsStage = 'high';
-  private lines: CsLine[] = [];
-  private cues: CsCue[] = [];
-  private nextCue = 0;
-  private ramp: number[] = [];
-  private pulses: number[] = [];
-  private fog: HTMLCanvasElement[] = [];
-  private particles: ThemeParticles | null = null;
-  private shatter: Shatter | null = null;
-  private shatterAt = 0;
-  private seed = 1;
 
   constructor(
     private game: GameStore,
@@ -125,24 +70,10 @@ export class CutsceneRunner implements CutscenePlayer {
     this.replay = !!opts.replay;
     this.aura = aura;
     this.def = aura.cutscene;
-    const tier = tierOf(aura);
-    this.extraMs = tier.staging.cutsceneExtraMs;
+    this.extraMs = tierOf(aura).staging.cutsceneExtraMs;
     this.t = 0;
     this.revealed = false;
     this.motes = [];
-    const def = aura.cutscene;
-    this.seed = Math.floor(hash01(auraId.length * 131 + auraId.charCodeAt(0)) * 1e6);
-    this.stage = cutsceneStage(tier.rank);
-    this.lines = cutsceneLines(def, tier.rank, this.extraMs);
-    this.cues = cutsceneCues(def, this.extraMs);
-    this.nextCue = 0;
-    this.ramp = def.ramp?.kind === 'flashes' || def.ramp?.kind === 'ticks' ? rampTimes() : [];
-    this.pulses = pulseTimes();
-    const fogCols = def.fog === false ? [] : (def.fog ?? [0, 1]).map((i) => def.palette[i % def.palette.length]);
-    const low = this.game.settings.vfxQuality === 'low';
-    this.fog = fogCols.length ? [0, 1, 2].slice(0, low ? 2 : 3).map((i) => nebulaTex(i % 2 ? [...fogCols].reverse() : fogCols, (this.seed + i * 17) % 500, 192)) : [];
-    this.particles = def.particles ? new ThemeParticles(def.particles, Math.round((def.particles.count ?? 56) * (low ? 0.5 : 1))) : null;
-    this.shatter = null;
     const c = document.createElement('canvas');
     c.className = 'cutscene-layer';
     c.setAttribute('aria-label', 'Cutscene');
@@ -179,9 +110,6 @@ export class CutsceneRunner implements CutscenePlayer {
   private skip = (): void => {
     if ((!this.game.settings.cutsceneSkip && !this.replay) || this.t >= this.fillStart) return;
     this.t = this.fillStart;
-    // Skipped moments stay silent.
-    while (this.nextCue < this.cues.length && this.cues[this.nextCue].t <= this.t) this.nextCue++;
-    if (this.aura) this.game.bus.emit('cutsceneCue', { aura: this.aura.id, cue: 'skip' });
     this.onSkip?.();
   };
 
@@ -204,10 +132,6 @@ export class CutsceneRunner implements CutscenePlayer {
     const dt = Math.min(50, now - this.last);
     this.last = now;
     this.t += dt;
-    while (this.aura && this.nextCue < this.cues.length && this.cues[this.nextCue].t <= this.t) {
-      const c = this.cues[this.nextCue++];
-      this.game.bus.emit('cutsceneCue', { aura: this.aura.id, cue: c.cue, kind: c.kind });
-    }
     if (!this.revealed && this.t >= this.revealAt) {
       this.revealed = true;
       const r = this.resolveReveal;
@@ -230,7 +154,6 @@ export class CutsceneRunner implements CutscenePlayer {
     this.canvas?.remove();
     this.canvas = null;
     this.ctx = null;
-    this.shatter = null;
   }
 
   // -------------------------------------------------------------------------
@@ -244,47 +167,35 @@ export class CutsceneRunner implements CutscenePlayer {
     const dpr = W / window.innerWidth;
     const t = this.t;
     const reduced = this.game.settings.reducedEffects;
-    // With reduced effects the flash is a softer, tinted light instead of pure white.
-    const flash = reduced ? mix(def.palette[0], '#ffffff', 0.55) : '#ffffff';
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
 
-    // Fade-out of the flash after the reveal.
+    // Fade-out of the white flash after the reveal.
     if (t >= this.revealAt) {
       ctx.clearRect(0, 0, W, H);
       const k = (t - this.revealAt) / GAME.cutscene.revealMs;
-      ctx.fillStyle = rgba(flash, 1 - smooth(k));
+      ctx.fillStyle = `rgba(255,255,255,${1 - smooth(k)})`;
       ctx.fillRect(0, 0, W, H);
       return;
     }
 
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, W, H);
-    const fillT = t >= this.fillStart ? (t - this.fillStart) / GAME.cutscene.fillMs : 0;
-    const bars = this.stage === 'top' ? Math.min(1, t / 600) * (1 - smooth(fillT)) : 0;
-    const glowCol = def.palette[0];
-
-    // Act 1: withdrawal (black; the top stage opens with its first text card).
-    if (t < this.b) {
-      this.drawLines(ctx, t, W, H, glowCol);
-      drawLetterbox(ctx, W, H, bars);
-      return;
-    }
+    if (t < this.b) return;
 
     const cx = W / 2;
     const cy = H / 2;
     const unit = (Math.min(W, H) / 60) * 1;
-    const growEnd = this.b + this.g;
     const growT = Math.min(1, (t - this.b) / this.g);
-    const climaxT = this.extraMs > 0 ? Math.max(0, Math.min(1, (t - growEnd) / this.extraMs)) : 0;
-    const inClimax = t >= growEnd && t < this.fillStart;
-    const frozen = def.climax === 'freeze' && t >= growEnd;
+    const climaxT = this.extraMs > 0 ? Math.max(0, Math.min(1, (t - this.b - this.g) / this.extraMs)) : 0;
+    const inClimax = t >= this.b + this.g && t < this.fillStart;
+    const fillT = t >= this.fillStart ? (t - this.fillStart) / GAME.cutscene.fillMs : 0;
 
-    // Rotation (a freeze stops it dead).
+    // Rotation.
     let angle = cutsceneAngle(growT);
-    if (t > growEnd && !frozen) {
-      const extra = (Math.min(t, this.fillStart) - growEnd) / 1000;
+    if (t > this.b + this.g) {
+      const extra = (Math.min(t, this.fillStart) - this.b - this.g) / 1000;
       const w1 = GAME.cutscene.rotEndDegPerSec;
       switch (def.climax) {
         case 'stall':
@@ -296,7 +207,7 @@ export class CutsceneRunner implements CutscenePlayer {
         default:
           angle += w1 * extra;
       }
-      if (fillT > 0) angle += (w1 * (t - this.fillStart)) / 1000;
+      if (fillT > 0) angle += w1 * (t - this.fillStart) / 1000;
     }
 
     // Scale (linear growth, "deliberately not huge").
@@ -312,65 +223,34 @@ export class CutsceneRunner implements CutscenePlayer {
       scale = scale + (cover - scale) * Math.pow(fillT, 2.2);
     }
 
-    if (this.shatter) {
-      // Act 4: the frame has broken, only its shards remain.
-      this.shatter.draw(ctx, (t - this.shatterAt) / 1000, W, H);
-    } else {
-      // Act 2: atmosphere - backdrop, coloured fog, theme particles.
-      const backdropAlpha = smooth((growT - 0.12) / 0.88) * 0.85 + (inClimax ? 0.15 : 0);
-      this.drawBackdrop(ctx, def.backdrop, W, H, dt, backdropAlpha, growT + climaxT, reduced);
-      const atmo = smooth(growT / 0.2) * (frozen ? 1 - 0.5 * climaxT : 1);
-      drawFog(ctx, this.fog, W, H, frozen ? this.b + this.g : t, atmo);
-      if (this.particles) {
-        if (!frozen) this.particles.update(dt, t);
-        this.particles.draw(ctx, W, H, atmo, (i) => particleColor(def.palette, def.particles!.color, i));
-      }
+    // Backdrop.
+    const backdropAlpha = smooth((growT - 0.12) / 0.88) * 0.85 + (inClimax ? 0.15 : 0);
+    this.drawBackdrop(ctx, def.backdrop, W, H, dt, backdropAlpha, growT + climaxT, reduced);
 
-      // Act 3: the symbol (with the double pulse and, for 'split', cut in two halves).
-      let jx = 0;
-      let jy = 0;
-      if (inClimax && (def.climax === 'stall' || def.climax === 'shatter') && !reduced) {
-        const amp = (def.climax === 'shatter' ? 6 : 3) * climaxT * dpr;
-        jx = (Math.random() - 0.5) * amp;
-        jy = (Math.random() - 0.5) * amp;
-      }
-      const symbolAlpha = Math.min(1, (t - this.b) / 600);
-      this.drawSymbol(ctx, def, cx + jx, cy + jy, (angle * Math.PI) / 180, scale, symbolAlpha, t, W, H);
-
-      // Ramp: flashes / ticks / counter.
-      const ramp = def.ramp;
-      if (ramp && !frozen) {
-        for (let i = this.ramp.length - 1; i >= 0; i--) {
-          const age = t - this.ramp[i];
-          if (age < 0) continue;
-          if (age > 300) break;
-          if (ramp.kind === 'flashes') drawRampFlash(ctx, W, H, age, i, glowCol, reduced);
-          else drawTick(ctx, W, H, age, glowCol, reduced);
-        }
-        if (ramp.kind === 'counter') {
-          const a = smooth((t - (this.b + this.g * 0.3)) / 500) * (1 - smooth(fillT * 3));
-          drawCounter(ctx, formatCounter(ramp, counterValue(ramp, t)), W, H, a, glowCol);
-        }
-      }
-
-      // Act 4: the signature break.
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      if (inClimax || (fillT > 0 && def.climax === 'split')) this.drawClimax(ctx, def, inClimax ? climaxT : 1, W, H, cx, cy, scale, reduced);
-      if ((def.climax === 'shatter' || def.climax === 'freeze') && t >= breakTime(def, this.extraMs)) {
-        this.shatter = new Shatter(c, this.seed);
-        this.shatterAt = t;
-      }
+    // Symbol.
+    const symbolAlpha = Math.min(1, (t - this.b) / 600);
+    let jx = 0;
+    let jy = 0;
+    if (inClimax && (def.climax === 'stall' || def.climax === 'shatter') && !reduced) {
+      const amp = (def.climax === 'shatter' ? 6 : 3) * climaxT * dpr;
+      jx = (Math.random() - 0.5) * amp;
+      jy = (Math.random() - 0.5) * amp;
     }
+    const rad = (angle * Math.PI) / 180;
+    ctx.setTransform(scale * Math.cos(rad), scale * Math.sin(rad), -scale * Math.sin(rad), scale * Math.cos(rad), cx + jx, cy + jy);
+    ctx.globalAlpha = symbolAlpha;
+    const time = t / 1000;
+    // The star sits in front of everything else in the symbol.
+    for (const layer of def.layers) if (layer.kind !== 'star') this.drawLayer(ctx, layer, def.palette, time);
+    for (const layer of def.layers) if (layer.kind === 'star') this.drawLayer(ctx, layer, def.palette, time);
+    ctx.globalAlpha = 1;
 
-    // Act 5: the edges glow up before the flash.
-    const edge = def.edge ?? [0];
-    drawEdgeGlow(ctx, W, H, smooth((t - (this.fillStart - GAME.cutscene.edgeMs)) / GAME.cutscene.edgeMs), edge.map((i) => def.palette[i % def.palette.length]), t);
-
-    this.drawLines(ctx, t, W, H, glowCol);
-    drawLetterbox(ctx, W, H, bars);
+    // Climax extras in screen space.
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (inClimax) this.drawClimax(ctx, def, climaxT, W, H, cx, cy, scale, reduced);
 
     // Skip hint.
-    if ((this.game.settings.cutsceneSkip || this.replay) && t < this.fillStart) {
+    if (this.game.settings.cutsceneSkip && t < this.fillStart) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = 'rgba(255,255,255,0.35)';
@@ -379,86 +259,13 @@ export class CutsceneRunner implements CutscenePlayer {
       ctx.fillText('Tippen zum Überspringen', W / 2, H - 28 * dpr);
     }
 
-    // Flash while the symbol fills the screen.
+    // White flash while the symbol fills the screen.
     if (fillT > 0) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = rgba(flash, Math.pow(fillT, 1.6));
+      ctx.fillStyle = `rgba(255,255,255,${Math.pow(fillT, 1.6)})`;
       ctx.fillRect(0, 0, W, H);
     }
-  }
-
-  private drawLines(ctx: CanvasRenderingContext2D, t: number, W: number, H: number, glow: string): void {
-    for (const line of this.lines) drawTextCard(ctx, line, t, W, H, glow);
-  }
-
-  /**
-   * The symbol: ghost copies of the motif swell out behind the star on the double pulse;
-   * the star always sits in front. For the 'split' break the symbol is cut along a diagonal
-   * and its halves drift apart.
-   */
-  private drawSymbol(ctx: CanvasRenderingContext2D, def: CutsceneDef, cx: number, cy: number, rad: number, scale: number, alpha: number, t: number, W: number, H: number): void {
-    const time = t / 1000;
-    const set = (s: number, dx = 0, dy = 0, rot = 0) => {
-      const r = rad + rot;
-      ctx.setTransform(s * Math.cos(r), s * Math.sin(r), -s * Math.sin(r), s * Math.cos(r), cx + dx, cy + dy);
-    };
-    const motif = def.layers.filter((l) => l.kind !== 'star');
-    const stars = def.layers.filter((l) => l.kind === 'star');
-    const echo = motif.length ? motif : stars;
-    let flare = 0;
-    for (const tp of this.pulses) {
-      const e = (t - tp) / 700;
-      if (e < 0 || e > 1) continue;
-      flare = Math.max(flare, 1 - e);
-      set(scale * (1 + 0.5 * smooth(e)));
-      ctx.globalAlpha = alpha * 0.7 * Math.pow(1 - e, 1.5);
-      for (const l of echo) this.drawLayer(ctx, l, def.palette, time);
-    }
-    const draw = (dx = 0, dy = 0, rot = 0) => {
-      set(scale, dx, dy, rot);
-      ctx.globalAlpha = alpha;
-      for (const l of motif) this.drawLayer(ctx, l, def.palette, time);
-      set(scale * (1 + 0.18 * flare), dx, dy, rot);
-      ctx.globalAlpha = alpha;
-      for (const l of stars) this.drawLayer(ctx, l, def.palette, time);
-    };
-    const cutAt = this.b + this.g + this.extraMs * SPLIT_AT;
-    if (def.climax !== 'split' || t < cutAt) {
-      draw();
-    } else {
-      const k = Math.min(1.4, (t - cutAt) / Math.max(1, this.fillStart + GAME.cutscene.fillMs - cutAt));
-      const d = Math.pow(k, 1.4) * Math.min(W, H) * 0.22;
-      const a = (-35 * Math.PI) / 180;
-      const dir = [Math.cos(a), Math.sin(a)];
-      const n = [-dir[1], dir[0]];
-      const L = Math.hypot(W, H);
-      for (const side of [-1, 1]) {
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.beginPath();
-        ctx.moveTo(cx - dir[0] * L, cy - dir[1] * L);
-        ctx.lineTo(cx + dir[0] * L, cy + dir[1] * L);
-        ctx.lineTo(cx + dir[0] * L + side * n[0] * L, cy + dir[1] * L + side * n[1] * L);
-        ctx.lineTo(cx - dir[0] * L + side * n[0] * L, cy - dir[1] * L + side * n[1] * L);
-        ctx.closePath();
-        ctx.clip();
-        draw(side * n[0] * d, side * n[1] * d, side * 0.08 * k);
-        ctx.restore();
-      }
-      // Light in the gap.
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = Math.max(0, 1 - k) * 0.9;
-      ctx.strokeStyle = mix(def.palette[0], '#ffffff', 0.6);
-      ctx.lineWidth = Math.max(2, d * 0.35);
-      ctx.beginPath();
-      ctx.moveTo(cx - dir[0] * L, cy - dir[1] * L);
-      ctx.lineTo(cx + dir[0] * L, cy + dir[1] * L);
-      ctx.stroke();
-      ctx.globalCompositeOperation = 'source-over';
-    }
-    ctx.globalAlpha = 1;
   }
 
   private color(palette: string[], idx: number | 'spectrum' | undefined, time: number, i = 0): string {
@@ -1000,52 +807,24 @@ export class CutsceneRunner implements CutscenePlayer {
         break;
       }
       case 'shatter': {
-        // Cracks run out from the centre until the frame breaks (see Shatter in draw()).
-        drawCracks(ctx, W, H, k / SHATTER_AT, this.seed);
-        break;
-      }
-      case 'freeze': {
-        // Time stops: colour drains from the frame, then it cracks and breaks.
-        const grey = smooth(k / 0.35);
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        if (CAN_SATURATE) {
-          ctx.globalCompositeOperation = 'saturation';
-          ctx.fillStyle = `rgba(128,128,128,${grey})`;
-        } else {
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.fillStyle = `rgba(40,42,50,${grey * 0.45})`;
+        const n = 14;
+        for (let i = 0; i < n; i++) {
+          const ang = (i / n) * TAU;
+          const d = scale * 30 * (0.8 + k * 2.5 * hash01(i));
+          ctx.globalAlpha = k * (1 - k * 0.3);
+          ctx.drawImage(sprite('fragment', i % 2 ? col : def.palette[1 % def.palette.length]), cx + Math.cos(ang) * d - 10, cy + Math.sin(ang) * d - 10, 20, 20);
         }
-        ctx.fillRect(0, 0, W, H);
-        ctx.globalCompositeOperation = 'source-over';
-        drawCracks(ctx, W, H, (k - 0.3) / (FREEZE_SHATTER_AT - 0.3), this.seed);
-        break;
-      }
-      case 'split': {
-        // The cut: a blade of light sweeps along the diagonal (the halves are drawn by drawSymbol).
-        const e = (k - SPLIT_AT * 0.4) / (SPLIT_AT * 0.9);
-        if (e > 0 && e < 1.4) {
-          const a = (-35 * Math.PI) / 180;
-          const L = Math.hypot(W, H);
-          const head = -L / 2 + L * Math.min(1, e);
-          ctx.translate(cx, cy);
-          ctx.rotate(a);
-          const g = ctx.createLinearGradient(head - L * 0.4, 0, head, 0);
-          g.addColorStop(0, rgba(col, 0));
-          g.addColorStop(1, rgba('#ffffff', Math.max(0, 1.2 - e) * (reduced ? 0.4 : 0.9)));
-          ctx.fillStyle = g;
-          ctx.fillRect(head - L * 0.4, -Math.min(W, H) * 0.006, L * 0.4, Math.min(W, H) * 0.012);
-          ctx.setTransform(1, 0, 0, 1, 0, 0);
-        }
+        ctx.globalAlpha = 1;
         break;
       }
       case 'pulse': {
-        // Heartbeat: soft swells of light (no rings).
         const beats = 4 + Math.floor(k * 8);
         const ph = (k * beats) % 1;
-        const s = scale * 34 * (1 + ph * 1.6);
-        ctx.globalAlpha = (1 - ph) * 0.45;
-        ctx.drawImage(glowSprite(col, 0.3), cx - s, cy - s, s * 2, s * 2);
-        ctx.globalAlpha = 1;
+        ctx.strokeStyle = rgba(col, (1 - ph) * 0.6);
+        ctx.lineWidth = 6 * (1 - ph) + 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, scale * 30 * (1 + ph * 2), 0, TAU);
+        ctx.stroke();
         break;
       }
       case 'invert': {
@@ -1060,15 +839,12 @@ export class CutsceneRunner implements CutscenePlayer {
       }
       case 'supernova': {
         if (k > 0.7) {
-          // The explosion: a burst of light floods outward (no ring).
           const e = (k - 0.7) / 0.3;
-          const R = Math.hypot(W, H) * 0.6 * (0.2 + e);
-          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
-          g.addColorStop(0, rgba('#ffffff', (1 - e) * 0.8));
-          g.addColorStop(0.5, rgba(col, (1 - e) * 0.45));
-          g.addColorStop(1, rgba(col, 0));
-          ctx.fillStyle = g;
-          ctx.fillRect(0, 0, W, H);
+          ctx.strokeStyle = rgba('#ffffff', 1 - e);
+          ctx.lineWidth = 10 * (1 - e) + 2;
+          ctx.beginPath();
+          ctx.arc(cx, cy, Math.hypot(W, H) * 0.5 * e, 0, TAU);
+          ctx.stroke();
         } else {
           const s = scale * 40 * (1 + k);
           ctx.globalAlpha = k;

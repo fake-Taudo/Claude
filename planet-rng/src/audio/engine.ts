@@ -28,7 +28,6 @@ export class AudioEngine {
   private boom: AudioBuffer | null = null;
   private plop: AudioBuffer | null = null;
   private boomSource: { src: AudioBufferSourceNode; gain: GainNode } | null = null;
-  private wind: { src: AudioBufferSourceNode; gain: GainNode } | null = null;
   private settings: Settings;
   private music: Music | null = null;
   private lastPlop = 0;
@@ -341,128 +340,6 @@ export class AudioEngine {
         this.tone({ type: 'sawtooth', freq: midi(36 + rank), dur: extra + 2.2, gain: 0.08, attack: 1.5, filter: 900, at: startAt });
         this.hiss({ at: startAt, dur: extra + 2.2, gain: 0.08, freq: 200, to: 5000, q: 3, attack: extra + 1.8 });
       }
-    });
-  }
-
-  // -------------------------------------------------------------------------
-  // Cutscene dramaturgy (cues from src/render/cutscene-acts.ts)
-  // -------------------------------------------------------------------------
-
-  /** Short "something big is coming" jingle at the very start. */
-  csJingle(rank: number): void {
-    this.safe(() => {
-      const root = 76 + Math.min(4, Math.max(0, rank - 6));
-      [0, 7, 12, 19].forEach((n, i) => this.tone({ type: 'triangle', freq: midi(root + n), at: i * 0.07, dur: 0.9 - i * 0.1, gain: 0.07, reverb: 0.7 }));
-      this.tone({ freq: midi(root + 31), at: 0.3, dur: 0.8, gain: 0.025, reverb: 0.9 });
-    });
-  }
-
-  /** Hoarse wind under the whole cutscene; fades in and out. */
-  windStart(seconds: number): void {
-    this.safe(() => {
-      const ctx = this.ctx!;
-      this.windStop(0);
-      const t = ctx.currentTime;
-      const src = ctx.createBufferSource();
-      src.buffer = this.noise();
-      src.loop = true;
-      const f = ctx.createBiquadFilter();
-      f.type = 'bandpass';
-      f.Q.value = 0.8;
-      f.frequency.setValueAtTime(380, t);
-      // Slow gusts: the band wanders up and down.
-      for (let i = 1; i < Math.ceil(seconds / 2.5); i++) f.frequency.linearRampToValueAtTime(320 + 260 * Math.abs(Math.sin(i * 1.7)), t + i * 2.5);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.09, t + 2.5);
-      g.gain.setValueAtTime(0.09, t + Math.max(2.6, seconds - 1.2));
-      g.gain.exponentialRampToValueAtTime(0.0001, t + seconds + 0.6);
-      src.connect(f);
-      f.connect(g);
-      g.connect(this.sfxBus);
-      src.start(t);
-      src.stop(t + seconds + 0.7);
-      this.wind = { src, gain: g };
-      src.onended = () => {
-        if (this.wind?.src === src) this.wind = null;
-      };
-    });
-  }
-
-  windStop(fade = 0.5): void {
-    if (!this.wind || !this.ctx) return;
-    const { src, gain } = this.wind;
-    try {
-      const t = this.ctx.currentTime;
-      gain.gain.cancelScheduledValues(t);
-      gain.gain.setTargetAtTime(0, t, Math.max(0.01, fade / 3));
-      src.stop(t + fade + 0.05);
-    } catch {
-      /* ignore */
-    }
-    this.wind = null;
-  }
-
-  /** One beat of the double pulse: a deep hit. */
-  csPulse(): void {
-    this.safe(() => {
-      this.tone({ freq: 74, to: 34, dur: 0.7, gain: 0.45 });
-      this.hiss({ dur: 0.35, gain: 0.06, type: 'lowpass', freq: 900, to: 120, q: 0.6 });
-    });
-  }
-
-  /** Ramp tick (clock or heartbeat). */
-  csTick(): void {
-    this.safe(() => {
-      this.tone({ type: 'square', freq: 1900, to: 1400, dur: 0.035, gain: 0.04, filter: 4000 });
-      this.tone({ freq: 140, to: 90, dur: 0.12, gain: 0.12 });
-    });
-  }
-
-  /** Ramp flash: a short airy whoosh. */
-  csFlash(): void {
-    this.safe(() => this.hiss({ dur: 0.28, gain: 0.05, freq: 1500, to: 6000, q: 1.5 }));
-  }
-
-  /** The signature break. */
-  csBreak(kind: string): void {
-    this.safe(() => {
-      switch (kind) {
-        case 'shatter':
-          // Glass: bright noise bursts and high ringing partials.
-          for (let i = 0; i < 6; i++) this.hiss({ at: i * 0.035, dur: 0.25 + i * 0.05, gain: 0.12 - i * 0.012, type: 'highpass', freq: 2500 + i * 900, q: 0.7 });
-          [2637, 3520, 4186, 5274].forEach((f, i) => this.tone({ freq: f * (1 + i * 0.013), at: i * 0.04, dur: 0.8, gain: 0.025, reverb: 0.6 }));
-          this.tone({ freq: 90, to: 40, dur: 0.6, gain: 0.3 });
-          break;
-        case 'split':
-          // Slash: a fast noise sweep and a metallic edge.
-          this.hiss({ dur: 0.32, gain: 0.16, freq: 600, to: 9000, q: 2.5 });
-          this.tone({ type: 'sawtooth', freq: 1800, to: 600, dur: 0.25, gain: 0.03, filter: 5000 });
-          this.tone({ freq: 70, to: 35, at: 0.08, dur: 0.6, gain: 0.3 });
-          break;
-        case 'freeze':
-          // Everything stops: the sound bends down and dies.
-          this.tone({ type: 'sawtooth', freq: 330, to: 55, dur: 1.2, gain: 0.05, filter: 1400 });
-          this.hiss({ dur: 0.9, gain: 0.06, freq: 3000, to: 200, q: 1 });
-          this.windStop(0.3);
-          break;
-        case 'supernova':
-          this.tone({ freq: 60, to: 25, dur: 1.6, gain: 0.55 });
-          this.hiss({ dur: 1.4, gain: 0.2, type: 'lowpass', freq: 6000, to: 300, q: 0.5 });
-          break;
-        default:
-          this.tone({ freq: 110, to: 55, dur: 0.5, gain: 0.18 });
-          break;
-      }
-    });
-  }
-
-  /** After-echo of the rarest auras on the stage: thunder. */
-  thunder(): void {
-    this.safe(() => {
-      this.hiss({ dur: 0.25, gain: 0.25, type: 'highpass', freq: 1800, q: 0.5 });
-      this.hiss({ at: 0.05, dur: 2.6, gain: 0.32, type: 'lowpass', freq: 400, to: 60, q: 0.7, attack: 0.08 });
-      this.tone({ freq: 48, to: 28, at: 0.05, dur: 2.2, gain: 0.4 });
     });
   }
 

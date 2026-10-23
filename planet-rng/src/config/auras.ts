@@ -175,7 +175,7 @@ export const AURAS: AuraDef[] = [
     id: 'singularitaet', name: 'Singularität', tier: 'divine', odds: 100 / 0.006, sell: 2, title: 'Der Unausweichliche',
     colors: { main: '#120a1f', glow: '#d9c7ff', accent: '#3a1a6b' },
     description: 'Alles wird nach innen gesogen. Nichts entkommt.',
-    cutscene: { ...classic(['#d9c7ff', '#3a1a6b', '#ffffff'], [{ kind: 'sparkles', count: 24, r: 70, color: 0, param: -1 }], 'void'), climax: 'converge', particles: { sprite: 'dot', dir: 'in', color: 0, count: 70 }, edge: [0] },
+    cutscene: classic(['#d9c7ff', '#3a1a6b', '#ffffff'], [{ kind: 'sparkles', count: 24, r: 70, color: 0, param: -1 }], 'void'),
   },
   {
     id: 'akkretion', name: 'Akkretion', tier: 'divine', odds: 20000, biome: 'schwarzesloch', sell: 2.4, title: 'Verschlinger',
@@ -183,8 +183,7 @@ export const AURAS: AuraDef[] = [
     description: 'Eine glühende Scheibe aus Materie stürzt spiralförmig hinein.',
     cutscene: {
       palette: ['#ffb35c', '#ff6a1a', '#1a0a00'],
-      backdrop: 'void', climax: 'converge',
-      particles: { sprite: 'ember', dir: 'in', color: 0 }, edge: [0, 1],
+      backdrop: 'void', climax: 'none',
       layers: [
         { kind: 'orbiters', count: 40, r: 38, color: 0, param: 0.8 },
         { kind: 'glow', r: 18, color: 0, alpha: 0.5 },
@@ -198,8 +197,7 @@ export const AURAS: AuraDef[] = [
     description: 'Ein riesiger roter Mond kreist, roter Regen fällt.',
     cutscene: {
       palette: ['#ff5a5a', '#8a0a1a', '#2a0008'],
-      backdrop: 'blood', climax: 'split',
-      particles: { sprite: 'drop', dir: 'fall', color: 0 }, edge: [0],
+      backdrop: 'blood', climax: 'none',
       layers: [
         { kind: 'glow', r: 48, color: 0, alpha: 0.3 },
         { kind: 'moon', r: 26, color: 0, color2: 2 },
@@ -213,8 +211,7 @@ export const AURAS: AuraDef[] = [
     description: 'Sechs Schwingen aus Licht schlagen langsam um einen Heiligenschein.',
     cutscene: {
       palette: ['#ffe08a', '#fff4d6', '#9fdcff'],
-      backdrop: 'stars', climax: 'converge',
-      particles: { sprite: 'feather', dir: 'rise', color: 1 }, edge: [0, 1],
+      backdrop: 'stars', climax: 'none',
       layers: [
         { kind: 'glow', r: 50, color: 0, alpha: 0.35 },
         { kind: 'wings', count: 6, r: 44, color: 1, color2: 2 },
@@ -228,8 +225,7 @@ export const AURAS: AuraDef[] = [
     description: 'Die Zeit reißt auf. Teilchen springen zwischen Augenblicken.',
     cutscene: {
       palette: ['#00e5c0', '#ff3d9a', '#b8fff0'],
-      backdrop: 'static', climax: 'freeze',
-      particles: { sprite: 'square', dir: 'drift', color: 1 }, edge: [0, 1],
+      backdrop: 'static', climax: 'none',
       layers: [
         { kind: 'rift', r: 40, count: 3, color: 1 },
         { kind: 'pixels', r: 40, count: 18, color: 2 },
@@ -242,7 +238,7 @@ export const AURAS: AuraDef[] = [
     id: 'ewigkeit', name: 'Ewigkeit', tier: 'transcendent', odds: 100000, sell: 6, title: 'Ewig',
     colors: { main: '#ffd76a', glow: '#ffffff', accent: '#c9a7ff', palette: SPECTRUM },
     description: 'Durchläuft endlos das Farbspektrum, Ringe drehen gegeneinander.',
-    cutscene: { ...classic(['#ffd76a', '#ffffff', '#c9a7ff'], [], 'stars', 'stall'), particles: { sprite: 'spark', dir: 'drift', color: 'spectrum' }, edge: [0, 2] },
+    cutscene: classic(['#ffd76a', '#ffffff', '#c9a7ff'], [], 'stars', 'stall'),
   },
   {
     id: 'chronosphaere', name: 'Chronosphäre', tier: 'transcendent', odds: 150000, sell: 8, title: 'Herr der Zeit',
@@ -251,7 +247,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#fff1b8', '#d4af37', '#7a4a1a'],
       backdrop: 'stars', climax: 'stall',
-      particles: { sprite: 'dot', dir: 'fall', color: 0 }, ramp: { kind: 'ticks' }, edge: [0],
       layers: [
         { kind: 'glow', r: 46, color: 0, alpha: 0.3 },
         { kind: 'clock', r: 32, color: 1, color2: 0 },
@@ -266,7 +261,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#e8d8ff', '#7a5cff', '#000000'],
       backdrop: 'void', climax: 'converge',
-      particles: { sprite: 'dot', dir: 'in', color: 0 }, edge: [0],
       layers: [
         { kind: 'glow', r: 44, color: 1, alpha: 0.4 },
         { kind: 'circle', r: 25, width: 0, color: 2, fill: true },
@@ -280,7 +274,7 @@ export const AURAS: AuraDef[] = [
     id: 'quasar', name: 'Quasar', tier: 'galactic', odds: 250000, sell: 10, title: 'Strahlender Kern',
     colors: { main: '#0a1a3a', glow: '#8ecfff', accent: '#ff6a3a' },
     description: 'Rotierende Doppel-Jets statt kreisender Partikel, taumelnde Trümmer.',
-    cutscene: { ...classic(['#8ecfff', '#ff6a3a', '#ffffff'], [{ kind: 'jets', r: 70, color: 0, color2: 1 }], 'stars', 'converge'), particles: { sprite: 'spark', dir: 'out', color: 0 }, edge: [0, 1] },
+    cutscene: classic(['#8ecfff', '#ff6a3a', '#ffffff'], [{ kind: 'jets', r: 70, color: 0, color2: 1 }], 'stars', 'converge'),
   },
   {
     id: 'supernova', name: 'Supernova', tier: 'galactic', odds: 400000, biome: 'supernova', sell: 14, title: 'Sternentod',
@@ -289,7 +283,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ffffff', '#ffb36b', '#7a3dff'],
       backdrop: 'stars', climax: 'supernova',
-      particles: { sprite: 'ember', dir: 'out', color: 0 }, ramp: { kind: 'counter', from: 100, to: 0, label: 'KERNSTABILITÄT', unit: '%' }, edge: [0, 1],
       layers: [
         { kind: 'glow', r: 40, color: 1, alpha: 0.6 },
         { kind: 'rays', count: 12, r: 60, color: 0, alpha: 0.5 },
@@ -305,7 +298,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ffc6f2', '#6b5bff', '#ffe6a8'],
       backdrop: 'stars', climax: 'converge',
-      particles: { sprite: 'star4', dir: 'drift', color: 2 }, edge: [0, 1],
       layers: [
         { kind: 'spiral', r: 52, count: 2, color: 0, color2: 1 },
         { kind: 'glow', r: 26, color: 2, alpha: 0.7 },
@@ -320,7 +312,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#00b3ff', '#ff2bd6', '#e0f7ff'],
       backdrop: 'void', climax: 'pulse',
-      particles: { sprite: 'spark', dir: 'in', color: 0 }, edge: [0, 1],
       layers: [
         { kind: 'fieldLines', r: 48, count: 6, color: 0, color2: 1 },
         { kind: 'glow', r: 16, color: 2, alpha: 0.5 },
@@ -333,8 +324,8 @@ export const AURAS: AuraDef[] = [
     id: 'multiversum', name: 'Multiversum', tier: 'universal', odds: 1250000, sell: 28, title: 'Weltenspringer',
     colors: { main: '#7a5cff', glow: '#b39dff', accent: '#4a2fbf', palette: ['#7a5cff', '#4ac9ff', '#ff4ad0'] },
     description: 'Drei Ringe in Violett, Cyan und Magenta, flackernde Linsen zwischen den Welten.',
-    cutscene: { ...classic(['#b39dff', '#4ac9ff', '#ff4ad0'], [
-    ], 'stars', 'pulse'), climax: 'split', particles: { sprite: 'bubble', dir: 'drift', color: 1 }, lines: ['ES GIBT MEHR ALS EINE WELT.'], ramp: { kind: 'flashes' }, edge: [1, 2] },
+    cutscene: classic(['#b39dff', '#4ac9ff', '#ff4ad0'], [
+    ], 'stars', 'pulse'),
   },
   {
     id: 'kosmischesnetz', name: 'Kosmisches Netz', tier: 'universal', odds: 2000000, sell: 38, title: 'Weber des Alls',
@@ -343,7 +334,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#4dffd2', '#7a5cff', '#c2fff0'],
       backdrop: 'void', climax: 'converge',
-      particles: { sprite: 'dot', dir: 'in', color: 0 }, lines: ['ALLES IST MITEINANDER VERBUNDEN.'], ramp: { kind: 'flashes' }, edge: [0, 1],
       layers: [
         { kind: 'web', r: 46, count: 12, color: 0, color2: 1 },
         { kind: 'star', points: 4, r: 15.4, inner: 0.3, color: 2, fill: true },
@@ -358,7 +348,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ffd23f', '#ff4500', '#ffffff'],
       backdrop: 'embers', climax: 'shatter',
-      particles: { sprite: 'ember', dir: 'out', color: 1 }, lines: ['VOR DEM ANFANG WAR NICHTS.'], ramp: { kind: 'counter', from: 10, to: 0, label: 'T MINUS', unit: 's', decimals: 1 }, edge: [0, 1],
       layers: [
         { kind: 'glow', r: 34, color: 0, alpha: 0.75 },
         { kind: 'circle', r: 20, width: 0, color: 2, fill: true },
@@ -373,7 +362,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#d6ff8a', '#2fd36b', '#ff9a3d'],
       backdrop: 'stars', climax: 'pulse',
-      particles: { sprite: 'bubble', dir: 'rise', color: 0 }, lines: ['ETWAS REGT SICH IN DER TIEFE.'], ramp: { kind: 'ticks' }, edge: [0],
       layers: [
         { kind: 'cells', r: 40, count: 6, color: 0, color2: 1 },
         { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 2, fill: true },
@@ -388,7 +376,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#8a92a5', '#5a6478', '#c0c6d4'],
       backdrop: 'static', climax: 'shatter',
-      fog: [1], particles: { sprite: 'dot', dir: 'fall', color: 0 }, lines: ['ALLES ZERFÄLLT.'], ramp: { kind: 'counter', from: 100, to: 0, label: 'ORDNUNG', unit: '%' }, edge: [1],
       layers: [
         { kind: 'cracks', count: 5, r: 34, color: 2 },
         { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 1, fill: true, alpha: 0.75 },
@@ -402,7 +389,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ff8a5c', '#6a7480', '#c0d4e8'],
       backdrop: 'snow', climax: 'stall',
-      particles: { sprite: 'crystal', dir: 'fall', color: 2 }, lines: ['DAS LETZTE LICHT WIRD KALT.'], ramp: { kind: 'counter', from: 5778, to: 3, label: 'TEMPERATUR', unit: 'K' }, edge: [0],
       layers: [
         { kind: 'glow', r: 40, color: 0, alpha: 0.4 },
         { kind: 'sparkles', count: 20, r: 50, color: 0, param: 1 },
@@ -418,7 +404,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ff5a3c', '#4ac9ff', '#ffffff'],
       backdrop: 'stars', climax: 'rewind',
-      particles: { sprite: 'spark', dir: 'drift', color: 0 }, lines: ['WAS IST, IST NICHT.'], ramp: { kind: 'flashes' }, edge: [0, 1],
       layers: [
         { kind: 'glow', r: 19, color: 0, alpha: 0.5, offset: [-16, 0] },
         { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 0, fill: true, offset: [-16, 0] },
@@ -434,7 +419,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ff3dbb', '#7af0ff', '#ffffff'],
       backdrop: 'stars', climax: 'rewind',
-      particles: { sprite: 'spark', dir: 'drift', color: 1 }, lines: ['DER WEG ZURÜCK IST DER WEG NACH VORN.'], ramp: { kind: 'ticks' }, edge: [0, 1],
       layers: [
         { kind: 'mobius', r: 40, color: 0, color2: 1 },
         { kind: 'star', points: 4, r: 16.8, inner: 0.3, color: 2, fill: true },
@@ -449,7 +433,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: SPECTRUM,
       backdrop: 'spectrum', climax: 'pulse',
-      particles: { sprite: 'spark', dir: 'out', color: 'spectrum' }, lines: ['JEDE FARBE.', 'JEDE WELT.', 'ALLES IN EINEM.'], ramp: { kind: 'flashes' }, edge: [0, 3],
       layers: [
         { kind: 'glow', r: 48, color: 'spectrum', alpha: 0.35 },
         { kind: 'star', points: 4, r: 18.2, inner: 0.3, color: 'spectrum', fill: true },
@@ -463,7 +446,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ffe9a8', '#ffffff', ...SPECTRUM],
       backdrop: 'spectrum', climax: 'supernova',
-      particles: { sprite: 'star4', dir: 'out', color: 1 }, lines: ['AM ANFANG WAR ES DUNKEL.', 'DANN ENTZÜNDETE SICH EIN STERN.', 'UND NOCH EINER.'], ramp: { kind: 'flashes' }, edge: [0, 1],
       layers: [
         { kind: 'rays', count: 16, r: 70, color: 0, alpha: 0.45 },
         { kind: 'star', points: 8, r: 25.2, inner: 0.4, color: 1, fill: true },
@@ -478,7 +460,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ffffff', '#888888', '#000000'],
       backdrop: 'void', climax: 'invert',
-      fog: [1], lines: ['ZÄHL MIT.', 'BIS NULL.'], ramp: { kind: 'counter', from: 10, to: 0, label: '' }, edge: [0],
       layers: [
         { kind: 'polygon', points: 4, r: 30, width: 1.5, color: 0, spin: 0.5 },
         { kind: 'star', points: 4, r: 19.6, inner: 0.25, color: 0, fill: true },
@@ -492,7 +473,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ffd700', '#ffffff', '#7a5cff'],
       backdrop: 'void', climax: 'converge',
-      particles: { sprite: 'dot', dir: 'drift', color: 0 }, lines: ['VOR JEDER FORM', 'WAR DIE URFORM.'], ramp: { kind: 'flashes' }, edge: [0, 2],
       layers: [
         { kind: 'polygon', points: 3, r: 38, width: 2, color: 0, spin: 0.4 },
         { kind: 'polygon', points: 4, r: 30, width: 2, color: 2, spin: -0.5 },
@@ -509,7 +489,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#a0f0ff', '#ffd76a', '#ffffff'],
       backdrop: 'stars', climax: 'rewind',
-      particles: { sprite: 'spark', dir: 'drift', color: 0 }, lines: ['EIN AUGENBLICK.', 'EINE EWIGKEIT.', 'KEIN UNTERSCHIED.'], ramp: { kind: 'counter', from: 1, to: 999999999, label: 'JAHRE' }, edge: [0, 1],
       layers: [
         { kind: 'glow', r: 44, color: 0, alpha: 0.35 },
         { kind: 'lemniscate', r: 44, color: 0, color2: 1 },
@@ -524,7 +503,6 @@ export const AURAS: AuraDef[] = [
     cutscene: {
       palette: ['#ffffff', '#fff6cf', ...SPECTRUM],
       backdrop: 'spectrum', climax: 'supernova',
-      particles: { sprite: 'spark', dir: 'in', color: 'spectrum' }, lines: ['ALLE WELTEN HABEN EIN HERZ.', 'HÖRST DU ES SCHLAGEN?'], ramp: { kind: 'ticks' }, edge: [0, 1],
       layers: [
         { kind: 'rays', count: 18, r: 80, color: 1, alpha: 0.5 },
         { kind: 'glow', r: 46, color: 'spectrum', alpha: 0.5 },

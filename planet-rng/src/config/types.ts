@@ -104,34 +104,7 @@ export interface CsLayer {
 
 export type CsBackdrop = 'none' | 'stars' | 'void' | 'streaks' | 'embers' | 'spectrum' | 'static' | 'snow' | 'blood';
 
-/**
- * The signature moment ("break") at the end of the build-up:
- * stall/rewind (spin stops or reverses), converge (light is pulled in), shatter (the frame
- * cracks and breaks into falling shards), split (the symbol is cut in two halves that drift
- * apart), freeze (time stops: rotation halts, colour drains, then the frame shatters),
- * pulse (heartbeat), invert (colours flip), supernova (collapse and explosion).
- */
-export type CsClimax = 'none' | 'stall' | 'converge' | 'shatter' | 'split' | 'freeze' | 'pulse' | 'invert' | 'supernova' | 'rewind';
-
-/** Theme particles drifting through the scene (atmosphere act). */
-export interface CsParticles {
-  sprite: 'feather' | 'ember' | 'bubble' | 'drop' | 'spark' | 'star4' | 'shard' | 'square' | 'dot' | 'petal' | 'crystal';
-  /** fall / rise (vertical), in / out (toward or away from the centre), drift (slow wandering). */
-  dir: 'fall' | 'rise' | 'in' | 'out' | 'drift';
-  /** Palette index, 'spectrum' or a hex colour. */
-  color?: number | 'spectrum' | string;
-  count?: number;
-}
-
-/**
- * Frequency ramp during the build-up: tension through acceleration.
- * flashes: beams of light flash across the screen, ever more often (at most 3 per second);
- * ticks: ticking that speeds up (heartbeat, clock); counter: a number runs from `from` to `to`.
- */
-export type CsRamp =
-  | { kind: 'flashes' }
-  | { kind: 'ticks' }
-  | { kind: 'counter'; from: number; to: number; label: string; unit?: string; decimals?: number };
+export type CsClimax = 'none' | 'stall' | 'converge' | 'shatter' | 'pulse' | 'invert' | 'supernova' | 'rewind';
 
 export interface CutsceneDef {
   layers: CsLayer[];
@@ -139,17 +112,6 @@ export interface CutsceneDef {
   palette: string[];
   backdrop: CsBackdrop;
   climax: CsClimax;
-  /** Coloured fog in drifting layers (palette indexes); default [0, 1], false = none. */
-  fog?: number[] | false;
-  particles?: CsParticles;
-  /**
-   * Own text lines (uppercase, word by word). The template shows the first line from the
-   * "Legendär-plus" stage on and all lines at the top stage.
-   */
-  lines?: string[];
-  ramp?: CsRamp;
-  /** Screen edges glow before the reveal: one palette index, or two (left / right). */
-  edge?: [number] | [number, number];
 }
 
 // ---------------------------------------------------------------------------
