@@ -1,0 +1,1244 @@
+[
+  {
+    "id": "staub",
+    "tier": 0,
+    "equipMs": 13.1,
+    "low": {
+      "avg": 6.59,
+      "p95": 9.8,
+      "canvas": "390x844",
+      "particles": 6
+    },
+    "medium": {
+      "avg": 14.58,
+      "p95": 20.2,
+      "canvas": "585x1266",
+      "particles": 12
+    },
+    "high": {
+      "avg": 22.38,
+      "p95": 34.8,
+      "canvas": "780x1688",
+      "particles": 20
+    }
+  },
+  {
+    "id": "moos",
+    "tier": 0,
+    "equipMs": 23.8,
+    "low": {
+      "avg": 5.71,
+      "p95": 7.4,
+      "canvas": "390x844",
+      "particles": 5
+    },
+    "medium": {
+      "avg": 12.86,
+      "p95": 17,
+      "canvas": "585x1266",
+      "particles": 11
+    },
+    "high": {
+      "avg": 20.08,
+      "p95": 21.7,
+      "canvas": "780x1688",
+      "particles": 18
+    }
+  },
+  {
+    "id": "flut",
+    "tier": 1,
+    "equipMs": 16.8,
+    "low": {
+      "avg": 9.4,
+      "p95": 12.6,
+      "canvas": "390x844",
+      "particles": 7
+    },
+    "medium": {
+      "avg": 20.91,
+      "p95": 28.4,
+      "canvas": "585x1266",
+      "particles": 13
+    },
+    "high": {
+      "avg": 33.13,
+      "p95": 44.4,
+      "canvas": "780x1688",
+      "particles": 22
+    }
+  },
+  {
+    "id": "asche",
+    "tier": 1,
+    "equipMs": 45.9,
+    "low": {
+      "avg": 9.9,
+      "p95": 16.3,
+      "canvas": "390x844",
+      "particles": 8
+    },
+    "medium": {
+      "avg": 19.37,
+      "p95": 25.2,
+      "canvas": "585x1266",
+      "particles": 16
+    },
+    "high": {
+      "avg": 34.29,
+      "p95": 47.3,
+      "canvas": "780x1688",
+      "particles": 26
+    }
+  },
+  {
+    "id": "sternschnuppe",
+    "tier": 1,
+    "equipMs": 14.2,
+    "low": {
+      "avg": 7.74,
+      "p95": 11.5,
+      "canvas": "390x844",
+      "particles": 4
+    },
+    "medium": {
+      "avg": 17.13,
+      "p95": 24.8,
+      "canvas": "585x1266",
+      "particles": 8
+    },
+    "high": {
+      "avg": 31.09,
+      "p95": 41.2,
+      "canvas": "780x1688",
+      "particles": 14
+    }
+  },
+  {
+    "id": "nebelschleier",
+    "tier": 1,
+    "equipMs": 103.4,
+    "low": {
+      "avg": 8.79,
+      "p95": 11.3,
+      "canvas": "390x844",
+      "particles": 0
+    },
+    "medium": {
+      "avg": 18.9,
+      "p95": 26.9,
+      "canvas": "585x1266",
+      "particles": 0
+    },
+    "high": {
+      "avg": 34.74,
+      "p95": 41.5,
+      "canvas": "780x1688",
+      "particles": 0
+    }
+  },
+  {
+    "id": "frost",
+    "tier": 2,
+    "equipMs": 46.7,
+    "low": {
+      "avg": 11.32,
+      "p95": 13.7,
+      "canvas": "390x844",
+      "particles": 7
+    },
+    "medium": {
+      "avg": 19.68,
+      "p95": 27.1,
+      "canvas": "585x1266",
+      "particles": 14
+    },
+    "high": {
+      "avg": 38.31,
+      "p95": 47.8,
+      "canvas": "780x1688",
+      "particles": 24
+    }
+  },
+  {
+    "id": "raureif",
+    "tier": 2,
+    "equipMs": 44.6,
+    "low": {
+      "avg": 9.83,
+      "p95": 13.4,
+      "canvas": "390x844",
+      "particles": 9
+    },
+    "medium": {
+      "avg": 23.33,
+      "p95": 29.1,
+      "canvas": "585x1266",
+      "particles": 18
+    },
+    "high": {
+      "avg": 37.31,
+      "p95": 48.6,
+      "canvas": "780x1688",
+      "particles": 30
+    }
+  },
+  {
+    "id": "sonnenwind",
+    "tier": 2,
+    "equipMs": 56.1,
+    "low": {
+      "avg": 9.38,
+      "p95": 12.7,
+      "canvas": "390x844",
+      "particles": 0
+    },
+    "medium": {
+      "avg": 22.62,
+      "p95": 27.9,
+      "canvas": "585x1266",
+      "particles": 0
+    },
+    "high": {
+      "avg": 34.03,
+      "p95": 42.7,
+      "canvas": "780x1688",
+      "particles": 0
+    }
+  },
+  {
+    "id": "sturm",
+    "tier": 2,
+    "equipMs": 28.1,
+    "low": {
+      "avg": 9.08,
+      "p95": 12,
+      "canvas": "390x844",
+      "particles": 12
+    },
+    "medium": {
+      "avg": 19.44,
+      "p95": 28.5,
+      "canvas": "585x1266",
+      "particles": 24
+    },
+    "high": {
+      "avg": 37.68,
+      "p95": 52.5,
+      "canvas": "780x1688",
+      "particles": 40
+    }
+  },
+  {
+    "id": "sonnenkern",
+    "tier": 3,
+    "equipMs": 58.4,
+    "low": {
+      "avg": 14.42,
+      "p95": 19.8,
+      "canvas": "390x844",
+      "particles": 21
+    },
+    "medium": {
+      "avg": 30.48,
+      "p95": 39.8,
+      "canvas": "585x1266",
+      "particles": 42
+    },
+    "high": {
+      "avg": 52.91,
+      "p95": 73.2,
+      "canvas": "780x1688",
+      "particles": 70
+    }
+  },
+  {
+    "id": "nebula",
+    "tier": 3,
+    "equipMs": 157.1,
+    "low": {
+      "avg": 13.06,
+      "p95": 17.4,
+      "canvas": "390x844",
+      "particles": 24
+    },
+    "medium": {
+      "avg": 27.22,
+      "p95": 36.9,
+      "canvas": "585x1266",
+      "particles": 48
+    },
+    "high": {
+      "avg": 45.17,
+      "p95": 63.4,
+      "canvas": "780x1688",
+      "particles": 80
+    }
+  },
+  {
+    "id": "prisma",
+    "tier": 3,
+    "equipMs": 70.7,
+    "low": {
+      "avg": 11.18,
+      "p95": 14.6,
+      "canvas": "390x844",
+      "particles": 20
+    },
+    "medium": {
+      "avg": 23.88,
+      "p95": 32,
+      "canvas": "585x1266",
+      "particles": 40
+    },
+    "high": {
+      "avg": 42.81,
+      "p95": 68.1,
+      "canvas": "780x1688",
+      "particles": 66
+    }
+  },
+  {
+    "id": "komet",
+    "tier": 3,
+    "equipMs": 19.8,
+    "low": {
+      "avg": 12.96,
+      "p95": 14.3,
+      "canvas": "390x844",
+      "particles": 19
+    },
+    "medium": {
+      "avg": 23.3,
+      "p95": 29.4,
+      "canvas": "585x1266",
+      "particles": 38
+    },
+    "high": {
+      "avg": 42.85,
+      "p95": 58.6,
+      "canvas": "780x1688",
+      "particles": 64
+    }
+  },
+  {
+    "id": "irrlicht",
+    "tier": 3,
+    "equipMs": 29.8,
+    "low": {
+      "avg": 11.71,
+      "p95": 16.1,
+      "canvas": "390x844",
+      "particles": 9
+    },
+    "medium": {
+      "avg": 21.3,
+      "p95": 31.7,
+      "canvas": "585x1266",
+      "particles": 18
+    },
+    "high": {
+      "avg": 45.96,
+      "p95": 59.7,
+      "canvas": "780x1688",
+      "particles": 30
+    }
+  },
+  {
+    "id": "eklipse",
+    "tier": 4,
+    "equipMs": 83.4,
+    "low": {
+      "avg": 17.07,
+      "p95": 23.4,
+      "canvas": "390x844",
+      "particles": 18
+    },
+    "medium": {
+      "avg": 34.3,
+      "p95": 49.4,
+      "canvas": "585x1266",
+      "particles": 36
+    },
+    "high": {
+      "avg": 53.58,
+      "p95": 74.2,
+      "canvas": "780x1688",
+      "particles": 60
+    }
+  },
+  {
+    "id": "saturnring",
+    "tier": 4,
+    "equipMs": 91.8,
+    "low": {
+      "avg": 13.41,
+      "p95": 17.5,
+      "canvas": "390x844",
+      "particles": 18
+    },
+    "medium": {
+      "avg": 29.27,
+      "p95": 43.1,
+      "canvas": "585x1266",
+      "particles": 36
+    },
+    "high": {
+      "avg": 46.51,
+      "p95": 61.3,
+      "canvas": "780x1688",
+      "particles": 60
+    }
+  },
+  {
+    "id": "finsternis",
+    "tier": 4,
+    "equipMs": 82.1,
+    "low": {
+      "avg": 17.55,
+      "p95": 21.6,
+      "canvas": "390x844",
+      "particles": 15
+    },
+    "medium": {
+      "avg": 28.7,
+      "p95": 36.5,
+      "canvas": "585x1266",
+      "particles": 30
+    },
+    "high": {
+      "avg": 53,
+      "p95": 75.6,
+      "canvas": "780x1688",
+      "particles": 50
+    }
+  },
+  {
+    "id": "pulsar",
+    "tier": 4,
+    "equipMs": 68.6,
+    "low": {
+      "avg": 12.63,
+      "p95": 17,
+      "canvas": "390x844",
+      "particles": 18
+    },
+    "medium": {
+      "avg": 26.77,
+      "p95": 35,
+      "canvas": "585x1266",
+      "particles": 36
+    },
+    "high": {
+      "avg": 44.83,
+      "p95": 60.1,
+      "canvas": "780x1688",
+      "particles": 60
+    }
+  },
+  {
+    "id": "meteorit",
+    "tier": 4,
+    "equipMs": 38.6,
+    "low": {
+      "avg": 14.02,
+      "p95": 16.1,
+      "canvas": "390x844",
+      "particles": 12
+    },
+    "medium": {
+      "avg": 25.39,
+      "p95": 34.4,
+      "canvas": "585x1266",
+      "particles": 24
+    },
+    "high": {
+      "avg": 43.27,
+      "p95": 58,
+      "canvas": "780x1688",
+      "particles": 40
+    }
+  },
+  {
+    "id": "gezeitenmond",
+    "tier": 4,
+    "equipMs": 23.2,
+    "low": {
+      "avg": 13.87,
+      "p95": 19,
+      "canvas": "390x844",
+      "particles": 19
+    },
+    "medium": {
+      "avg": 36.43,
+      "p95": 41.2,
+      "canvas": "585x1266",
+      "particles": 38
+    },
+    "high": {
+      "avg": 49.65,
+      "p95": 62.6,
+      "canvas": "780x1688",
+      "particles": 64
+    }
+  },
+  {
+    "id": "diamantherz",
+    "tier": 4,
+    "equipMs": 62.7,
+    "low": {
+      "avg": 18.53,
+      "p95": 23.6,
+      "canvas": "390x844",
+      "particles": 22
+    },
+    "medium": {
+      "avg": 36.08,
+      "p95": 41.5,
+      "canvas": "585x1266",
+      "particles": 44
+    },
+    "high": {
+      "avg": 49.19,
+      "p95": 68.5,
+      "canvas": "780x1688",
+      "particles": 74
+    }
+  },
+  {
+    "id": "sternbild",
+    "tier": 4,
+    "equipMs": 32.9,
+    "low": {
+      "avg": 13.5,
+      "p95": 18.5,
+      "canvas": "390x844",
+      "particles": 18
+    },
+    "medium": {
+      "avg": 28.2,
+      "p95": 38.7,
+      "canvas": "585x1266",
+      "particles": 36
+    },
+    "high": {
+      "avg": 58.97,
+      "p95": 72.8,
+      "canvas": "780x1688",
+      "particles": 60
+    }
+  },
+  {
+    "id": "polarlicht",
+    "tier": 4,
+    "equipMs": 29.8,
+    "low": {
+      "avg": 14.53,
+      "p95": 18,
+      "canvas": "390x844",
+      "particles": 27
+    },
+    "medium": {
+      "avg": 28.07,
+      "p95": 38.5,
+      "canvas": "585x1266",
+      "particles": 54
+    },
+    "high": {
+      "avg": 52.19,
+      "p95": 65.2,
+      "canvas": "780x1688",
+      "particles": 90
+    }
+  },
+  {
+    "id": "urlicht",
+    "tier": 4,
+    "equipMs": 109.1,
+    "low": {
+      "avg": 21.51,
+      "p95": 25.2,
+      "canvas": "390x844",
+      "particles": 19
+    },
+    "medium": {
+      "avg": 41.45,
+      "p95": 54.4,
+      "canvas": "585x1266",
+      "particles": 38
+    },
+    "high": {
+      "avg": 72.6,
+      "p95": 93.8,
+      "canvas": "780x1688",
+      "particles": 64
+    }
+  },
+  {
+    "id": "sternenfeuer",
+    "tier": 4,
+    "equipMs": 33.8,
+    "low": {
+      "avg": 13.31,
+      "p95": 17.7,
+      "canvas": "390x844",
+      "particles": 30
+    },
+    "medium": {
+      "avg": 29.93,
+      "p95": 41.6,
+      "canvas": "585x1266",
+      "particles": 60
+    },
+    "high": {
+      "avg": 48.7,
+      "p95": 65.4,
+      "canvas": "780x1688",
+      "particles": 100
+    }
+  },
+  {
+    "id": "phoenix",
+    "tier": 4,
+    "equipMs": 28.2,
+    "low": {
+      "avg": 11.75,
+      "p95": 15.1,
+      "canvas": "390x844",
+      "particles": 24
+    },
+    "medium": {
+      "avg": 35.79,
+      "p95": 37.9,
+      "canvas": "585x1266",
+      "particles": 48
+    },
+    "high": {
+      "avg": 52.72,
+      "p95": 64.1,
+      "canvas": "780x1688",
+      "particles": 80
+    }
+  },
+  {
+    "id": "koronaauswurf",
+    "tier": 4,
+    "equipMs": 22.2,
+    "low": {
+      "avg": 15.87,
+      "p95": 19.1,
+      "canvas": "390x844",
+      "particles": 18
+    },
+    "medium": {
+      "avg": 27.59,
+      "p95": 37.9,
+      "canvas": "585x1266",
+      "particles": 36
+    },
+    "high": {
+      "avg": 47.63,
+      "p95": 62,
+      "canvas": "780x1688",
+      "particles": 60
+    }
+  },
+  {
+    "id": "singularitaet",
+    "tier": 5,
+    "equipMs": 161.1,
+    "low": {
+      "avg": 15.52,
+      "p95": 19.4,
+      "canvas": "390x844",
+      "particles": 51
+    },
+    "medium": {
+      "avg": 38.8,
+      "p95": 56.2,
+      "canvas": "585x1266",
+      "particles": 102
+    },
+    "high": {
+      "avg": 70.14,
+      "p95": 94.2,
+      "canvas": "780x1688",
+      "particles": 170
+    }
+  },
+  {
+    "id": "akkretion",
+    "tier": 5,
+    "equipMs": 110.3,
+    "low": {
+      "avg": 15.39,
+      "p95": 20.4,
+      "canvas": "390x844",
+      "particles": 42
+    },
+    "medium": {
+      "avg": 34.83,
+      "p95": 42.1,
+      "canvas": "585x1266",
+      "particles": 84
+    },
+    "high": {
+      "avg": 52.23,
+      "p95": 67.3,
+      "canvas": "780x1688",
+      "particles": 140
+    }
+  },
+  {
+    "id": "blutmond",
+    "tier": 5,
+    "equipMs": 47.3,
+    "low": {
+      "avg": 17.52,
+      "p95": 22.4,
+      "canvas": "390x844",
+      "particles": 45
+    },
+    "medium": {
+      "avg": 34.4,
+      "p95": 44.3,
+      "canvas": "585x1266",
+      "particles": 90
+    },
+    "high": {
+      "avg": 63.1,
+      "p95": 82.3,
+      "canvas": "780x1688",
+      "particles": 150
+    }
+  },
+  {
+    "id": "seraph",
+    "tier": 5,
+    "equipMs": 72.3,
+    "low": {
+      "avg": 19.31,
+      "p95": 25,
+      "canvas": "390x844",
+      "particles": 33
+    },
+    "medium": {
+      "avg": 42.74,
+      "p95": 51.3,
+      "canvas": "585x1266",
+      "particles": 66
+    },
+    "high": {
+      "avg": 65.38,
+      "p95": 88.7,
+      "canvas": "780x1688",
+      "particles": 110
+    }
+  },
+  {
+    "id": "zeitriss",
+    "tier": 5,
+    "equipMs": 29.4,
+    "low": {
+      "avg": 15.34,
+      "p95": 19.4,
+      "canvas": "390x844",
+      "particles": 36
+    },
+    "medium": {
+      "avg": 31.76,
+      "p95": 44.1,
+      "canvas": "585x1266",
+      "particles": 72
+    },
+    "high": {
+      "avg": 58.14,
+      "p95": 75.8,
+      "canvas": "780x1688",
+      "particles": 120
+    }
+  },
+  {
+    "id": "ewigkeit",
+    "tier": 5,
+    "equipMs": 95.8,
+    "low": {
+      "avg": 19.47,
+      "p95": 26,
+      "canvas": "390x844",
+      "particles": 42
+    },
+    "medium": {
+      "avg": 33.04,
+      "p95": 42.4,
+      "canvas": "585x1266",
+      "particles": 84
+    },
+    "high": {
+      "avg": 55.52,
+      "p95": 68.5,
+      "canvas": "780x1688",
+      "particles": 140
+    }
+  },
+  {
+    "id": "chronosphaere",
+    "tier": 5,
+    "equipMs": 62.5,
+    "low": {
+      "avg": 14.92,
+      "p95": 17.3,
+      "canvas": "390x844",
+      "particles": 30
+    },
+    "medium": {
+      "avg": 31.44,
+      "p95": 39.6,
+      "canvas": "585x1266",
+      "particles": 60
+    },
+    "high": {
+      "avg": 55.99,
+      "p95": 75.1,
+      "canvas": "780x1688",
+      "particles": 100
+    }
+  },
+  {
+    "id": "ereignishorizont",
+    "tier": 5,
+    "equipMs": 109.6,
+    "low": {
+      "avg": 14.17,
+      "p95": 19.8,
+      "canvas": "390x844",
+      "particles": 48
+    },
+    "medium": {
+      "avg": 33.3,
+      "p95": 44,
+      "canvas": "585x1266",
+      "particles": 96
+    },
+    "high": {
+      "avg": 51.54,
+      "p95": 72.1,
+      "canvas": "780x1688",
+      "particles": 160
+    }
+  },
+  {
+    "id": "quasar",
+    "tier": 5,
+    "equipMs": 85,
+    "low": {
+      "avg": 14.46,
+      "p95": 20,
+      "canvas": "390x844",
+      "particles": 30
+    },
+    "medium": {
+      "avg": 29.47,
+      "p95": 41.1,
+      "canvas": "585x1266",
+      "particles": 60
+    },
+    "high": {
+      "avg": 47.41,
+      "p95": 60.6,
+      "canvas": "780x1688",
+      "particles": 100
+    }
+  },
+  {
+    "id": "supernova",
+    "tier": 5,
+    "equipMs": 127.2,
+    "low": {
+      "avg": 14.94,
+      "p95": 23.8,
+      "canvas": "390x844",
+      "particles": 27
+    },
+    "medium": {
+      "avg": 32.88,
+      "p95": 44.8,
+      "canvas": "585x1266",
+      "particles": 54
+    },
+    "high": {
+      "avg": 57.6,
+      "p95": 83.7,
+      "canvas": "780x1688",
+      "particles": 90
+    }
+  },
+  {
+    "id": "andromeda",
+    "tier": 5,
+    "equipMs": 266.9,
+    "low": {
+      "avg": 15.62,
+      "p95": 21.7,
+      "canvas": "390x844",
+      "particles": 24
+    },
+    "medium": {
+      "avg": 34.76,
+      "p95": 47.9,
+      "canvas": "585x1266",
+      "particles": 48
+    },
+    "high": {
+      "avg": 61.37,
+      "p95": 82,
+      "canvas": "780x1688",
+      "particles": 80
+    }
+  },
+  {
+    "id": "magnetar",
+    "tier": 5,
+    "equipMs": 29.3,
+    "low": {
+      "avg": 15.42,
+      "p95": 18.6,
+      "canvas": "390x844",
+      "particles": 42
+    },
+    "medium": {
+      "avg": 32.51,
+      "p95": 47.8,
+      "canvas": "585x1266",
+      "particles": 84
+    },
+    "high": {
+      "avg": 57.12,
+      "p95": 78.6,
+      "canvas": "780x1688",
+      "particles": 140
+    }
+  },
+  {
+    "id": "multiversum",
+    "tier": 6,
+    "equipMs": 164.5,
+    "low": {
+      "avg": 16.92,
+      "p95": 23.4,
+      "canvas": "390x844",
+      "particles": 78
+    },
+    "medium": {
+      "avg": 37.06,
+      "p95": 51.7,
+      "canvas": "585x1266",
+      "particles": 156
+    },
+    "high": {
+      "avg": 63.49,
+      "p95": 90.2,
+      "canvas": "780x1688",
+      "particles": 260
+    }
+  },
+  {
+    "id": "kosmischesnetz",
+    "tier": 6,
+    "equipMs": 75,
+    "low": {
+      "avg": 17.47,
+      "p95": 22.1,
+      "canvas": "390x844",
+      "particles": 78
+    },
+    "medium": {
+      "avg": 37.12,
+      "p95": 46.5,
+      "canvas": "585x1266",
+      "particles": 156
+    },
+    "high": {
+      "avg": 68.34,
+      "p95": 87.4,
+      "canvas": "780x1688",
+      "particles": 260
+    }
+  },
+  {
+    "id": "urknall",
+    "tier": 6,
+    "equipMs": 116.5,
+    "low": {
+      "avg": 13.94,
+      "p95": 17,
+      "canvas": "390x844",
+      "particles": 90
+    },
+    "medium": {
+      "avg": 36.14,
+      "p95": 47.1,
+      "canvas": "585x1266",
+      "particles": 180
+    },
+    "high": {
+      "avg": 61.51,
+      "p95": 79.8,
+      "canvas": "780x1688",
+      "particles": 300
+    }
+  },
+  {
+    "id": "ursuppe",
+    "tier": 6,
+    "equipMs": 68.9,
+    "low": {
+      "avg": 19.53,
+      "p95": 25.8,
+      "canvas": "390x844",
+      "particles": 84
+    },
+    "medium": {
+      "avg": 40.49,
+      "p95": 52.9,
+      "canvas": "585x1266",
+      "particles": 168
+    },
+    "high": {
+      "avg": 67.34,
+      "p95": 90,
+      "canvas": "780x1688",
+      "particles": 280
+    }
+  },
+  {
+    "id": "entropie",
+    "tier": 6,
+    "equipMs": 72.8,
+    "low": {
+      "avg": 15.77,
+      "p95": 22.4,
+      "canvas": "390x844",
+      "particles": 84
+    },
+    "medium": {
+      "avg": 34.84,
+      "p95": 44.8,
+      "canvas": "585x1266",
+      "particles": 168
+    },
+    "high": {
+      "avg": 66.78,
+      "p95": 88.5,
+      "canvas": "780x1688",
+      "particles": 280
+    }
+  },
+  {
+    "id": "waermetod",
+    "tier": 6,
+    "equipMs": 96.9,
+    "low": {
+      "avg": 14.83,
+      "p95": 19.6,
+      "canvas": "390x844",
+      "particles": 78
+    },
+    "medium": {
+      "avg": 42.34,
+      "p95": 54.6,
+      "canvas": "585x1266",
+      "particles": 156
+    },
+    "high": {
+      "avg": 67.76,
+      "p95": 85.7,
+      "canvas": "780x1688",
+      "particles": 260
+    }
+  },
+  {
+    "id": "paradoxon",
+    "tier": 6,
+    "equipMs": 90.2,
+    "low": {
+      "avg": 17.63,
+      "p95": 22.6,
+      "canvas": "390x844",
+      "particles": 90
+    },
+    "medium": {
+      "avg": 36.12,
+      "p95": 46.9,
+      "canvas": "585x1266",
+      "particles": 180
+    },
+    "high": {
+      "avg": 63.6,
+      "p95": 87.6,
+      "canvas": "780x1688",
+      "particles": 300
+    }
+  },
+  {
+    "id": "moebius",
+    "tier": 6,
+    "equipMs": 99.6,
+    "low": {
+      "avg": 17.92,
+      "p95": 24.7,
+      "canvas": "390x844",
+      "particles": 78
+    },
+    "medium": {
+      "avg": 36.79,
+      "p95": 47,
+      "canvas": "585x1266",
+      "particles": 156
+    },
+    "high": {
+      "avg": 64.32,
+      "p95": 92,
+      "canvas": "780x1688",
+      "particles": 260
+    }
+  },
+  {
+    "id": "omniversum",
+    "tier": 6,
+    "equipMs": 170.2,
+    "low": {
+      "avg": 19.44,
+      "p95": 26.4,
+      "canvas": "390x844",
+      "particles": 90
+    },
+    "medium": {
+      "avg": 40.64,
+      "p95": 50.1,
+      "canvas": "585x1266",
+      "particles": 180
+    },
+    "high": {
+      "avg": 69.45,
+      "p95": 98.1,
+      "canvas": "780x1688",
+      "particles": 300
+    }
+  },
+  {
+    "id": "schoepfung",
+    "tier": 6,
+    "equipMs": 96.9,
+    "low": {
+      "avg": 20.22,
+      "p95": 26.8,
+      "canvas": "390x844",
+      "particles": 90
+    },
+    "medium": {
+      "avg": 42.7,
+      "p95": 59.8,
+      "canvas": "585x1266",
+      "particles": 180
+    },
+    "high": {
+      "avg": 71.06,
+      "p95": 98.1,
+      "canvas": "780x1688",
+      "particles": 300
+    }
+  },
+  {
+    "id": "nullpunkt",
+    "tier": 6,
+    "equipMs": 40.2,
+    "low": {
+      "avg": 14.09,
+      "p95": 21.6,
+      "canvas": "390x844",
+      "particles": 63
+    },
+    "medium": {
+      "avg": 29.48,
+      "p95": 38.2,
+      "canvas": "585x1266",
+      "particles": 126
+    },
+    "high": {
+      "avg": 51.14,
+      "p95": 64.3,
+      "canvas": "780x1688",
+      "particles": 210
+    }
+  },
+  {
+    "id": "archetyp",
+    "tier": 6,
+    "equipMs": 86.1,
+    "low": {
+      "avg": 18.84,
+      "p95": 24.7,
+      "canvas": "390x844",
+      "particles": 84
+    },
+    "medium": {
+      "avg": 43.4,
+      "p95": 55.6,
+      "canvas": "585x1266",
+      "particles": 168
+    },
+    "high": {
+      "avg": 67.08,
+      "p95": 88.4,
+      "canvas": "780x1688",
+      "particles": 280
+    }
+  },
+  {
+    "id": "aeon",
+    "tier": 6,
+    "equipMs": 88.6,
+    "low": {
+      "avg": 18.75,
+      "p95": 25.7,
+      "canvas": "390x844",
+      "particles": 93
+    },
+    "medium": {
+      "avg": 40.68,
+      "p95": 54.1,
+      "canvas": "585x1266",
+      "particles": 186
+    },
+    "high": {
+      "avg": 70.77,
+      "p95": 93,
+      "canvas": "780x1688",
+      "particles": 310
+    }
+  },
+  {
+    "id": "weltenkern",
+    "tier": 6,
+    "equipMs": 171.2,
+    "low": {
+      "avg": 23.43,
+      "p95": 29.6,
+      "canvas": "390x844",
+      "particles": 87
+    },
+    "medium": {
+      "avg": 44.43,
+      "p95": 59.7,
+      "canvas": "585x1266",
+      "particles": 174
+    },
+    "high": {
+      "avg": 85.69,
+      "p95": 105.1,
+      "canvas": "780x1688",
+      "particles": 290
+    }
+  }
+]

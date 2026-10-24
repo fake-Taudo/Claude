@@ -1,0 +1,470 @@
+{
+ "singularitaet": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.5,
+    "max": 3.4
+   },
+   "medium": {
+    "avg": 4.4,
+    "max": 5.8
+   },
+   "high": {
+    "avg": 10.7,
+    "max": 16.4
+   }
+  }
+ },
+ "akkretion": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.6,
+    "max": 3.5
+   },
+   "medium": {
+    "avg": 3.2,
+    "max": 4.2
+   },
+   "high": {
+    "avg": 3.6,
+    "max": 4.2
+   }
+  }
+ },
+ "blutmond": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.8,
+    "max": 3.5
+   },
+   "medium": {
+    "avg": 3.3,
+    "max": 4.3
+   },
+   "high": {
+    "avg": 4.3,
+    "max": 6.5
+   }
+  }
+ },
+ "seraph": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 4.2,
+    "max": 10.6
+   },
+   "medium": {
+    "avg": 4.9,
+    "max": 11.5
+   },
+   "high": {
+    "avg": 5.3,
+    "max": 11.5
+   }
+  }
+ },
+ "zeitriss": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.7,
+    "max": 4.8
+   },
+   "medium": {
+    "avg": 2.7,
+    "max": 4.9
+   },
+   "high": {
+    "avg": 3.1,
+    "max": 5.3
+   }
+  }
+ },
+ "ewigkeit": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.7,
+    "max": 3.5
+   },
+   "medium": {
+    "avg": 3.2,
+    "max": 4.3
+   },
+   "high": {
+    "avg": 3.8,
+    "max": 4.6
+   }
+  }
+ },
+ "chronosphaere": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.7,
+    "max": 3.6
+   },
+   "medium": {
+    "avg": 3.8,
+    "max": 5.8
+   },
+   "high": {
+    "avg": 3.8,
+    "max": 4.6
+   }
+  }
+ },
+ "ereignishorizont": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 3.1,
+    "max": 4.7
+   },
+   "medium": {
+    "avg": 3.6,
+    "max": 5.3
+   },
+   "high": {
+    "avg": 4.5,
+    "max": 6.4
+   }
+  }
+ },
+ "quasar": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 3.8,
+    "max": 9.3
+   },
+   "medium": {
+    "avg": 5,
+    "max": 12.8
+   },
+   "high": {
+    "avg": 5.1,
+    "max": 11.5
+   }
+  }
+ },
+ "supernova": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.6,
+    "max": 3.9
+   },
+   "medium": {
+    "avg": 3,
+    "max": 4.5
+   },
+   "high": {
+    "avg": 3.5,
+    "max": 4.9
+   }
+  }
+ },
+ "andromeda": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.8,
+    "max": 3.8
+   },
+   "medium": {
+    "avg": 3.4,
+    "max": 4.2
+   },
+   "high": {
+    "avg": 4.6,
+    "max": 6.7
+   }
+  }
+ },
+ "magnetar": {
+  "duration": 13.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.8,
+    "max": 4.8
+   },
+   "medium": {
+    "avg": 3.5,
+    "max": 6.1
+   },
+   "high": {
+    "avg": 4,
+    "max": 6
+   }
+  }
+ },
+ "multiversum": {
+  "duration": 20,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 3.9,
+    "max": 6.6
+   },
+   "medium": {
+    "avg": 5.2,
+    "max": 7.9
+   },
+   "high": {
+    "avg": 4.9,
+    "max": 6.7
+   }
+  }
+ },
+ "kosmischesnetz": {
+  "duration": 20,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.8,
+    "max": 4.5
+   },
+   "medium": {
+    "avg": 3.4,
+    "max": 4.8
+   },
+   "high": {
+    "avg": 3.6,
+    "max": 5.2
+   }
+  }
+ },
+ "urknall": {
+  "duration": 19.5,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 1.8,
+    "max": 3.4
+   },
+   "medium": {
+    "avg": 2,
+    "max": 3.6
+   },
+   "high": {
+    "avg": 2.3,
+    "max": 4.4
+   }
+  }
+ },
+ "ursuppe": {
+  "duration": 20,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 4,
+    "max": 5.7
+   },
+   "medium": {
+    "avg": 4.3,
+    "max": 6.1
+   },
+   "high": {
+    "avg": 4.9,
+    "max": 6.7
+   }
+  }
+ },
+ "entropie": {
+  "duration": 21,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.1,
+    "max": 2.7
+   },
+   "medium": {
+    "avg": 2.6,
+    "max": 2.9
+   },
+   "high": {
+    "avg": 3,
+    "max": 3.3
+   }
+  }
+ },
+ "waermetod": {
+  "duration": 20,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 3.2,
+    "max": 5
+   },
+   "medium": {
+    "avg": 2.6,
+    "max": 3.2
+   },
+   "high": {
+    "avg": 3,
+    "max": 3.6
+   }
+  }
+ },
+ "paradoxon": {
+  "duration": 20,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 7.5,
+    "max": 15
+   },
+   "medium": {
+    "avg": 8.2,
+    "max": 15.2
+   },
+   "high": {
+    "avg": 8.5,
+    "max": 16.1
+   }
+  }
+ },
+ "moebius": {
+  "duration": 20,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.9,
+    "max": 4.6
+   },
+   "medium": {
+    "avg": 3.2,
+    "max": 4.9
+   },
+   "high": {
+    "avg": 3.7,
+    "max": 5.3
+   }
+  }
+ },
+ "omniversum": {
+  "duration": 32,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 3.3,
+    "max": 4.8
+   },
+   "medium": {
+    "avg": 3.4,
+    "max": 5.3
+   },
+   "high": {
+    "avg": 3.8,
+    "max": 5.7
+   }
+  }
+ },
+ "schoepfung": {
+  "duration": 30,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 3.3,
+    "max": 6.7
+   },
+   "medium": {
+    "avg": 3.3,
+    "max": 6.6
+   },
+   "high": {
+    "avg": 3.4,
+    "max": 6.6
+   }
+  }
+ },
+ "nullpunkt": {
+  "duration": 28,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 0.2,
+    "max": 0.2
+   },
+   "medium": {
+    "avg": 0.2,
+    "max": 0.3
+   },
+   "high": {
+    "avg": 0.2,
+    "max": 0.2
+   }
+  }
+ },
+ "archetyp": {
+  "duration": 30,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 2.1,
+    "max": 4.2
+   },
+   "medium": {
+    "avg": 2,
+    "max": 4.3
+   },
+   "high": {
+    "avg": 1.9,
+    "max": 4.4
+   }
+  }
+ },
+ "aeon": {
+  "duration": 34,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 3.3,
+    "max": 4.8
+   },
+   "medium": {
+    "avg": 3.9,
+    "max": 5.5
+   },
+   "high": {
+    "avg": 4.5,
+    "max": 5.8
+   }
+  }
+ },
+ "weltenkern": {
+  "duration": 36,
+  "holes": [],
+  "cost": {
+   "low": {
+    "avg": 3.1,
+    "max": 7.1
+   },
+   "medium": {
+    "avg": 3,
+    "max": 7
+   },
+   "high": {
+    "avg": 3.2,
+    "max": 6.8
+   }
+  }
+ }
+}
