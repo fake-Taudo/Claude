@@ -187,7 +187,7 @@ export class Timeline {
           s.taken = true;
         }
         snap = s.buf;
-      } else if (s.snapshot === 'live') {
+      } else if (s.snapshot === 'live' && (!s.block.liveIf || s.block.liveIf(env))) {
         s.buf = this.grab(s.buf ?? undefined);
         snap = s.buf;
       }
@@ -206,7 +206,7 @@ export class Timeline {
   }
 
   private active(tr: Track, t: number): boolean {
-    return t >= tr.t && (t <= tr.t + tr.dur || !!tr.hold);
+    return t >= tr.t && (t <= tr.t + tr.dur || !!tr.hold || (tr.until !== undefined && t <= tr.until));
   }
 
   private progress(tr: Track, t: number): number {

@@ -514,6 +514,8 @@ interface TrackBase {
   fade?: [number, number];
   /** Keep drawing at p = 1 after the track ended (until the cutscene ends). */
   hold?: boolean;
+  /** Keep drawing at p = 1 after the track ended, up to this time (absolute seconds). */
+  until?: number;
   /** Only draw on one side of a line through the centre (angle in degrees, side +1/-1). */
   clip?: { angle: number; side: 1 | -1 };
   /** Sound at the start of the track. */

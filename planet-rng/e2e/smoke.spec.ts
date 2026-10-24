@@ -258,3 +258,25 @@ test('a rolled cutscene: logic first, roll locked, auto roll waits, skip and run
   expect(await game<number>(page, 'p.game.state.auras.akkretion')).toBe(1);
   expect(await game<string>(page, 'p.controller.phase')).toBe('idle');
 });
+
+test('a cutscene jumps to the reveal after the tab was hidden for more than 2 s', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await setup(page, "p.game.state.tutorial = { done: true, step: 9 }; p.game.setSettings({ flashHintShown: true }); p.game.state.pendingRoll = { aura: 'seraph', lucky: false, luck: 1, biome: null, startedAt: Date.now(), auto: false }; p.controller.playCutscene('seraph', false)");
+  await expect(page.locator('.cutscene-layer')).toBeVisible();
+  const setHidden = (hidden: boolean) =>
+    page.evaluate((h) => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => h });
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (h ? 'hidden' : 'visible') });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, hidden);
+  await page.waitForTimeout(1000);
+  await setHidden(true);
+  await page.waitForTimeout(2600);
+  await setHidden(false);
+  await expect(page.getByTestId('reveal-big')).toBeVisible({ timeout: 2000 });
+  await expect(page.locator('.cutscene-layer')).toBeHidden({ timeout: 3000 });
+  expect(await game<number>(page, 'p.game.state.auras.seraph')).toBe(1);
+  expect(await game<string>(page, 'p.controller.phase')).toBe('idle');
+});

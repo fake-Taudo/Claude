@@ -64,7 +64,13 @@ Alle Werte stehen in `src/config/`. Beispiele:
 - Verkaufspreis: `sell` in `auras.ts`. Shop-Preise und Erscheinungschancen: `shop.ts`.
 - Trank-Rezepte und Wirkungen: `potions.ts`. Schmiede-Rezepte: `RECIPES` in derselben Datei.
 - Rebirth-Kosten und Multiplikatoren: `rebirth.ts`.
-- Roll-Dauer, Auto-Faktor, Glücks-Roll, Cutscene-Timings: `game.ts`.
+- Roll-Dauer, Auto-Faktor, Glücks-Roll: `game.ts`.
+- Cutscenes: eine Definition je Aura in `src/config/cutscenes/` (`t1.ts`, `t2.ts`, `t3.ts`).
+  Jede Zeile ist ein Track: Startzeit `t`, Dauer `dur`, Baustein und Parameter (Zeiten in s,
+  Größen in u = 1 % der kurzen Bildschirmseite). „Puls schneller“ ist z. B. `interval` der
+  `DoublePulse`-Zeile, „Schwarzphase 1 s kürzer“ `motifAt` in `T1_TIMES` (`template.ts`).
+  Stufen-Schwellen, Skip-Zeiten und Flash-Limit: `constants.ts`; Kreis-Stern-Tempo und
+  -Größe weiterhin in `GAME.cutscene`.
 
 - Aura-Optik: die Spec der Aura in `src/config/vfx/specs/` (Größen in D = Planetendurchmesser,
   Drehungen in °/s, Zeiten in s). Budgets je Stufe in `src/config/vfx/tiers.ts`. Eine neue Aura
@@ -79,7 +85,13 @@ das Aura-Labor und `npm run vfx:review`).
 Ordner heraus und nach `npm run build` starten), z. B.:
 
 - `node scripts/dev/gallery.mjs <ordner>`: jede Aura auf der Bühne fotografieren
-- `node scripts/dev/cutscene-all.mjs <ordner> 11500`: ein Bild jeder Cutscene
+- `node scripts/dev/cutscene-sheet.mjs docs/cutscenes`: Kontaktbögen aller Cutscenes
+  (0/10/25/50/75/90/100 %) und der Vergleichsbogen; `npx tsx scripts/cutscene-review.ts`
+  schreibt die Checkliste `docs/cutscenes/cutscene-review.md`
+- `node scripts/dev/cutscene-check.mjs <aus.json>`: deckt jede Cutscene das Spiel vollständig
+  ab, und was kostet ein Bild je Qualität; `cutscene-profile.mjs <id> <zeiten>`: Kosten je Track
+- `node scripts/dev/cutscene-soak.mjs 18`: viele Cutscenes hintereinander (Speicher, Canvas)
+- `node scripts/dev/echo-shot.mjs <ordner>`: Nachhall auf der Bühne nach T1/T2/T3
 - `node scripts/dev/panels.mjs <ordner> 844 390 land`: alle Menüs in einer Bildschirmgröße
 - `node scripts/dev/soak.mjs 5`: Dauerlauf mit Auto Roll und wechselnden Auren (Speicher,
   Bildrate, Textur-Cache, Fehler)
@@ -98,6 +110,12 @@ Ordner heraus und nach `npm run build` starten), z. B.:
 Qualität umschalten, Intro wiederholen, Akzent auslösen, Schichten einzeln an/aus, Hintergrund
 hell/dunkel, FPS und Partikelzahl. Der Speicherstand bleibt dabei unverändert.
 
+**Cutscene-Labor:** `planet-rng.html?cutscene=<id>` (z. B. `?cutscene=omniversum`): Cutscene
+wählen und abspielen, Zeitleiste mit Scrubber und Markern (Beats blau, Blitze rot, Bruch gelb,
+Enthüllung weiß), Tempo 0,25× bis 2×, Tracks einzeln an/aus, Qualität, Hintergrund
+dunkel/hell/Spiel, Ton (bei 1×), FPS, Partikel und Blitze pro Sekunde. Nur über die URL
+erreichbar; der Speicherstand bleibt unverändert.
+
 ## Dokumente
 
 - [DECISIONS.md](DECISIONS.md): alle Entscheidungen, wo die Vorgabe offen war
@@ -105,3 +123,5 @@ hell/dunkel, FPS und Partikelzahl. Der Speicherstand bleibt dabei unverändert.
 - [ABSCHLUSSBERICHT.md](ABSCHLUSSBERICHT.md): was gebaut ist und was offen bleibt
 - [PLAN.md](PLAN.md): Architektur und Phasen
 - [docs/vfx/aura-review.md](docs/vfx/aura-review.md): Prüfliste der Aura-Effekte je Aura
+- [docs/cutscenes/cutscene-review.md](docs/cutscenes/cutscene-review.md): Checkliste und
+  Kontaktbögen aller Cutscenes

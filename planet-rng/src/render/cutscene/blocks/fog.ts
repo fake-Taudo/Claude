@@ -5,11 +5,30 @@ import { mix } from '../../color';
 import { nebulaTex } from '../../vfx/tex';
 import { color, curve, TAU, type Block } from '../core';
 
-export const FogLayers: Block<'FogLayers'> = {
+/** Fog is soft: it is drawn at a quarter of the resolution and scaled up in one pass. */
+const SCALE = 0.25;
+
+export const FogLayers: Block<'FogLayers', { buf: HTMLCanvasElement | null }> = {
   space: 'world',
-  draw(ctx, _p, prm, theme, env) {
+  init() {
+    return { buf: null };
+  },
+  draw(target, _p, prm, theme, env, st) {
     const density = curve(prm.density, env.local, 0.6) * env.alpha;
     if (density <= 0.005) return;
+    const bw = Math.max(16, Math.round(env.W * SCALE));
+    const bh = Math.max(16, Math.round(env.H * SCALE));
+    if (!st.buf || st.buf.width !== bw || st.buf.height !== bh) {
+      st.buf = document.createElement('canvas');
+      st.buf.width = bw;
+      st.buf.height = bh;
+    }
+    const ctx = st.buf.getContext('2d')!;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, bw, bh);
+    ctx.scale(bw / env.W, bh / env.H);
     const n = Math.max(1, (prm.layers ?? 3) + CUTSCENE.quality[env.quality].fog);
     // Greying in 5 steps keeps the number of baked textures small.
     const grey = Math.round(curve(prm.grey, env.local, 0) * 4) / 4;
@@ -57,7 +76,9 @@ export const FogLayers: Block<'FogLayers'> = {
       }
       ctx.restore();
     }
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = 'source-over';
+    target.globalCompositeOperation = 'lighter';
+    target.globalAlpha = 1;
+    target.drawImage(st.buf, 0, 0, env.W, env.H);
+    target.globalCompositeOperation = 'source-over';
   },
 };

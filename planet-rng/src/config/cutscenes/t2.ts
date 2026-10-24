@@ -368,7 +368,7 @@ export const T2: CutsceneDef[] = [
         name: 'Zellen',
       },
       { t: 5, dur: 8.5, block: 'Counter', params: { label: 'Zellen', from: 1, to: 1_048_576, ease: 'inExpo', format: 'de', y: 0.16, size: 6, color: 'primary', ticks: 'bubble' }, fade: [0.4, 0.4], name: 'Zähler' },
-      { t: 14.6, dur: 0.4, block: 'Rays', params: { through: 'vertical', rate: [60, 60], color: 'primary', width: 1.3, life: 0.3, seed: 8 }, name: 'Blitz' },
+      { t: 14.6, dur: 0.4, block: 'Rays', params: { through: 'vertical', rate: [40, 40], color: 'primary', width: 1.5, life: 0.3, seed: 8 }, name: 'Blitz' },
       { t: 14.6, dur: 0.5, block: 'Flash', params: { color: 'primary', peak: 0.6, decay: 0.45 } },
       { t: 14.6, dur: 1.4, block: 'GravityRings', params: { direction: 'out', count: 3, stagger: 0.12, colors: ['primary', 'secondary', '#ff9a3d'], width: 2.2 } },
       { t: 14.6, dur: 1.2, block: 'ThemeParticles', params: { sprite: 'spark', count: 110, dir: 'out', burst: true, life: [0.8, 1.2], radius: [2, 65], colors: ['primary', 'white'], trail: 2.5 } },

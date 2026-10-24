@@ -199,6 +199,55 @@ Bodenwellen und das Aufleuchten des Heros bleiben.
 - Die Effekte sind auf Hochformat abgestimmt. Im Querformat (geprüft mit 844×390) füllen die
   V5/V6-Auren die Höhe, reichen seitlich aber nicht bis an den Rand.
 
+## Cutscene-System (Neuaufbau)
+
+**Was gebaut ist**
+
+- **Timeline-Engine** (`src/render/cutscene/`): jede Cutscene ist eine Datendefinition aus Tracks
+  (`src/config/cutscenes/`), jeder Track ruft einen Baustein mit seinem Fortschritt auf. 21 Bausteine:
+  FadeVeil, FogLayers, CoreMotif (22 Motive inkl. Kreis-Stern, Planet, Mond, Komet, Kristall,
+  schwarzes Loch, Ring), ThemeParticles, DoublePulse, EdgeGlow, WhiteOut, Flash, Shatter, SplitSlash,
+  TimeFreeze, GravityRings, TextCard, Counter, BeatInvert, Letterbox, SceneCut, ScreenShake/Zoom,
+  Lens, Rays, Ticker; dazu GlobalEcho als Nachhall auf der Bühne.
+- Alle Bausteine sind Funktionen der Zeit (Partikel geschlossen berechnet), daher kann das
+  **Cutscene-Labor** (`?cutscene=<id>`) springen, rückwärts scrubben und das Tempo ändern.
+  Frame-Snapshots (Shatter, SplitSlash, TimeFreeze, Linse) zerlegen das echte Bild.
+- **Zeitbasis** `AudioContext.currentTime` (mit Ausgabelatenz), Sound als geplante Ereignisse:
+  Jingle, heiserer Wind, Deep Boom (T1) oder Drone (T2/T3), Motivklänge, Riser, Stille, Impact,
+  Musik mit Beats für T3. Audiofehler lassen die Cutscene stumm weiterlaufen.
+- **Logik zuerst:** Aura, Statistik und Speicherstand vor dem Start; die Spielereignisse werden bis
+  zur Enthüllung gehalten. Überspringen, Tab-Wechsel und Abbruch ändern nichts am Spielstand.
+- **26 eigene Cutscenes:** 12 × T1 (13,5 s, Kreis-Stern-Ablauf mit eigenem Motiv und kleinem Bruch),
+  8 × T2 (19,5–21 s, Texttafeln, Rampe, eigener Bruch), 6 × T3 (28–36 s, eigene Filme mit Musik).
+  Der alte Ablauf (3 s Schwarz, 10 s linear wachsender Kreis-Stern, 110 → 260°/s, Weißblende)
+  ist als Kernmotiv „Kreis-Stern“ erhalten und läuft in fünf T1-Cutscenes.
+- **Einstellungen:** Cutscenes an/aus, Überspringen erlauben, „Cutscenes überspringen bis …“,
+  Lichtblitze reduzieren, Cutscene-Lautstärke; einmaliger Lichtblitz-Hinweis.
+
+**Prüfung**
+
+| Kriterium | Stand |
+|---|---|
+| Jede Aura eigene, erkennbar andere Cutscene | Vergleichsbogen `docs/cutscenes/cutscene-contact-sheet.png`; Unit-Test: keine zwei Definitionen nur farbverschieden |
+| Atmosphäre, Rampe, Bruch, Stille davor, starke Enthüllung | Checkliste `docs/cutscenes/cutscene-review.md`; Unit-Test: 0,3–0,6 s Stille direkt vor jedem Bruch, Impact-Sound, Texttafeln und Rampe ab T2 |
+| Kreis-Stern erhalten und gleichwertig | T1-Template liest `GAME.cutscene`, bisherige Tests (5,5 Umdrehungen, 110/260°/s) grün |
+| Zeitbasis Audio, Beat-Sync T3 | Uhr folgt `AudioContext.currentTime`; T3 mit Musik und 36–52 Beat-Markern (Unit-Test: Musik und Beats vorhanden) |
+| Logik vorher, Skip ändert nichts, Tab-Wechsel | Playwright: gutgeschrieben und gespeichert vor dem Start, Skip, Durchlauf, Auto Roll wartet, Tab > 2 s → Enthüllung |
+| Flash-Limit, reduzierte Blitze, Hinweis | Validator im Unit-Test (max. 3 je 1-s-Fenster, alle Cutscenes ≤ 2/s); Schalter und Hinweis vorhanden |
+| Deckt das Spiel vollständig ab | `cutscene-check.mjs`: alle 26 ab 0,5 s lückenlos deckend |
+| Leistung | Software-Rendering, Handy-Ansicht mit DPR 2: Mittel 2–8 ms je Bild, Spitze 16 ms (Paradoxon, Live-Split); die Bühne pausiert, solange die Cutscene sie verdeckt |
+| Speicher | 18 Cutscenes hintereinander: keine verwaisten Ebenen, Texturen im Budget |
+| Tests | 92 Unit-Tests, 12 Playwright-Läufe (6 Szenarien × Handy/Desktop) grün |
+
+**Offen**
+
+- Gehört ist der Ton nur indirekt (kein Lautsprecher in dieser Umgebung): alle 26 Cutscenes laufen
+  mit Audio fehlerfrei durch, Lautstärkeverhältnisse und Mischung sollten einmal am Gerät
+  abgehört werden („Cutscenes“-Regler in den Einstellungen).
+- Die Bildzeiten stammen aus Software-Rendering ohne GPU; auf einem echten Handy sind sie
+  niedriger. Die automatische Qualitätsanpassung gilt auch für Cutscenes.
+- Alle Zeiten sind Schätzwerte im Sinne des Auftrags und in den Definitionen einzeln änderbar.
+
 ## Wichtigste Entscheidungen (Details in DECISIONS.md)
 
 - Roll-Modell normiert so, dass „1 in X“ bei Luck 1 exakt stimmt; Staub erhält den Rest

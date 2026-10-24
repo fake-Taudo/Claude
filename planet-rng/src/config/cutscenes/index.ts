@@ -26,7 +26,8 @@ function resolve(def: CutsceneDef, depth = 0): CutsceneDef {
   const until = def.extends.until;
   const inherited: Track[] = b.tracks
     .filter((tr) => tr.t < until)
-    .map((tr) => ({ ...tr, dur: Math.min(tr.dur, until - tr.t), hold: false, name: `${tr.name ?? tr.block} (${b.id})` }) as Track);
+    // Held tracks (the black veil) keep holding until the takeover.
+    .map((tr) => ({ ...tr, dur: Math.min(tr.dur, until - tr.t), hold: false, until: tr.hold ? until : undefined, name: `${tr.name ?? tr.block} (${b.id})` }) as Track);
   return {
     ...def,
     tracks: [...inherited, ...def.tracks],

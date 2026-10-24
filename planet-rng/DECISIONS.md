@@ -427,3 +427,22 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   weniger Bewegung wünscht.
 - **Hinweis vor der ersten Cutscene:** „Enthält Lichtblitze. In den Einstellungen reduzierbar.“
   steht während der schwarzen Eröffnung (blockiert nichts) und wird danach nicht mehr gezeigt.
+
+### Leistung und Abschluss (Phase 6 + 7)
+
+- Phase 6 („alle weiteren Cutscene-Auren“) ist in den Phasen 2–4 aufgegangen: jede der 26 Auren ab
+  1 in 10.000 hat ihre eigene Definition; es gibt keine Platzhalter mehr.
+- **Spielbühne pausiert**, solange die Cutscene sie vollständig verdeckt (ab 0,5 s bis zur
+  Übergabe); sie zeichnet ab der Übergabe wieder, damit Reveal und Aura-Intro darunter sichtbar sind.
+- **Nebel in Viertel-Auflösung:** die Ebenen werden in einen kleinen Puffer gezeichnet und in einem
+  Durchgang hochskaliert (weich ist er ohnehin); spart drei bildschirmfüllende Überlagerungen.
+- **Linse nur auf „Hoch“** und dann nur der Ausschnitt um die Linse; auf „Mittel“/„Niedrig“ wird
+  das Bild darunter gar nicht erst kopiert.
+- **Farbtausch per Canvas-Filter** (`hue-rotate`), wenn der Browser ihn kann (geprüft beim ersten
+  Gebrauch), sonst über die Inversion als Farbton-Quelle.
+- **Täuschung (`extends`):** gehaltene Tracks der Vorlage (der Schwarzschleier) halten bis zur
+  Übernahme (`until`), ihre Einblendung behält die eigene Dauer.
+- Prüfskripte: Kontaktbögen und Vergleichsbogen (`cutscene-sheet.mjs`), Deckung und Kosten
+  (`cutscene-check.mjs`, Ergebnis in `docs/cutscenes/perf.json`), Kosten je Track
+  (`cutscene-profile.mjs`), Dauerlauf (`cutscene-soak.mjs`), Ton aller Cutscenes (`audio.mjs`),
+  Checkliste aus den Daten (`scripts/cutscene-review.ts`).

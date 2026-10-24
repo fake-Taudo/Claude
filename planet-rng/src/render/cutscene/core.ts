@@ -172,6 +172,8 @@ export interface Block<B extends keyof BlockParams, S = unknown> {
   space: 'world' | 'screen';
   /** 'once': the frame below is grabbed when the track starts; 'live': every frame. */
   snapshot?: 'once' | 'live' | ((params: BlockParams[B]) => 'once' | 'live');
+  /** For 'live' snapshots: whether the grab is needed this frame (skips the copy otherwise). */
+  liveIf?(env: Env): boolean;
   /** Per-track state created when the cutscene starts (baking, geometry). */
   init?(params: BlockParams[B], track: Track & { block: B }, env: Env): S;
   draw(ctx: CanvasRenderingContext2D, p: number, params: BlockParams[B], theme: Theme, env: Env, state: S, snap: HTMLCanvasElement | null): void;

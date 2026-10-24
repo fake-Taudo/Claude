@@ -151,9 +151,32 @@ export const Shatter: Block<'Shatter', { list: Shard[]; q: number }> = {
   },
 };
 
+let filterOk: boolean | null = null;
+/** Whether canvas filters work here (they draw a hue swap in one GPU pass). */
+function canvasFilter(): boolean {
+  if (filterOk !== null) return filterOk;
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 2;
+    const g = c.getContext('2d')!;
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, 2, 2);
+    const d = document.createElement('canvas');
+    d.width = d.height = 2;
+    const h = d.getContext('2d')!;
+    if (!('filter' in h)) return (filterOk = false);
+    h.filter = 'invert(1)';
+    h.drawImage(c, 0, 0);
+    filterOk = h.getImageData(0, 0, 1, 1).data[0] < 30;
+  } catch {
+    filterOk = false;
+  }
+  return filterOk;
+}
+
 /**
  * Hue-swapped copy of a frame with its brightness kept: the inverted frame lends its hue
- * (rotated by 180°) to the original via the 'hue' blend mode.
+ * (rotated by 180°) to the original via the 'hue' blend mode (fallback without canvas filters).
  */
 function hueSwapped(snap: HTMLCanvasElement, st: { inv: HTMLCanvasElement | null; out: HTMLCanvasElement | null }): HTMLCanvasElement {
   const make = (c: HTMLCanvasElement | null) => {
@@ -189,7 +212,9 @@ export const SplitSlash: Block<'SplitSlash', { inv: HTMLCanvasElement | null; ou
   draw(ctx, p, prm, theme, env, st, snap) {
     if (!snap) return;
     const swap = prm.swap ?? 'none';
-    const swapped = swap !== 'none' && env.local >= (prm.swapAt ?? env.dur / 2) ? hueSwapped(snap, st) : null;
+    const swapOn = swap !== 'none' && env.local >= (prm.swapAt ?? env.dur / 2);
+    const gpu = swapOn && canvasFilter();
+    const swapped = swapOn && !gpu ? hueSwapped(snap, st) : null;
     const { W, H, cx, cy, diag, u } = env;
     const ang = (prm.angle ?? 0) * DEG;
     const dx = Math.cos(ang);
@@ -212,8 +237,10 @@ export const SplitSlash: Block<'SplitSlash', { inv: HTMLCanvasElement | null; ou
       ctx.lineTo(cx - dx * R + nx * side * R, cy - dy * R + ny * side * R);
       ctx.closePath();
       ctx.clip();
-      const mine = swapped && (swap === 'both' || (swap === 'a' && side === 1) || (swap === 'b' && side === -1));
-      ctx.drawImage(mine ? swapped : snap, 0, 0, W, H);
+      const mine = swapOn && (swap === 'both' || (swap === 'a' && side === 1) || (swap === 'b' && side === -1));
+      if (mine && gpu) ctx.filter = 'hue-rotate(180deg)';
+      ctx.drawImage(mine && swapped ? swapped : snap, 0, 0, W, H);
+      ctx.filter = 'none';
       ctx.restore();
     }
     // Light in the gap.

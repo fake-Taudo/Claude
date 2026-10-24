@@ -24,6 +24,12 @@ interface LabHook {
   setQuality(q: Quality): void;
   def(): CutsceneDef;
   t(): number;
+  /** Draws `frames` frames at time t and returns the average render time in ms. */
+  bench(t: number, frames: number): number;
+  /** Lowest canvas alpha (0..255) sampled on a grid at time t: 255 = fully covering. */
+  minAlpha(t: number): number;
+  /** Render cost per track at time t (ms saved when the track is switched off). */
+  profile(t: number): { track: string; ms: number }[];
 }
 
 export function CutsceneLab() {
@@ -143,6 +149,45 @@ export function CutsceneLab() {
       setQuality: (q) => setQuality(q),
       def: () => st.current.tl!.def,
       t: () => st.current.t,
+      bench: (t, frames) => {
+        const tl = st.current.tl!;
+        tl.ensureSnapshots(t);
+        const t0 = performance.now();
+        for (let i = 0; i < frames; i++) tl.render(t + i / 60);
+        // Force the GPU work to finish so the time is real.
+        tl.canvas.getContext('2d')!.getImageData(0, 0, 1, 1);
+        return (performance.now() - t0) / frames;
+      },
+      profile: (t) => {
+        const tl = st.current.tl!;
+        const run = () => {
+          tl.ensureSnapshots(t);
+          const t0 = performance.now();
+          for (let i = 0; i < 8; i++) tl.render(t);
+          tl.canvas.getContext('2d')!.getImageData(0, 0, 1, 1);
+          return (performance.now() - t0) / 8;
+        };
+        const keep = tl.muted;
+        const full = run();
+        const out = tl.def.tracks.map((tr, i) => {
+          tl.muted = new Set([...keep, i]);
+          return { track: `${i} ${tr.name ?? tr.block}`, ms: +(full - run()).toFixed(2) };
+        });
+        tl.muted = keep;
+        return out.sort((a, b) => b.ms - a.ms);
+      },
+      minAlpha: (t) => {
+        const tl = st.current.tl!;
+        tl.ensureSnapshots(t);
+        tl.render(t);
+        const c = tl.canvas;
+        const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+        let min = 255;
+        for (let y = 2; y < c.height; y += Math.max(1, Math.floor(c.height / 24))) {
+          for (let x = 2; x < c.width; x += Math.max(1, Math.floor(c.width / 16))) min = Math.min(min, d[(y * c.width + x) * 4 + 3]);
+        }
+        return min;
+      },
     };
     (window as unknown as Record<string, unknown>).__cutsceneLab = hook;
   }, []);
@@ -251,7 +296,7 @@ export function CutsceneLab() {
                   setMuted(next);
                 }}
               />
-              <span class={t >= tr.t && (t <= tr.t + tr.dur || tr.hold) ? 'is-on' : ''}>
+              <span class={t >= tr.t && (t <= tr.t + tr.dur || tr.hold || (tr.until !== undefined && t <= tr.until)) ? 'is-on' : ''}>
                 {tr.name ?? tr.block} <small>{tr.t}s</small>
               </span>
             </label>

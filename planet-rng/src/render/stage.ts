@@ -36,6 +36,12 @@ const coarse = (): boolean => {
   }
 };
 
+let stageCovered: () => boolean = () => false;
+/** The cutscene runner tells the stage when it is completely covered (no need to draw). */
+export function setStageCover(fn: () => boolean): void {
+  stageCovered = fn;
+}
+
 export class Stage {
   readonly ctx: CanvasRenderingContext2D;
   w = 0;
@@ -208,6 +214,12 @@ export class Stage {
 
   private frame = (now: number): void => {
     if (!this.running) return;
+    if (stageCovered()) {
+      // A cutscene covers the whole stage: skip the work, keep the clock smooth.
+      this.last = now;
+      this.raf = requestAnimationFrame(this.frame);
+      return;
+    }
     const dtMs = now - this.last;
     const dt = Math.min(0.05, dtMs / 1000);
     this.last = now;

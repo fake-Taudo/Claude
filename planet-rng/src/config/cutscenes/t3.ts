@@ -239,7 +239,7 @@ const nullpunkt: CutsceneDef = {
     { t: 13.4, dur: 4.8, block: 'BeatInvert', params: { every: 2, hold: 0.15 }, name: 'Schwarz-Weiß' },
     { t: 18.2, dur: 3.2, block: 'BeatInvert', params: { every: 1, hold: 0.12 }, name: 'Schwarz-Weiß schneller' },
     text(14, 6, [['Weniger', 'ist', 'mehr'], ['Bis', 'nichts', 'bleibt'], ['Alles', 'löst sich', 'auf']], { mode: 'words', wordTimes: [0, 1.2, 2.4], color: 'black', y: 0.8, size: 6 }),
-    { t: 21.6, dur: 6.4, block: 'FadeVeil', params: { color: 'black', from: 0, to: 1 }, ease: 'inQuad', fade: [0.4, 0], name: 'Nichts' },
+    { t: 21.6, dur: 0.4, block: 'FadeVeil', params: { color: 'black', from: 0, to: 1 }, ease: 'inQuad', hold: true, name: 'Nichts' },
     {
       t: 22.6,
       dur: 1.6,
