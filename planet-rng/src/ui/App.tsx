@@ -12,6 +12,7 @@ import { EffectsPanel } from './panels/Effects';
 import { ForgePanel, PotionsPanel } from './panels/Crafting';
 import { RebirthPanel } from './panels/Rebirth';
 import { QuestsPanel } from './panels/Quests';
+import { AdminPanel } from './panels/Admin';
 import { Feed } from './Feed';
 import { Tutorial } from './Tutorial';
 import { Nameplate, Reveal, RollNames, ScreenFx } from './Reveal';
@@ -63,6 +64,8 @@ function Panels() {
       return <RebirthPanel />;
     case 'quests':
       return <QuestsPanel />;
+    case 'admin':
+      return game.settings.adminUnlocked ? <AdminPanel /> : null;
     default:
       return null;
   }

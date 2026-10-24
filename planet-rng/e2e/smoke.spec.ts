@@ -280,3 +280,43 @@ test('a cutscene jumps to the reveal after the tab was hidden for more than 2 s'
   expect(await game<number>(page, 'p.game.state.auras.seraph')).toBe(1);
   expect(await game<string>(page, 'p.controller.phase')).toBe('idle');
 });
+
+test('admin menu: opened with the code, gives every aura and Gold Coins, forces the next roll', async ({ page }) => {
+  await page.goto(URL);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await setup(page, 'p.game.state.tutorial = { done: true, step: 9 }; p.game.setSettings({ cutscenes: false })');
+  await page.keyboard.press('o');
+  await page.getByTestId('code-input').fill('falsch');
+  await page.getByTestId('code-submit').click();
+  await expect(page.getByTestId('panel-admin')).toHaveCount(0);
+  await page.getByTestId('code-input').fill('sternenstaub');
+  await page.getByTestId('code-input').press('Enter');
+  await expect(page.getByTestId('panel-admin')).toBeVisible();
+
+  await page.getByTestId('admin-all-auras').click();
+  const total = await game<number>(page, 'p.engine && Object.keys(p.game.state.auras).length');
+  expect(total).toBe(await game<number>(page, 'window.__prngIds.length'));
+
+  // (Giving every aura unlocks achievements, some of them pay Gold Coins.)
+  await page.getByTestId('tab-resources').click();
+  const before = await game<number>(page, 'p.game.state.gold');
+  await page.getByTestId('admin-gold-input').fill('250000');
+  await page.getByTestId('admin-gold-add').click();
+  expect(await game<number>(page, 'p.game.state.gold')).toBe(before + 250_000_000);
+  const gold = await game<number>(page, 'p.game.state.gold');
+
+  await page.getByTestId('tab-game').click();
+  await page.getByTestId('admin-next-aura').selectOption('omniversum');
+  await page.getByTestId('admin-force').click();
+  await page.getByTestId('panel-close').click();
+  await setup(page, 'p.controller.roll(false)');
+  await expect.poll(() => game<number>(page, 'p.game.state.auras.omniversum'), { timeout: 15000 }).toBe(2);
+
+  // Saved: the menu stays reachable from the settings after a reload.
+  await page.reload();
+  expect(await game<number>(page, 'p.game.state.gold')).toBeGreaterThanOrEqual(gold);
+  await page.keyboard.press('o');
+  await page.getByTestId('open-admin').click();
+  await expect(page.getByTestId('panel-admin')).toBeVisible();
+});

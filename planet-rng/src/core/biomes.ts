@@ -47,8 +47,20 @@ export function slotAt(now: number): number {
   return Math.floor(now / slotMs());
 }
 
+let override: { biome: BiomeDef | null } | null = null;
+
+/** Admin: force a biome (or a clear sky with null) until reset with `undefined`. Not saved. */
+export function setBiomeOverride(id: string | null | undefined): void {
+  override = id === undefined ? null : { biome: id === null ? null : (BIOMES.biomes.find((b) => b.id === id) ?? null) };
+}
+
+export function biomeOverride(): string | null | undefined {
+  return override ? (override.biome?.id ?? null) : undefined;
+}
+
 /** The biome active at the given time, or null for a clear sky. */
 export function activeBiome(now: number): BiomeDef | null {
+  if (override) return override.biome;
   const w = biomeWindow(slotAt(now));
   return w.biome && now >= w.start && now < w.end ? w.biome : null;
 }

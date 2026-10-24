@@ -3,8 +3,11 @@
 
 import {
   AURA_BY_ID,
+  AURAS,
   GAME,
   ITEM_BY_ID,
+  ITEMS,
+  POTIONS,
   POTION_BY_ID,
   RECIPE_BY_ID,
   REBIRTHS,
@@ -501,4 +504,58 @@ export function tick(state: GameState, now: number, prevBiome: string | null, ac
 
 export function tierRank(id: TierId): number {
   return TIER_BY_ID[id].rank;
+}
+
+// ---------------------------------------------------------------------------
+// Admin (cheat menu, opened with a code)
+// ---------------------------------------------------------------------------
+
+/** Gives `n` copies of each aura (all auras when `ids` is omitted). */
+export function adminGiveAuras(state: GameState, n: number, now: number, ids: string[] = AURAS.map((a) => a.id)): GameEvent[] {
+  const events: GameEvent[] = [];
+  const count = Math.max(1, Math.floor(n));
+  for (const id of ids) if (AURA_BY_ID[id]) addAura(state, id, count, now, events);
+  track(state, now, [], events);
+  return events;
+}
+
+/** Removes every copy of an aura (locked ones too). */
+export function adminRemoveAura(state: GameState, id: string): GameEvent[] {
+  const events: GameEvent[] = [];
+  removeAuras(state, id, auraCount(state, id), events);
+  return events;
+}
+
+/** Adds (or with `set`, sets) Gold Coins. Amounts in whole coins, capped at 1 trillion. */
+export function adminGold(state: GameState, gold: number, set = false): GameEvent[] {
+  const milli = Math.round(Math.max(0, Math.min(1e12, gold)) * 1000);
+  const before = state.gold;
+  state.gold = set ? milli : Math.min(1e15, state.gold + milli);
+  return [{ type: 'goldChanged', delta: state.gold - before, reason: 'bonus' }];
+}
+
+/** Adds `n` of each potion (or only `ids`). */
+export function adminGivePotions(state: GameState, n: number, ids: string[] = POTIONS.map((p) => p.id)): GameEvent[] {
+  for (const id of ids) if (POTION_BY_ID[id]) state.potions[id] = (state.potions[id] ?? 0) + Math.max(1, Math.floor(n));
+  return [];
+}
+
+/** Adds `n` of each item (or only `ids`). */
+export function adminGiveItems(state: GameState, n: number, ids: string[] = ITEMS.map((i) => i.id)): GameEvent[] {
+  for (const id of ids) if (ITEM_BY_ID[id]) state.items[id] = (state.items[id] ?? 0) + Math.max(1, Math.floor(n));
+  return [];
+}
+
+/** Sets the rebirth level directly (nothing is consumed or reset). */
+export function adminSetRebirth(state: GameState, level: number): GameEvent[] {
+  const max = REBIRTHS.length;
+  state.rebirth = Math.max(0, Math.min(max, Math.floor(level)));
+  return [{ type: 'rebirth', level: state.rebirth }];
+}
+
+/** Ends every running potion and item effect. */
+export function adminClearBuffs(state: GameState): GameEvent[] {
+  const events: GameEvent[] = state.buffs.map((b) => ({ type: 'buffExpired', buff: b.id }) as GameEvent);
+  state.buffs = [];
+  return events;
 }

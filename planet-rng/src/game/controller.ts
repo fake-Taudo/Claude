@@ -37,6 +37,8 @@ export class RollController {
   private pendingReplay: string | null = null;
   private listeners = new Set<() => void>();
   cutscenes: CutscenePlayer = { play: () => Promise.resolve() };
+  /** Admin: aura the next roll will land on (one roll only). */
+  forceNext: string | null = null;
 
   constructor(
     private game: GameStore,
@@ -89,6 +91,11 @@ export class RollController {
     const events = this.game.apply((s, ctx) => beginRoll(s, ctx, auto), 'soon');
     const pending = this.game.state.pendingRoll;
     if (!pending || events.some((e) => e.type === 'error')) return false;
+    if (this.forceNext) {
+      // Admin: the next roll lands on the chosen aura.
+      pending.aura = this.forceNext;
+      this.forceNext = null;
+    }
 
     const aura = AURA_BY_ID[pending.aura];
     const tier = tierOf(aura);

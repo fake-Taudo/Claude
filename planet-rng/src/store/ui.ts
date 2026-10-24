@@ -5,7 +5,7 @@ import type { OfflineSummary } from '../core/offline';
 import { Observable } from './emitter';
 import type { ToastSpec } from './store';
 
-export type PanelId = 'inventory' | 'shop' | 'forge' | 'potions' | 'effects' | 'rebirth' | 'quests' | 'settings';
+export type PanelId = 'inventory' | 'shop' | 'forge' | 'potions' | 'effects' | 'rebirth' | 'quests' | 'settings' | 'admin';
 
 export interface DialogSpec {
   title: string;

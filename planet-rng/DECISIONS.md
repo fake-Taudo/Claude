@@ -446,3 +446,19 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
   (`cutscene-check.mjs`, Ergebnis in `docs/cutscenes/perf.json`), Kosten je Track
   (`cutscene-profile.mjs`), Dauerlauf (`cutscene-soak.mjs`), Ton aller Cutscenes (`audio.mjs`),
   Checkliste aus den Daten (`scripts/cutscene-review.ts`).
+
+## Admin-Menü
+
+- Geöffnet wird es mit dem Code `STERNENSTAUB` (Groß-/Kleinschreibung und Leerzeichen egal) im
+  Feld „Code“ der Einstellungen; der Code steht in `GAME.admin.code`. Ein Tastatur-Code ohne
+  Eingabefeld wäre mit den Tastenkürzeln (S = Shop, A = Auto Roll, …) kollidiert.
+- Nach dem ersten Öffnen zeigen die Einstellungen eine Schaltfläche „Admin-Menü öffnen“; im Menü
+  lässt es sich wieder sperren (dann braucht es den Code erneut).
+- Inhalt: alle Auren oder einzelne Auren in beliebiger Anzahl geben und wieder entfernen, Gold
+  Coins hinzufügen oder genau setzen (bis 1 Billion), Tränke und Items, laufende Effekte beenden,
+  Rebirth-Stufe direkt setzen (ohne Kosten und ohne Zurücksetzen), den nächsten Roll auf eine
+  Aura festlegen (mit Cutscene, wenn sie eine hat), jede Cutscene ansehen, das Wetter (Biom)
+  festlegen.
+- Gegebene Auren zählen als gefunden (Sammlung, Erfolge mit ihren Belohnungen). Alles wird sofort
+  gespeichert. Das Wetter gilt nur bis zum Neuladen, weil es sonst die Offline-Berechnung
+  verfälschen würde.

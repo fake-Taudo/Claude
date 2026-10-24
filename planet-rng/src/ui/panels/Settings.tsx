@@ -1,3 +1,4 @@
+import { useState } from 'preact/hooks';
 import { GAME } from '../../config';
 import { CUTSCENE } from '../../config/cutscenes';
 import { formatOddsShort } from '../../core/format';
@@ -9,6 +10,7 @@ import { Btn, Panel, Slider, Toggle } from '../common';
 import { useGame } from '../hooks';
 import { Icon } from '../icons';
 import { sfx } from '../sound';
+import { isAdminCode } from './Admin';
 
 const QUALITY: { id: VfxQuality; label: string }[] = [
   { id: 'low', label: 'Niedrig' },
@@ -34,8 +36,20 @@ const KEYS: [string, string][] = [
 
 export function SettingsPanel() {
   useGame();
+  const [code, setCode] = useState('');
   const s = game.settings;
   const set = (patch: Partial<typeof s>) => game.setSettings(patch);
+  const redeem = () => {
+    if (isAdminCode(code, GAME.admin.code)) {
+      setCode('');
+      set({ adminUnlocked: true });
+      sfx('claim');
+      ui.open('admin');
+    } else {
+      sfx('error');
+      game.toast({ text: 'Unbekannter Code', kind: 'error', icon: 'info' });
+    }
+  };
   const canFullscreen = typeof document !== 'undefined' && !!document.documentElement.requestFullscreen;
 
   return (
@@ -156,6 +170,30 @@ export function SettingsPanel() {
             Erneut starten
           </Btn>
         </div>
+      </section>
+
+      <section class="settings-group">
+        <h3>Code</h3>
+        <form
+          class="setting-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            redeem();
+          }}
+        >
+          <input class="admin-input" value={code} onInput={(e) => setCode((e.target as HTMLInputElement).value)} placeholder="Code eingeben" autocomplete="off" aria-label="Code" data-testid="code-input" />
+          <Btn size="sm" variant="ghost" data-testid="code-submit" onClick={redeem}>
+            Einlösen
+          </Btn>
+        </form>
+        {s.adminUnlocked && (
+          <div class="setting-row">
+            <span>Admin-Menü</span>
+            <Btn size="sm" variant="ghost" icon="gear" data-testid="open-admin" onClick={() => ui.open('admin')}>
+              Öffnen
+            </Btn>
+          </div>
+        )}
       </section>
 
       <section class="settings-group">

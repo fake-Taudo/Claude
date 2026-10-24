@@ -17,6 +17,8 @@ export interface Settings {
   reduceFlashes: boolean;
   /** The one-time flash warning before the first cutscene was shown. */
   flashHintShown: boolean;
+  /** The admin code was entered once: the settings show a button for the admin menu. */
+  adminUnlocked: boolean;
   masterVolume: number;
   sfxVolume: number;
   musicVolume: number;
@@ -36,6 +38,7 @@ export const DEFAULT_SETTINGS: Settings = {
   cutsceneVolume: 1,
   reduceFlashes: false,
   flashHintShown: false,
+  adminUnlocked: false,
   masterVolume: 0.8,
   sfxVolume: 0.8,
   musicVolume: 0.35,

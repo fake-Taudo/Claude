@@ -25,6 +25,11 @@ export const GAME = {
     historyLength: 12,
   },
 
+  admin: {
+    /** Typing this code anywhere (or entering it in the settings) opens the admin menu. */
+    code: 'STERNENSTAUB',
+  },
+
   cutscene: {
     /** Auras from this "1 in X" upward get a cutscene. */
     minOdds: 10000,

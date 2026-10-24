@@ -110,6 +110,10 @@ Ordner heraus und nach `npm run build` starten), z. B.:
 Qualität umschalten, Intro wiederholen, Akzent auslösen, Schichten einzeln an/aus, Hintergrund
 hell/dunkel, FPS und Partikelzahl. Der Speicherstand bleibt dabei unverändert.
 
+**Admin-Menü:** in den Einstellungen unter „Code“ `STERNENSTAUB` eingeben (änderbar in
+`GAME.admin.code`). Auren, Gold Coins, Tränke und Items geben, Rebirth-Stufe setzen, nächsten
+Roll festlegen, Cutscenes ansehen, Wetter wählen.
+
 **Cutscene-Labor:** `planet-rng.html?cutscene=<id>` (z. B. `?cutscene=omniversum`): Cutscene
 wählen und abspielen, Zeitleiste mit Scrubber und Markern (Beats blau, Blitze rot, Bruch gelb,
 Enthüllung weiß), Tempo 0,25× bis 2×, Tracks einzeln an/aus, Qualität, Hintergrund
