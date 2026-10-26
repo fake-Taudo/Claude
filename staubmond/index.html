@@ -582,7 +582,7 @@ const CONFIG = {
     { id: 'teleport', name: 'Teleport-Plattform', price: 25000, w: 3, h: 3, licence: 3, cat: 'infra' },
     { id: 'lamp', name: 'Lampenmast', price: 800, w: 1, h: 1, licence: 5, cat: 'infra' },
   ],
-  belts: { packetKg: 5, gap: 0.5, speeds: [0, 1, 3, 9] },
+  belts: { packetKg: 2.5, gaps: [1, 1, 0.5, 0.25], speeds: [0, 4, 6, 9] },   // Durchsatz = Tempo / Abstand × 2,5 kg = 10/30/90 kg/s
   machines: {
     compressor: { inKg: 2, outKg: 1, out: 7, rate: 12, accepts: 'compress' },       // rate = kg Input/s
     brickpress: { inKg: 2, outKg: 1, out: 8, rate: 12, accepts: [7] },
@@ -2240,7 +2240,7 @@ const Buildings = {
     if (snaps.length) { this.relink(); this.pushUndo({ k: 'unbelts', cells: snaps }); }
     return snaps.length;
   },
-  beltCanAccept(bl) { const it = bl.items; return it.length === 0 || (it[it.length - 1].p >= CONFIG.belts.gap && it.length < 3); },
+  beltCanAccept(bl) { const it = bl.items, g = CONFIG.belts.gaps[bl.tier]; return it.length === 0 || (it[it.length - 1].p >= g && it.length <= 1 / g); },
 
   // Verknüpfungen neu berechnen (nach jeder Bauänderung)
   relink() {
@@ -2306,12 +2306,12 @@ const Buildings = {
   /* --- Simulation pro Logik-Tick --- */
   update(dt) {
     this.tick++;
-    const tick = this.tick, gap = CONFIG.belts.gap, sp = CONFIG.belts.speeds, bm = Economy.fx('beltSpeed');
+    const tick = this.tick, sp = CONFIG.belts.speeds, bm = Economy.fx('beltSpeed');
     // Bänder
     for (const bl of this.active) {
       const it = bl.items, n = it.length;
       if (!n) { this.active.delete(bl); continue; }
-      const step = sp[bl.tier] * bm * dt;
+      const step = sp[bl.tier] * bm * dt, gap = CONFIG.belts.gaps[bl.tier];
       for (let i = 0; i < n; i++) {
         const p = it[i]; if (p.tick === tick) continue;
         const lim = i === 0 ? 1 : it[i - 1].p - gap;
@@ -2675,7 +2675,8 @@ const Haptics = { tap(ms) { if (Settings.d.vibrate && navigator.vibrate) try { n
 /* Zentrale Aktions-Schicht: Tastatur, Touch und Netzwerk lösen dieselben Aktionen aus */
 const Actions = {
   queue: [],
-  push(name, arg) { this.queue.push([name, arg]); },
+  // sofort ausführen (Ereignisse laufen nie parallel zur Logik); Koop-Clients leiten an den Host weiter
+  push(name, arg) { if (Net.isClient() && Net.forward(name, arg)) return; this.exec(name, arg); },
   key(a) {
     if (a === 'debug') { UI.toggleDebug(); return; }
     if (a === 'pause') { if (Build.active) { if (Build.sel || Build.moving) Build.cancel(); else Build.toggle(false); return; } if (UI.closeTop()) return; this.push('pause'); return; }
@@ -2719,9 +2720,10 @@ const Actions = {
     const dep = Buildings.nearest(P.x, P.y, b => b.type === 'depot' || b.type === 'outpost', R + (v ? v.def.body : 0));
     if (dep && Buildings.canLaunch(dep) && !(drop && load > 0.001)) out.push({ id: 'launch', label: 'Kapsel starten', icon: 'rocket', b: dep });
     if (!v) { const nv = Vehicles.nearest(P.x, P.y, 3.2 + 1.5); if (nv && U.dist(P.x, P.y, nv.x, nv.y) < nv.def.body + 2.2) out.push({ id: 'enter', label: nv.def.kind === 'cart' ? 'Schieben' : 'Einsteigen', icon: 'car', v: nv }); }
+    // im Fahrzeug: Aussteigen vor Terminal (E steigt nach Abladen/Kapselstart aus)
+    if (v) out.push({ id: 'exit', label: v.def.kind === 'cart' ? 'Loslassen' : 'Aussteigen', icon: 'exit', sec: true });
     const term = this.nearTerminal();
     if (term) out.push({ id: 'terminal', label: term.type === 'teleport' ? 'Teleport' : 'Terminal', icon: term.type === 'teleport' ? 'teleport' : 'terminal', b: term, sec: true });
-    if (v) out.push({ id: 'exit', label: v.def.kind === 'cart' ? 'Loslassen' : 'Aussteigen', icon: 'exit', sec: true });
     return out;
   },
   nearTerminal() {
@@ -3579,7 +3581,7 @@ const Draw = {
       } else { ctx.fillStyle = col; ctx.fillRect(-0.5, -0.42, 1, 0.84); }
       if (detail) {
         ctx.strokeStyle = acc; ctx.lineWidth = 0.07;
-        const ph = ((t * CONFIG.belts.speeds[bl.tier] * Economy.fx('beltSpeed')) % 0.5 + 0.5) % 0.5;
+        const ph = ((t * CONFIG.belts.speeds[bl.tier] * Economy.fx('beltSpeed') * 0.25) % 0.5 + 0.5) % 0.5;
         if (!curve) for (let q = -0.5 + ph; q < 0.5; q += 0.5) { ctx.beginPath(); ctx.moveTo(q - 0.12, -0.2); ctx.lineTo(q + 0.05, 0); ctx.lineTo(q - 0.12, 0.2); ctx.stroke(); }
         else { ctx.beginPath(); ctx.moveTo(0.14, -0.18); ctx.lineTo(0.32, 0); ctx.lineTo(0.14, 0.18); ctx.stroke(); }
         if (!curve) { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(-0.5, -0.45, 1, 0.06); ctx.fillRect(-0.5, 0.39, 1, 0.06); }
@@ -3589,8 +3591,8 @@ const Draw = {
         let x, y;
         if (curve) { const ang = Math.PI + curve * (Math.PI / 2) * it.p; x = 0.5 + Math.cos(ang) * 0.5; y = curve * 0.5 + Math.sin(ang) * 0.5; }
         else { x = it.p - 0.5; y = 0; }
-        ctx.fillStyle = GOOD_COL[it.t]; ctx.fillRect(x - 0.17, y - 0.17, 0.34, 0.34);
-        if (detail) { ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.04; ctx.strokeRect(x - 0.17, y - 0.17, 0.34, 0.34); }
+        ctx.fillStyle = GOOD_COL[it.t]; ctx.fillRect(x - 0.15, y - 0.15, 0.3, 0.3);
+        if (detail) { ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.04; ctx.strokeRect(x - 0.15, y - 0.15, 0.3, 0.3); }
       }
     }
   },
@@ -3735,12 +3737,15 @@ const Robots = {
     }
     return false;
   },
+  // Bahnen reihum vergeben: Start bei der Zeile nächst dem ersten Roboter, danach umlaufend
   claimRow(r, a) {
     const band = Math.max(1, this.radius(r) * 2 * 0.86);
-    if (a.nextY >= a.y0 + a.h) return false;
+    if (a.covered === undefined) { a.covered = 0; a.nextY = U.clamp(Math.floor(r.y - a.y0 - 1), 0, a.h - 1) + a.y0; }
+    if (a.covered >= a.h) return false;
+    if (a.nextY >= a.y0 + a.h) a.nextY = a.y0;
     r.rowY = Math.min(a.y0 + a.h - 0.5, a.nextY + band / 2);
-    a.nextY += band;
-    r.dir = (a.claims++ & 1) ? -1 : 1;
+    a.nextY += band; a.covered += band;
+    a.claims++; r.dir = U.dx(a.x0, r.x) < a.w / 2 ? 1 : -1;   // am näheren Ende beginnen (Schlangenlinien)
     r.col = r.dir > 0 ? 0 : a.w - 1;
     r.tx = NaN; r.band = band;
     return true;
@@ -3835,7 +3840,7 @@ const Robots = {
         if (!r.rowY) {
           if (!this.claimRow(r, a)) {
             if (this.areaDone(a)) { if (!a.done) this.finish(a); return; }
-            if (a.pass < 3) { a.pass++; a.nextY = a.y0; return; }
+            if (a.pass < 3) { a.pass++; a.covered = undefined; return; }
             if (!a.done) this.finish(a); return;
           }
         }
@@ -3846,7 +3851,7 @@ const Robots = {
           r.appr = Math.abs(U.dx(r.x, r.sx)) > 1.2 || Math.abs(r.y - r.rowY) > 1.2;
         }
         // erst zum Anfang des schmutzigen Abschnitts, dann putzend bis zum Ende
-        if (r.appr) { if (this.moveTo(r, r.sx, r.rowY, dt, false)) r.appr = false; return; }
+        if (r.appr) { if (this.moveTo(r, r.sx, r.rowY, dt, Math.abs(r.y - r.rowY) < 1.5)) r.appr = false; return; }
         if (this.moveTo(r, r.tx, r.rowY, dt, true)) { r.col += r.dir; r.tx = NaN; }
         return;
       }
