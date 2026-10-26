@@ -474,6 +474,21 @@ body.prof-phone #map .legend { display: none; }
      Herauszoomen und Sektor-Übersichtsbilder für sehr weite Zooms.
    - Speichern: IndexedDB (Kern + geänderte Chunks, RLE + gzip), 5 rotierende
      Kern-Backups, FNV-Prüfsumme, Schema-Migration, Export/Import als Datei.
+   Koop (optional, Phase 7)
+   - Transport: PeerJS (WebRTC, Host-ID „staubmond-<6-stelliger Code>“, öffentlicher
+     PeerJS-Vermittlungsserver, danach direkte Verbindung) oder BroadcastChannel für
+     mehrere Tabs auf demselben Gerät (offline testbar).
+   - Host-autoritativ: Der Host simuliert Welt, Wirtschaft, Gebäude und Roboter. Clients
+     senden 15×/s Position, Blickfeld und „putzt gerade“; der Host führt die Putzstriche
+     aus. Alle Käufe/Bauaktionen laufen über die Befehlsschicht (Shop) und werden an den
+     Host weitergeleitet. Snapshots 10×/s (Spieler, Fahrzeuge, Roboter, geänderte
+     Chunks – nahe zuerst), Spielzustand 2×/s, Gebäude bei Änderung.
+   - Gemeinsame Kasse und Fortschritt; nur der Host speichert. Der eigene Spielstand der
+     Clients bleibt unberührt. Crew-Bonus +5 % Einkommen je Mitspieler.
+   - Verlässt jemand das Spiel (oder reißt die Verbindung ab, 15 s ohne Meldung), geht
+     seine Ladung ins Hauptdepot, sein Fahrzeug wird frei – nichts geht verloren.
+     Tab im Hintergrund: Clients gelten als abwesend, beim Host pausiert das Spiel.
+   - Versionsprüfung beim Beitritt, max. 8 Personen, Host kann entfernen und sperren.
    ============================================================================ */
 
 /* ============================================================================
@@ -645,6 +660,8 @@ const CONFIG = {
   offline: { maxHours: 8, efficiency: 0.5, researched: 0.8, step: 1.0, budgetMs: 18 },
   camera: { zoomMin: 0.04, zoomMax: 4, zoomDesktop: 2.0, zoomPhone: 1.7, zoomPhonePortrait: 1.45, zoomTablet: 1.6,
     lerp: 6, lookAhead: 0.35, lod0: 0.3, lod2: 0.1 },
+  // Koop: Verbindungs-Zeitüberschreitung (s), Crew-Größe inkl. Host
+  net: { timeout: 15, maxPlayers: 8 },
   perf: {
     dprDesktop: 2, dprPhone: 1.5, chunkCachePhone: 120, chunkCacheDesktop: 300, lod1Cache: 420, sectorCache: 600,
     baseCache: 900, texUpdatesPerFrame: 6, genBudgetMs: 5, dynResFrameMs: 18, dynResWindow: 2, dynResStep: 0.1, dynResMin: 0.6,
@@ -1539,8 +1556,20 @@ const World = {
   },
   _flushMarks() { for (const [ci, d] of this._mk) this.markDirty(ci, d[0], d[1], d[2], d[3]); this._mk.clear(); },
 
+  // Koop-Client: Chunk-Daten vom Host übernehmen
+  applyChunk(ci, dust, meteor, rev) {
+    this.ensureStats(ci);
+    let ch = this.chunks[ci];
+    if (!ch) { ch = { ci, dust, meteor, rev: rev || 1 }; this.chunks[ci] = ch; }
+    else { ch.dust = dust; ch.meteor = meteor; ch.rev = rev || ch.rev + 1; }
+    const b = this.base(ci); let clean = 0;
+    for (let i = 0; i < 4096; i++) if (dust[i] <= CLEAN_T && this.isCleanableT(b.terr[i])) clean++;
+    this.secClean[this.secOfChunk(ci)] += clean - this.chunkClean[ci]; this.chunkClean[ci] = clean;
+    this.markTex(ci, 0, 0, 63, 63); this.dirtyMap.add(ci);
+  },
   cellCleaned(ci, x, y) {
     this.chunkClean[ci]++;
+    if (Net.role === 'host') (Net.statDirty || (Net.statDirty = new Set())).add(ci);
     const s = this.secOfChunk(ci);
     this.secClean[s]++;
     this.updateSector(s);
@@ -1786,7 +1815,7 @@ const Player = {
   ctxCap() { const v = this.veh; if (!v) return this.ownCap(); if (v.def.kind === 'cart') return this.ownCap() + Vehicles.cap(v); return Vehicles.cap(v); },
   // Staub aufnehmen (World.col) – zuerst eigener Behälter, Rest in die Schubkarre
   takeCol(kgTotal) {
-    if (kgTotal <= 0) return;
+    if (kgTotal <= 0 || (this === Player && Net.isClient())) return;
     const free = Math.max(0, this.ownCap() - this.loadKg());
     const toSelf = Math.min(1, free / kgTotal);
     for (let t = 0; t < NGOODS; t++) { const k = World.col[t]; if (!k) continue; this.load[t] += k * toSelf; if (toSelf < 1 && this.veh) this.veh.load[t] += k * (1 - toSelf); }
@@ -1874,23 +1903,26 @@ const Vehicles = {
     Bus.emit('vehicleBought', v);
     return v;
   },
-  enter(v) {
-    if (Player.veh) return;
-    Player.veh = v; v.garage = 0; v.fs = 0; v.vx = v.vy = 0;
-    if (v.def.kind !== 'cart') Camera.setZoom(Camera.tz * 0.7);
-    if (v.def.kind !== 'cart') { Player.x = v.x; Player.y = v.y; }
+  enter(v, P) {
+    P = P || Player;
+    if (P.veh || v.driver) return;
+    P.veh = v; v.driver = P === Player ? 0 : P.id; v.garage = 0; v.fs = 0; v.vx = v.vy = 0;
+    if (P === Player && v.def.kind !== 'cart') Camera.setZoom(Camera.tz * 0.7);
+    if (v.def.kind !== 'cart') { P.x = v.x; P.y = v.y; }
     Bus.emit('enter', v);
   },
-  exit() {
-    const v = Player.veh; if (!v) return;
-    if (v.def.kind === 'cart') { Player.veh = null; Bus.emit('exit', v); return; }
+  exit(P) {
+    P = P || Player;
+    const v = P.veh; if (!v) return;
+    v.driver = 0;
+    if (v.def.kind === 'cart') { P.veh = null; Bus.emit('exit', v); return; }
     const side = v.a + Math.PI / 2, d = v.def.body + 1;
     let spot = null;
     for (const s of [side, side + Math.PI, v.a + Math.PI, v.a]) { const x = U.wrapX(v.x + Math.cos(s) * d), y = v.y + Math.sin(s) * d; if (Move.circleFree(x, y, CONFIG.player.radius, 'walk')) { spot = { x, y }; break; } }
     if (!spot) spot = Move.findFree(v.x, v.y, CONFIG.player.radius, 'walk', 10) || { x: v.x, y: v.y };
-    Player.veh = null; Player.x = Player.px = spot.x; Player.y = Player.py = spot.y; Player.vx = Player.vy = 0;
+    P.veh = null; P.x = P.px = spot.x; P.y = P.py = spot.y; P.vx = P.vy = 0;
     v.vx = v.vy = v.fs = 0;
-    Camera.setZoom(Camera.tz / 0.7);
+    if (P === Player) Camera.setZoom(Camera.tz / 0.7);
     Bus.emit('exit', v);
   },
   // Fahrzeug fahren: Lenkung zur Joystick-Richtung, Trägheit, leichtes Driften
@@ -1935,18 +1967,19 @@ const Vehicles = {
   recall(v, toGarage) {
     if (v === Player.veh || v.incoming > 0) return false;
     if (!toGarage && !Economy.spend(this.recallFee(v))) return false;
-    v.incoming = toGarage ? 4 : CONFIG.vehicleRecallTime; v.dest = toGarage || null;
+    v.incoming = toGarage ? 4 : CONFIG.vehicleRecallTime; v.dest = toGarage || null; v.caller = Net.actor ? Net.actor.peer : null;
     return true;
   },
   update(dt) {
     for (const v of this.list) {
-      if (v === Player.veh) continue;
+      if (v === Player.veh || v.driver) continue;
       v.px = v.x; v.py = v.y; v.pa = v.a;
       if (v.incoming > 0) {
         v.incoming -= dt;
         if (v.incoming <= 0) {
           v.incoming = 0;
-          let tx = Player.x + Math.cos(Player.dir) * 4, ty = Player.y + Math.sin(Player.dir) * 4;
+          const C = (v.caller && Net.peers.get(v.caller)) || Player; v.caller = null;
+          let tx = C.x + Math.cos(C.dir) * 4, ty = C.y + Math.sin(C.dir) * 4;
           if (v.dest) { const g = Buildings.byId(v.dest); if (g) { tx = g.x + g.w / 2; ty = g.y + g.h + v.def.body + 1; } v.dest = null; }
           const spot = Move.findFree(tx, ty, v.def.body, this.kind(v), 20) || { x: tx, y: ty };
           v.x = v.px = spot.x; v.y = v.py = spot.y; v.vx = v.vy = 0;
@@ -1962,7 +1995,7 @@ const Vehicles = {
   },
   nearest(x, y, maxD) {
     let best = null, bd = maxD * maxD;
-    for (const v of this.list) { if (v === Player.veh || v.incoming > 0) continue; const d = U.dist2(x, y, v.x, v.y); if (d < bd) { bd = d; best = v; } }
+    for (const v of this.list) { if (v === Player.veh || v.incoming > 0 || v.driver) continue; const d = U.dist2(x, y, v.x, v.y); if (d < bd) { bd = d; best = v; } }
     return best;
   },
 };
@@ -2270,7 +2303,7 @@ const Buildings = {
       if (nb && nb.dir !== ((b.rot + 2) & 3)) b.outT = nb;
       else { const o = this.at(p.x, p.y); if (o && o !== b && o.def.in) b.outT = o; }
     }
-    // Hinweis für Bänder, die in das Ende eines anderen Bandes zeigen, wird über inMask gerendert
+    if (Net.isHost()) Net.buildDirty = true;
   },
   outPort(b) {
     const r = b.rot;
@@ -2338,6 +2371,17 @@ const Buildings = {
     // Gebäude
     for (let i = 0; i < this.list.length; i++) this.updateB(this.list[i], dt);
     if (this.covDirty) this.rebuildCoverage();
+  },
+  // Koop-Client: Pakete nur optisch weiterschieben (der Host bleibt maßgeblich)
+  animateBelts(dt) {
+    const tick = ++this.tick, sp = CONFIG.belts.speeds, bm = Economy.fx('beltSpeed');
+    for (const bl of this.active) {
+      const it = bl.items, n = it.length; if (!n) { this.active.delete(bl); continue; }
+      const step = sp[bl.tier] * bm * dt, gap = CONFIG.belts.gaps[bl.tier];
+      for (let i = 0; i < n; i++) { const p = it[i]; if (p.tick === tick) continue; const lim = i === 0 ? 1 : it[i - 1].p - gap; const np = Math.min(p.p + step, lim); if (np > p.p) p.p = np; }
+      const f = it[0], nx = bl.next;
+      if (f.p >= 1 && f.tick !== tick && nx && nx.items && this.beltCanAccept(nx)) { it.shift(); f.p = 0; f.tick = tick; nx.items.push(f); this.active.add(nx); }
+    }
   },
   updateB(b, dt) {
     switch (b.type) {
@@ -2480,10 +2524,10 @@ const DEFAULT_BINDS = {
   up: ['KeyW', 'ArrowUp'], down: ['KeyS', 'ArrowDown'], left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],
   clean: ['Space'], interact: ['KeyE'], terminal: ['KeyT'], build: ['KeyB'], rotate: ['KeyR'], move: ['KeyM'], demolish: ['KeyX'],
   map: ['Tab'], research: ['KeyF'], orders: ['KeyJ'], album: ['KeyK'], zoomIn: ['Equal', 'NumpadAdd', 'BracketRight'], zoomOut: ['Minus', 'NumpadSubtract', 'Slash'],
-  pause: ['Escape'], debug: ['F3'],
+  coop: ['KeyC'], pause: ['Escape'], debug: ['F3'],
 };
 const BIND_NAMES = { up: 'Hoch', down: 'Runter', left: 'Links', right: 'Rechts', clean: 'Putzen (halten)', interact: 'Interagieren', terminal: 'Terminal öffnen', build: 'Baumodus',
-  rotate: 'Drehen', move: 'Verschieben / Karte', demolish: 'Abreißen', map: 'Karte', research: 'Forschung', orders: 'Aufträge', album: 'Album', zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', pause: 'Pause / Menü', debug: 'Debug-Anzeige' };
+  rotate: 'Drehen', move: 'Verschieben / Karte', demolish: 'Abreißen', map: 'Karte', research: 'Forschung', orders: 'Aufträge', album: 'Album', zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', coop: 'Crew / Emotes (Koop)', pause: 'Pause / Menü', debug: 'Debug-Anzeige' };
 
 const Settings = {
   d: {
@@ -2686,8 +2730,8 @@ const Haptics = { tap(ms) { if (Settings.d.vibrate && navigator.vibrate) try { n
 /* Zentrale Aktions-Schicht: Tastatur, Touch und Netzwerk lösen dieselben Aktionen aus */
 const Actions = {
   queue: [],
-  // sofort ausführen (Ereignisse laufen nie parallel zur Logik); Koop-Clients leiten an den Host weiter
-  push(name, arg) { if (Net.isClient() && Net.forward(name, arg)) return; this.exec(name, arg); },
+  // sofort ausführen (Ereignisse laufen nie parallel zur Logik); im Koop leiten interact() und Shop.do() selbst an den Host weiter
+  push(name, arg) { this.exec(name, arg); },
   key(a) {
     if (a === 'debug') { UI.toggleDebug(); return; }
     if (a === 'pause') { if (Build.active) { if (Build.sel || Build.moving) Build.cancel(); else Build.toggle(false); return; } if (UI.closeTop()) return; this.push('pause'); return; }
@@ -2699,7 +2743,6 @@ const Actions = {
   run() {
     while (this.queue.length) {
       const [a, arg] = this.queue.shift();
-      if (Net.isClient() && Net.forward(a, arg)) continue;
       this.exec(a, arg);
     }
   },
@@ -2712,46 +2755,49 @@ const Actions = {
       case 'rotate': return Build.rotateKey();
       case 'move': return Build.moveKey();
       case 'demolish': return Build.demolishKey();
-      case 'undo': return Buildings.doUndo();
+      case 'undo': return Shop.do('undo');
       case 'map': return UI.toggleMap();
       case 'research': return UI.open('research');
       case 'orders': return UI.open('orders');
       case 'album': return UI.open('album');
+      case 'coop': return Net.role ? Net.panel() : undefined;
       case 'pause': return UI.open('pause');
     }
   },
   // Kontext-Aktionen in Reichweite (nach Priorität)
-  context() {
-    const out = []; if (!G || Build.active) return out;
-    const P = Player, R = CONFIG.player.interactRange, v = P.veh;
+  context(P) {
+    const out = []; P = P || Player; if (!G || (P === Player && Build.active)) return out;
+    const R = CONFIG.player.interactRange, v = P.veh;
     const load = P.loadKg() + (v ? Vehicles.loadKg(v) : 0);
     const drop = Buildings.nearest(P.x, P.y, b => b.def.drop, R + (v ? v.def.body : 0));
     if (drop && load > 0.001) out.push({ id: 'unload', label: 'Abladen', icon: 'unload', b: drop });
     else if (load > 0.001 && Economy.remoteUnload() && Buildings.covered(P.x, P.y)) out.push({ id: 'remote', label: 'Fernabladen', icon: 'radio' });
     const dep = Buildings.nearest(P.x, P.y, b => b.type === 'depot' || b.type === 'outpost', R + (v ? v.def.body : 0));
     if (dep && Buildings.canLaunch(dep) && !(drop && load > 0.001)) out.push({ id: 'launch', label: 'Kapsel starten', icon: 'rocket', b: dep });
-    if (!v) { const nv = Vehicles.nearest(P.x, P.y, 3.2 + 1.5); if (nv && U.dist(P.x, P.y, nv.x, nv.y) < nv.def.body + 2.2) out.push({ id: 'enter', label: nv.def.kind === 'cart' ? 'Schieben' : 'Einsteigen', icon: 'car', v: nv }); }
+    if (!v) { const nv = Vehicles.nearest(P.x, P.y, 3.2 + 1.5); if (nv && !nv.driver && U.dist(P.x, P.y, nv.x, nv.y) < nv.def.body + 2.2) out.push({ id: 'enter', label: nv.def.kind === 'cart' ? 'Schieben' : 'Einsteigen', icon: 'car', v: nv }); }
     // im Fahrzeug: Aussteigen vor Terminal (E steigt nach Abladen/Kapselstart aus)
     if (v) out.push({ id: 'exit', label: v.def.kind === 'cart' ? 'Loslassen' : 'Aussteigen', icon: 'exit', sec: true });
-    const term = this.nearTerminal();
+    const term = this.nearTerminal(P);
     if (term) out.push({ id: 'terminal', label: term.type === 'teleport' ? 'Teleport' : 'Terminal', icon: term.type === 'teleport' ? 'teleport' : 'terminal', b: term, sec: true });
     return out;
   },
-  nearTerminal() {
-    const P = Player, v = P.veh;
+  nearTerminal(P) {
+    P = P || Player; const v = P.veh;
     return Buildings.nearest(P.x, P.y, b => ['depot', 'outpost', 'hangar', 'garage', 'teleport', 'silo', 'compressor', 'brickpress', 'glassoven', 'ramp', 'hopper', 'antenna', 'splitter', 'lamp'].includes(b.type), CONFIG.player.interactRange + (v ? v.def.body : 0));
   },
-  interact(id) {
-    const ctx = this.context();
-    if (!ctx.length) { if (!id && Player.ctxLoad() > 0.01) UI.toast('Zum Abladen näher an ein Depot gehen (orangefarbener Pfeil).'); return; }
-    const c = id ? ctx.find(x => x.id === id) : ctx[0]; if (!c) return;
+  interact(id, P) {
+    P = P || Player;
+    const ctx = this.context(P), me = P === Player;
+    if (!ctx.length) { if (me && !id && P.ctxLoad() > 0.01) UI.toast('Zum Abladen näher an ein Depot gehen (orangefarbener Pfeil).'); return; }
+    let c = id ? ctx.find(x => x.id === id) : ctx[0]; if (!c) return;
+    if (me && Net.isClient() && c.id !== 'terminal') { Net.forward('interact', c.id); if (c.id === 'unload' || c.id === 'remote') Audio.sfx('unload'); return; }
     switch (c.id) {
-      case 'unload': { const kg = Player.unloadTo(c.b); if (kg > 0) { Audio.sfx('unload'); UI.popWorld(c.b, '+' + U.kg(kg)); Haptics.tap(15); } break; }
-      case 'remote': { const dep = Buildings.mainDepot(); const kg = Player.unloadTo(dep); if (kg > 0) { Audio.sfx('radio'); UI.toast('Fernabladen: ' + U.kg(kg) + ' per Funk ins Hauptdepot geschickt.'); } break; }
+      case 'unload': { const kg = P.unloadTo(c.b); if (kg > 0) { if (me) { Audio.sfx('unload'); Haptics.tap(15); } UI.popWorld(c.b, '+' + U.kg(kg)); } break; }
+      case 'remote': { const dep = Buildings.mainDepot(); const kg = P.unloadTo(dep); if (kg > 0 && me) { Audio.sfx('radio'); UI.toast('Fernabladen: ' + U.kg(kg) + ' per Funk ins Hauptdepot geschickt.'); } break; }
       case 'launch': Buildings.launch(c.b, false); break;
-      case 'enter': Vehicles.enter(c.v); Audio.sfx('door'); break;
-      case 'exit': Vehicles.exit(); Audio.sfx('door'); break;
-      case 'terminal': UI.openBuilding(c.b); break;
+      case 'enter': Vehicles.enter(c.v, P); if (me) Audio.sfx('door'); break;
+      case 'exit': Vehicles.exit(P); if (me) Audio.sfx('door'); break;
+      case 'terminal': if (me) UI.openBuilding(c.b); break;
     }
   },
   terminal() { const t = this.nearTerminal(); if (t) UI.openBuilding(t); else UI.toast('Kein Terminal in Reichweite.'); },
@@ -2880,6 +2926,8 @@ const Renderer = {
     this.k = this.dpr * this.rs;
     const bw = Math.round(W * this.k), bh = Math.round(H * this.k);
     if (this.cv.width !== bw || this.cv.height !== bh) { this.cv.width = bw; this.cv.height = bh; }
+    const port = H > W; if (this.lastPort !== undefined && port !== this.lastPort && Input.profile === 'phone') Camera.setZoom(Camera.tz * (port ? CONFIG.camera.zoomPhonePortrait / CONFIG.camera.zoomPhone : CONFIG.camera.zoomPhone / CONFIG.camera.zoomPhonePortrait));
+    this.lastPort = port;
     Bus.emit('resize');
   },
   // Dynamische Auflösung: misst die Frame-Zeit und passt die Render-Skalierung an
@@ -3184,6 +3232,7 @@ const Renderer = {
     Draw.vehicles(a);
     Draw.robots(a, lod);
     Draw.inspector();
+    Draw.others();
     Draw.player(a);
     this.drawParticles();
     Draw.capsules();
@@ -3271,6 +3320,7 @@ const Renderer = {
     if (Camera.zoom < 0.42) Draw.sectorGrid(s);
     if (Build.active) Draw.ghost();
     Draw.worldUI();
+    Draw.crewTags();
     // Wegpunkt-Markierung
     if (G.waypoint) { const w = G.waypoint; if (this.inView(w.x, w.y, 2)) { this.at(w.x, w.y); ctx.strokeStyle = C_ORANGE; ctx.lineWidth = 0.25; ctx.beginPath(); ctx.arc(0, 0, 1.2 + Math.sin(G.t * 4) * 0.2, 0, Math.PI * 2); ctx.stroke(); } }
     ctx.setTransform(k, 0, 0, k, 0, 0);
@@ -3299,30 +3349,87 @@ const Draw = {
   lerpPos(o, a) { return { x: U.wrapX(o.px + U.dx(o.px, o.x) * a), y: o.py + (o.y - o.py) * a }; },
 
   player(a) {
-    const P = Player, R = Renderer, ctx = R.ctx;
+    const P = Player, R = Renderer;
     if (P.veh && P.veh.def.kind !== 'cart') return;
     const p = this.lerpPos(P, a); if (!R.inView(p.x, p.y, 3)) return;
     const tx = U.wrapX(P.ptx + U.dx(P.ptx, P.tx) * a), ty = P.pty + (P.ty - P.pty) * a;
     if (P.veh) this.cart(P.veh, a);
     const bob = Math.abs(Math.sin(P.bob * 2.2)) * (P.moving ? 0.22 : 0.04);
-    // Werkzeug
     this.tool(tx, ty, p, P.cleaning);
-    R.at(p.x, p.y, P.dir);
+    this.astronaut(p.x, p.y, P.dir, bob, Net.role ? Net.myColor : C_ORANGE);
+  },
+  // Astronaut im Raumanzug (Anzugfarbe = Spielerfarbe im Koop)
+  astronaut(x, y, dir, bob, suit) {
+    const R = Renderer, ctx = R.ctx;
+    R.at(x, y, dir);
     const sc = 1 + bob * 0.25;
     ctx.fillStyle = 'rgba(15,12,10,0.3)'; ctx.beginPath(); ctx.ellipse(0.06, 0.1, 0.5, 0.42, 0, 0, Math.PI * 2); ctx.fill();
     ctx.translate(-bob * 0.2, -bob * 0.5); ctx.scale(sc, sc);
     // Rucksack
     ctx.fillStyle = '#d9dee0'; this.rr(ctx, -0.62, -0.32, 0.34, 0.64, 0.1); ctx.fill(); ctx.strokeStyle = '#6b7478'; ctx.lineWidth = 0.05; ctx.stroke();
     // Arme
-    ctx.fillStyle = C_ORANGE; ctx.beginPath(); ctx.ellipse(0.12, -0.36, 0.22, 0.13, 0.4, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(0.12, 0.36, 0.22, 0.13, -0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = suit; ctx.beginPath(); ctx.ellipse(0.12, -0.36, 0.22, 0.13, 0.4, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(0.12, 0.36, 0.22, 0.13, -0.4, 0, Math.PI * 2); ctx.fill();
     // Körper
-    ctx.fillStyle = C_ORANGE; ctx.beginPath(); ctx.ellipse(-0.05, 0, 0.36, 0.42, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#a34807'; ctx.lineWidth = 0.05; ctx.stroke();
+    ctx.fillStyle = suit; ctx.beginPath(); ctx.ellipse(-0.05, 0, 0.36, 0.42, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = this.shade(suit); ctx.lineWidth = 0.05; ctx.stroke();
     // Helm mit Visier
     ctx.fillStyle = '#f4f6f7'; ctx.beginPath(); ctx.arc(0.08, 0, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#8b9599'; ctx.lineWidth = 0.04; ctx.stroke();
     const g = ctx.createLinearGradient(0.1, -0.2, 0.36, 0.2); g.addColorStop(0, '#1d3b5c'); g.addColorStop(0.6, '#3d6f9a'); g.addColorStop(1, '#f2c46a');
     ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0.2, 0, 0.15, 0.22, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.beginPath(); ctx.ellipse(0.24, -0.08, 0.04, 0.07, 0.3, 0, Math.PI * 2); ctx.fill();
+  },
+  shadeCache: {},
+  shade(hex) {
+    let c = this.shadeCache[hex]; if (c) return c;
+    const n = parseInt(hex.slice(1), 16), f = 0.62;
+    c = this.shadeCache[hex] = 'rgb(' + (((n >> 16) & 255) * f | 0) + ',' + (((n >> 8) & 255) * f | 0) + ',' + ((n & 255) * f | 0) + ')';
+    return c;
+  },
+  // Mitspieler im Koop: Figur (zu Fuß / mit Schubkarre); Fahrzeuge zeichnet vehicles()
+  others() {
+    if (!Net.role) return;
+    const R = Renderer;
+    for (const o of Net.list()) {
+      if (!R.inView(o.x, o.y, 4)) continue;
+      const v = o.veh ? Vehicles.byId(o.veh) : null;
+      if (v && v.def.kind !== 'cart') continue;
+      o.bobT = (Net.bobT[o.id] = (Net.bobT[o.id] || 0) + (o.mv ? 1 / 60 : 0));
+      const bob = Math.abs(Math.sin(o.bobT * 7)) * (o.mv ? 0.22 : 0.04);
+      this.tool(o.tx, o.ty, o, o.clean);
+      this.astronaut(o.x, o.y, o.dir, bob, o.color);
+    }
+  },
+  // Namensschilder und Emote-Blasen (Bildschirmraum)
+  crewTags() {
+    if (!Net.role) return;
+    const R = Renderer, ctx = R.ctx, now = performance.now();
+    ctx.setTransform(R.k, 0, 0, R.k, 0, 0); ctx.textAlign = 'center';
+    const bubble = (id, x, y) => {
+      const b = Net.bubbles && Net.bubbles.get(id); if (!b) return;
+      const age = (now - b.t) / 1000; if (age > 3.2) { Net.bubbles.delete(id); return; }
+      const txt = EMOTES[b.e]; if (!txt) return;
+      ctx.globalAlpha = Math.min(1, (3.2 - age) * 3, age * 8);
+      ctx.font = '700 14px system-ui, sans-serif';
+      const w = ctx.measureText(txt).width + 18, yy = y - 26 - Math.min(1, age * 6) * 6;
+      ctx.fillStyle = 'rgba(244,246,247,0.96)'; Draw.rr(ctx, x - w / 2, yy - 15, w, 26, 12); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x - 6, yy + 10); ctx.lineTo(x, yy + 17); ctx.lineTo(x + 6, yy + 10); ctx.fill();
+      ctx.fillStyle = '#17252b'; ctx.fillText(txt, x, yy + 3);
+      ctx.globalAlpha = 1;
+    };
+    for (const o of Net.list()) {
+      if (!R.onScreen(o.x, o.y, 6)) continue;
+      const v = o.veh ? Vehicles.byId(o.veh) : null, lift = v && v.def.kind !== 'cart' ? v.def.body * 0.9 + 0.6 : 0.9;
+      const x = R.sx(o.x), y = R.sy(o.y) - lift * R.s - 8;
+      ctx.font = '800 12px system-ui, sans-serif';
+      const w = ctx.measureText(o.name).width + 14;
+      ctx.fillStyle = 'rgba(10,16,19,0.72)'; Draw.rr(ctx, x - w / 2, y - 12, w, 17, 8); ctx.fill();
+      ctx.fillStyle = o.color; ctx.fillRect(x - w / 2 + 5, y - 5, 4, 4);
+      ctx.fillStyle = '#f4f6f7'; ctx.fillText(o.name, x + 3, y + 1);
+      bubble(o.id, x, y - 8);
+    }
+    const me = Net.isClient() ? Net.myId : 0, P = Player;
+    const v = P.veh, lift = v && v.def.kind !== 'cart' ? v.def.body * 0.9 + 0.6 : 0.9;
+    bubble(me, R.sx(P.x), R.sy(P.y) - lift * R.s - 8);
   },
   tool(tx, ty, p, active) {
     const R = Renderer, ctx = R.ctx, id = G.tool, rad = Economy.toolRadius();
@@ -3381,7 +3488,8 @@ const Draw = {
   },
   vehicle(v, x, y, ang, driven) {
     const R = Renderer, ctx = R.ctx, d = v.def, b = d.body, W = Vehicles.width(v);
-    const cleaning = driven && Player.cleaning;
+    let cleaning = driven && Player.cleaning;
+    if (!driven && v.driver && Net.role) { const o = Net.list().find(q => q.veh === v.id); if (o) { cleaning = o.clean; driven = true; } }
     R.at(x, y, ang);
     const hov = d.hover ? 0.35 + Math.sin(G.t * 3) * 0.05 : 0;
     ctx.fillStyle = 'rgba(15,12,10,0.3)'; this.rr(ctx, -b * 1.05 + 0.2 + hov, -b * 0.8 + 0.25 + hov, b * 2.1, b * 1.6, b * 0.4); ctx.fill();
@@ -3648,7 +3756,10 @@ const Draw = {
     for (let sy = sy0; sy <= sy1; sy++) for (let sx = sx0; sx <= sx1; sx++) {
       const si = sy * NSEC + ((sx % NSEC) + NSEC) % NSEC, x = R.W / 2 + (sx * SEC - Camera.x) * s + 6, y = R.sy(sy * SEC) + 16;
       const p = World.secProgress[si], done = World.secDone[si];
-      if (done) { ctx.fillStyle = 'rgba(79,209,139,' + 0.12 * a + ')'; ctx.fillRect(x - 6, y - 16, SEC * s, SEC * s); }
+      if (done) {
+        ctx.fillStyle = 'rgba(79,209,139,' + 0.12 * a + ')'; ctx.fillRect(x - 6, y - 16, SEC * s, SEC * s);
+        if (SEC * s > 90) { ctx.save(); ctx.translate(x - 6 + SEC * s / 2, y - 16 + SEC * s / 2); ctx.rotate(-0.18); const fs = Math.min(28, SEC * s / 9); ctx.font = '900 ' + fs + 'px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.55 * a; ctx.strokeStyle = '#c4362c'; ctx.lineWidth = 3; const tw = ctx.measureText(TXT.sectorStamp).width; ctx.strokeRect(-tw / 2 - 8, -fs * 0.9, tw + 16, fs * 1.3); ctx.fillStyle = '#c4362c'; ctx.fillText(TXT.sectorStamp, 0, fs * 0.15); ctx.restore(); ctx.textAlign = 'left'; ctx.font = '700 12px system-ui, sans-serif'; }
+      }
       ctx.fillStyle = 'rgba(255,255,255,' + 0.75 * a + ')';
       ctx.fillText(U.sectorLabel(si) + (p > 0.0005 ? '  ' + U.pct(Math.min(1, p)) : ''), x, y);
     }
@@ -4007,7 +4118,7 @@ const Progression = {
     G.secDone.push(s); G.stats.sectors++;
     const bonus = this.sectorBonus(s);
     Economy.grant(bonus, 'sector'); G.fp += CONFIG.sectorReward.fp;
-    UI.stamp(s, bonus);
+    UI.stamp(s, bonus); Net.fx('stamp', [s, bonus]);
     Fx.sectorWave(s);
     Audio.sfx('stamp');
     Bus.emit('sectorDone', s);
@@ -4022,7 +4133,7 @@ const Progression = {
     const m = this.findReward(f), fp = CONFIG.findReward.fp + (f.gold ? 1 : 0);
     Economy.grant(m, 'find'); G.fp += fp;
     if (Robots.offlineMode) return;
-    UI.findPopup(f, m, fp);
+    UI.findPopup(f, m, fp); Net.fx('find', [f.id, m, fp]);
     Fx.burst(f.x, f.y, 3, 30);
     Audio.sfx('find');
     Bus.emit('find', f);
@@ -4151,7 +4262,7 @@ const Progression = {
       const o = G.orders[i];
       if (this.orderProgress(o) >= 1) {
         Economy.grant(o.reward, 'order'); G.fp += o.fp; G.stats.ordersDone++;
-        UI.toast('📋 Auftrag erledigt: ' + this.orderText(o).title + ' · +' + U.money(o.reward) + ' · +' + o.fp + ' FP', 'good');
+        const ot = '📋 Auftrag erledigt: ' + this.orderText(o).title + ' · +' + U.money(o.reward) + ' · +' + o.fp + ' FP'; UI.toast(ot, 'good'); Net.fx('toast', [ot, 'good']);
         Audio.sfx('stamp');
         G.orders.splice(i, 1, this.makeOrder(G.orders.map(x => x.kind)));
         Bus.emit('orderDone', o);
@@ -4188,7 +4299,7 @@ const Progression = {
   carpetProgress() { let p = 0; for (const s of this.carpetSecs) p += Math.min(1, World.secProgress[s] / CONFIG.world.sectorDoneFrac); return this.carpetSecs.length ? p / this.carpetSecs.length : 0; },
   checkEnding() {
     if (G.ended || !this.carpetSecs.length) return;
-    if (this.carpetSecs.every(s => World.secDone[s])) { G.ended = true; G.stats.endTime = G.t; UI.ending(); Save.soon(); }
+    if (this.carpetSecs.every(s => World.secDone[s])) { G.ended = true; G.stats.endTime = G.t; UI.ending(); Net.fx('ending'); Save.soon(); }
   },
 };
 
@@ -4261,8 +4372,8 @@ const Build = {
     if (!this.active) return;
     if (this.sel) { this.rot = (this.rot + 1) & 3; if (this.ghost) this.setGhost(this.ghost.wx, this.ghost.wy); Audio.sfx('click'); return; }
     const w = this.pointerWorld(); const b = w && Buildings.at(Math.floor(w.x), Math.floor(w.y));
-    if (b) { if (Buildings.rotate(b)) Audio.sfx('build'); }
-    else { const bl = w && Buildings.beltAt(Math.floor(w.x), Math.floor(w.y)); if (bl) { const old = bl.dir; bl.dir = (bl.dir + 1) & 3; Buildings.relink(); Buildings.pushUndo({ k: 'belts', cells: [[bl.x, bl.y, bl.dir, [old, bl.tier]]] }); } }
+    if (b) { if (UI.act('rotate', b.id).ok) Audio.sfx('build'); }
+    else if (w && Buildings.beltAt(Math.floor(w.x), Math.floor(w.y))) UI.act('beltRotate', U.wrapI(Math.floor(w.x)), Math.floor(w.y));
   },
   moveKey() { if (this.active) this.setMode('move'); },
   demolishKey() { if (this.active) this.setMode('demolish'); },
@@ -4288,7 +4399,7 @@ const Build = {
     this.lastMs = { x: sx, y: sy };
     if (this.mode === 'demolish') {
       const b = Buildings.at(cx, cy);
-      if (b) { if (Buildings.remove(b)) Audio.sfx('demolish'); return; }
+      if (b) { if (UI.act('remove', b.id).ok) Audio.sfx('demolish'); return; }
       this.drag = { id, kind, del: true }; this.delCells = [[cx, cy]]; return;
     }
     if (this.mode === 'move' && !this.moving) {
@@ -4321,13 +4432,13 @@ const Build = {
   pointerUp(sx, sy, id) {
     if (!this.drag || this.drag.id !== id) return;
     const d = this.drag; this.drag = null;
-    if (d.del) { const n = Buildings.removeBeltsAt(this.delCells); if (n) Audio.sfx('demolish'); this.delCells = []; return; }
+    if (d.del) { const r = UI.act('unbelts', this.delCells.slice()); if (r.n || r.pending) Audio.sfx('demolish'); this.delCells = []; return; }
     if (d.ghost) { if (d.kind === 'touch') { this.pending = true; UI.buildDock(true); } else this.confirm(); return; }
     // Band-Pfad bauen
     const path = this.beltDirs();
     this.path = [];
     if (!path.length) return;
-    const r = Buildings.placeBeltPath(path, this.beltTier);
+    const r = Shop.do('belts', path, this.beltTier);
     if (r.ok) { Audio.sfx('build'); Haptics.tap(10); if (r.skipped) UI.toast(r.skipped + ' Feld(er) übersprungen (staubig oder belegt).'); }
     else UI.toast(r.why, 'warn');
   },
@@ -4359,11 +4470,11 @@ const Build = {
   confirm() {
     const g = this.ghost; if (!g || !this.sel) return;
     if (this.moving) {
-      const r = Buildings.move(this.moving, g.x, g.y, this.rot);
+      const r = Shop.do('move', this.moving.id, g.x, g.y, this.rot);
       if (r.ok) { Audio.sfx('build'); this.moving = null; this.sel = null; this.ghost = null; this.pending = false; UI.buildDock(true); } else UI.toast(r.why, 'warn');
       return;
     }
-    const r = Buildings.place(this.sel, g.x, g.y, this.rot);
+    const r = Shop.do('place', this.sel, g.x, g.y, this.rot);
     if (r.ok) { Audio.sfx('build'); Haptics.tap(15); Fx.burst(U.wrapX(g.x + g.w / 2), g.y + g.h / 2, 4, 14); this.setGhost(g.wx, g.wy); if (Input.touchMode) this.pending = true; }
     else { UI.toast(r.why, 'warn'); Audio.sfx('error'); }
   },
@@ -4482,8 +4593,10 @@ const UI = {
       research: btn('research', 'F', 'Forschung', () => this.open('research')),
       orders: btn('orders', 'J', 'Aufträge', () => this.open('orders')),
       album: btn('album', 'K', 'Album', () => this.open('album')),
+      coop: btn('people', 'C', 'Crew & Emotes', () => Net.panel()),
       menu: btn('menu', 'Esc', 'Menü', () => this.open('pause')),
     };
+    this.iconBtns.coop.style.display = 'none';
     this.el('hud-mapwrap').addEventListener('click', () => { Audio.unlock(); this.toggleMap(); });
     this.el('hud-goal').addEventListener('click', () => { if (Input.profile === 'phone') { this.el('hud-goal').classList.toggle('collapsed'); } else this.open('orders'); });
     // Fünffach-Tipp auf das Geld → Debug-Overlay
@@ -4492,6 +4605,8 @@ const UI = {
     Bus.on('grant', (m, reason) => { if (reason !== 'refund') this.popAcc += m; });
     Bus.on('profile', () => { this.cache = {}; this.layoutMinimap(); });
     Bus.on('touchmode', () => { this.cache = {}; this.updateTouch(); });
+    Bus.on('settings', k => { if (k === 'joyFixed' || k === 'lefty') this.joyIdle(); });
+    Bus.on('resize', () => { if (Input.joy.id === null) this.joyIdle(); });
     Bus.on('licence', l => this.ceremony(l));
     this.layoutMinimap();
   },
@@ -4505,7 +4620,15 @@ const UI = {
     this.updateTouch(); this.tutorial();
   },
   leaveGame() { this.show('hud', false); this.show('touch', false); this.show('tutorial', false); this.el('ctx').innerHTML = ''; this.closeAll(); Build.active = false; this.buildDock(false); this.closeMap(); },
-  updateTouch() { this.show('touch', Game.state === 'play' && Input.touchMode); this.el('ctx').classList.toggle('desk', !Input.touchMode); },
+  updateTouch() {
+    this.show('touch', Game.state === 'play' && Input.touchMode); this.el('ctx').classList.toggle('desk', !Input.touchMode);
+    if (Input.joy.id === null) this.joyIdle();
+  },
+  joyIdle() {
+    const j = this.el('joy');
+    if (Settings.d.joyFixed && Input.touchMode) { j.classList.remove('hidden'); j.classList.add('idle'); j.style.left = (Settings.d.lefty ? innerWidth - 110 : 110) + 'px'; j.style.top = (innerHeight - 130) + 'px'; this.joyKnob(0, 0); }
+    else { j.classList.add('hidden'); j.classList.remove('idle'); }
+  },
 
   /* --- HUD (max. 10× pro Sekunde, nur geänderte Werte) --- */
   hud(dt) {
@@ -4516,7 +4639,7 @@ const UI = {
     const target = G.money, diff = target - this.shownMoney;
     this.shownMoney = Math.abs(diff) < 1 ? target : this.shownMoney + diff * Math.min(1, hdt * 6);
     this.setText('money-v', U.big(this.shownMoney));
-    this.setText('money-r', U.money(Economy.incomePerMin()) + '/Min.' + (Input.profile === 'phone' ? ' · Glanz ' + U.pct(World.glanz(), 4) : ''));
+    this.setText('money-r', U.money(Net.isClient() ? (G.incRate || 0) : Economy.incomePerMin()) + '/Min.' + (Input.profile === 'phone' ? ' · Glanz ' + U.pct(World.glanz(), 4) : ''));
     const dem = CONFIG.goods[G.demand.type];
     this.setText('money-d', 'Erdnachfrage: ' + dem.name + ' +' + Math.round(CONFIG.economy.demandBonus * Economy.fx('demand') * 100) + ' % · ' + U.clock(Math.max(0, G.demand.until - G.t)));
     this.popT += hdt;
@@ -4646,6 +4769,7 @@ const UI = {
     ctx.fillStyle = '#ff9a52'; for (const r of Robots.list) { const x = R + U.dx(P.x, r.x) * sc, y = R + (r.y - P.y) * sc; ctx.fillRect(x - 1, y - 1, 2, 2); }
     if (Economy.fx('findSensor')) for (const f of World.finds) if (!G.finds[f.id] && U.dist(P.x, P.y, f.x, f.y) < 60 && Math.sin(G.t * 6) > 0) { const x = R + U.dx(P.x, f.x) * sc, y = R + (f.y - P.y) * sc; ctx.fillStyle = '#ffe680'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill(); }
     if (G.waypoint) { const x = R + U.dx(P.x, G.waypoint.x) * sc, y = R + (G.waypoint.y - P.y) * sc; ctx.strokeStyle = '#5fc4c4'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.stroke(); }
+    for (const o of Net.list()) { const x = R + U.dx(P.x, o.x) * sc, y = R + (o.y - P.y) * sc; ctx.fillStyle = o.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, Math.max(3.5, W / 40), 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
     // Spielerpfeil
     ctx.translate(R, R); ctx.rotate(P.dir); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5;
     const a = Math.max(5, W / 26); ctx.beginPath(); ctx.moveTo(a * 1.4, 0); ctx.lineTo(-a, -a); ctx.lineTo(-a * 0.4, 0); ctx.lineTo(-a, a); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -4653,17 +4777,18 @@ const UI = {
     ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(R, R, R - 1, 0, Math.PI * 2); ctx.stroke();
   },
   /* --- Joystick-Anzeige --- */
-  joyShow(on, x, y) { const j = this.el('joy'); j.classList.toggle('hidden', !on); if (on) { j.style.left = x + 'px'; j.style.top = y + 'px'; this.joyKnob(0, 0); } },
+  joyShow(on, x, y) { const j = this.el('joy'); if (!on) { this.joyIdle(); return; } j.classList.remove('hidden', 'idle'); j.style.left = x + 'px'; j.style.top = y + 'px'; this.joyKnob(0, 0); },
   joyKnob(dx, dy) { const k = this.el('joy').firstChild; k.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; },
   /* --- Meldungen --- */
   toast(text, kind, ms) {
+    if (Net.capture) { Net.capture.push([text, kind]); return; }
     const box = this.el('toasts'); if (!box) return;
     while (box.children.length > 3) box.firstChild.remove();
     const e = U.h('div', { class: 'toast ' + (kind || ''), html: U.esc(text) });
     box.appendChild(e);
     setTimeout(() => { e.classList.add('out'); setTimeout(() => e.remove(), 400); }, ms || (kind === 'radio' ? 6000 : 3800));
   },
-  radio(text) { if (Robots.offlineMode) return; this.toast(text, 'radio', 6500); Audio.sfx('radio'); },
+  radio(text) { if (Robots.offlineMode) return; this.toast(text, 'radio', 6500); Audio.sfx('radio'); Net.fx('radio', text); },
   popWorld(b, text) { const c = Buildings.center(b); Renderer.popup(c.x, b.y, text); },
 
   /* --- Tutorial-Memos --- */
@@ -4771,7 +4896,7 @@ const UI = {
     tb('move', 'Verschieben', Build.mode === 'move', () => Build.setMode('move'));
     tb('trash', 'Abreißen', Build.mode === 'demolish', () => Build.setMode('demolish'));
     tb('rotate', 'Drehen', false, () => Build.rotateKey());
-    tb('undo', 'Rückgängig', false, () => Buildings.doUndo());
+    tb('undo', 'Rückgängig', false, () => Shop.do('undo'));
     tools.appendChild(U.h('div', { style: { flex: '1' } }));
     tb('close', 'Baumodus beenden', false, () => Build.toggle(false));
     dock.appendChild(tools);
@@ -4878,12 +5003,22 @@ Object.assign(UI, {
     else if (o.btn) {
       const pr = U.h('div', { class: 'price' });
       pr.appendChild(o.miss ? U.h('span', { class: 'miss', text: o.miss }) : U.h('span', {}));
-      const b = U.h('button', { class: 'btn sm ' + (o.btnCls || 'primary') + (o.disabled ? ' disabled' : ''), html: o.btn, onclick: e => { e.stopPropagation(); if (o.disabled) { Audio.sfx('error'); if (o.miss) this.toast(o.miss, 'warn'); return; } Audio.sfx('buy'); o.onBuy(); } });
+      const b = U.h('button', { class: 'btn sm ' + (o.btnCls || 'primary') + (o.disabled ? ' disabled' : ''), html: o.btn, onclick: e => { e.stopPropagation(); if (o.disabled) { Audio.sfx('error'); if (o.miss) this.toast(o.miss, 'warn'); return; } Audio.sfx('buy'); const m0 = G.money; o.onBuy(); if (G.money < m0) this.buyFx(e.clientX, e.clientY); } });
       pr.appendChild(b); c.appendChild(pr);
     }
     return c;
   },
   priceBtn(price) { return U.money(price); },
+  // Befehl ausführen und Ergebnis melden
+  act(name, ...args) { const r = Shop.do(name, ...args); if (r.msg) this.toast(r.msg, 'good'); else if (!r.ok && r.why) { this.toast(r.why, 'warn'); Audio.sfx('error'); } this.refreshTop(); return r; },
+  // satte Kauf-Bestätigung: Münzregen am Knopf + Funkeln beim Spieler
+  buyFx(x, y) {
+    for (let i = 0; i < 12; i++) {
+      const e = U.h('div', { class: 'money-pop', text: '₥', style: { left: (x - 6) + 'px', top: (y - 10) + 'px', fontSize: (12 + Math.random() * 10) + 'px', animationDuration: (0.7 + Math.random() * 0.6) + 's', transform: 'translateX(' + ((Math.random() - 0.5) * 60) + 'px)' } });
+      this.el('fx').appendChild(e); setTimeout(() => e.remove(), 1400);
+    }
+    Fx.burst(Player.x, Player.y, 3, 18); Haptics.tap(20);
+  },
   missText(price) { return G.money >= price ? '' : 'Es fehlen ' + U.money(price - G.money); },
 
   open(id, arg) {
@@ -4922,7 +5057,7 @@ Object.assign(UI, {
           vals: [['Radius', U.f1(t.radius * Economy.fx('toolRadius')) + ' Zellen'], ['Leistung', U.f1(t.power * Economy.suction() * Economy.fx('toolPower')) + ' kg/s']],
           locked: locked ? 'Lizenz ' + t.licence + ' nötig' : null,
           btn: cur ? 'Ausgerüstet' : owned ? 'Ausrüsten' : 'Kaufen · ' + U.money(price), btnCls: owned ? 'petrol' : 'primary', disabled: cur || (!owned && G.money < price), miss: owned ? '' : this.missText(price),
-          onBuy: () => { if (!owned) { if (!Economy.spend(price)) return; G.tools[t.id] = 1; G.stats.ups++; Bus.emit('purchase', t.id); this.toast(t.name + ' gekauft und ausgerüstet!', 'good'); } G.tool = t.id; this.refreshTop(); } }));
+          onBuy: () => this.act('tool', t.id) }));
       }
       body.appendChild(g);
     } else if (tab === 'up') {
@@ -4933,7 +5068,7 @@ Object.assign(UI, {
         g.appendChild(this.card({ icon: 'up', title: u.name, meta: u.desc, levels: [lvl, CONFIG.upgradeLevels], vals: [['Stufe ' + lvl, fmt(Economy.upValue(u.id, lvl)), max ? null : fmt(Economy.upValue(u.id, lvl + 1))]],
           note: u.id === 'capsule' ? (lvl >= CONFIG.remoteUnloadLevel ? '✓ Fernabladen aktiv' : 'Ab Stufe ' + CONFIG.remoteUnloadLevel + ': Fernabladen') : '',
           locked: locked ? 'Lizenz ' + u.licence + ' nötig' : null, btn: max ? 'Maximum' : 'Stufe ' + (lvl + 1) + ' · ' + U.money(price), disabled: max || G.money < price, miss: max ? '' : this.missText(price),
-          onBuy: () => { if (!Economy.spend(price)) return; G.up[u.id] = lvl + 1; G.stats.ups++; Bus.emit('purchase', u.id); this.refreshTop(); } }));
+          onBuy: () => this.act('upgrade', u.id) }));
       }
       body.appendChild(g);
     } else if (tab === 'veh') {
@@ -4947,7 +5082,7 @@ Object.assign(UI, {
       if (L < 6) {
         const d = Economy.licenceDef(L + 1), price = Economy.licencePrice(L + 1), c = Economy.canBuyLicence();
         body.appendChild(this.card({ icon: 'licence', title: 'Lizenz ' + d.lvl + ' – ' + d.name, meta: 'Schaltet frei: ' + TXT.licenceUnlocks[d.lvl], vals: [['Sektoren', G.stats.sectors + ' / ' + d.sectors], ['Gebühr', U.money(price)]],
-          btn: 'Beförderung beantragen', disabled: !c.ok, miss: c.ok ? '' : c.why, onBuy: () => { if (Economy.buyLicence()) this.refreshTop(); } }));
+          btn: 'Beförderung beantragen', disabled: !c.ok, miss: c.ok ? '' : c.why, onBuy: () => this.act('licence') }));
       }
       const tbl = U.h('div', { class: 'kv', style: { marginTop: '14px' } });
       for (const l of CONFIG.licences) { tbl.appendChild(U.h('span', { html: (l.lvl <= L ? '✓ ' : '') + '<b>' + l.lvl + ' – ' + l.name + '</b>' })); tbl.appendChild(U.h('span', { text: U.money(Economy.licencePrice(l.lvl)) + ' · ' + l.sectors + ' Sekt.' })); }
@@ -4965,7 +5100,7 @@ Object.assign(UI, {
       const pk = U.h('div', { class: 'kv' });
       for (const g of CONFIG.goods) { if (g.id === 6 && !G.stats.kgByType[6]) continue; if (g.id >= 7 && G.licence < 2) continue; pk.appendChild(U.h('span', { text: g.name })); pk.appendChild(U.h('span', { text: U.f2(Economy.value(g.id) * Economy.demandMul(g.id) * Economy.incomeMul()) })); }
       body.appendChild(pk);
-      const b = U.h('button', { class: 'btn primary', style: { marginTop: '14px', width: '100%' }, html: Icons.svg('rocket') + ' Kapsel jetzt starten', onclick: () => { if (Buildings.canLaunch(dep)) { Buildings.launch(dep, false); this.refreshTop(); } else this.toast('Kapsel nicht bereit oder leer.', 'warn'); } });
+      const b = U.h('button', { class: 'btn primary', style: { marginTop: '14px', width: '100%' }, html: Icons.svg('rocket') + ' Kapsel jetzt starten', onclick: () => this.act('launch', dep.id) });
       b.querySelector('svg').style.width = '20px';
       body.appendChild(b);
     }
@@ -4978,7 +5113,7 @@ Object.assign(UI, {
       const note = { schubkarre: 'Zusätzlicher Behälter zu Fuß.', kehrwagen: 'Das erste echte Fahrzeug.', rover: 'Allround-Kehrmaschine.', crawler: 'Überfährt Geröll und kleine Kraterränder.', hover: 'Überquert Schluchten, ignoriert Hänge.' }[d.id];
       g.appendChild(this.card({ icon: 'car', title: d.name, meta: owned.length ? owned.length + '× im Fuhrpark' : U.money(price), vals, note, locked: locked ? 'Lizenz ' + d.licence + ' nötig' : null,
         btn: 'Kaufen · ' + U.money(price), disabled: G.money < price, miss: this.missText(price),
-        onBuy: () => { const v = Vehicles.buy(d.id); if (v) { G.stats.ups++; Bus.emit('purchase', d.id); this.toast(d.name + ' gekauft! Steht am Depot bereit.', 'good'); this.refreshTop(); } } }));
+        onBuy: () => this.act('vehicle', d.id) }));
     }
     body.appendChild(g);
     if (Vehicles.list.length) { body.appendChild(U.h('div', { class: 'sect-title', text: 'Fuhrpark & Fahrzeug-Upgrades' })); this.renderVehicleList(body, null); }
@@ -4996,14 +5131,14 @@ Object.assign(UI, {
         const row = U.h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' } });
         const lv = U.h('div', { class: 'lvl', style: { flex: '1' } }); for (let i = 0; i < CONFIG.vehicleUpgradeLevels; i++) lv.appendChild(U.h('i', { class: i < lvl ? 'on' : '' }));
         row.appendChild(U.h('span', { style: { minWidth: '84px' }, text: u.name })); row.appendChild(lv);
-        row.appendChild(U.h('button', { class: 'btn sm' + (max || G.money < price ? ' disabled' : ' primary'), text: max ? 'Max' : U.money(price), onclick: e => { e.stopPropagation(); if (max || !Economy.spend(price)) { Audio.sfx('error'); return; } v.up[u.id]++; G.stats.ups++; Audio.sfx('buy'); this.refreshTop(); } }));
+        row.appendChild(U.h('button', { class: 'btn sm' + (max || G.money < price ? ' disabled' : ' primary'), text: max ? 'Max' : U.money(price), onclick: e => { e.stopPropagation(); if (max) { Audio.sfx('error'); return; } const r = this.act('vehUp', v.id, u.id); if (r.ok) Audio.sfx('buy'); } }));
         c.appendChild(row);
       }
       const acts = U.h('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' } });
       if (!isCur && !v.incoming) {
         const fee = Vehicles.recallFee(v);
-        acts.appendChild(U.h('button', { class: 'btn sm petrol', text: 'Herbeirufen · ' + U.money(fee), onclick: e => { e.stopPropagation(); if (Vehicles.recall(v)) { this.toast(d.name + ' kommt in ' + CONFIG.vehicleRecallTime + ' s per Lieferdrohne.'); this.refreshTop(); } else this.toast('Zu wenig Geld.', 'warn'); } }));
-        if (garage) acts.appendChild(U.h('button', { class: 'btn sm', text: here ? 'Hier geparkt ✓' : 'In diese Garage', onclick: e => { e.stopPropagation(); if (here) return; Vehicles.recall(v, garage.id); v.garage = garage.id; this.refreshTop(); } }));
+        acts.appendChild(U.h('button', { class: 'btn sm petrol', text: 'Herbeirufen · ' + U.money(fee), onclick: e => { e.stopPropagation(); this.act('recallVeh', v.id, 0); } }));
+        if (garage) acts.appendChild(U.h('button', { class: 'btn sm', text: here ? 'Hier geparkt ✓' : 'In diese Garage', onclick: e => { e.stopPropagation(); if (here) return; this.act('recallVeh', v.id, garage.id); } }));
       }
       c.appendChild(acts);
       g.appendChild(c);
@@ -5028,16 +5163,16 @@ Object.assign(UI, {
         g.appendChild(this.card({ icon: 'robot', title: d.name, meta: n ? n + ' im Dienst' : U.money(price), vals: [['Tempo', d.speed + ' Z/s'], ['Putzradius', U.f1(d.radius)], ['Kapazität', U.kg(d.cap)]],
           note: d.fly ? 'Fliegt über alle Hindernisse.' : d.smallRims ? 'Fährt über kleine Kraterränder.' : '', locked: locked ? 'Lizenz ' + d.licence + ' nötig' : null,
           btn: full ? (Robots.list.length >= Robots.fleetCap() ? 'Stellenplan voll' : 'Hangar voll') : 'In Dienst nehmen · ' + U.money(price), disabled: full || G.money < price, miss: full ? (Robots.list.length >= Robots.fleetCap() ? 'Nächste Lizenz erhöht den Stellenplan' : 'Weiteren Hangar bauen') : this.missText(price),
-          onBuy: () => { const r = Robots.buy(d.id, h); if (r.ok) { G.stats.builtBy.robot = (G.stats.builtBy.robot || 0) + 1; this.toast(d.name + ' meldet sich zum Dienst!', 'good'); this.refreshTop(); } else this.toast(r.why, 'warn'); } }));
+          onBuy: () => this.act('robot', d.id, h.id) }));
       }
       body.appendChild(g);
     } else if (tab === 'list') {
       const mine = Robots.list.filter(r => r.hangar === h.id);
       const s = U.sectorAt(Player.x, Player.y), idle = mine.filter(r => !r.assign);
       const acts = U.h('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' } });
-      acts.appendChild(U.h('button', { class: 'btn primary' + (idle.length ? '' : ' disabled'), text: 'Freie Roboter → Sektor ' + U.sectorLabel(s), onclick: () => { if (!idle.length) return; if (!Buildings.covered(s % NSEC * SEC + 128, ((s / NSEC) | 0) * SEC + 128)) { this.toast('Sektor nicht im Funknetz – Antenne bauen!', 'warn'); return; } Robots.assignArea(idle, Robots.areaFor(s), true); this.toast(idle.length + ' Roboter putzen jetzt Sektor ' + U.sectorLabel(s) + '.', 'good'); this.refreshTop(); } }));
+      acts.appendChild(U.h('button', { class: 'btn primary' + (idle.length ? '' : ' disabled'), text: 'Freie Roboter → Sektor ' + U.sectorLabel(s), onclick: () => { if (!idle.length) return; this.act('assign', idle.map(r => r.id), Robots.areaFor(s), true); } }));
       acts.appendChild(U.h('button', { class: 'btn petrol', text: 'Auf der Karte zuweisen', onclick: () => { this.closeAll(); this.toggleMap(); } }));
-      acts.appendChild(U.h('button', { class: 'btn', text: 'Alle zurückrufen', onclick: () => { Robots.recall(mine); this.refreshTop(); } }));
+      acts.appendChild(U.h('button', { class: 'btn', text: 'Alle zurückrufen', onclick: () => this.act('recallRobots', mine.map(r => r.id)) }));
       body.appendChild(acts);
       if (!mine.length) body.appendChild(U.h('div', { class: 'note', text: 'Dieser Hangar ist noch leer.' }));
       const St = { home: 'auf dem Heimweg', idle: 'wartet im Hangar', work: 'putzt', toDrop: 'liefert ab', radio: 'entleert per Funk' };
@@ -5045,8 +5180,8 @@ Object.assign(UI, {
         const a = r.assign ? Robots.assignById(r.assign) : null;
         const row = U.h('div', { class: 'setting' }, U.h('div', { class: 'lbl', html: '<b>' + r.def.name + ' #' + r.id + '</b><small>' + (r.warn ? '⚠ kein Funksignal' : St[r.state] || r.state) + (a ? ' · ' + (a.sector >= 0 ? 'Sektor ' + U.sectorLabel(a.sector) : 'Rechteck') : '') + ' · Ladung ' + U.kg(Robots.loadKg(r)) + '</small>' }),
           U.h('div', { style: { display: 'flex', gap: '6px' } },
-            U.h('button', { class: 'btn sm', text: 'Abziehen', onclick: () => { Robots.recall([r]); this.refreshTop(); } }),
-            U.h('button', { class: 'btn sm danger', text: 'Verkaufen', onclick: () => { Robots.sell(r); this.refreshTop(); } })));
+            U.h('button', { class: 'btn sm', text: 'Abziehen', onclick: () => this.act('recallRobots', [r.id]) }),
+            U.h('button', { class: 'btn sm danger', text: 'Verkaufen', onclick: () => this.act('robotSell', r.id) })));
         body.appendChild(row);
       }
     } else {
@@ -5054,7 +5189,7 @@ Object.assign(UI, {
       for (const u of CONFIG.robotUpgrades) {
         const lvl = G.robotUp[u.id], max = lvl >= CONFIG.robotUpgradeLevels, price = Robots.upPrice(u.id);
         g.appendChild(this.card({ icon: 'robot', title: u.name, meta: '+' + Math.round(u.step * 100) + ' % pro Stufe für alle Roboter', levels: [lvl, CONFIG.robotUpgradeLevels], vals: [['Stufe ' + lvl, '+' + Math.round(u.step * lvl * 100) + ' %', max ? null : '+' + Math.round(u.step * (lvl + 1) * 100) + ' %']],
-          btn: max ? 'Maximum' : U.money(price), disabled: max || G.money < price, miss: max ? '' : this.missText(price), onBuy: () => { if (!Economy.spend(price)) return; G.robotUp[u.id]++; G.stats.ups++; this.refreshTop(); } }));
+          btn: max ? 'Maximum' : U.money(price), disabled: max || G.money < price, miss: max ? '' : this.missText(price), onBuy: () => this.act('robotUp', u.id) }));
       }
       body.appendChild(g);
       body.appendChild(U.h('div', { class: 'note', style: { marginTop: '10px' }, text: 'Einen Akku gibt es bewusst nicht. K.E.H.R.-Bots arbeiten, solange sie Funk haben.' }));
@@ -5081,8 +5216,8 @@ Object.assign(UI, {
     if (b.type === 'antenna') { add('Funk', Buildings.online.has(b) ? '<span class="pill good">verbunden</span>' : '<span class="pill bad">keine Verbindung</span>'); add('Radius', Math.round(Buildings.radioRadius(b)) + ' Zellen'); }
     body.appendChild(kv);
     const acts = U.h('div', { style: { display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' } });
-    if (!b.def.fixed) acts.appendChild(U.h('button', { class: 'btn danger sm', text: 'Abreißen (100 % zurück)', onclick: () => { if (Buildings.remove(b)) { Audio.sfx('demolish'); this.closeAll(); } } }));
-    if (!b.def.fixed && b.type !== 'bridge') acts.appendChild(U.h('button', { class: 'btn sm', text: 'Drehen', onclick: () => { Buildings.rotate(b); this.refreshTop(); } }));
+    if (!b.def.fixed) acts.appendChild(U.h('button', { class: 'btn danger sm', text: 'Abreißen (100 % zurück)', onclick: () => { if (this.act('remove', b.id).ok) { Audio.sfx('demolish'); this.closeAll(); } } }));
+    if (!b.def.fixed && b.type !== 'bridge') acts.appendChild(U.h('button', { class: 'btn sm', text: 'Drehen', onclick: () => this.act('rotate', b.id) }));
     body.appendChild(acts);
   },
 
@@ -5096,10 +5231,8 @@ Object.assign(UI, {
         const done = !!G.research[n.id], avail = !done && (i === 0 || G.research[br.nodes[i - 1].id]);
         const cls = 'node' + (done ? ' done' : avail ? (G.fp >= n.cost ? ' avail' : '') : ' locked') + (n.final ? ' final' : '');
         col.appendChild(U.h('div', { class: cls, onclick: () => {
-          if (done) return; if (!avail) { this.toast('Erst den vorherigen Knoten erforschen.'); return; }
-          if (G.fp < n.cost) { this.toast('Es fehlen ' + (n.cost - G.fp) + ' FP.', 'warn'); return; }
-          G.fp -= n.cost; G.research[n.id] = 1; Economy.resetFx(); Audio.sfx('research'); Bus.emit('research', n.id); this.toast('Erforscht: ' + n.name, 'good');
-          if (n.fx.radio) Buildings.covDirty = true; if (n.fx.vehWidth || n.fx.toolRadius) this.cache = {};
+          if (done) return;
+          const r = this.act('research', n.id); if (r.ok) Audio.sfx('research');
           p.render();
         } }, U.h('span', { class: 'c', text: done ? '✓' : n.cost + ' FP' }), U.h('b', { text: n.name }), U.h('span', { text: n.desc })));
       });
@@ -5119,7 +5252,7 @@ Object.assign(UI, {
         U.h('div', { class: 'prog' }, U.h('i', { style: { width: (pr * 100).toFixed(0) + '%' } })),
         U.h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '6px' } },
           U.h('span', { class: 'rew', text: 'Belohnung: ' + U.money(o.reward) + ' · ' + o.fp + ' FP' }),
-          U.h('button', { style: { fontFamily: 'system-ui', fontSize: '11px', border: '1px solid rgba(44,38,28,.35)', borderRadius: '7px', background: 'transparent', padding: '4px 8px', cursor: 'pointer', color: '#2c261c' }, text: 'Tauschen', onclick: () => { if (Progression.swapOrder(o.id)) { Audio.sfx('memo'); this.refreshTop(); } else this.toast('Kein kostenloser Tausch mehr in dieser Stunde.', 'warn'); } })),
+          U.h('button', { style: { fontFamily: 'system-ui', fontSize: '11px', border: '1px solid rgba(44,38,28,.35)', borderRadius: '7px', background: 'transparent', padding: '4px 8px', cursor: 'pointer', color: '#2c261c' }, text: 'Tauschen', onclick: () => { if (this.act('swapOrder', o.id).ok) Audio.sfx('memo'); } })),
         U.h('div', { class: 'ms', text: 'gez. ' + o.signer }));
       if (o.kind === 'sectorPct') m.appendChild(U.h('button', { style: { fontFamily: 'system-ui', fontSize: '11px', marginTop: '6px', border: '1px solid rgba(44,38,28,.35)', borderRadius: '7px', background: 'transparent', padding: '4px 8px', cursor: 'pointer', color: '#2c261c' }, text: 'Wegpunkt setzen', onclick: () => { G.waypoint = { x: (o.s % NSEC) * SEC + 128, y: ((o.s / NSEC) | 0) * SEC + 128 }; this.toast('Wegpunkt gesetzt.'); } }));
       box.appendChild(m);
@@ -5255,6 +5388,7 @@ Object.assign(UI, {
     b('gear', 'Einstellungen', () => this.open('settings'));
     b('help', 'Steuerung & Hilfe', () => this.open('help'));
     b('people', 'Koop beitreten', () => Net.panel());
+    b('full', 'Vollbild', () => Game.fullscreen());
     box.appendChild(btns);
     box.appendChild(U.h('div', { class: 'foot', html: 'Version ' + CONFIG.version + ' · Alle Grafiken und Klänge werden live erzeugt.' + (Save.fallback ? '<br>⚠ IndexedDB nicht verfügbar – eingeschränkter Speicher.' : '') }));
     m.appendChild(box);
@@ -5336,8 +5470,7 @@ Object.assign(UI, {
     const x0 = Math.min(a.x, a.x + U.dx(a.x, b.x)), w = Math.abs(U.dx(a.x, b.x)), y0 = Math.min(a.y, b.y), h = Math.abs(b.y - a.y);
     if (w < 8 || h < 8) { this.toast('Rechteck zu klein.'); return; }
     const idle = Robots.idle(); if (!idle.length) { this.toast('Keine freien Roboter.', 'warn'); return; }
-    Robots.assignArea(idle, { x0: Math.floor(x0), y0: Math.floor(y0), w: Math.ceil(w), h: Math.ceil(h), sector: -1 }, false);
-    this.toast(idle.length + ' Roboter putzen jetzt das Rechteck.', 'good');
+    this.act('assign', idle.map(r => r.id), { x0: Math.floor(x0), y0: Math.floor(y0), w: Math.ceil(w), h: Math.ceil(h), sector: -1 }, false);
   },
   mapInfo() {
     const M = this.map, s = M.sel, box = M.info; box.classList.remove('hidden'); box.innerHTML = '';
@@ -5358,14 +5491,11 @@ Object.assign(UI, {
       acts.appendChild(U.h('button', { class: 'btn sm', text: '+', onclick: () => { n = Math.min(Robots.idle().length, n + 1); upd(); } }));
       acts.appendChild(U.h('button', { class: 'btn sm primary' + (idle.length ? '' : ' disabled'), text: 'Roboter zuweisen (' + idle.length + ' frei)', onclick: () => {
         const fr = Robots.idle(); if (!fr.length) { this.toast('Keine freien Roboter – im Hangar abziehen oder neue kaufen.', 'warn'); return; }
-        if (!cov) { this.toast('Sektor liegt außerhalb des Funknetzes. Antennen-Kette bauen!', 'warn'); return; }
         const cx = c.x0 + 128, cy = c.y0 + 128; fr.sort((r1, r2) => U.dist2(r1.x, r1.y, cx, cy) - U.dist2(r2.x, r2.y, cx, cy));
-        const pick = fr.slice(0, n);
-        if (a) { for (const r of pick) { r.assign = a.id; r.state = 'work'; r.rowY = 0; r.tx = NaN; } a.done = false; } else Robots.assignArea(pick, c, true);
-        this.toast(pick.length + ' Roboter → Sektor ' + U.sectorLabel(s), 'good'); this.mapInfo();
+        this.act('assign', fr.slice(0, n).map(r => r.id), c, true); this.mapInfo();
       } }));
     }
-    if (a) acts.appendChild(U.h('button', { class: 'btn sm', text: 'Roboter abziehen', onclick: () => { Robots.recall(Robots.robotsOf(a)); this.mapInfo(); } }));
+    if (a) acts.appendChild(U.h('button', { class: 'btn sm', text: 'Roboter abziehen', onclick: () => { this.act('recallRobots', Robots.robotsOf(a).map(r => r.id)); this.mapInfo(); } }));
     if (Robots.list.length) acts.appendChild(U.h('button', { class: 'btn sm', text: 'Rechteck ziehen', onclick: () => { M.rect = true; this.toast('Ziehen Sie auf der Karte ein Rechteck für alle freien Roboter.'); } }));
     for (const t of Buildings.teleports) if (U.sectorAt(t.x, t.y) === s) acts.appendChild(U.h('button', { class: 'btn sm primary', text: 'Teleport: ' + t.name, onclick: () => { this.closeMap(); Game.teleport(t); } }));
     box.appendChild(acts);
@@ -5440,6 +5570,9 @@ Object.assign(UI, {
     for (const v of Vehicles.list) if (v !== Player.veh && !v.incoming) { const p = pt(v.x, v.y); ctx.fillStyle = '#fff'; ctx.fillRect(p.x - 2, p.y - 2, 4, 4); }
     if (G.waypoint) { const p = pt(G.waypoint.x, G.waypoint.y); ctx.strokeStyle = '#5fc4c4'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI * 2); ctx.stroke(); }
     if (M.rect && M.rectA) { const a = pt(M.rectA.x, M.rectA.y), b = pt(M.rectB.x, M.rectB.y); ctx.strokeStyle = '#ffc23d'; ctx.setLineDash([6, 4]); ctx.lineWidth = 2; ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); ctx.setLineDash([]); }
+    ctx.font = '800 12px system-ui, sans-serif'; ctx.textAlign = 'center';
+    for (const o of Net.list()) { const p = pt(o.x, o.y); ctx.fillStyle = o.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.strokeText(o.name, p.x, p.y - 10); ctx.fillStyle = '#fff'; ctx.fillText(o.name, p.x, p.y - 10); }
+    ctx.textAlign = 'left';
     const pp = pt(Player.x, Player.y); ctx.save(); ctx.translate(pp.x, pp.y); ctx.rotate(Player.dir); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-7, -7); ctx.lineTo(-3, 0); ctx.lineTo(-7, 7); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
   },
 });
@@ -5744,11 +5877,543 @@ const Save = {
 };
 
 /* ============================================================================
-   13. NET – optionaler Koop (wird in Phase 7 ergänzt)
+   12b. SHOP – alle zustandsändernden Befehle mit einfachen Argumenten (IDs).
+   UI, Tastatur, Touch und Koop-Clients rufen ausschließlich diese Befehle auf.
    ============================================================================ */
+const Shop = {
+  fail(why) { return { ok: false, why }; },
+  miss(p) { return 'Es fehlen ' + U.money(p - G.money); },
+  // Einstieg: im Koop-Client an den Host weiterleiten, sonst lokal ausführen
+  do(name, ...args) {
+    if (Net.isClient()) { Net.forward('shop', { name, args }); return { ok: true, pending: true }; }
+    const f = this[name]; if (typeof f !== 'function') return this.fail('Unbekannter Befehl');
+    try { return f.apply(this, args) || { ok: true }; } catch (e) { console.warn('Befehl fehlgeschlagen', name, e); return this.fail('Fehler: ' + e.message); }
+  },
+  tool(id) {
+    const t = CONFIG.tools.find(x => x.id === id); if (!t) return this.fail('Unbekannt');
+    if (t.licence > G.licence) return this.fail('Lizenz ' + t.licence + ' nötig');
+    if (!G.tools[id]) { const p = Economy.toolPrice(t); if (!Economy.spend(p)) return this.fail(this.miss(p)); G.tools[id] = 1; G.stats.ups++; Bus.emit('purchase', id); G.tool = id; return { ok: true, msg: t.name + ' gekauft und ausgerüstet!' }; }
+    G.tool = id; return { ok: true };
+  },
+  upgrade(id) {
+    const u = Economy.upDef(id); if (!u) return this.fail('Unbekannt');
+    if ((u.licence || 0) > G.licence) return this.fail('Lizenz ' + u.licence + ' nötig');
+    const lvl = G.up[id] || 0; if (lvl >= CONFIG.upgradeLevels) return this.fail('Maximum erreicht');
+    const p = Economy.upPrice(id); if (!Economy.spend(p)) return this.fail(this.miss(p));
+    G.up[id] = lvl + 1; G.stats.ups++; Bus.emit('purchase', id); return { ok: true };
+  },
+  licence() { const c = Economy.canBuyLicence(); if (!c.ok) return this.fail(c.why); return Economy.buyLicence() ? { ok: true } : this.fail('Nicht möglich'); },
+  vehicle(type) {
+    const d = Vehicles.def(type); if (!d) return this.fail('Unbekannt');
+    if (d.licence > G.licence) return this.fail('Lizenz ' + d.licence + ' nötig');
+    const price = Math.round(d.price * Economy.fx('upgradePrice'));
+    const v = Vehicles.buy(type); if (!v) return this.fail(this.miss(price));
+    G.stats.ups++; Bus.emit('purchase', type); return { ok: true, msg: d.name + ' gekauft! Steht am Depot bereit.' };
+  },
+  vehUp(vid, key) {
+    const v = Vehicles.byId(vid); if (!v) return this.fail('Fahrzeug fehlt');
+    if (v.up[key] >= CONFIG.vehicleUpgradeLevels) return this.fail('Maximum erreicht');
+    const p = Vehicles.upPrice(v, key); if (!Economy.spend(p)) return this.fail(this.miss(p));
+    v.up[key]++; G.stats.ups++; return { ok: true };
+  },
+  recallVeh(vid, garageId) {
+    const v = Vehicles.byId(vid); if (!v) return this.fail('Fahrzeug fehlt');
+    if (garageId) { if (!Vehicles.recall(v, garageId)) return this.fail('Gerade nicht möglich'); v.garage = garageId; return { ok: true }; }
+    return Vehicles.recall(v) ? { ok: true, msg: v.def.name + ' kommt in ' + CONFIG.vehicleRecallTime + ' s per Lieferdrohne.' } : this.fail('Zu wenig Geld oder Fahrzeug unterwegs.');
+  },
+  robot(model, hid) {
+    const h = Buildings.byId(hid); if (!h) return this.fail('Hangar fehlt');
+    const r = Robots.buy(model, h); if (!r.ok) return r;
+    G.stats.builtBy.robot = (G.stats.builtBy.robot || 0) + 1; return { ok: true, msg: r.r.def.name + ' meldet sich zum Dienst!' };
+  },
+  robotSell(rid) { const r = Robots.list.find(x => x.id === rid); if (!r) return this.fail('Roboter fehlt'); Robots.sell(r); Robots.cleanupAssigns(); return { ok: true }; },
+  robotUp(key) {
+    if (G.robotUp[key] >= CONFIG.robotUpgradeLevels) return this.fail('Maximum erreicht');
+    const p = Robots.upPrice(key); if (!Economy.spend(p)) return this.fail(this.miss(p));
+    G.robotUp[key]++; G.stats.ups++; return { ok: true };
+  },
+  research(nid) {
+    for (const br of CONFIG.research) {
+      const i = br.nodes.findIndex(n => n.id === nid); if (i < 0) continue;
+      const n = br.nodes[i];
+      if (G.research[nid]) return this.fail('Bereits erforscht');
+      if (i > 0 && !G.research[br.nodes[i - 1].id]) return this.fail('Erst den vorherigen Knoten erforschen.');
+      if (G.fp < n.cost) return this.fail('Es fehlen ' + (n.cost - G.fp) + ' FP.');
+      G.fp -= n.cost; G.research[nid] = 1; Economy.resetFx(); Bus.emit('research', nid);
+      if (n.fx.radio) Buildings.covDirty = true;
+      return { ok: true, msg: 'Erforscht: ' + n.name };
+    }
+    return this.fail('Unbekannt');
+  },
+  robotsById(ids) { return ids.map(id => Robots.list.find(r => r.id === id)).filter(Boolean); },
+  assign(ids, area, auto) {
+    const rs = this.robotsById(ids); if (!rs.length) return this.fail('Keine freien Roboter');
+    if (!Buildings.covered(area.x0 + area.w / 2, area.y0 + area.h / 2)) return this.fail('Bereich liegt außerhalb des Funknetzes. Antennen-Kette bauen!');
+    const ex = area.sector >= 0 ? Robots.assignedSector(area.sector) : null;
+    if (ex) { for (const r of rs) { Robots.release(r); r.assign = ex.id; r.state = 'work'; } ex.done = false; }
+    else Robots.assignArea(rs, area, auto);
+    return { ok: true, msg: rs.length + ' Roboter → ' + (area.sector >= 0 ? 'Sektor ' + U.sectorLabel(area.sector) : 'Rechteck') };
+  },
+  recallRobots(ids) { Robots.recall(this.robotsById(ids)); return { ok: true }; },
+  place(type, x, y, rot) { return Buildings.place(type, x, y, rot); },
+  remove(bid) { const b = Buildings.byId(bid); if (!b) return this.fail('Gebäude fehlt'); return Buildings.remove(b) ? { ok: true } : this.fail('Abriss nicht möglich'); },
+  move(bid, x, y, rot) { const b = Buildings.byId(bid); if (!b) return this.fail('Gebäude fehlt'); return Buildings.move(b, x, y, rot); },
+  rotate(bid) { const b = Buildings.byId(bid); if (!b) return this.fail('Gebäude fehlt'); return Buildings.rotate(b) ? { ok: true } : this.fail('Drehen nicht möglich'); },
+  belts(path, tier) { return Buildings.placeBeltPath(path, tier); },
+  unbelts(cells) { return { ok: true, n: Buildings.removeBeltsAt(cells) }; },
+  beltRotate(x, y) { const bl = Buildings.beltAt(x, y); if (!bl) return this.fail('Kein Band'); const old = bl.dir; bl.dir = (bl.dir + 1) & 3; Buildings.relink(); Buildings.pushUndo({ k: 'belts', cells: [[bl.x, bl.y, bl.dir, [old, bl.tier]]] }); return { ok: true }; },
+  undo() { Buildings.doUndo(); return { ok: true }; },
+  launch(bid) { const b = Buildings.byId(bid); if (!b || !Buildings.canLaunch(b)) return this.fail('Kapsel nicht bereit oder leer.'); Buildings.launch(b, false); return { ok: true }; },
+  swapOrder(oid) { return Progression.swapOrder(oid) ? { ok: true } : this.fail('Kein kostenloser Tausch mehr in dieser Stunde.'); },
+};
+
+/* ============================================================================
+   13. NET – optionaler Koop per Einladungscode (host-autoritativ)
+   ============================================================================ */
+/* Transporte: PeerJS (Internet, WebRTC, Host-ID „staubmond-CODE“) oder BroadcastChannel (dieses Gerät) */
+const PEERJS_URL = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+const NetLocal = {
+  // gleiches Gerät, mehrere Tabs/Fenster
+  start(host, code, h) {
+    this.ch = new BroadcastChannel('staubmond-coop-' + code); this.host = host; this.h = h;
+    this.me = host ? 'host' : 'c' + Math.random().toString(36).slice(2, 9);
+    this.ch.onmessage = e => {
+      const m = e.data; if (!m || m.to !== this.me) return;
+      if (m.k === 'hello' && host) { h.onOpen(m.from); this.post(m.from, 'ack'); }
+      else if (m.k === 'ack' && !host) { this.ok = true; h.onOpen('host'); }
+      else if (m.k === 'bye') h.onClose(m.from);
+      else if (m.k === 'msg') h.onData(m.from, m.d);
+    };
+    if (!host) { this.post('host', 'hello'); setTimeout(() => { if (!this.ok) h.onError('Kein Spiel mit diesem Code auf diesem Gerät gefunden.'); }, 2500); }
+    else setTimeout(() => h.onReady(), 0);
+  },
+  post(to, k, d) { if (this.ch) this.ch.postMessage({ from: this.me, to, k, d }); },
+  send(to, d) { this.post(to, 'msg', d); },
+  drop(to) { this.post(to, 'bye'); },
+  close() { if (this.ch) { this.post(this.host ? '*' : 'host', 'bye'); this.ch.close(); this.ch = null; } },
+};
+const NetPeer = {
+  conns: new Map(),
+  load() {
+    return new Promise((res, rej) => {
+      if (window.Peer) return res();
+      const s = document.createElement('script'); s.src = PEERJS_URL; s.async = true; s.crossOrigin = 'anonymous';
+      s.onload = () => res(); s.onerror = () => rej(new Error('PeerJS konnte nicht geladen werden (offline?).'));
+      document.head.appendChild(s);
+    });
+  },
+  async start(host, code, h) {
+    this.h = h; this.host = host;
+    await this.load();
+    const peer = this.peer = host ? new window.Peer('staubmond-' + code, { debug: 0 }) : new window.Peer({ debug: 0 });
+    peer.on('error', e => h.onError(e && e.type === 'unavailable-id' ? 'Code bereits vergeben – bitte erneut hosten.' : e && e.type === 'peer-unavailable' ? 'Kein Spiel mit diesem Code gefunden.' : 'Verbindungsfehler: ' + (e && e.type || e)));
+    const wire = c => {
+      c.on('open', () => { this.conns.set(c.peer, c); h.onOpen(host ? c.peer : 'host'); });
+      c.on('data', d => { d = this.unpart(c.peer, d); if (d) h.onData(host ? c.peer : 'host', d); });
+      c.on('close', () => { this.conns.delete(c.peer); h.onClose(host ? c.peer : 'host'); });
+      c.on('error', e => console.warn('Koop-Verbindung:', e && (e.type || e.message) || e));
+    };
+    if (host) { peer.on('open', () => h.onReady()); peer.on('connection', wire); }
+    else peer.on('open', () => wire(peer.connect('staubmond-' + code, { reliable: true, serialization: 'json' })));
+  },
+  // Nachrichten über ~5.000 Zeichen (Spielstand, Chunk-Snapshots) in Teile zerlegen: PeerJS verwirft
+  // JSON-Nachrichten ab ~16 KB; 5.000 Zeichen bleiben auch mit Escapes/UTF-8 sicher darunter
+  PART: 5000,
+  send(to, d) {
+    const c = this.host ? this.conns.get(to) : this.conns.values().next().value; if (!c || !c.open) return;
+    const j = JSON.stringify(d), L = this.PART; if (j.length < L) { c.send(d); return; }
+    const id = (this.pid = (this.pid || 0) + 1), n = Math.ceil(j.length / L);
+    for (let i = 0; i < n; i++) c.send({ __p: id, i, n, s: j.slice(i * L, (i + 1) * L) });
+  },
+  unpart(from, d) {
+    if (!d || d.__p === undefined) return d;
+    const key = from + ':' + d.__p, buf = (this.parts = this.parts || new Map());
+    let e = buf.get(key); if (!e) { e = { n: d.n, got: 0, s: [] }; buf.set(key, e); }
+    if (e.s[d.i] === undefined) { e.s[d.i] = d.s; e.got++; }
+    if (e.got < e.n) return null;
+    buf.delete(key);
+    try { return JSON.parse(e.s.join('')); } catch (err) { return null; }
+  },
+  drop(to) { const c = this.conns.get(to); if (c) c.close(); },
+  close() { for (const c of this.conns.values()) try { c.close(); } catch (e) { } this.conns.clear(); if (this.peer) try { this.peer.destroy(); } catch (e) { } this.peer = null; },
+};
+
+const PLAYER_COLORS = ['#ff7a1f', '#5fc4c4', '#c9a6f2', '#ffc23d', '#4fd18b', '#ff6464', '#7fb2ff', '#e8eef0'];
+const EMOTES = { wave: '👋 Winken', here: '📍 Hierher!', good: '👍 Gute Arbeit' };
+
 const Net = {
-  isClient() { return false; }, isHost() { return false; }, forward() { return false; }, crewBonus() { return 0; },
-  update() { }, panel() { UI.toast('Koop ist in Vorbereitung.'); },
+  role: null, tr: null, code: '', name: 'Crew', peers: new Map(), others: [], myId: 0, myColor: PLAYER_COLORS[0],
+  banned: new Set(), buildDirty: false, t: 0, inT: 0, rid: 1, emote: null, kind: 'peer', status: '',
+  bobT: {},
+  isClient() { return this.role === 'client'; },
+  // alle anderen Crew-Mitglieder als einheitliche, geglättete Liste
+  list() {
+    const out = [];
+    if (this.role === 'host') for (const rp of this.peers.values()) out.push({ id: rp.id, name: rp.name, color: rp.color, x: rp.rx !== undefined ? rp.rx : rp.x, y: rp.ry !== undefined ? rp.ry : rp.y, dir: rp.dir, tx: rp.rtx !== undefined ? rp.rtx : rp.tx, ty: rp.rty !== undefined ? rp.rty : rp.ty, clean: rp.cleaning, veh: rp.veh ? rp.veh.id : 0, mv: rp.moving });
+    else if (this.role === 'client') for (const o of this.others) out.push({ id: o[0], name: o[1], color: o[2], x: o.rx, y: o.ry, dir: o[5], tx: o.rtx, ty: o.rty, clean: !!o[8], veh: o[9], mv: o.mv });
+    return out;
+  },
+  isHost() { return this.role === 'host'; },
+  crewBonus() { return this.role === 'host' ? CONFIG.economy.crewBonus * this.peers.size : this.role === 'client' ? CONFIG.economy.crewBonus * this.others.length : 0; },
+  send(to, m) { if (this.tr) this.tr.send(to, m); },
+  broadcast(m) { for (const id of this.peers.keys()) this.send(id, m); },
+  // Client → Host: Befehle weiterleiten
+  forward(kind, d) {
+    if (!this.isClient()) return false;
+    this.send('host', { t: 'act', a: kind, d, rid: this.rid++ });
+    return true;
+  },
+  b64(u8) { return Save.b64(u8); }, unb64(s) { return Save.unb64(s); },
+  packChunk(ch) { return [ch.ci, this.b64(Save.rle(ch.dust)), ch.meteor && ch.meteor.some(v => v) ? this.b64(Save.rle(ch.meteor)) : null, ch.rev]; },
+
+  /* ---------- Host ---------- */
+  async host(kind) {
+    if (this.role || !G || Game.state !== 'play') return;
+    this.kind = kind; this.code = String(100000 + Math.floor(Math.random() * 900000));
+    const tr = this.tr = kind === 'local' ? NetLocal : NetPeer;
+    this.status = 'Starte …'; this.refresh();
+    try {
+      await tr.start(true, this.code, {
+        onReady: () => { this.role = 'host'; this.status = 'Bereit – Code weitergeben.'; this.refresh(); UI.toast('Koop gestartet. Einladungscode: ' + this.code, 'good', 8000); },
+        onOpen: id => { },
+        onData: (id, m) => this.hostData(id, m),
+        onClose: id => this.dropPeer(id, 'Verbindung beendet'),
+        onError: e => { UI.toast(e, 'warn', 7000); this.stop(); },
+      });
+    } catch (e) { UI.toast(e.message, 'warn', 7000); this.stop(); }
+  },
+  remotePlayer(id, name) {
+    const used = new Set([...this.peers.values()].map(p => p.color));
+    const color = PLAYER_COLORS.slice(1).find(c => !used.has(c)) || PLAYER_COLORS[1];
+    const dep = Buildings.mainDepot(), c = Buildings.center(dep);
+    const rp = Object.create(Player);
+    Object.assign(rp, { id: 'p' + id.slice(-6), peer: id, name, color, x: c.x + (Math.random() - 0.5) * 6, y: dep.y + dep.h + 3, px: 0, py: 0, dir: -Math.PI / 2, tx: 0, ty: 0, ptx: 0, pty: 0,
+      load: new Float64Array(NGOODS), veh: null, cleaning: false, cleanFx: 0, moving: false, bob: 0, view: null, known: new Map(), bg: null, lastIn: performance.now(), emote: null });
+    rp.px = rp.tx = rp.ptx = rp.x; rp.py = rp.ty = rp.pty = rp.y;
+    return rp;
+  },
+  hostData(id, m) {
+    if (!m || !m.t) return;
+    let rp = this.peers.get(id);
+    if (m.t === 'join') {
+      if (m.v !== CONFIG.version) { this.send(id, { t: 'deny', why: 'Unterschiedliche Spielversion (Host ' + CONFIG.version + ', Sie ' + m.v + '). Bitte beide Seiten neu laden.' }); setTimeout(() => this.tr.drop(id), 300); return; }
+      if (this.banned.has(id) || this.banned.has(m.name)) { this.send(id, { t: 'deny', why: 'Der Host hat Sie von diesem Spiel ausgeschlossen.' }); setTimeout(() => this.tr.drop(id), 300); return; }
+      if (this.peers.size >= CONFIG.net.maxPlayers - 1) { this.send(id, { t: 'deny', why: 'Die Crew ist voll (max. ' + CONFIG.net.maxPlayers + ' Personen).' }); setTimeout(() => this.tr.drop(id), 300); return; }
+      rp = this.remotePlayer(id, String(m.name || 'Crew').slice(0, 16));
+      this.peers.set(id, rp);
+      const core = Save.coreJSON();
+      const near = World.chunks.filter(Boolean);
+      rp.bg = near.map(c => c.ci);
+      this.send(id, { t: 'welcome', id: rp.id, color: rp.color, x: rp.x, y: rp.y, core, chunks: [] });
+      UI.toast(rp.name + ' ist der Crew beigetreten.', 'good');
+      this.refresh();
+      return;
+    }
+    if (!rp) return;
+    if (m.t === 'in') {
+      const now = performance.now(), dt = Math.min(0.25, (now - rp.lastIn) / 1000); rp.lastIn = now;
+      rp.px = rp.x; rp.py = rp.y; rp.ptx = rp.tx; rp.pty = rp.ty;
+      rp.x = U.wrapX(m.x); rp.y = m.y; rp.dir = m.dir; rp.tx = U.wrapX(m.tx); rp.ty = m.ty; rp.moving = m.mv; rp.view = m.view;
+      const v = rp.veh;
+      if (v && v.def.kind !== 'cart') {
+        const lx = v.nx !== undefined ? v.nx : v.x, ly = v.nx !== undefined ? v.ny : v.y, la = v.nx !== undefined ? v.na : v.a;
+        v.nx = U.wrapX(m.vx); v.ny = m.vy; v.na = m.va; v.vx = m.vvx || 0; v.vy = m.vvy || 0; rp.x = v.nx; rp.y = v.ny;
+        if (m.cl && Math.abs(U.dx(lx, v.nx)) < 8 && Math.abs(ly - v.ny) < 8) {
+          const free = Vehicles.cap(v) - Vehicles.loadKg(v);
+          if (free > 0.001) { const back = v.def.body * 0.55;
+            const kg = World.stroke(lx - Math.cos(la) * back, ly - Math.sin(la) * back, v.nx - Math.cos(v.na) * back, v.ny - Math.sin(v.na) * back, Vehicles.width(v) / 2, Math.min(Vehicles.power(v) * dt, free), false, Economy.fx('yield'));
+            if (kg > 0) for (let t = 0; t < NGOODS; t++) v.load[t] += World.col[t]; }
+        }
+      } else if (m.cl) {
+        if (v) { v.x = U.wrapX(rp.x + Math.cos(rp.dir) * 1.1); v.y = rp.y + Math.sin(rp.dir) * 1.1; v.a = rp.dir; }
+        const budget = Math.min(Economy.toolPower() * dt, rp.ctxCap() - rp.ctxLoad());
+        if (budget > 0) { const kg = World.stroke(rp.ptx, rp.pty, rp.tx, rp.ty, Economy.toolRadius(), budget, false, Economy.fx('yield')); Player.takeCol.call(rp, kg); }
+      } else if (v) { v.x = U.wrapX(rp.x + Math.cos(rp.dir) * 1.1); v.y = rp.y + Math.sin(rp.dir) * 1.1; v.a = rp.dir; }
+      rp.cleaning = !!m.cl;
+      return;
+    }
+    if (m.t === 'act') {
+      // Meldungen dieses Befehls gehen an den Auslöser, nicht an den Host
+      const cap = []; this.capture = cap; this.actor = rp;
+      let res = { ok: true };
+      try {
+        if (m.a === 'shop' && m.d && typeof Shop[m.d.name] === 'function' && m.d.name !== 'do') res = Shop.do(m.d.name, ...(m.d.args || []));
+        else if (m.a === 'interact') Actions.interact(m.d, rp);
+      } finally { this.capture = null; this.actor = null; }
+      this.send(id, { t: 'res', rid: m.rid, ok: res.ok, why: res.why, msg: res.msg, toasts: cap });
+      return;
+    }
+    if (m.t === 'away') { rp.away = !!m.on; rp.lastIn = performance.now(); return; }
+    if (m.t === 'emote' && EMOTES[m.e]) { this.showEmote(rp.id, rp.name, m.e); this.broadcast({ t: 'emote', id: rp.id, name: rp.name, e: m.e }); }
+  },
+  dropPeer(id, why) {
+    const rp = this.peers.get(id); if (!rp) return;
+    // Ladung geht ins Hauptdepot – nichts geht verloren
+    const dep = Buildings.mainDepot();
+    for (let t = 0; t < NGOODS; t++) if (rp.load[t] > 0) Buildings.deliver(dep, t, rp.load[t]);
+    if (rp.veh) { rp.veh.driver = 0; rp.veh.vx = rp.veh.vy = 0; delete rp.veh.nx; }
+    this.peers.delete(id);
+    UI.toast(rp.name + ' hat die Crew verlassen' + (why ? ' (' + why + ')' : '') + '.');
+    this.refresh();
+  },
+  kick(id, ban) {
+    const rp = this.peers.get(id); if (!rp) return;
+    if (ban) { this.banned.add(id); this.banned.add(rp.name); }
+    this.send(id, { t: 'kick', why: ban ? 'Sie wurden vom Host gesperrt.' : 'Sie wurden vom Host entfernt.' });
+    setTimeout(() => { this.tr.drop(id); this.dropPeer(id, ban ? 'gesperrt' : 'entfernt'); }, 200);
+  },
+  hostTick(dt) {
+    this.t += dt;
+    // Mitspieler und ihre Fahrzeuge weich zur zuletzt gemeldeten Position (Meldungen kommen mit 15 Hz)
+    const k = 1 - Math.exp(-14 * dt), now = performance.now();
+    for (const [id, rp] of this.peers) {
+      if (!rp.away && now - rp.lastIn > CONFIG.net.timeout * 1000) { this.tr.drop(id); this.dropPeer(id, 'keine Verbindung'); continue; }
+      if (rp.rx === undefined || Math.abs(U.dx(rp.rx, rp.x)) > 20 || Math.abs(rp.ry - rp.y) > 20) { rp.rx = rp.x; rp.ry = rp.y; rp.rtx = rp.tx; rp.rty = rp.ty; }
+      rp.rx = U.wrapX(rp.rx + U.dx(rp.rx, rp.x) * k); rp.ry += (rp.y - rp.ry) * k;
+      rp.rtx = U.wrapX(rp.rtx + U.dx(rp.rtx, rp.tx) * k); rp.rty += (rp.ty - rp.rty) * k;
+      const v = rp.veh;
+      if (v && v.def.kind !== 'cart' && v.nx !== undefined) {
+        v.px = v.x; v.py = v.y; v.pa = v.a;
+        const far = Math.abs(U.dx(v.x, v.nx)) > 20 || Math.abs(v.ny - v.y) > 20;
+        v.x = far ? v.nx : U.wrapX(v.x + U.dx(v.x, v.nx) * k); v.y = far ? v.ny : v.y + (v.ny - v.y) * k; v.a = far ? v.na : U.angLerp(v.a, v.na, k);
+        v.spin = (v.spin || 0) + Math.hypot(v.vx, v.vy) * dt * 0.5;
+      }
+    }
+    if (this.t - (this.snapT || 0) < 0.1) return;
+    this.snapT = this.t;
+    const all = [[0, this.name || 'Host', PLAYER_COLORS[0], Player.x, Player.y, Player.dir, Player.tx, Player.ty, Player.cleaning ? 1 : 0, Player.veh ? Player.veh.id : 0, this.emote]];
+    for (const rp of this.peers.values()) all.push([rp.id, rp.name, rp.color, rp.x, rp.y, rp.dir, rp.tx, rp.ty, rp.cleaning ? 1 : 0, rp.veh ? rp.veh.id : 0, rp.emote]);
+    const veh = Vehicles.list.map(v => [v.id, v.type, +v.x.toFixed(2), +v.y.toFixed(2), +v.a.toFixed(3), Math.round(Vehicles.loadKg(v) * 10) / 10, v.incoming > 0 ? 1 : 0, v.driver || (v === Player.veh ? 'host' : 0), v.up.speed, v.up.width, v.up.cap]);
+    const rob = Robots.list.map(r => [r.id, r.model, +r.x.toFixed(2), +r.y.toFixed(2), +r.a.toFixed(2), r.state, r.warn ? 1 : 0, Math.round(Robots.loadKg(r)), r.hangar, r.assign]);
+    const slow = this.t - (this.stateT || 0) >= 0.5;
+    let state = null;
+    if (slow) {
+      this.stateT = this.t;
+      G.incRate = Economy.incomePerMin();
+      const g = {}; for (const k of ['incRate', 'money', 'licence', 'tools', 'tool', 'up', 'research', 'fp', 'orders', 'swapsUsed', 'swapHour', 'stats', 'demand', 'day', 't', 'ev', 'robotUp', 'secDone', 'finds', 'nextId', 'ended', 'mission', 'avgVal']) g[k] = G[k];
+      const sp = []; for (let i = 0; i < NSEC * NSEC; i++) sp.push(Math.round(World.secProgress[i] * 10000));
+      const cs = []; for (const ci of this.statDirty || []) cs.push(ci, World.cleanable[ci], World.chunkClean[ci]); this.statDirty = new Set();
+      state = { g, sp, cs, assigns: Robots.assigns };
+    }
+    const build = this.buildDirty && this.t - (this.buildT || 0) > 0.25;
+    if (build) { this.buildDirty = false; this.buildT = this.t; Buildings.save(); }
+    for (const [id, rp] of this.peers) {
+      const msg = { t: 'snap', p: all.filter(p => p[0] !== rp.id), v: veh, r: rob, you: { load: Array.from(rp.load), veh: rp.veh ? rp.veh.id : 0 } };
+      // Chunks: nahe zuerst, dann Hintergrund
+      const out = [], vw = rp.view || [rp.x - 30, rp.y - 20, rp.x + 30, rp.y + 20];
+      const cx0 = Math.floor((vw[0] - 64) / CH), cx1 = Math.floor((vw[2] + 64) / CH), cy0 = Math.max(0, Math.floor((vw[1] - 64) / CH)), cy1 = Math.min(NCH - 1, Math.floor((vw[3] + 64) / CH));
+      for (let cy = cy0; cy <= cy1 && out.length < 10; cy++) for (let cx = cx0; cx <= cx1 && out.length < 10; cx++) {
+        const ci = cy * NCH + ((cx % NCH) + NCH) % NCH, ch = World.chunks[ci];
+        if (ch && rp.known.get(ci) !== ch.rev) { out.push(this.packChunk(ch)); rp.known.set(ci, ch.rev); }
+      }
+      while (rp.bg && rp.bg.length && out.length < 14) { const ci = rp.bg.pop(), ch = World.chunks[ci]; if (ch && rp.known.get(ci) !== ch.rev) { out.push(this.packChunk(ch)); rp.known.set(ci, ch.rev); } }
+      if (out.length) msg.c = out;
+      if (state) {
+        msg.s = state;
+        // Gebäudezustand und Bandpakete in Sichtweite
+        const bs = []; for (const b of Buildings.list) if (U.dist(b.x, b.y, rp.x, rp.y) < 120) bs.push([b.id, Array.from(b.capsule).map(v => Math.round(v * 10) / 10), Array.from(b.store).map(v => Math.round(v * 10) / 10), +b.cool.toFixed(2), +b.launch.toFixed(2), b.status, b.hold ? b.hold.t : -1]);
+        msg.bs = bs;
+      }
+      if (this.t - (rp.beltT || 0) >= 0.2) {
+        rp.beltT = this.t;
+        const bi = []; for (const bl of Buildings.active) if (Math.abs(U.dx(rp.x, bl.x)) < 70 && Math.abs(bl.y - rp.y) < 50) bi.push([bl.k, bl.items.map(i => [i.t, i.kg, Math.round(i.p * 100) / 100])]);
+        msg.bi = bi;
+      }
+      if (build) msg.b = { b: G.buildings, bl: G.belts.map(x => ({ x: x.x, y: x.y, d: x.d, t: x.t })) };
+      this.send(id, msg);
+    }
+  },
+
+  /* ---------- Client ---------- */
+  async join(code, name, kind) {
+    if (this.role) return;
+    code = String(code || '').replace(/\D/g, '');
+    if (code.length !== 6) { UI.toast('Bitte einen 6-stelligen Einladungscode eingeben.', 'warn'); return; }
+    if (Game.state === 'play') { await Save.saveNow(); }
+    this.kind = kind; this.code = code; this.name = name || 'Crew';
+    const tr = this.tr = kind === 'local' ? NetLocal : NetPeer;
+    this.status = 'Verbinde …'; this.refresh();
+    try {
+      await tr.start(false, code, {
+        onReady: () => { },
+        onOpen: () => this.send('host', { t: 'join', v: CONFIG.version, name: this.name }),
+        onData: (id, m) => this.clientData(m),
+        onClose: () => { if (this.role === 'client' || this.status) { UI.toast('Verbindung zum Host verloren. Ihr eigener Spielstand ist unberührt.', 'warn', 8000); this.leave(true); } },
+        onError: e => { UI.toast(e, 'warn', 7000); this.leave(true); },
+      });
+    } catch (e) { UI.toast(e.message, 'warn', 7000); this.leave(true); }
+  },
+  clientData(m) {
+    if (!m || !m.t) return;
+    this.lastMsg = performance.now();
+    if (m.t === 'pause') { this.hostPaused = !!m.on; UI.toast(m.on ? 'Der Host hat das Spiel pausiert (anderer Tab / App). Bitte kurz warten …' : 'Der Host ist zurück.', m.on ? 'warn' : 'good', 5000); return; }
+    if (m.t === 'deny' || m.t === 'kick') { UI.toast(m.why, 'warn', 8000); this.leave(true); return; }
+    if (m.t === 'welcome') {
+      UI.closeAll();
+      if (Game.state === 'play') { UI.leaveGame(); }
+      this.role = 'client'; this.myId = m.id; this.myColor = m.color; this.status = 'Verbunden';
+      G = JSON.parse(m.core); G.slot = -1; G.tutSkip = true;
+      Game.startWorld([]);
+      Player.x = Player.px = m.x; Player.y = Player.py = m.y; Player.veh = null; Player.load.fill(0); Camera.snap();
+      World.onSectorDone = null; World.onFind = null;
+      UI.toast('Willkommen in der Crew! Alle Käufe gelten für alle.', 'good', 6000);
+      this.refresh();
+      return;
+    }
+    if (this.role !== 'client') return;
+    if (m.t === 'snap') return this.applySnap(m);
+    if (m.t === 'res') { if (m.msg) UI.toast(m.msg, 'good'); else if (!m.ok && m.why) UI.toast(m.why, 'warn'); for (const t of m.toasts || []) UI.toast(t[0], t[1]); UI.refreshTop(); return; }
+    if (m.t === 'fx') return this.applyFx(m);
+    if (m.t === 'emote') return this.showEmote(m.id, m.name, m.e);
+  },
+  applySnap(m) {
+    this.others = m.p.map(p => { const o = this.others.find(q => q[0] === p[0]); return Object.assign(p, { rx: o ? o.rx : p[3], ry: o ? o.ry : p[4], rtx: o ? o.rtx : p[6], rty: o ? o.rty : p[7], mv: o ? o.mv : false }); });
+    // eigene Ladung und Fahrzeug
+    for (let t = 0; t < NGOODS; t++) Player.load[t] = m.you.load[t] || 0;
+    const myVeh = m.you.veh ? Vehicles.byId(m.you.veh) : null;
+    if (myVeh && Player.veh !== myVeh) { Player.veh = myVeh; if (myVeh.def.kind !== 'cart') { Player.x = myVeh.x; Player.y = myVeh.y; Camera.setZoom(Camera.tz * 0.7); } }
+    else if (!myVeh && Player.veh) { const v = Player.veh; Player.veh = null; if (v.def.kind !== 'cart') { const sp = Move.findFree(v.x + Math.cos(v.a + 1.57) * (v.def.body + 1), v.y + Math.sin(v.a + 1.57) * (v.def.body + 1), CONFIG.player.radius, 'walk', 8); if (sp) { Player.x = Player.px = sp.x; Player.y = Player.py = sp.y; } Camera.setZoom(Camera.tz / 0.7); } }
+    // Fahrzeuge
+    const seen = new Set();
+    for (const a of m.v) {
+      seen.add(a[0]); let v = Vehicles.byId(a[0]);
+      if (!v) { v = Vehicles.fromSave({ id: a[0], type: a[1], x: a[2], y: a[3], a: a[4], up: {} }); Vehicles.list.push(v); }
+      v.up.speed = a[8]; v.up.width = a[9]; v.up.cap = a[10]; v.incoming = a[6] ? 1 : 0; v.driver = a[7] && a[7] !== this.myId ? a[7] : 0;
+      if (v !== Player.veh) { v.tx = a[2]; v.ty = a[3]; v.ta = a[4]; }
+      const tot = Vehicles.loadKg(v); if (Math.abs(tot - a[5]) > 0.05) { v.load.fill(0); v.load[0] = a[5]; }
+    }
+    Vehicles.list = Vehicles.list.filter(v => seen.has(v.id));
+    // Roboter
+    const rm = new Map(Robots.list.map(r => [r.id, r]));
+    Robots.list = m.r.map(a => { let r = rm.get(a[0]); if (!r) r = Robots.fromSave({ id: a[0], model: a[1], x: a[2], y: a[3], hangar: a[8] }); r.tx2 = a[2]; r.ty2 = a[3]; r.a = a[4]; r.state = a[5]; r.warn = !!a[6]; r.load.fill(0); r.load[0] = a[7]; r.hangar = a[8]; r.assign = a[9]; r.near = Renderer.inView(r.x, r.y, 12); return r; });
+    // Chunks
+    if (m.c) for (const c of m.c) World.applyChunk(c[0], Save.unrle(this.unb64(c[1]), 4096), c[2] ? Save.unrle(this.unb64(c[2]), 4096) : null, c[3]);
+    if (m.s) this.applyState(m.s);
+    if (m.bs) for (const a of m.bs) { const b = Buildings.byId(a[0]); if (!b) continue; for (let i = 0; i < NGOODS; i++) { b.capsule[i] = a[1][i]; b.store[i] = a[2][i]; } if (a[4] > 0 && !(b.launch > 0)) Bus.emit('launchFx', b); b.cool = a[3]; b.launch = a[4]; b.status = a[5]; b.hold = a[6] >= 0 ? (b.hold || { t: a[6], kg: 1 }) : null; if (b.hold) b.hold.t = a[6]; }
+    if (m.b) { G.buildings = m.b.b; G.belts = m.b.bl; Buildings.init(); }
+    if (m.bi) for (const [k, items] of m.bi) { const bl = Buildings.belts.get(k); if (!bl) continue; for (const it of bl.items) Pool.free(it); bl.items.length = 0; for (const [t, kg, p] of items) { const it = Pool.get(t, kg); it.p = p; bl.items.push(it); } if (bl.items.length) Buildings.active.add(bl); }
+  },
+  applyState(s) {
+    const lic = G.licence;
+    Object.assign(G, s.g);
+    if (G.licence !== lic) { World.updateLocks(); Renderer.flushTextures(); }
+    Economy.resetFx();
+    for (let i = 0; i < s.sp.length; i++) World.secProgress[i] = s.sp[i] / 10000;
+    World.glanzSum = 0; for (let i = 0; i < s.sp.length; i++) World.glanzSum += Math.min(1, World.secProgress[i]);
+    World.secDone.fill(0); for (const x of G.secDone) World.secDone[x] = 1;
+    for (let i = 0; i < s.cs.length; i += 3) { World.cleanable[s.cs[i]] = s.cs[i + 1]; World.chunkClean[s.cs[i]] = s.cs[i + 2]; World.dirtyMap.add(s.cs[i]); }
+    if (s.assigns) Robots.assigns = s.assigns;
+  },
+  applyFx(m) {
+    const d = m.d;
+    if (m.k === 'radio') UI.radio(d);
+    else if (m.k === 'toast') UI.toast(d[0], d[1]);
+    else if (m.k === 'stamp') { UI.stamp(d[0], d[1]); Fx.sectorWave(d[0]); Audio.sfx('stamp'); }
+    else if (m.k === 'find') { const f = World.finds[d[0]]; if (f) { UI.findPopup(f, d[1], d[2]); Audio.sfx('find'); } }
+    else if (m.k === 'cert') UI.ceremony(d);
+    else if (m.k === 'ending') UI.ending();
+    else if (m.k === 'launch') { const b = Buildings.byId(d[0]); if (b && d[1] > 0) { Audio.sfx('launch'); const c = Buildings.center(b); Renderer.popup(c.x, b.y - 1, '+' + U.money(d[1]), '#ffd27a'); } }
+  },
+  clientTick(dt, I) {
+    if (!this.hostPaused && performance.now() - (this.lastMsg || performance.now()) > CONFIG.net.timeout * 1000) { UI.toast('Keine Antwort vom Host. Ihr eigener Spielstand ist unberührt.', 'warn', 8000); this.leave(true); return; }
+    G.t += dt; G.day += dt;
+    Player.update(dt, I);
+    // andere Fahrzeuge und Roboter weich zur Sollposition
+    const k = 1 - Math.exp(-12 * dt);
+    for (const v of Vehicles.list) { if (v === Player.veh || v.tx === undefined) continue; v.px = v.x; v.py = v.y; v.pa = v.a; v.x = U.wrapX(v.x + U.dx(v.x, v.tx) * k); v.y += (v.ty - v.y) * k; v.a = U.angLerp(v.a, v.ta, k); }
+    for (const r of Robots.list) { if (r.tx2 === undefined) continue; r.px = r.x; r.py = r.y; const jump = Math.abs(U.dx(r.x, r.tx2)) > 30 || Math.abs(r.ty2 - r.y) > 30; r.x = jump ? r.tx2 : U.wrapX(r.x + U.dx(r.x, r.tx2) * k); r.y = jump ? r.ty2 : r.y + (r.ty2 - r.y) * k; r.cleanFx = r.state === 'work' ? 1 : 0; }
+    for (const o of this.others) { const ox = o.rx, oy = o.ry; o.rx = U.wrapX(o.rx + U.dx(o.rx, o[3]) * k); o.ry += (o[4] - o.ry) * k; o.rtx = U.wrapX(o.rtx + U.dx(o.rtx, o[6]) * k); o.rty += (o[7] - o.rty) * k; o.mv = Math.hypot(U.dx(ox, o.rx), oy - o.ry) > 0.3 * dt; }
+    Buildings.animateBelts(dt);
+    Audio.update(dt);
+    Game.effects(dt);
+    this.inT += dt;
+    if (this.inT >= 1 / 15) {
+      this.inT = 0;
+      const v = Player.veh, vr = Renderer.viewRect();
+      this.send('host', { t: 'in', x: +Player.x.toFixed(3), y: +Player.y.toFixed(3), dir: +Player.dir.toFixed(3), tx: +Player.tx.toFixed(3), ty: +Player.ty.toFixed(3), cl: I.clean ? 1 : 0, mv: Player.moving,
+        vx: v ? v.x : 0, vy: v ? v.y : 0, va: v ? v.a : 0, vvx: v ? v.vx : 0, vvy: v ? v.vy : 0, view: [vr.x0, vr.y0, vr.x1, vr.y1] });
+    }
+  },
+  update(dt, I) {
+    if (this.role === 'client') return this.clientTick(dt, I);
+    if (this.role === 'host') this.hostTick(dt);
+  },
+  // Tab/App im Hintergrund: Host pausiert für alle, Clients gelten als abwesend (kein Rauswurf)
+  away(on) {
+    if (this.isClient()) this.send('host', { t: 'away', on });
+    else if (this.isHost()) this.broadcast({ t: 'pause', on });
+  },
+  // Host: Ereignisse an alle senden
+  fx(k, d) { if (this.isHost()) this.broadcast({ t: 'fx', k, d }); },
+  showEmote(id, name, e) {
+    UI.toast((name || 'Crew') + ': ' + EMOTES[e], '', 3500);
+    const o = id === this.myId || id === 0 && this.isHost() ? null : null; void o;
+    this.bubbles = this.bubbles || new Map(); this.bubbles.set(id, { e, t: performance.now() });
+    Audio.sfx('memo');
+  },
+  sendEmote(e) {
+    if (this.isClient()) this.send('host', { t: 'emote', e });
+    else if (this.isHost()) { this.showEmote(0, this.name || 'Host', e); this.broadcast({ t: 'emote', id: 0, name: this.name || 'Host', e }); }
+    this.bubbles = this.bubbles || new Map(); this.bubbles.set(this.isClient() ? this.myId : 0, { e, t: performance.now() });
+  },
+  leave(silent) {
+    const wasClient = this.role === 'client';
+    if (this.tr) this.tr.close();
+    this.tr = null; this.role = null; this.status = ''; this.others = []; this.peers.clear(); this.hostPaused = false; this.lastMsg = 0; if (this.bubbles) this.bubbles.clear();
+    if (wasClient) { G = null; Game.toMenu(); }
+    if (!silent) UI.toast('Koop beendet.');
+    this.refresh();
+  },
+  stop() { if (this.isHost()) { this.broadcast({ t: 'kick', why: 'Der Host hat das Koop-Spiel beendet.' }); } this.leave(true); },
+  refresh() {
+    const p = UI.stack.find(x => x.o.id === 'coop'); if (p) p.render();
+    if (UI.iconBtns) UI.iconBtns.coop.style.display = this.role ? '' : 'none';
+  },
+  // Koop-Panel
+  panel() {
+    UI.panel({ id: 'coop', title: 'Koop', sub: 'Bis zu 8 Personen · gemeinsame Kasse · +5 % Crew-Bonus je Mitspieler', icon: 'people', small: true, render: b => {
+      const note = (t) => b.appendChild(U.h('div', { class: 'note', style: { marginBottom: '10px' }, html: t }));
+      const seg = (v, fn) => { const s = U.h('div', { class: 'seg', style: { marginBottom: '10px' } }); for (const [k, l] of [['peer', 'Internet (Einladungscode)'], ['local', 'Dieses Gerät (Tabs)']]) s.appendChild(U.h('button', { class: this.kind === k ? 'on' : '', text: l, onclick: () => { this.kind = k; this.refresh(); } })); return s; };
+      if (this.role === 'host') {
+        b.appendChild(U.h('div', { style: { fontSize: '13px', color: 'var(--muted)' }, text: 'Einladungscode' }));
+        b.appendChild(U.h('div', { style: { fontSize: '38px', fontWeight: '900', letterSpacing: '.18em', margin: '4px 0 10px' }, text: this.code }));
+        note(this.status + (this.kind === 'local' ? ' (nur auf diesem Gerät, z. B. zweiter Tab)' : ''));
+        b.appendChild(U.h('div', { class: 'sect-title', text: 'Crew (' + (this.peers.size + 1) + '/8)' }));
+        b.appendChild(U.h('div', { class: 'setting' }, U.h('div', { class: 'lbl', html: '<b style="color:' + PLAYER_COLORS[0] + '">● ' + U.esc(this.name || 'Host') + '</b><small>Host</small>' })));
+        for (const [id, rp] of this.peers) b.appendChild(U.h('div', { class: 'setting' }, U.h('div', { class: 'lbl', html: '<b style="color:' + rp.color + '">● ' + U.esc(rp.name) + '</b>' }),
+          U.h('div', { style: { display: 'flex', gap: '6px' } }, U.h('button', { class: 'btn sm', text: 'Entfernen', onclick: () => this.kick(id) }), U.h('button', { class: 'btn sm danger', text: 'Sperren', onclick: () => this.kick(id, true) }))));
+        this.emoteRow(b);
+        b.appendChild(U.h('button', { class: 'btn danger', style: { marginTop: '12px' }, text: 'Koop beenden', onclick: () => this.stop() }));
+        return;
+      }
+      if (this.role === 'client') {
+        note('Verbunden mit Code <b>' + this.code + '</b>. Der Spielstand liegt beim Host; Ihr eigener Spielstand bleibt unberührt.');
+        for (const o of this.others) b.appendChild(U.h('div', { class: 'setting' }, U.h('div', { class: 'lbl', html: '<b style="color:' + o[2] + '">● ' + U.esc(o[1]) + '</b>' })));
+        this.emoteRow(b);
+        b.appendChild(U.h('button', { class: 'btn danger', style: { marginTop: '12px' }, text: 'Crew verlassen', onclick: () => this.leave() }));
+        return;
+      }
+      b.appendChild(seg());
+      const nameIn = U.h('input', { type: 'text', value: this.name || 'Crew', maxlength: '16', style: { width: '100%', padding: '10px', borderRadius: '9px', border: '1px solid var(--line)', background: '#17252b', color: '#fff', font: 'inherit', marginBottom: '8px', userSelect: 'text' }, 'aria-label': 'Name' });
+      b.appendChild(U.h('div', { class: 'sect-title', text: 'Ihr Name' })); b.appendChild(nameIn);
+      if (Game.state === 'play') {
+        b.appendChild(U.h('div', { class: 'sect-title', text: 'Spiel hosten' }));
+        note('Ihr aktueller Spielstand wird zum Crew-Spiel. Ein 6-stelliger Code lädt Mitspieler ein.');
+        b.appendChild(U.h('button', { class: 'btn primary', text: 'Hosten', onclick: () => { this.name = nameIn.value.trim() || 'Host'; this.host(this.kind); } }));
+      }
+      b.appendChild(U.h('div', { class: 'sect-title', text: 'Beitreten' }));
+      const codeIn = U.h('input', { type: 'text', inputmode: 'numeric', maxlength: '6', placeholder: '123456', style: { width: '100%', padding: '10px', borderRadius: '9px', border: '1px solid var(--line)', background: '#17252b', color: '#fff', font: '700 22px/1 system-ui', letterSpacing: '.2em', textAlign: 'center', marginBottom: '8px', userSelect: 'text' }, 'aria-label': 'Einladungscode' });
+      b.appendChild(codeIn);
+      b.appendChild(U.h('button', { class: 'btn petrol', text: 'Beitreten', onclick: () => this.join(codeIn.value, nameIn.value.trim() || 'Crew', this.kind) }));
+      if (this.status) note('<br>' + this.status);
+      note('<br>Alle müssen dieselbe Spielversion haben (' + CONFIG.version + '). „Internet“ nutzt WebRTC über PeerJS (direkte Verbindung, kein eigener Server).');
+    } });
+  },
+  emoteRow(b) {
+    const r = U.h('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' } });
+    for (const k in EMOTES) r.appendChild(U.h('button', { class: 'btn sm', text: EMOTES[k], onclick: () => this.sendEmote(k) }));
+    b.appendChild(r);
+  },
 };
 
 /* ============================================================================
@@ -5765,8 +6430,8 @@ const Game = {
     Audio.init();
     await Save.open();
     this.listeners();
-    document.addEventListener('visibilitychange', () => { if (document.hidden) { if (this.state === 'play') { Save.saveNow(); } if (Audio.ok) Audio.ctx.suspend(); } else { this.last = performance.now(); this.acc = 0; if (Audio.ok && this.state !== 'boot') Audio.ctx.resume(); } });
-    addEventListener('pagehide', () => { if (this.state === 'play') Save.saveNow(); });
+    document.addEventListener('visibilitychange', () => { Net.away(document.hidden); if (document.hidden) { if (this.state === 'play') { Save.saveNow(); } if (Audio.ok) Audio.ctx.suspend(); } else { this.last = performance.now(); this.acc = 0; if (Audio.ok && this.state !== 'boot') Audio.ctx.resume(); } });
+    addEventListener('pagehide', () => { if (this.state === 'play') Save.saveNow(); if (Net.tr) Net.tr.close(); });
     addEventListener('beforeunload', () => { if (this.state === 'play') Save.saveNow(); });
     document.getElementById('boot').classList.add('gone');
     this.toMenu();
@@ -5775,10 +6440,10 @@ const Game = {
   },
   listeners() {
     Bus.on('unload', () => { Progression.tutFlags.unload = true; });
-    Bus.on('launch', (b, money) => { Audio.sfx('launch'); if (b.type !== 'ramp' && Renderer.inView(b.x, b.y, 10)) { Camera.pulse = 1.2; } if (money > 0) { const c = Buildings.center(b); Renderer.popup(c.x, b.y - 1, '+' + U.money(money), '#ffd27a'); } });
+    Bus.on('launch', (b, money) => { Net.fx('launch', [b.id, money]); Audio.sfx('launch'); if (b.type !== 'ramp' && Renderer.inView(b.x, b.y, 10)) { Camera.pulse = 1.2; } if (money > 0) { const c = Buildings.center(b); Renderer.popup(c.x, b.y - 1, '+' + U.money(money), '#ffd27a'); } });
     Bus.on('built', b => { G.stats.builtBy[b.type] = (G.stats.builtBy[b.type] || 0) + 1; });
     Bus.on('beltsBuilt', n => { G.stats.builtBy.belt = (G.stats.builtBy.belt || 0) + n; });
-    Bus.on('licence', () => { Save.soon(); Economy.updateDemand(); });
+    Bus.on('licence', l => { Save.soon(); Economy.updateDemand(); Net.fx('cert', l); });
     Bus.on('vehicleArrived', v => { Fx.burst(v.x, v.y, 4, 20); Audio.sfx('build'); UI.toast(v.def.name + ' ist eingetroffen.'); });
   },
   toMenu() {
@@ -5864,6 +6529,7 @@ const Game = {
     UI.toast('Neue Mondmission ' + (mission + 1) + ' – Erfahrungsbonus +' + mission * 25 + ' % auf alle Einnahmen!', 'good', 7000);
   },
   teleport(t) {
+    if (Net.isClient() && Player.veh) { UI.toast('Bitte erst aussteigen.', 'warn'); return; }
     if (Player.veh && Player.veh.def.kind !== 'cart') Vehicles.exit();
     else if (Player.veh) Vehicles.exit();
     Fx.burst(Player.x, Player.y, 3, 30);
@@ -5928,6 +6594,14 @@ const Game = {
       if (t === 4 && Math.random() < 0.3) Particles.spawn(3, P.tx + (Math.random() - 0.5) * 2, P.ty + (Math.random() - 0.5) * 2, 0.2, 0, 0, 0.3, 0.6, 0.25, 0);
     }
     if (v && v.cleanFx > 0) { const back = v.def.body * 0.7, bx = v.x - Math.cos(v.a) * back, by = v.y - Math.sin(v.a) * back; const t = World.typeAt(Math.floor(bx), Math.floor(by)); for (let i = 0; i < 3; i++) Fx.dust(bx, by, Vehicles.width(v) / 2, v.a, t); }
+    // dezenter Glanz: vereinzeltes Funkeln auf sauberem Boden in Sichtweite
+    if (Camera.zoom > 0.6 && Math.random() < 0.25 * Settings.d.particles) {
+      const vr = Renderer.viewRect(), x = U.wrapX(vr.x0 + Math.random() * (vr.x1 - vr.x0)), y = vr.y0 + Math.random() * (vr.y1 - vr.y0);
+      const xi = Math.floor(x), yi = Math.floor(y);
+      if (yi > 0 && yi < WSIZE && World.dustAt(xi, yi) === 0 && World.isCleanableT(World.terrAt(xi, yi)) && !Buildings.at(xi, yi) && !Buildings.beltAt(xi, yi)) Particles.spawn(1, x, y, 0, 0, 0, 0, 0.7 + Math.random() * 0.8, 0.14 + Math.random() * 0.1, 0);
+    }
+    // Roboter-Piepsen in der Nähe
+    if (Robots.list.length && Math.random() < 0.004) { const r = Robots.list[Math.floor(Math.random() * Robots.list.length)]; if (r.near && U.dist2(r.x, r.y, P.x, P.y) < 900) Audio.sfx('robot'); }
     // Fußspuren im Staub
     if (!v && P.moving) {
       this.stepAcc += P.speed * dt;
