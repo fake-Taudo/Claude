@@ -40,7 +40,8 @@ html, body {
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-text-size-adjust: 100%;
 }
 button { font: inherit; color: inherit; }
-#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+#game, #ground { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+#ground { pointer-events: none; visibility: hidden; }
 #ui { position: absolute; inset: 0; pointer-events: none; font-size: 14px; }
 #ui > * { pointer-events: none; }
 .hidden { display: none !important; }
@@ -377,7 +378,8 @@ body.prof-phone #map .legend { display: none; }
 </style>
 </head>
 <body>
-<canvas id="game" tabindex="0" aria-label="Spielfläche"></canvas>
+<canvas id="ground" aria-hidden="true"></canvas>
+  <canvas id="game" tabindex="0" aria-label="Spielfläche"></canvas>
 <div id="ui">
   <div id="hud" class="hidden">
     <div id="hud-money" class="hud-box pe" title="Fünfmal antippen: Debug-Anzeige"><div class="m num"><span id="money-v">0</span><span class="cur">₥</span></div><div class="r num" id="money-r">0 ₥/Min.</div><div class="d" id="money-d"></div></div>
@@ -896,7 +898,8 @@ const FX_CONFIG = {
   // Putzen
   clean: { swingDeg: 25, swingHz: 7, rampTime: 2, rampBoost: 0.45, perKgParticles: 9, minPerFrame: 0.35, homeAt: 0.42, lifeMin: 0.4, lifeMax: 0.9 },
   // Welt
-  edge: { warp: 0.35, lo: 14, hi: 34, rim: 0.55, shadow: 0.34, shadowOff: 0.42, wall: 0.22 },
+  lodDetail: 0.85,
+  edge: { warp: 0.35, soft: 0.12, rim: 0.5, shadow: 0.38, shadowOff: 0.45, wall: 0.04 },
   gloss: { period: 7, width: 0.24, alpha: 0.2, maskRes: 4 },
   fresh: { life: 1.5, max: 1600, strength: 0.42 },
   wipe: { life: 0.8, max: 120 },
@@ -3179,14 +3182,15 @@ const VFX = {
 
 const Renderer = {
   cv: null, ctx: null, dpr: 1, rs: 1, k: 1, W: 0, H: 0, R: 2,
-  cache0: new Map(), cache1: new Map(), cacheS: new Map(), stamp: 0, queue: [], secDirty: new Set(),
+  cache0: new Map(), cacheM: new Map(), cache1: new Map(), cacheS: new Map(), stamp: 0, queue: [], jobs: [], secDirty: new Set(),
   lut: null, grain: null, scratch: {}, flatCol: null, frameMs: 16, dyn: { acc: 0, n: 0, t: 0, good: 0 },
   sparkleBudget: 0, popups: [], marks: [],
   init(cv) {
-    this.cv = cv; this.ctx = cv.getContext('2d', { alpha: false });
-    this.buildLUT();
+    this.cv = cv; this.ctx = cv.getContext('2d', { alpha: true });
+    this.buildLUT(); this.initGround(); Ground.init();
     this.grain = new Int8Array(256 * 256);
     for (let i = 0; i < 65536; i++) this.grain[i] = Math.round((U.hash(i & 255, i >> 8, 99) - 0.5) * 2 * 100);
+    GLGround.init();
     this.applyQuality();
     this.resize();
     addEventListener('resize', () => this.resize());
@@ -3214,6 +3218,7 @@ const Renderer = {
     this.k = this.dpr * this.rs;
     const bw = Math.round(W * this.k), bh = Math.round(H * this.k);
     if (this.cv.width !== bw || this.cv.height !== bh) { this.cv.width = bw; this.cv.height = bh; }
+    GLGround.resize(bw, bh);
     const port = H > W; if (this.lastPort !== undefined && port !== this.lastPort && Input.profile === 'phone') Camera.setZoom(Camera.tz * (port ? CONFIG.camera.zoomPhonePortrait / CONFIG.camera.zoomPhone : CONFIG.camera.zoomPhone / CONFIG.camera.zoomPhonePortrait));
     this.lastPort = port;
     Bus.emit('resize');
@@ -3235,9 +3240,9 @@ const Renderer = {
 
   /* --- Farbtabelle Staubart × Staubwert --- */
   buildLUT() {
-    const clean = [182, 189, 197];
-    const L = [[178, 161, 136], [128, 124, 129], [170, 151, 124], [163, 135, 112], [172, 152, 194], [170, 194, 222], [168, 96, 70]];
-    const D = [[108, 92, 74], [58, 57, 63], [102, 86, 68], [96, 70, 56], [104, 80, 132], [112, 146, 188], [112, 48, 36]];
+    const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+    const clean = hex(THEME.clean.base);
+    const L = THEME.dustTypes.map(p => hex(p[0])), D = THEME.dustTypes.map(p => hex(p[1]));
     this.lut = new Uint8Array(7 * 256 * 3);
     for (let t = 0; t < 7; t++) for (let v = 0; v < 256; v++) {
       let c;
@@ -3252,58 +3257,211 @@ const Renderer = {
 
   /* --- Chunk-Texturen erzeugen (ganz oder Teilrechteck) --- */
   makeEntry(size) { const cv = document.createElement('canvas'); cv.width = cv.height = size; return { cv, ctx: cv.getContext('2d'), stamp: 0 }; },
+  /* --- Boden-Tabellen (einmalig): Felsuntergrund, Kanten-Verzerrung, Farbrampen --- */
+  // kachelbares Wertrauschen (periodisch in x und y)
+  tn(x, y, p, s) {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+    const x0 = ((xi % p) + p) % p, y0 = ((yi % p) + p) % p, x1 = (x0 + 1) % p, y1 = (y0 + 1) % p;
+    const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const a = U.hash(x0, y0, s), b = U.hash(x1, y0, s), c = U.hash(x0, y1, s), d = U.hash(x1, y1, s);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  },
+  initGround() {
+    const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+    // Felsuntergrund 512×512 (8 Texel pro Zelle, kachelbar): Mikrokrater, Risse, Kiesel, Flecken
+    const S = 512, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d', { willReadFrequently: true });
+    x.fillStyle = 'rgb(128,128,128)'; x.fillRect(0, 0, S, S);
+    const im0 = x.getImageData(0, 0, S, S), d0 = im0.data;
+    for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) {
+      const n = this.tn(px / 64, py / 64, 8, 71) * 0.55 + this.tn(px / 16, py / 16, 32, 72) * 0.3 + this.tn(px / 4, py / 4, 128, 73) * 0.15;
+      const v = 128 + (n - 0.5) * 70 + (U.hash(px, py, 74) - 0.5) * 10, o = (py * S + px) * 4; d0[o] = d0[o + 1] = d0[o + 2] = v;
+    }
+    x.putImageData(im0, 0, 0);
+    const r = U.rng(4242), wrap = (fn, px, py, rad) => { for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) if (px + ox > -rad && px + ox < S + rad && py + oy > -rad && py + oy < S + rad) fn(px + ox, py + oy); };
+    // Mikrokrater: Rand oben links hell, Inneres unten rechts dunkel
+    for (let i = 0; i < 46; i++) {
+      const px = r() * S, py = r() * S, rad = 3 + Math.pow(r(), 2.2) * 26;
+      wrap((X, Y) => {
+        const g = x.createRadialGradient(X + rad * 0.25, Y + rad * 0.25, rad * 0.1, X, Y, rad); g.addColorStop(0, 'rgba(60,60,60,0.55)'); g.addColorStop(0.75, 'rgba(90,90,90,0.25)'); g.addColorStop(1, 'rgba(128,128,128,0)');
+        x.fillStyle = g; x.beginPath(); x.arc(X, Y, rad, 0, 6.283); x.fill();
+        x.strokeStyle = 'rgba(205,205,205,0.55)'; x.lineWidth = Math.max(1, rad * 0.16); x.beginPath(); x.arc(X, Y, rad * 0.94, Math.PI * 0.85, Math.PI * 1.75); x.stroke();
+        x.strokeStyle = 'rgba(70,70,70,0.35)'; x.lineWidth = Math.max(1, rad * 0.1); x.beginPath(); x.arc(X, Y, rad * 0.96, Math.PI * -0.15, Math.PI * 0.7); x.stroke();
+      }, px, py, rad);
+    }
+    // feine Risse
+    x.lineCap = 'round';
+    for (let i = 0; i < 30; i++) {
+      let px = r() * S, py = r() * S, a = r() * 6.283; const n = 4 + (r() * 10 | 0), w = 0.6 + r() * 1.0;
+      const pts = [[px, py]]; for (let k = 0; k < n; k++) { a += (r() - 0.5) * 1.1; px += Math.cos(a) * (5 + r() * 9); py += Math.sin(a) * (5 + r() * 9); pts.push([px, py]); }
+      wrap((X, Y) => { const ox = X - pts[0][0], oy = Y - pts[0][1]; x.strokeStyle = 'rgba(60,60,60,0.32)'; x.lineWidth = w; x.beginPath(); x.moveTo(pts[0][0] + ox, pts[0][1] + oy); for (const p of pts) x.lineTo(p[0] + ox, p[1] + oy); x.stroke(); x.strokeStyle = 'rgba(200,200,200,0.22)'; x.lineWidth = w * 0.7; x.beginPath(); x.moveTo(pts[0][0] + ox + 1, pts[0][1] + oy + 1); for (const p of pts) x.lineTo(p[0] + ox + 1, p[1] + oy + 1); x.stroke(); }, pts[0][0], pts[0][1], 200);
+    }
+    // Kiesel (eigener Kanal für Geröllstaub)
+    const peb = document.createElement('canvas'); peb.width = peb.height = S; const pq = peb.getContext('2d', { willReadFrequently: true });
+    for (let i = 0; i < 900; i++) {
+      const px = r() * S, py = r() * S, rad = 0.8 + Math.pow(r(), 3) * 3.4, tone = r();
+      wrap((X, Y) => {
+        x.fillStyle = 'rgba(70,70,70,0.45)'; x.beginPath(); x.arc(X + rad * 0.35, Y + rad * 0.35, rad, 0, 6.283); x.fill();
+        x.fillStyle = 'rgba(' + (150 + tone * 70 | 0) + ',' + (150 + tone * 70 | 0) + ',' + (150 + tone * 70 | 0) + ',0.8)'; x.beginPath(); x.arc(X, Y, rad, 0, 6.283); x.fill();
+        pq.fillStyle = 'rgb(' + (90 + tone * 160 | 0) + ',0,0)'; pq.beginPath(); pq.arc(X, Y, rad * 1.3, 0, 6.283); pq.fill();
+      }, px, py, rad + 2);
+    }
+    // helle Flecken
+    for (let i = 0; i < 18; i++) { const px = r() * S, py = r() * S, rad = 20 + r() * 60; wrap((X, Y) => { const g = x.createRadialGradient(X, Y, 0, X, Y, rad); g.addColorStop(0, 'rgba(176,176,176,0.12)'); g.addColorStop(1, 'rgba(190,190,190,0)'); x.fillStyle = g; x.beginPath(); x.arc(X, Y, rad, 0, 6.283); x.fill(); }, px, py, rad); }
+    const bd = x.getImageData(0, 0, S, S).data, pd = pq.getImageData(0, 0, S, S).data;
+    this.bed = new Uint8Array(S * S); this.peb = new Uint8Array(S * S);
+    for (let i = 0; i < S * S; i++) { this.bed[i] = bd[i * 4]; this.peb[i] = pd[i * 4]; }
+    // Kanten-Verzerrung: weiches Rauschen ±1 (Periode 128 Texel = 32 Zellen), nur von Weltkoordinaten abhängig
+    this.warpX = new Float32Array(128 * 128); this.warpY = new Float32Array(128 * 128);
+    for (let py = 0; py < 128; py++) for (let px = 0; px < 128; px++) {
+      const i = py * 128 + px;
+      this.warpX[i] = (this.tn(px / 8, py / 8, 16, 81) - 0.5) * 1.5 + (this.tn(px / 2, py / 2, 64, 82) - 0.5) * 0.7;
+      this.warpY[i] = (this.tn(px / 8, py / 8, 16, 83) - 0.5) * 1.5 + (this.tn(px / 2, py / 2, 64, 84) - 0.5) * 0.7;
+    }
+    // Rampe sauberer Boden: Schatten → Grundton → Glanz (kühl), Index = Helligkeit × 128
+    const cs = hex(THEME.clean.shade), cb = hex(THEME.clean.base), cl = hex(THEME.clean.light);
+    this.cleanRamp = new Uint8Array(256 * 3);
+    for (let i = 0; i < 256; i++) {
+      const b = i / 128; let c3;
+      if (b < 1) { const t = U.clamp((b - 0.35) / 0.65, 0, 1); c3 = [0, 1, 2].map(k => cs[k] * (0.55 + 0.45 * t) + (cb[k] - cs[k]) * t * t); }
+      else { const t = U.clamp((b - 1) / 0.55, 0, 1); c3 = [0, 1, 2].map(k => cb[k] + (cl[k] - cb[k]) * t); }
+      this.cleanRamp[i * 3] = c3[0]; this.cleanRamp[i * 3 + 1] = c3[1]; this.cleanRamp[i * 3 + 2] = c3[2];
+    }
+    this.dustL = THEME.dustTypes.map(p => hex(p[0])); this.dustD = THEME.dustTypes.map(p => hex(p[1]));
+    // gepolsterte Arbeitsfelder (66×66) für Nachbarzugriff über Chunkgrenzen
+    const N = 66 * 66;
+    this.pD = new Float32Array(N); this.pC = new Float32Array(N); this.pB = new Float32Array(N); this.pS = new Float32Array(N); this.pT = new Uint8Array(N); this.pY = new Uint8Array(N);
+    this.powD = new Float32Array(257); for (let i = 0; i <= 256; i++) this.powD[i] = Math.pow(Math.min(1, i / 255), 0.8);
+    this.powS = new Float32Array(512); for (let i = 0; i < 512; i++) this.powS[i] = Math.pow(i / 128, 0.75);
+  },
+  // Zellinformationen eines Nachbar-Chunks nur lesen, wenn er ohnehin vorliegt (nie neu erzeugen)
+  peekChunk(ci) { const ch = World.chunks[ci]; if (ch) return { D: ch.dust, b: World.base(ci) }; if (World.hasBase(ci)) { const b = World.base(ci); return { D: b.dust, b }; } return null; },
+  fillPad(ci, b, D) {
+    const pD = this.pD, pC = this.pC, pS = this.pS, pT = this.pT, pY = this.pY, TER = b.terr, SH = b.shade, TY = b.type;
+    const cx = ci % NCH, cy = (ci / NCH) | 0;
+    const nb = {};
+    const get = (ox, oy) => { const k = ox + ',' + oy; if (k in nb) return nb[k]; const ny = cy + oy; nb[k] = ny < 0 || ny >= NCH ? null : this.peekChunk(ny * NCH + ((cx + ox) % NCH + NCH) % NCH); return nb[k]; };
+    for (let py = -1; py <= 64; py++) for (let px = -1; px <= 64; px++) {
+      const k = (py + 1) * 66 + px + 1;
+      let t, d, sh, ty;
+      if (px >= 0 && px < 64 && py >= 0 && py < 64) { const li = py * 64 + px; t = TER[li]; d = D[li]; sh = SH[li]; ty = TY[li]; }
+      else {
+        const ox = px < 0 ? -1 : px > 63 ? 1 : 0, oy = py < 0 ? -1 : py > 63 ? 1 : 0, n = get(ox, oy);
+        const lx = (px + 64) & 63, ly = (py + 64) & 63, li = ly * 64 + lx;
+        if (n) { t = n.b.terr[li]; d = n.D[li]; sh = n.b.shade[li]; ty = n.b.type[li]; }
+        else { const cl = U.clamp(py, 0, 63) * 64 + U.clamp(px, 0, 63); t = TER[cl]; d = D[cl]; sh = SH[cl]; ty = TY[cl]; }
+      }
+      pT[k] = t; pS[k] = sh; pY[k] = ty;
+      if (t === T_ROCK || t === T_GRAVEL || t === T_CANYON) { pD[k] = -1; pC[k] = -1; }
+      else { pD[k] = d; pC[k] = d > CLEAN_T ? 1 : 0; }
+    }
+    // nicht putzbare Zellen (Fels, Schlucht) mit dem Mittel der Nachbarn füllen – keine künstlichen Kanten
+    for (let k = 67; k < 66 * 65 - 1; k++) {
+      if (pC[k] >= 0) continue;
+      let sd = 0, sc = 0, n = 0;
+      const a = [k - 1, k + 1, k - 66, k + 66];
+      for (let q = 0; q < 4; q++) { const j = a[q]; if (pC[j] >= 0) { sd += pD[j]; sc += pC[j]; n++; } }
+      pD[k] = n ? sd / n : 0; pC[k] = n ? (sc / n > 0.5 ? 1 : 0) : 0;
+    }
+    for (let k = 0; k < 66 * 66; k++) if (pC[k] < 0) { pD[k] = 0; pC[k] = 0; }
+    // leicht weichgezeichnete Bedeckung → runde Kontur statt Treppenstufen (einzelne Zellen bleiben sichtbar)
+    const pB = this.pB; pB.set(pC);
+    for (let y = 1; y < 65; y++) for (let x = 1; x < 65; x++) { const k = y * 66 + x; pB[k] = pC[k] * 0.52 + (pC[k - 1] + pC[k + 1] + pC[k - 66] + pC[k + 66]) * 0.12; }
+  },
+  /* --- Chunk-Texturen: Staub als beleuchtetes Höhenfeld, scharfe Putzkante, Felsuntergrund --- */
   paintChunk(ci, R, entry, cx0, cy0, cx1, cy1) {
+    if (R === 1) return this.paintChunkLow(ci, entry, cx0, cy0, cx1, cy1);
     const b = World.base(ci), ch = World.chunks[ci], D = ch ? ch.dust : b.dust, M = ch ? ch.meteor : null;
-    const TER = b.terr, TY = b.type, REG = b.region, SH = b.shade, lut = this.lut, gr = this.grain;
+    const TER = b.terr, TY = b.type, REG = b.region, SH = b.shade, gr = this.grain;
+    this.fillPad(ci, b, D);
+    const pD = this.pD, pC = this.pB, pS = this.pS, pT = this.pT, pY = this.pY, PD = this.powD, PS = this.powS;
+    const BED = this.bed, PEB = this.peb, WX = this.warpX, WY = this.warpY, CR = this.cleanRamp, DL = this.dustL, DK = this.dustD;
+    const E = FX_CONFIG.edge, full = VFX.T.shade >= 2, A = E.warp, hw = E.soft, rimK = E.rim, wallK = E.wall, shK = E.shadow, so = E.shadowOff;
     const lk = CONFIG.regions.map(r => r.licence > G.licence);
     const img = this.scratch[R], data = img.data, S = 64 * R;
-    const X0 = (ci % NCH) * 64 * R, Y0 = ((ci / NCH) | 0) * 64 * R;
+    const ccx = ci % NCH, ccy = (ci / NCH) | 0;
+    const X0 = ccx * 64 * R, Y0 = ccy * 64 * R, mirX = ccx & 1, mirY = ccy & 1;
     const px0 = cx0 * R, py0 = cy0 * R, px1 = (cx1 + 1) * R, py1 = (cy1 + 1) * R;
-    const inv = 1 / R, hatch = 3 * R;
+    const inv = 1 / R, hatch = 3 * R, t8 = 8 / R, w4 = 4 / R;
+    const wcx = ccx * 256, wcy = ccy * 256;
     for (let py = py0; py < py1; py++) {
-      const vv = (py + 0.5) * inv - 0.5; let j0 = Math.floor(vv); const fv = vv - j0;
-      const j1 = j0 + 1 > 63 ? 63 : j0 + 1; if (j0 < 0) j0 = 0;
-      const cyi = (py * inv) | 0;
+      const v = (py + 0.5) * inv - 0.5, cyi = (py * inv) | 0;
+      let by = ((py + 0.5) * t8) | 0; if (mirY) by = 511 - by;
+      const wy4 = ((wcy + ((py + 0.5) * w4 | 0)) & 127) * 128;
       let o = (py * S + px0) * 4;
       for (let px = px0; px < px1; px++, o += 4) {
         const cxi = (px * inv) | 0, c = cyi * 64 + cxi, t = TER[c];
         let r, g, bb;
         const gi = gr[((Y0 + py) & 255) * 256 + ((X0 + px) & 255)];
+        let bx = ((px + 0.5) * t8) | 0; if (mirX) bx = 511 - bx;
+        const bi = by * 512 + bx;
         if (t === T_ROCK || t === T_GRAVEL) {
-          const s = SH[c] / 128 * (1 + gi * 0.0012); r = 96 * s; g = 92 * s; bb = 90 * s;
+          const s = SH[c] / 128 * (1 + (BED[bi] - 128) * 0.004 + gi * 0.001); r = 92 * s; g = 90 * s; bb = 92 * s;
         } else {
-          let d, sh, cw = 0, mb = M ? M[c] : 0;
-          if (R === 1) { d = D[c]; sh = SH[c]; cw = t === T_CANYON ? 1 : 0; }
-          else {
-            // bilinear: Staub nur aus putzbaren Ecken, Schlucht-Anteil als weiche Überblendung
-            const uu = (px + 0.5) * inv - 0.5; let i0 = Math.floor(uu); const fu = uu - i0;
-            const i1 = i0 + 1 > 63 ? 63 : i0 + 1; if (i0 < 0) i0 = 0;
-            const a00 = j0 * 64 + i0, a10 = j0 * 64 + i1, a01 = j1 * 64 + i0, a11 = j1 * 64 + i1;
-            const w00 = (1 - fu) * (1 - fv), w10 = fu * (1 - fv), w01 = (1 - fu) * fv, w11 = fu * fv;
-            let ds = 0, ws = 0, tt;
-            tt = TER[a00]; if (tt === T_CANYON) cw += w00; else if (tt !== T_ROCK && tt !== T_GRAVEL) { ds += D[a00] * w00; ws += w00; }
-            tt = TER[a10]; if (tt === T_CANYON) cw += w10; else if (tt !== T_ROCK && tt !== T_GRAVEL) { ds += D[a10] * w10; ws += w10; }
-            tt = TER[a01]; if (tt === T_CANYON) cw += w01; else if (tt !== T_ROCK && tt !== T_GRAVEL) { ds += D[a01] * w01; ws += w01; }
-            tt = TER[a11]; if (tt === T_CANYON) cw += w11; else if (tt !== T_ROCK && tt !== T_GRAVEL) { ds += D[a11] * w11; ws += w11; }
-            d = ws > 0 ? ds / ws : D[c];
-            sh = SH[a00] * w00 + SH[a10] * w10 + SH[a01] * w01 + SH[a11] * w11;
-            if (M) mb = M[a00] * w00 + M[a10] * w10 + M[a01] * w01 + M[a11] * w11;
+          const u = (px + 0.5) * inv - 0.5;
+          // verzerrte Abtastposition (±warp Zellen), stabil über Weltkoordinaten
+          const wi = wy4 + ((wcx + ((px + 0.5) * w4 | 0)) & 127);
+          let uw = u + WX[wi] * A + 1, vw = v + WY[wi] * A + 1;
+          if (uw < 0) uw = 0; else if (uw > 64.999) uw = 64.999; if (vw < 0) vw = 0; else if (vw > 64.999) vw = 64.999;
+          const i0 = uw | 0, j0 = vw | 0, fx = uw - i0, fy = vw - j0;
+          const k00 = j0 * 66 + i0, k10 = k00 + 1, k01 = k00 + 66, k11 = k01 + 1;
+          const w00 = (1 - fx) * (1 - fy), w10 = fx * (1 - fy), w01 = (1 - fx) * fy, w11 = fx * fy;
+          const raw = pC[k00] * w00 + pC[k10] * w10 + pC[k01] * w01 + pC[k11] * w11;
+          const dd = pD[k00] * w00 + pD[k10] * w10 + pD[k01] * w01 + pD[k11] * w11;
+          const sh = (pS[k00] * w00 + pS[k10] * w10 + pS[k01] * w01 + pS[k11] * w11) / 128;
+          // scharfe, leicht zerfranste Kante
+          let cov = (raw - 0.56 + hw) / (2 * hw); cov = cov <= 0 ? 0 : cov >= 1 ? 1 : cov * cov * (3 - 2 * cov);
+          // Schlucht-Anteil (weich)
+          let cw = 0; { const a = pT[k00] === T_CANYON ? w00 : 0, b2 = pT[k10] === T_CANYON ? w10 : 0, c2 = pT[k01] === T_CANYON ? w01 : 0, d2 = pT[k11] === T_CANYON ? w11 : 0; cw = a + b2 + c2 + d2; }
+          // Felsuntergrund (sauberer Boden): Gelände-Licht × Textur, kühle Rampe
+          let fb = (1 + (sh - 1) * 0.62) * (full ? 1 + (BED[bi] - 128) * 0.0037 : 1) * (1 + gi * 0.00025);
+          if (full && cov < 0.999) {
+            // Schlagschatten des Staubwalls auf den sauberen Boden (Sonne oben links)
+            let su = uw - so, sv = vw - so; if (su < 0) su = 0; if (sv < 0) sv = 0;
+            const si0 = su | 0, sj0 = sv | 0, sfx = su - si0, sfy = sv - sj0, s00 = sj0 * 66 + si0;
+            const rs = pC[s00] * (1 - sfx) * (1 - sfy) + pC[s00 + 1] * sfx * (1 - sfy) + pC[s00 + 66] * (1 - sfx) * sfy + pC[s00 + 67] * sfx * sfy;
+            const sd = rs - raw; if (sd > 0) fb *= 1 - (sd > 1 ? 1 : sd) * shK * 1.6;
           }
-          const ty = TY[c], lo = (ty * 256 + (d | 0)) * 3;
-          r = lut[lo]; g = lut[lo + 1]; bb = lut[lo + 2];
-          // Körnung: auf Staub stärker, auf sauberem Boden fein
-          const gs = d > 8 ? 0.0002 + d * 0.0000009 : 0.00008;
-          let s = sh / 128 * (1 + gi * gs);
-          if (cw < 0.999) {
-            r *= s; g *= s; bb *= s;
-            if (mb > 2) { const m = U.smooth(Math.min(1, mb / 140)), k2 = 0.75 + mb / 900; r += (128 * k2 * s - r) * m; g += (68 * k2 * s - g) * m; bb += (52 * k2 * s - bb) * m; if (gi > 90 && mb > 60) { r += 50; g += 30; bb += 10; } }
-            if (ty === 4 && d > 30 && gi > 96) { r = 255; g = 236; bb = 255; }
-            else if (ty === 5 && d > 30 && gi > 92) { r += 40; g += 44; bb += 40; }
-          }
+          let fi = (fb * 128) | 0; if (fi > 255) fi = 255; else if (fi < 0) fi = 0;
+          const fr = CR[fi * 3], fg = CR[fi * 3 + 1], fbb = CR[fi * 3 + 2];
+          if (cov > 0.001) {
+            // Staubfarbe: hell/dunkel je Staubart (bilinear über Zellen → weiche Regionsübergänge), dichter = dunkler
+            const ty = TY[c], ty00 = pY[k00], ty11 = pY[k11];
+            const L0 = DL[ty00], L1 = DL[ty11], K0 = DK[ty00], K1 = DK[ty11], q = (fx + fy) * 0.5;
+            const lr = L0[0] + (L1[0] - L0[0]) * q, lg = L0[1] + (L1[1] - L0[1]) * q, lb = L0[2] + (L1[2] - L0[2]) * q;
+            const kr = K0[0] + (K1[0] - K0[0]) * q, kg = K0[1] + (K1[1] - K0[1]) * q, kb = K0[2] + (K1[2] - K0[2]) * q;
+            const dn = dd > 255 ? 1 : dd / 255, td = PD[(dn * 255) | 0];
+            let dr = lr + (kr - lr) * td, dg = lg + (kg - lg) * td, db = lb + (kb - lb) * td;
+            // Höhenfeld-Licht: Hänge zur Sonne hell, abgewandt dunkel
+            let li = PS[(sh * 128) & 511];
+            if (full) {
+              const gdx = (1 - fy) * (pD[k10] - pD[k00]) + fy * (pD[k11] - pD[k01]), gdy = (1 - fx) * (pD[k01] - pD[k00]) + fx * (pD[k11] - pD[k10]);
+              const hs = (gdx + gdy) * 0.028; li *= 1 + 0.3 * (hs > 2.5 ? 1 : hs < -2.5 ? -1 : hs / (1 + Math.abs(hs) * 0.4)) ;
+              // Staubwall entlang der Putzkante: Außenseite oben links hell, Innenseite dunkel
+              const grx = (1 - fy) * (pC[k10] - pC[k00]) + fy * (pC[k11] - pC[k01]), gry = (1 - fx) * (pC[k01] - pC[k00]) + fx * (pC[k11] - pC[k10]);
+              let wm = (1 - raw) * 2.2; wm = wm < 0 ? 0 : wm > 1 ? 1 : wm; wm *= cov;
+              const rt = (grx + gry) * 0.7071 * 1.6;
+              li *= 1 + (rimK * (rt > 1 ? 1 : rt < -1 ? -1 : rt) + wallK) * wm;
+            }
+            // Körnung (Material statt Weichzeichner), Staubart-Struktur
+            let gk = 0.0004 + dn * 0.0007;
+            if (ty === 1) { const g2 = gr[(((Y0 + py) >> 1) & 255) * 256 + (((X0 + px) >> 1) & 255)]; li *= 1 + g2 * 0.0013; }
+            else if (ty === 3) li *= 1 + 0.07 * Math.sin((px + X0) * 0.55 / R * 2.2 + (py + Y0) * 0.12 / R + WX[wi] * 2.5);
+            li *= 1 + gi * gk;
+            dr *= li; dg *= li; db *= li;
+            if (ty === 2 && dd > 25) { const pv = PEB[bi]; if (pv) { const f = pv > 170 ? 1.28 : 0.74; dr *= f; dg *= f; db *= f; } }
+            else if (ty === 4 && dd > 30 && gi > 112) { dr = 255; dg = 233; db = 168; }
+            else if (ty === 5 && dd > 30 && gi > 110) { dr = 236; dg = 248; db = 255; }
+            // dünner Staub lässt den Untergrund durchschimmern
+            const op = cov * (0.62 + 0.38 * (dd > 90 ? 1 : dd / 90));
+            r = fr + (dr - fr) * op; g = fg + (dg - fg) * op; bb = fbb + (db - fbb) * op;
+          } else { r = fr; g = fg; bb = fbb; }
+          // Meteorstaub (rötlich, glimmend)
+          let mb = M ? M[c] : 0;
+          if (mb > 2) { const m = U.smooth(Math.min(1, mb / 140)), k2 = 0.78 + mb / 900, s2 = PS[(sh * 128) & 511]; r += (176 * k2 * s2 - r) * m; g += (100 * k2 * s2 - g) * m; bb += (74 * k2 * s2 - bb) * m; if (gi > 90 && mb > 60) { r += 55; g += 30; bb += 10; } }
           if (cw > 0) {
-            const cs = Math.min(1, sh / 128), q = cw >= 0.999 ? 1 : U.smooth(U.clamp((cw - 0.12) / 0.76, 0, 1));
-            const cr = 62 * cs + 8, cg = 52 * cs + 8, cb = 56 * cs + 12;
-            r += (cr - r) * q; g += (cg - g) * q; bb += (cb - bb) * q;
+            const cs = Math.min(1, sh), qq = cw >= 0.999 ? 1 : U.smooth(U.clamp((cw - 0.12) / 0.76, 0, 1));
+            const cr = 52 * cs + 10, cg = 46 * cs + 10, cb = 54 * cs + 14;
+            r += (cr - r) * qq; g += (cg - g) * qq; bb += (cb - bb) * qq;
           }
         }
         if (lk[REG[c]]) { const st = ((X0 + px + Y0 + py) % (hatch * 2)) < hatch; const f = st ? 0.42 : 0.58; r = r * f + (st ? 40 : 10); g = g * f + (st ? 30 : 10); bb = bb * f + (st ? 6 : 14); }
@@ -3311,40 +3469,100 @@ const Renderer = {
       }
     }
     entry.ctx.putImageData(img, 0, 0, px0, py0, px1 - px0, py1 - py0);
-    // Fußspuren / Reifenspuren
+    // Fuß- und Reifenspuren (nur auf Staub)
     const dl = World.decals.get(ci);
-    if (dl && R >= 2) this.paintDecals(ci, dl, entry, R, cx0, cy0, cx1, cy1);
+    if (dl && VFX.T.decals > 0) this.paintDecals(ci, dl, entry, R, cx0, cy0, cx1, cy1);
   },
+  // Fernsicht (1 px pro Zelle): gleiche Farben, ohne Kantendetails
+  paintChunkLow(ci, entry, cx0, cy0, cx1, cy1) {
+    const b = World.base(ci), ch = World.chunks[ci], D = ch ? ch.dust : b.dust, M = ch ? ch.meteor : null;
+    const TER = b.terr, TY = b.type, REG = b.region, SH = b.shade, lut = this.lut, CR = this.cleanRamp;
+    const lk = CONFIG.regions.map(r => r.licence > G.licence);
+    const img = this.scratch[1], data = img.data;
+    for (let py = cy0; py <= cy1; py++) {
+      let o = (py * 64 + cx0) * 4;
+      for (let px = cx0; px <= cx1; px++, o += 4) {
+        const c = py * 64 + px, t = TER[c], sh = SH[c] / 128;
+        let r, g, bb;
+        if (t === T_ROCK || t === T_GRAVEL) { r = 92 * sh; g = 90 * sh; bb = 92 * sh; }
+        else if (t === T_CANYON) { r = 52 * sh + 10; g = 46 * sh + 10; bb = 54 * sh + 14; }
+        else if (D[c] <= CLEAN_T) { const fi = Math.min(255, sh * 128 | 0); r = CR[fi * 3]; g = CR[fi * 3 + 1]; bb = CR[fi * 3 + 2]; }
+        else { const lo = (TY[c] * 256 + D[c]) * 3, s = Math.pow(sh, 0.75); r = lut[lo] * s; g = lut[lo + 1] * s; bb = lut[lo + 2] * s; }
+        if (M && M[c] > 2) { const m = U.smooth(Math.min(1, M[c] / 140)); r += (176 - r) * m; g += (100 - g) * m; bb += (74 - bb) * m; }
+        if (lk[REG[c]]) { r *= 0.5; g *= 0.5; bb *= 0.55; }
+        data[o] = r; data[o + 1] = g; data[o + 2] = bb; data[o + 3] = 255;
+      }
+    }
+    entry.ctx.putImageData(img, 0, 0, cx0, cy0, cx1 - cx0 + 1, cy1 - cy0 + 1);
+  },
+  // Fußabdrücke (Stiefelprofil, eingedrückt) und Reifenspuren (Profilblöcke), nur auf Staub
   paintDecals(ci, list, entry, R, cx0, cy0, cx1, cy1) {
-    const c = entry.ctx, X0 = (ci % NCH) * 64, Y0 = ((ci / NCH) | 0) * 64;
+    const c = entry.ctx, X0 = (ci % NCH) * 64, Y0 = ((ci / NCH) | 0) * 64, all = VFX.T.decals >= 2;
     c.save(); c.beginPath(); c.rect(cx0 * R, cy0 * R, (cx1 - cx0 + 1) * R, (cy1 - cy0 + 1) * R); c.clip();
-    c.fillStyle = 'rgba(40,30,20,0.28)';
     for (const d of list) {
+      if (d.k && !all) continue;
       const lx = d.x - X0, ly = d.y - Y0;
-      if (lx < cx0 - 2 || lx > cx1 + 2 || ly < cy0 - 2 || ly > cy1 + 2) continue;
+      if (lx < cx0 - 3 || lx > cx1 + 3 || ly < cy0 - 3 || ly > cy1 + 3) continue;
       if (World.dustAt(Math.floor(d.x), Math.floor(d.y)) <= 22) continue;
       c.save(); c.translate(lx * R, ly * R); c.rotate(d.a);
-      if (d.k === 0) { c.beginPath(); c.ellipse(0, 0, 0.24 * R, 0.13 * R, 0, 0, Math.PI * 2); c.fill(); }
-      else { c.fillRect(-0.5 * R, -d.w * R / 2, R, 0.22 * R); c.fillRect(-0.5 * R, d.w * R / 2 - 0.22 * R, R, 0.22 * R); }
+      if (d.k === 0) {
+        // eingedrückt: Schatten oben links, Lichtkante unten rechts
+        c.fillStyle = 'rgba(40,30,20,0.32)';
+        c.beginPath(); c.ellipse(0.06 * R, 0, 0.17 * R, 0.1 * R, 0, 0, 6.283); c.fill();
+        c.beginPath(); c.ellipse(-0.17 * R, 0, 0.09 * R, 0.085 * R, 0, 0, 6.283); c.fill();
+        c.fillStyle = 'rgba(255,244,222,0.16)'; c.fillRect(-0.24 * R, 0.07 * R, 0.44 * R, 0.035 * R);
+        c.fillStyle = 'rgba(40,30,20,0.22)'; for (let q = -1; q <= 1; q++) c.fillRect((0.02 + q * 0.07) * R, -0.08 * R, 0.03 * R, 0.16 * R);
+      } else {
+        const w = d.w;
+        for (const side of [-1, 1]) {
+          const yy = side * (w / 2 - 0.15);
+          c.fillStyle = 'rgba(40,30,20,0.26)'; c.fillRect(-0.5 * R, (yy - 0.13) * R, R, 0.26 * R);
+          c.fillStyle = 'rgba(30,22,14,0.22)'; for (let q = 0; q < 3; q++) c.fillRect((-0.45 + q * 0.33) * R, (yy - 0.11) * R, 0.12 * R, 0.22 * R);
+          c.fillStyle = 'rgba(255,244,222,0.12)'; c.fillRect(-0.5 * R, (yy + 0.13) * R, R, 0.04 * R);
+        }
+      }
       c.restore();
     }
     c.restore();
   },
+  // Boden-Stufen: 0 = Detail (px/Zelle der Effekt-Stufe), 3 = Mittel (2 px/Zelle), 1 = Fern (1 px/Zelle)
+  lodR(lod) { return lod === 0 ? this.R : lod === 3 ? 2 : 1; },
+  cacheOf(lod) { return lod === 0 ? this.cache0 : lod === 3 ? this.cacheM : this.cache1; },
   getTex(ci, lod) {
-    const cache = lod === 0 ? this.cache0 : this.cache1;
-    const e = cache.get(ci);
+    const e = this.cacheOf(lod).get(ci);
     if (e) { e.stamp = this.stamp; return e; }
     return null;
   },
-  genTex(ci, lod) {
-    const cache = lod === 0 ? this.cache0 : this.cache1, R = lod === 0 ? this.R : 1;
-    const e = this.makeEntry(64 * R);
-    this.paintChunk(ci, R, e, 0, 0, 63, 63);
-    e.stamp = this.stamp;
-    cache.set(ci, e);
-    const lim = lod === 0 ? this.limit0 : CONFIG.perf.lod1Cache;
+  // Textur anlegen und zum schrittweisen Malen einreihen (8 Zellreihen je Schritt, mehrere Frames)
+  genTex(ci, lod, prio) {
+    const cache = this.cacheOf(lod), R = this.lodR(lod);
+    let e = cache.get(ci); if (e) return e;
+    e = this.makeEntry(64 * R); e.row = 0; e.done = false; e.R = R; e.ci = ci; e.lod = lod; e.prio = prio || 0;
+    e.stamp = this.stamp; cache.set(ci, e); this.jobs.push(e);
+    const lim = lod === 0 ? this.limit0 : lod === 3 ? 160 : CONFIG.perf.lod1Cache;
     if (cache.size > lim) this.evict(cache, lim);
     return e;
+  },
+  workTex(budgetEnd) {
+    const J = this.jobs; if (!J.length) return;
+    J.sort((a, b) => a.prio - b.prio);
+    let first = true;
+    while (J.length && (first || performance.now() < budgetEnd)) {
+      const e = J[0];
+      if (e.cv.width === 1 || e.R !== this.lodR(e.lod) && e.lod === 0) { J.shift(); continue; }
+      const r1 = Math.min(63, e.row + 7);
+      this.paintChunk(e.ci, e.R, e, 0, e.row, 63, r1);
+      e.row = r1 + 1; first = false;
+      if (e.row > 63) { e.done = true; J.shift(); }
+    }
+  },
+  // Ersatzbild, solange die Detailtextur noch entsteht
+  drawFallback(ci, lod, X0, Y0, w, h) {
+    const ctx = this.ctx;
+    for (const l of lod === 0 ? [3, 1] : [1]) { const f = this.cacheOf(l).get(ci); if (f && f.done) { ctx.drawImage(f.cv, X0, Y0, w, h); return; } }
+    const sEnt = this.cacheS.get(World.secOfChunk(ci));
+    if (sEnt && !sEnt.missing.has(ci)) { const idx = World.chunksOfSector(World.secOfChunk(ci)).indexOf(ci); ctx.drawImage(sEnt.cv, (idx & 3) * 16, (idx >> 2) * 16, 16, 16, X0, Y0, w, h); }
+    else { const c = this.chunkFlat(ci); ctx.fillStyle = 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')'; ctx.fillRect(X0, Y0, w, h); }
   },
   evict(cache, lim) {
     const arr = []; for (const [k, v] of cache) arr.push([v.stamp, k]);
@@ -3352,7 +3570,7 @@ const Renderer = {
     const n = cache.size - Math.floor(lim * 0.9);
     for (let i = 0; i < n; i++) { const e = cache.get(arr[i][1]); if (e) { e.cv.width = 1; } cache.delete(arr[i][1]); }
   },
-  flushTextures() { for (const c of [this.cache0, this.cache1]) { for (const e of c.values()) e.cv.width = 1; c.clear(); } this.cacheS.clear(); },
+  flushTextures() { for (const c of [this.cache0, this.cacheM, this.cache1]) { for (const e of c.values()) e.cv.width = 1; c.clear(); } this.jobs.length = 0; this.cacheS.clear(); Ground.masks.clear(); GLGround.reset(); },
   // geänderte Zellen in vorhandene Texturen schreiben (Budget pro Frame)
   updateDirty() {
     let n = 0;
@@ -3362,8 +3580,16 @@ const Renderer = {
       const d = World.texRect.get(ci); World.texRect.delete(ci); if (!d) continue;
       const x0 = Math.max(0, d[0] - 1), y0 = Math.max(0, d[1] - 1), x1 = Math.min(63, d[2] + 1), y1 = Math.min(63, d[3] + 1);
       const e0 = this.cache0.get(ci); if (e0) { this.paintChunk(ci, this.R, e0, x0, y0, x1, y1); n++; }
+      const eM = this.cacheM.get(ci); if (eM) { this.paintChunk(ci, 2, eM, x0, y0, x1, y1); n += 0.4; }
       const e1 = this.cache1.get(ci); if (e1) { this.paintChunk(ci, 1, e1, x0, y0, x1, y1); n += 0.25; }
+      Ground.maskDirty(ci, x0, y0, x1, y1); GLGround.markDirty(ci);
       this.secDirty.add(World.secOfChunk(ci));
+      // Nachbar-Texturen lesen Randzellen dieses Chunks (Kante, Schatten) → Randstreifen nachziehen
+      if (d[0] <= 1 || d[2] >= 62 || d[1] <= 1 || d[3] >= 62) {
+        const cx = ci % NCH, cy = (ci / NCH) | 0, nb = (ox, oy, a, b2, c, e) => { const ny = cy + oy; if (ny < 0 || ny >= NCH) return; const nci = ny * NCH + ((cx + ox) % NCH + NCH) % NCH; GLGround.markDirty(nci); if (this.cache0.has(nci) || this.cacheM.has(nci)) { const r = World.texRect.get(nci); if (r) { r[0] = Math.min(r[0], a); r[1] = Math.min(r[1], b2); r[2] = Math.max(r[2], c); r[3] = Math.max(r[3], e); } else World.texRect.set(nci, [a, b2, c, e]); World.dirtyTex.add(nci); } };
+        if (d[0] <= 1) nb(-1, 0, 62, y0, 63, y1); if (d[2] >= 62) nb(1, 0, 0, y0, 1, y1);
+        if (d[1] <= 1) nb(0, -1, x0, 62, x1, 63); if (d[3] >= 62) nb(0, 1, x0, 0, x1, 1);
+      }
     }
   },
   /* --- Sektor-Übersichtsbilder (1 px = 4×4 Zellen) --- */
@@ -3419,13 +3645,19 @@ const Renderer = {
     const t0 = performance.now(), budgetEnd = t0 + CONFIG.perf.genBudgetMs;
     this.alpha = alpha;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = '#05080a'; ctx.fillRect(0, 0, this.cv.width, this.cv.height);
+    const z = Camera.zoom;
+    this.gl = GLGround.ok && z >= CONFIG.camera.lod0 && Game.state !== 'menu';
+    GLGround.show(this.gl);
+    if (this.gl) ctx.clearRect(0, 0, this.cv.width, this.cv.height);
+    else { ctx.fillStyle = THEME.void; ctx.fillRect(0, 0, this.cv.width, this.cv.height); }
     const s = Camera.effScale();
     this.s = s;
     this.updateDirty();
-    Prof.start('ground'); this.drawGround(s, budgetEnd); this.drawGrain(s); Prof.end('ground');
+    Prof.start('ground'); this.drawGround(s, budgetEnd); if (Camera.zoom > 1.25 && !this.gl) this.drawGrain(s); Prof.end('ground');
+    VFX.begin(); Ground.draw(s); VFX.end();
     Prof.start('objs'); this.drawWorld(s); Prof.end('objs');
     this.drawNight(s);
+    VFX.begin(); Ground.drawAtmos(s); VFX.end();
     this.drawOverlay(s);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   },
@@ -3443,10 +3675,20 @@ const Renderer = {
     const ctx = this.ctx, k = this.k, W = this.W, H = this.H, z = Camera.zoom, C = CONFIG.camera;
     const lod = z >= C.lod0 ? 0 : z >= C.lod2 ? 1 : 2;
     this.lod = lod;
+    // Boden: Detailtextur erst ab FX_CONFIG.lodDetail, darunter die mittlere Stufe (spart Speicher und Zeit)
+    const glod = lod === 0 ? (z >= FX_CONFIG.lodDetail || this.R === 2 ? 0 : 3) : lod;
     const x0 = Camera.x - W / 2 / s, x1 = Camera.x + W / 2 / s, y0 = Camera.y - H / 2 / s, y1 = Camera.y + H / 2 / s;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = true; if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'low';
     const ox = (W / 2 - Camera.x * s) * k, oy = (H / 2 - Camera.y * s) * k, sk = s * k;
+    if (this.gl && lod === 0) {
+      const miss = GLGround.draw(s, budgetEnd);
+      for (const [ci, cx, cy] of miss) { const X0 = Math.round(ox + cx * CH * sk), X1 = Math.round(ox + (cx + 1) * CH * sk), Y0 = Math.round(oy + cy * CH * sk), Y1 = Math.round(oy + (cy + 1) * CH * sk); this.drawFallback(ci, 3, X0, Y0, X1 - X0, Y1 - Y0); }
+      if (VFX.T.decals > 0) Ground.drawDecals(s);
+      if (y0 < 0) { ctx.fillStyle = '#030506'; ctx.fillRect(0, 0, this.cv.width, Math.max(0, Math.round(oy))); }
+      if (y1 > WSIZE) { const Y = Math.round(oy + WSIZE * sk); ctx.fillStyle = '#030506'; ctx.fillRect(0, Y, this.cv.width, this.cv.height - Y); }
+      return;
+    }
     if (lod === 2) {
       const sx0 = Math.floor(x0 / SEC), sx1 = Math.floor(x1 / SEC), sy0 = Math.max(0, Math.floor(y0 / SEC)), sy1 = Math.min(NSEC - 1, Math.floor(y1 / SEC));
       const todo = [];
@@ -3460,29 +3702,26 @@ const Renderer = {
       return;
     }
     const cx0 = Math.floor(x0 / CH), cx1 = Math.floor(x1 / CH), cy0 = Math.max(0, Math.floor(y0 / CH)), cy1 = Math.min(NCH - 1, Math.floor(y1 / CH));
-    const miss = this.queue; miss.length = 0;
     const ccx = Camera.x / CH, ccy = Camera.y / CH;
     for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) {
       const ci = cy * NCH + ((cx % NCH) + NCH) % NCH;
       const X0 = Math.round(ox + cx * CH * sk), X1 = Math.round(ox + (cx + 1) * CH * sk), Y0 = Math.round(oy + cy * CH * sk), Y1 = Math.round(oy + (cy + 1) * CH * sk);
-      let e = this.getTex(ci, lod);
-      if (!e) {
-        miss.push([(cx + 0.5 - ccx) ** 2 + (cy + 0.5 - ccy) ** 2, ci, X0, Y0, X1, Y1]);
-        const f = lod === 0 ? this.getTex(ci, 1) : null;
-        if (f) ctx.drawImage(f.cv, X0, Y0, X1 - X0, Y1 - Y0);
-        else { const sEnt = this.cacheS.get(World.secOfChunk(ci)); if (sEnt && !sEnt.missing.has(ci)) { const idx = World.chunksOfSector(World.secOfChunk(ci)).indexOf(ci); ctx.drawImage(sEnt.cv, (idx & 3) * 16, (idx >> 2) * 16, 16, 16, X0, Y0, X1 - X0, Y1 - Y0); } else { const c = this.chunkFlat(ci); ctx.fillStyle = 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')'; ctx.fillRect(X0, Y0, X1 - X0, Y1 - Y0); } }
-        continue;
-      }
-      ctx.drawImage(e.cv, X0, Y0, X1 - X0, Y1 - Y0);
+      let e = this.getTex(ci, glod);
+      if (!e) e = this.genTex(ci, glod, (cx + 0.5 - ccx) ** 2 + (cy + 0.5 - ccy) ** 2);
+      if (e.done) { ctx.drawImage(e.cv, X0, Y0, X1 - X0, Y1 - Y0); continue; }
+      e.prio = (cx + 0.5 - ccx) ** 2 + (cy + 0.5 - ccy) ** 2;
+      this.drawFallback(ci, glod, X0, Y0, X1 - X0, Y1 - Y0);
+      if (e.row > 0) { const R = e.R, hh = e.row * R; ctx.drawImage(e.cv, 0, 0, 64 * R, hh, X0, Y0, X1 - X0, (Y1 - Y0) * hh / (64 * R)); }
     }
-    if (miss.length) {
-      miss.sort((a, b) => a[0] - b[0]);
-      for (const m of miss) {
-        if (performance.now() > budgetEnd && m !== miss[0]) break;
-        const e = this.genTex(m[1], lod);
-        ctx.drawImage(e.cv, m[2], m[3], m[4] - m[2], m[5] - m[3]);
+    // Vorab-Laden: Ring um den sichtbaren Bereich (niedrige Priorität)
+    if (glod !== 1 && this.jobs.length < 3) {
+      for (let cy = Math.max(0, cy0 - 1); cy <= Math.min(NCH - 1, cy1 + 1); cy++) for (let cx = cx0 - 1; cx <= cx1 + 1; cx++) {
+        if (cy >= cy0 && cy <= cy1 && cx >= cx0 && cx <= cx1) continue;
+        const ci = cy * NCH + ((cx % NCH) + NCH) % NCH;
+        if (!this.cacheOf(glod).has(ci) && (World.chunks[ci] || World.hasBase(ci))) this.genTex(ci, glod, 1000 + (cx + 0.5 - ccx) ** 2 + (cy + 0.5 - ccy) ** 2);
       }
     }
+    this.workTex(budgetEnd);
     // Kartenrand (Pole)
     if (y0 < 0) { ctx.fillStyle = '#030506'; ctx.fillRect(0, 0, this.cv.width, Math.max(0, Math.round(oy))); }
     if (y1 > WSIZE) { const Y = Math.round(oy + WSIZE * sk); ctx.fillStyle = '#030506'; ctx.fillRect(0, Y, this.cv.width, this.cv.height - Y); }
@@ -3497,7 +3736,7 @@ const Renderer = {
     }
     const ctx = this.ctx, k = this.k, sc = s / 8;
     ctx.save();
-    ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = U.clamp((Camera.zoom - 0.7) * 0.25, 0, 0.16);
+    ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = U.clamp((Camera.zoom - 1.25) * 0.1, 0, 0.12) * (0.4 + 0.6 * VFX.strength());
     ctx.setTransform(k * sc, 0, 0, k * sc, k * (this.W / 2 - Camera.x * s), k * (this.H / 2 - Camera.y * s));
     ctx.fillStyle = this.grainPat;
     const x0 = (Camera.x - this.W / 2 / s) * 8, y0 = (Camera.y - this.H / 2 / s) * 8;
@@ -3530,24 +3769,27 @@ const Renderer = {
     Draw.capsules();
   },
   drawRocks() {
-    const ctx = this.ctx;
+    const ctx = this.ctx, soft = VFX.T.softShadow;
     for (const ci of this.visibleChunks(4)) {
       const list = World.rocksOf(ci);
       for (const r of list) {
         if (!this.inView(r.x, r.y, r.r + 1)) continue;
         this.at(r.x, r.y);
-        const v = r.verts, n = v.length / 2, tone = 92 + r.tone * 30;
-        ctx.beginPath(); ctx.moveTo(v[0] + 0.25, v[1] + 0.3); for (let i = 1; i < n; i++) ctx.lineTo(v[i * 2] + 0.25, v[i * 2 + 1] + 0.3); ctx.closePath();
-        ctx.fillStyle = 'rgba(20,16,12,0.35)'; ctx.fill();
-        ctx.beginPath(); ctx.moveTo(v[0], v[1]); for (let i = 1; i < n; i++) ctx.lineTo(v[i * 2], v[i * 2 + 1]); ctx.closePath();
-        ctx.fillStyle = 'rgb(' + (tone | 0) + ',' + ((tone - 4) | 0) + ',' + ((tone - 8) | 0) + ')'; ctx.fill();
-        ctx.lineWidth = 0.09; ctx.strokeStyle = 'rgba(30,26,24,0.75)'; ctx.stroke();
-        // helle Facette oben links
-        ctx.beginPath(); ctx.moveTo(0, 0);
-        for (let i = 0; i < n; i++) { const x = v[i * 2], y = v[i * 2 + 1]; if (x + y < 0.2) ctx.lineTo(x * 0.92, y * 0.92); }
-        ctx.closePath(); ctx.fillStyle = 'rgba(255,250,240,0.22)'; ctx.fill();
-        ctx.beginPath(); ctx.moveTo(v[0] * 0.3, v[1] * 0.3); ctx.lineTo(v[2] * 0.6, v[3] * 0.6); ctx.lineTo(v[4] * 0.3, v[5] * 0.3);
-        ctx.strokeStyle = 'rgba(40,34,30,0.3)'; ctx.lineWidth = 0.06; ctx.stroke();
+        const v = r.verts, n = v.length / 2, tone = 96 + r.tone * 30;
+        const path = (sc, ox, oy) => { ctx.beginPath(); ctx.moveTo(v[0] * sc + ox, v[1] * sc + oy); for (let i = 1; i < n; i++) ctx.lineTo(v[i * 2] * sc + ox, v[i * 2 + 1] * sc + oy); ctx.closePath(); };
+        // weicher Kontaktschatten (Sonne oben links)
+        if (soft) { ctx.fillStyle = 'rgba(14,12,10,0.16)'; path(1.12, 0.32, 0.38); ctx.fill(); ctx.fillStyle = 'rgba(14,12,10,0.22)'; path(1.02, 0.2, 0.24); ctx.fill(); }
+        else { ctx.fillStyle = 'rgba(14,12,10,0.3)'; path(1, 0.25, 0.3); ctx.fill(); }
+        // Grundton
+        path(1, 0, 0); ctx.fillStyle = 'rgb(' + (tone | 0) + ',' + ((tone - 3) | 0) + ',' + ((tone - 6) | 0) + ')'; ctx.fill();
+        // Schattenseite unten rechts
+        ctx.save(); path(1, 0, 0); ctx.clip();
+        ctx.fillStyle = 'rgba(30,26,24,0.34)'; ctx.beginPath(); ctx.moveTo(-r.r * 2, r.r * 2); ctx.lineTo(r.r * 2, -r.r * 2); ctx.lineTo(r.r * 2, r.r * 2); ctx.closePath(); ctx.fill();
+        // Lichtfacette oben links
+        ctx.fillStyle = 'rgba(255,250,240,0.26)'; ctx.beginPath(); ctx.moveTo(-r.r * 2, r.r * 0.2); ctx.lineTo(r.r * 0.2, -r.r * 2); ctx.lineTo(-r.r * 2, -r.r * 2); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(255,250,240,0.12)'; path(0.55, -r.r * 0.12, -r.r * 0.12); ctx.fill();
+        ctx.restore();
+        path(1, 0, 0); ctx.lineWidth = 0.09; ctx.strokeStyle = THEME.outline; ctx.stroke();
       }
     }
   },
@@ -3613,6 +3855,427 @@ const Renderer = {
   },
   popup(x, y, text, col) { if (this.popups.length < 30) this.popups.push({ x, y, text, col, t: 0 }); },
 };
+
+/* ============================================================================
+   8d. GROUND-FX – Glanzband, Frisch-geputzt-Schimmer, Wischstreifen, Glanzsterne,
+   Luftstaub und Vignette. Alles rein optisch, nichts davon wird gespeichert.
+   ============================================================================ */
+const Ground = {
+  masks: new Map(), layer: null, lctx: null, mimg: null,
+  fresh: null, fHead: 0, fN: 0, wipes: [], glints: [], glintT: 0, motes: [], vig: null, vigKey: '', camPrev: null,
+  init() {
+    this.fresh = new Float32Array(FX_CONFIG.fresh.max * 3);
+    this.layer = document.createElement('canvas'); this.lctx = this.layer.getContext('2d');
+    this.mimg = new ImageData(64, 64);
+  },
+  reset() { this.masks.clear(); this.fHead = 0; this.fN = 0; this.wipes.length = 0; this.glints.length = 0; },
+  // eine Zelle ist gerade sauber geworden (nur sichtbare, nie im Offline-Modus)
+  onClean(x, y) {
+    if (Robots.offlineMode || !Renderer.s || !Renderer.inView(x + 0.5, y + 0.5, 2)) return;
+    const F = this.fresh, i = this.fHead * 3; F[i] = x + 0.5; F[i + 1] = y + 0.5; F[i + 2] = VFX.t;
+    GLGround.freshDirty.add(World.ci(x, y));
+    this.fHead = (this.fHead + 1) % FX_CONFIG.fresh.max; if (this.fN < FX_CONFIG.fresh.max) this.fN++;
+  },
+  // Wischstreifen in Bewegungsrichtung (vom Putz-Effekt gemeldet)
+  wipe(x0, y0, x1, y1, w) {
+    if (!VFX.T.gloss) return;
+    const L = this.wipes; L.push({ x0, y0, x1, y1, w, t: VFX.t }); if (L.length > FX_CONFIG.wipe.max) L.shift();
+  },
+  /* --- Saubere Fläche als Maske (1 px pro Zelle) --- */
+  mask(ci) {
+    let e = this.masks.get(ci);
+    if (!e) {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+      e = { cv, ctx: cv.getContext('2d'), stamp: 0 };
+      this.paintMask(ci, e, 0, 0, 63, 63);
+      this.masks.set(ci, e);
+      if (this.masks.size > 140) { const arr = [...this.masks].sort((a, b) => a[1].stamp - b[1].stamp); for (let i = 0; i < 30; i++) this.masks.delete(arr[i][0]); }
+    }
+    e.stamp = Renderer.stamp;
+    return e;
+  },
+  paintMask(ci, e, x0, y0, x1, y1) {
+    const b = World.base(ci), ch = World.chunks[ci], D = ch ? ch.dust : b.dust, T = b.terr, d = this.mimg.data;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const li = y * 64 + x, t = T[li], o = li * 4;
+      d[o] = d[o + 1] = d[o + 2] = 255; d[o + 3] = (t === T_ROCK || t === T_GRAVEL || t === T_CANYON) ? 0 : D[li] <= CLEAN_T ? 255 : 0;
+    }
+    e.ctx.putImageData(this.mimg, 0, 0, x0, y0, x1 - x0 + 1, y1 - y0 + 1);
+  },
+  maskDirty(ci, x0, y0, x1, y1) { const e = this.masks.get(ci); if (e) this.paintMask(ci, e, x0, y0, x1, y1); },
+  /* --- Glanz-Ebene über dem Boden (¼ Auflösung, auf saubere Fläche maskiert) --- */
+  draw(s) {
+    const R = Renderer, ctx = R.ctx, k = R.k, W = R.W, H = R.H, T = VFX.T, now = VFX.t;
+    if (R.gl) { this.drawWipes(s); this.drawGlints(s); return; }
+    if (!T.gloss || R.lod !== 0 || Camera.zoom < 0.55) { this.drawGlints(s); return; }
+    const q = FX_CONFIG.gloss.maskRes, lw = Math.ceil(W / q), lh = Math.ceil(H / q), l = this.lctx, sq = s / q;
+    if (this.layer.width !== lw || this.layer.height !== lh) { this.layer.width = lw; this.layer.height = lh; }
+    l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = 'source-over'; l.globalAlpha = 1; l.clearRect(0, 0, lw, lh);
+    const str = VFX.strength() / (VFX.reduce() ? 0.5 : 1), boost = 1 + Clean.intensity * FX_CONFIG.clean.rampBoost;
+    // 1) wanderndes Glanzband (diagonal, alle ~7 s)
+    const G2 = FX_CONFIG.gloss, per = G2.period, ph = ((now % per) / per) * 1.6 - 0.3;
+    const dlen = lw + lh, cx = ph * dlen;
+    const gr = l.createLinearGradient(cx - dlen * G2.width, 0, cx + dlen * G2.width, dlen * 0);
+    const ga = G2.alpha * str * boost;
+    gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,' + ga.toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    l.save(); l.transform(1, 0, -0.7, 1, lh * 0.35, 0); l.fillStyle = gr; l.fillRect(-lh, 0, lw + lh * 2, lh); l.restore();
+    // 2) Frisch-geputzt-Schimmer (1,5 s) und Wischstreifen (0,8 s)
+    const F = this.fresh, life = FX_CONFIG.fresh.life, fs = FX_CONFIG.fresh.strength * str * boost, sp = VFX.spr('soft', VFX.PAL.white);
+    l.globalCompositeOperation = 'lighter';
+    let n = 0;
+    for (let j = 0; j < this.fN; j++) {
+      const i = j * 3, age = now - F[i + 2]; if (age > life || age < 0) continue;
+      const x = R.sx(F[i]) / q, y = R.sy(F[i + 1]) / q; if (x < -4 || y < -4 || x > lw + 4 || y > lh + 4) continue;
+      const a = Math.pow(1 - age / life, 1.6) * fs; if (a < 0.02) continue;
+      const rr = sq * 1.1; l.globalAlpha = a > 1 ? 1 : a; l.drawImage(VFX.atlas, sp[0], sp[1], 64, 64, x - rr, y - rr, rr * 2, rr * 2); n++;
+    }
+    l.lineCap = 'round';
+    for (let i = this.wipes.length - 1; i >= 0; i--) {
+      const w = this.wipes[i], age = now - w.t; if (age > FX_CONFIG.wipe.life) { this.wipes.splice(i, 1); continue; }
+      const a = (1 - age / FX_CONFIG.wipe.life) * 0.5 * str;
+      l.globalAlpha = a; l.strokeStyle = '#ffffff'; l.lineWidth = Math.max(1, w.w * sq * 0.35);
+      l.beginPath(); l.moveTo(R.sx(w.x0) / q, R.sy(w.y0) / q); l.lineTo(R.sx(w.x1) / q, R.sy(w.y1) / q); l.stroke();
+    }
+    l.globalAlpha = 1;
+    // 3) auf saubere Fläche maskieren
+    l.globalCompositeOperation = 'destination-in'; l.imageSmoothingEnabled = true;
+    for (const ci of R.visibleChunks(0)) {
+      const m = this.mask(ci), cxw = (ci % NCH) * CH, cyw = ((ci / NCH) | 0) * CH;
+      const X = R.sx(cxw) / q, Y = R.sy(cyw) / q; let XX = X;
+      // Ost-West-Umlauf: sx liefert den nächsten Abstand zur Kamera
+      l.drawImage(m.cv, XX, Y, CH * sq, CH * sq);
+    }
+    // außerhalb aller Masken nichts stehen lassen: Rand mit leerer Fläche
+    l.globalCompositeOperation = 'source-over';
+    // 4) weich auf den Boden legen
+    ctx.save(); ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = true;
+    ctx.globalCompositeOperation = 'soft-light'; ctx.drawImage(this.layer, 0, 0, lw * q, lh * q);
+    ctx.restore();
+    this.drawGlints(s);
+  },
+  // Wischstreifen direkt (GL-Modus): helle Striche auf frisch geputztem Boden
+  drawWipes(s) {
+    if (!this.wipes.length) return;
+    const R = Renderer, ctx = R.ctx, k = R.k, now = VFX.t, str = VFX.strength() / (VFX.reduce() ? 0.5 : 1);
+    ctx.save(); ctx.setTransform(k, 0, 0, k, 0, 0); ctx.lineCap = 'round'; ctx.strokeStyle = '#ffffff';
+    for (let i = this.wipes.length - 1; i >= 0; i--) {
+      const w = this.wipes[i], age = now - w.t; if (age > FX_CONFIG.wipe.life) { this.wipes.splice(i, 1); continue; }
+      ctx.globalAlpha = (1 - age / FX_CONFIG.wipe.life) * 0.16 * str; ctx.lineWidth = Math.max(1, w.w * s * 0.3);
+      ctx.beginPath(); ctx.moveTo(R.sx(w.x0), R.sy(w.y0)); ctx.lineTo(R.sx(w.x1), R.sy(w.y1)); ctx.stroke();
+    }
+    ctx.restore();
+  },
+  // Fuß- und Reifenspuren als Vektor-Abdrücke (GL-Modus), nur auf Staub
+  drawDecals(s) {
+    const R = Renderer, ctx = R.ctx, all = VFX.T.decals >= 2; if (Camera.zoom < 0.7) return;
+    let n = 0;
+    for (const ci of R.visibleChunks(1)) {
+      const list = World.decals.get(ci); if (!list) continue;
+      for (let i = list.length - 1; i >= 0 && n < 700; i--) {
+        const d = list[i]; if (d.k && !all) continue;
+        if (!R.inView(d.x, d.y, 2)) continue;
+        if (World.dustAt(Math.floor(d.x), Math.floor(d.y)) <= 22) continue;
+        n++; R.at(d.x, d.y, d.a);
+        if (d.k === 0) {
+          ctx.fillStyle = 'rgba(40,30,20,0.3)';
+          ctx.beginPath(); ctx.ellipse(0.06, 0, 0.17, 0.1, 0, 0, 6.283); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(-0.17, 0, 0.09, 0.085, 0, 0, 6.283); ctx.fill();
+          ctx.fillStyle = 'rgba(255,244,222,0.14)'; ctx.fillRect(-0.24, 0.07, 0.44, 0.035);
+          ctx.fillStyle = 'rgba(40,30,20,0.2)'; for (let q = -1; q <= 1; q++) ctx.fillRect(0.02 + q * 0.07, -0.08, 0.03, 0.16);
+        } else {
+          for (const side of [-1, 1]) {
+            const yy = side * (d.w / 2 - 0.15);
+            ctx.fillStyle = 'rgba(40,30,20,0.24)'; ctx.fillRect(-0.5, yy - 0.13, 1, 0.26);
+            ctx.fillStyle = 'rgba(30,22,14,0.2)'; for (let q = 0; q < 3; q++) ctx.fillRect(-0.45 + q * 0.33, yy - 0.11, 0.12, 0.22);
+            ctx.fillStyle = 'rgba(255,244,222,0.1)'; ctx.fillRect(-0.5, yy + 0.13, 1, 0.04);
+          }
+        }
+      }
+    }
+  },
+  /* --- Glanzsterne: kurz aufblitzend, nur auf sauberem Boden, max. 6 gleichzeitig --- */
+  drawGlints(s) {
+    const R = Renderer, ctx = R.ctx, k = R.k, now = VFX.t, L = this.glints, maxN = Math.round(VFX.T.glints * Math.min(1, VFX.strength() * 1.4));
+    for (let i = L.length - 1; i >= 0; i--) if (now - L[i].t > L[i].life) L.splice(i, 1);
+    if (Camera.zoom > 0.6 && L.length < maxN && now - this.glintT > FX_CONFIG.glint.everyMs / 1000) {
+      this.glintT = now;
+      // bevorzugt dort, wo gerade geputzt wurde
+      let x = 0, y = 0, ok = false;
+      if (this.fN && VFX.r() < 0.7) { const j = (this.fHead - 1 - (VFX.r() * Math.min(this.fN, 120) | 0) + FX_CONFIG.fresh.max * 2) % FX_CONFIG.fresh.max, i = j * 3; if (now - this.fresh[i + 2] < 3) { x = this.fresh[i] + VFX.rr(-0.4, 0.4); y = this.fresh[i + 1] + VFX.rr(-0.4, 0.4); ok = true; } }
+      if (!ok) { const vr = R.viewRect(); x = U.wrapX(vr.x0 + VFX.r() * (vr.x1 - vr.x0)); y = vr.y0 + VFX.r() * (vr.y1 - vr.y0); }
+      const xi = Math.floor(x), yi = Math.floor(y);
+      if (yi > 0 && yi < WSIZE && World.dustAt(xi, yi) === 0 && World.isCleanableT(World.terrAt(xi, yi)) && !Buildings.at(xi, yi) && !Buildings.beltAt(xi, yi))
+        L.push({ x, y, t: now, life: VFX.rr(FX_CONFIG.glint.life[0], FX_CONFIG.glint.life[1]), size: VFX.rr(0.55, 0.95), ice: World.typeAt(xi, yi) === 5 });
+    }
+    if (!L.length) return;
+    ctx.save(); ctx.setTransform(k, 0, 0, k, 0, 0); ctx.globalCompositeOperation = 'lighter';
+    for (const g of L) {
+      const f = (now - g.t) / g.life, a = Math.sin(Math.PI * f); if (a <= 0) continue;
+      const sp = VFX.spr('glint', g.ice ? VFX.PAL.iceSpark : VFX.PAL.white), rr = g.size * s * (0.6 + 0.4 * a);
+      ctx.globalAlpha = a; ctx.drawImage(VFX.atlas, sp[0], sp[1], 64, 64, R.sx(g.x) - rr, R.sy(g.y) - rr, rr * 2, rr * 2);
+    }
+    ctx.restore();
+  },
+  /* --- Atmosphäre: schwebender Luftstaub mit Parallaxe, Vignette --- */
+  drawAtmos(s) {
+    const R = Renderer, ctx = R.ctx, k = R.k, W = R.W, H = R.H, T = VFX.T;
+    if (T.air && R.lod === 0) {
+      const n = Input.profile === 'phone' ? FX_CONFIG.air.phone : FX_CONFIG.air.count;
+      if (this.motes.length !== n) { this.motes = []; for (let i = 0; i < n; i++) this.motes.push({ x: VFX.r(), y: VFX.r(), d: VFX.rr(0.25, 1), ph: VFX.r() * 6.28, sz: VFX.rr(0.8, 2.2) }); }
+      const cp = this.camPrev || { x: Camera.x, y: Camera.y }, dx = U.dx(cp.x, Camera.x) * s, dy = (Camera.y - cp.y) * s;
+      this.camPrev = { x: Camera.x, y: Camera.y };
+      ctx.save(); ctx.setTransform(k, 0, 0, k, 0, 0);
+      const sp = VFX.spr('soft', VFX.PAL.clean);
+      for (const m of this.motes) {
+        // Parallaxe: nähere Teilchen ziehen schneller vorbei
+        m.x -= dx * (0.15 + m.d * 0.35) / W; m.y -= dy * (0.15 + m.d * 0.35) / H;
+        m.x += Math.sin(VFX.t * 0.3 + m.ph) * 0.00015; m.y += 0.00008;
+        m.x -= Math.floor(m.x); m.y -= Math.floor(m.y);
+        const a = (0.1 + 0.16 * m.d) * (0.6 + 0.4 * Math.sin(VFX.t * 0.8 + m.ph)) * VFX.strength(), r = m.sz * (1 + m.d);
+        ctx.globalAlpha = a; ctx.drawImage(VFX.atlas, sp[0], sp[1], 64, 64, m.x * W - r, m.y * H - r, r * 2, r * 2);
+      }
+      ctx.restore();
+    }
+    if (T.vignette) {
+      const key = W + 'x' + H;
+      if (this.vigKey !== key) {
+        const c = document.createElement('canvas'); c.width = 256; c.height = Math.max(64, Math.round(256 * H / W)); const x = c.getContext('2d');
+        const st = Input.profile === 'phone' ? FX_CONFIG.vignette.phone : FX_CONFIG.vignette.strength;
+        const g = x.createRadialGradient(c.width / 2, c.height / 2, Math.min(c.width, c.height) * 0.32, c.width / 2, c.height / 2, Math.hypot(c.width, c.height) * 0.56);
+        g.addColorStop(0, 'rgba(11,14,20,0)'); g.addColorStop(1, 'rgba(11,14,20,' + st + ')');
+        x.fillStyle = g; x.fillRect(0, 0, c.width, c.height);
+        this.vig = c; this.vigKey = key;
+      }
+      ctx.save(); ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(this.vig, 0, 0, W, H); ctx.restore();
+    }
+  },
+};
+
+/* ============================================================================
+   8e. GL-BODEN – Staub, Putzkante und Felsuntergrund pro Bildschirmpixel (WebGL)
+   Die Staubdaten werden nur gelesen und als kleine Texturen (66×66 je Chunk) hochgeladen.
+   Kante, Licht, Glanz und Schimmer rechnet der Shader – gestochen scharf bei jedem Zoom.
+   Ohne WebGL (oder nach Kontextverlust) zeichnet Renderer.paintChunk wie gehabt per Canvas.
+   ============================================================================ */
+const GLGround = {
+  ok: false, gl: null, cv: null, prog: null, loc: {}, chunks: new Map(), glob: {}, freshMap: new Map(), lost: false,
+  VS: 'attribute vec2 aP; uniform vec4 uRect; uniform vec2 uOrg; varying vec2 vCell; varying vec2 vWorld;' +
+      'void main(){ vec2 p = mix(uRect.xy, uRect.zw, aP); gl_Position = vec4(p, 0.0, 1.0); vCell = aP * 64.0; vWorld = uOrg + vCell; }',
+  FS: [
+    '#ifdef GL_FRAGMENT_PRECISION_HIGH', 'precision highp float;', '#else', 'precision mediump float;', '#endif',
+    'uniform sampler2D uL, uC1, uC2, uN, uBed, uWarp, uGrain;',
+    'uniform vec2 uMir; uniform vec3 uCS, uCB, uCL;',
+    'uniform vec4 uE;',      // warp, rim, wall, shadow
+    'uniform vec4 uF;',      // full, cellsPerPx, shadowOff, strength
+    'uniform vec4 uG;',      // bandPhase, bandWidth, glossA, freshK
+    'uniform vec2 uScr;',
+    'varying vec2 vCell; varying vec2 vWorld;',
+    'vec4 L(vec2 c){ return texture2D(uL, (c + 1.0) / 66.0); }',
+    'vec3 floorCol(float b){ if (b < 1.0) { float t = clamp((b - 0.35) / 0.65, 0.0, 1.0); return uCS * (0.55 + 0.45 * t) + (uCB - uCS) * t * t; } return mix(uCB, uCL, clamp((b - 1.0) / 0.55, 0.0, 1.0)); }',
+    'void main(){',
+    '  vec4 nn = texture2D(uN, (floor(vCell) + 1.5) / 66.0);',
+    '  float ty = floor(nn.r * 255.0 + 0.5), rock = nn.g, lockd = nn.b;',
+    '  vec2 wv = texture2D(uWarp, vWorld / 32.0).rg * 2.0 - 1.0;',
+    '  vec2 c = vCell + wv * uE.x;',
+    '  vec4 l0 = L(c);',
+    '  float raw = l0.g, dust = l0.r * 255.0, sh = l0.b * 3.984375, cw = l0.a;',
+    '  vec4 lx1 = L(c + vec2(0.5, 0.0)), lx0 = L(c - vec2(0.5, 0.0)), ly1 = L(c + vec2(0.0, 0.5)), ly0 = L(c - vec2(0.0, 0.5));',
+    '  vec2 gC = vec2(lx1.g - lx0.g, ly1.g - ly0.g);',
+    '  vec2 gD = vec2(lx1.r - lx0.r, ly1.r - ly0.r) * 255.0;',
+    '  float w = max(length(gC) * uF.y * 0.7, 0.01);',
+    '  float cov = smoothstep(0.56 - w, 0.56 + w, raw);',
+    '  float bm = smoothstep(0.25, 0.75, texture2D(uWarp, vWorld / 211.0).b);',
+    '  vec4 bed = mix(texture2D(uBed, vWorld / 64.0), texture2D(uBed, vec2(vWorld.y, -vWorld.x) / 83.0 + 0.37), bm);',
+    '  float gr = texture2D(uGrain, vWorld / 16.0).r - 0.5;',
+    '  float fb = (1.0 + (sh - 1.0) * 0.62) * (1.0 + (bed.r - 0.5) * 0.95 * uF.x) * (1.0 + gr * 0.05);',
+    '  if (uF.x > 0.5 && cov < 0.999) { float rs = L(c - vec2(uF.z)).g; float sd = clamp(rs - raw, 0.0, 1.0); fb *= 1.0 - sd * uE.w * 1.6; }',
+    '  vec3 col;',
+    '  vec3 fl = floorCol(fb);',
+    '  vec4 c1 = texture2D(uC1, (c + 1.0) / 66.0), c2 = texture2D(uC2, (c + 1.0) / 66.0);',
+    '  float fresh = c2.a;',
+    // Glanzband und Frisch-geputzt-Schimmer nur auf sauberem Boden
+    '  float d = (gl_FragCoord.x + (uScr.y - gl_FragCoord.y) * 0.7) / (uScr.x + uScr.y * 0.7);',
+    '  float band = exp(-pow((d - uG.x) / uG.y, 2.0));',
+    '  fl = fl * (1.0 + band * uG.z * 0.55) + vec3(band * uG.z * 22.0);',
+    '  fl += vec3(18.0, 22.0, 26.0) * fresh * uG.w;',
+    '  if (cov > 0.001) {',
+    '    float dn = min(1.0, dust / 255.0), td = pow(dn, 0.8);',
+    '    vec3 dc = mix(c1.rgb, c2.rgb, td) * 255.0;',
+    '    float li = pow(max(sh, 0.0), 0.75);',
+    '    if (uF.x > 0.5) {',
+    '      float hs = (gD.x + gD.y) * 0.028; li *= 1.0 + 0.3 * clamp(hs / (1.0 + abs(hs) * 0.4), -1.0, 1.0);',
+    '      float wm = clamp((1.0 - raw) * 2.6, 0.0, 1.0) * cov;',
+    '      float rt = clamp((gC.x + gC.y) * 0.7071 * 1.8, -1.0, 1.0);',
+    '      li *= 1.0 + (uE.y * rt + uE.z) * wm;',
+    '    }',
+    '    float g2 = texture2D(uGrain, vWorld / (ty == 1.0 ? 8.0 : 16.0)).r - 0.5, g3 = texture2D(uGrain, vWorld / 5.3 + 0.31).r - 0.5;',
+    '    li *= 1.0 + g2 * (0.14 + dn * 0.2 + (ty == 1.0 ? 0.12 : 0.0)) + g3 * (0.08 + dn * 0.1);',
+    '    if (ty == 3.0) li *= 1.0 + 0.07 * sin(vWorld.x * 2.2 + vWorld.y * 0.48 + wv.x * 2.5);',
+    '    dc *= li;',
+    '    float hp = texture2D(uGrain, floor(vWorld * 5.0) / 1280.0 + 0.0019).r;',
+    '    if (ty == 2.0 && dust > 25.0 && bed.a > 0.2) dc *= bed.a > 0.66 ? 1.28 : 0.74;',
+    '    else if (ty == 4.0 && dust > 30.0 && hp > 0.9) dc = mix(dc, vec3(255.0, 233.0, 168.0), 0.85);',
+    '    else if (ty == 5.0 && dust > 30.0 && hp > 0.91) dc = mix(dc, vec3(236.0, 248.0, 255.0), 0.8);',
+    '    float op = cov * (0.62 + 0.38 * min(1.0, dust / 90.0));',
+    '    col = mix(fl, dc, op);',
+    '  } else col = fl;',
+    '  float mb = c1.a * 255.0;',
+    '  if (mb > 2.0) { float m = smoothstep(0.0, 1.0, min(1.0, mb / 140.0)), k2 = 0.78 + mb / 900.0, s2 = pow(max(sh, 0.0), 0.75); col = mix(col, vec3(176.0, 100.0, 74.0) * k2 * s2, m); }',
+    '  if (cw > 0.0) { float cs = min(1.0, sh), q = cw >= 0.999 ? 1.0 : smoothstep(0.0, 1.0, clamp((cw - 0.12) / 0.76, 0.0, 1.0)); col = mix(col, vec3(52.0 * cs + 10.0, 46.0 * cs + 10.0, 54.0 * cs + 14.0), q); }',
+    '  if (rock > 0.5) { float s3 = sh * (1.0 + (bed.r - 0.5) * 1.0 + gr * 0.2); col = vec3(92.0, 90.0, 92.0) * s3; }',
+    '  if (lockd > 0.5) { float st = step(0.5, fract((vWorld.x + vWorld.y) / 1.5)); col = col * mix(0.58, 0.42, st) + mix(vec3(10.0, 10.0, 14.0), vec3(40.0, 30.0, 6.0), st); }',
+    '  gl_FragColor = vec4(col / 255.0, 1.0);',
+    '}',
+  ].join('\n'),
+  init() {
+    try {
+      const cv = document.getElementById('ground'); if (!cv) return;
+      const gl = cv.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+      if (!gl) return;
+      this.cv = cv; this.gl = gl;
+      cv.addEventListener('webglcontextlost', e => { e.preventDefault(); this.ok = false; this.lost = true; this.chunks.clear(); Renderer.flushTextures(); });
+      cv.addEventListener('webglcontextrestored', () => { this.lost = false; this.setup(); });
+      this.setup();
+    } catch (e) { this.ok = false; }
+  },
+  setup() {
+    const gl = this.gl;
+    const sh = (t, src) => { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+    try {
+      const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, this.VS)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, this.FS)); gl.linkProgram(p);
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+      this.prog = p; gl.useProgram(p);
+      for (const n of ['aP']) this.loc[n] = gl.getAttribLocation(p, n);
+      for (const n of ['uRect', 'uOrg', 'uL', 'uC1', 'uC2', 'uN', 'uBed', 'uWarp', 'uGrain', 'uMir', 'uCS', 'uCB', 'uCL', 'uE', 'uF', 'uG', 'uScr']) this.loc[n] = gl.getUniformLocation(p, n);
+      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(this.loc.aP); gl.vertexAttribPointer(this.loc.aP, 2, gl.FLOAT, false, 0, 0);
+      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+      // globale Texturen: Felsuntergrund (+ Kiesel), Kanten-Verzerrung, Körnung
+      const R = Renderer, S = 512, bed = new Uint8Array(S * S * 2);
+      for (let i = 0; i < S * S; i++) { bed[i * 2] = R.bed[i]; bed[i * 2 + 1] = R.peb[i]; }
+      this.glob.bed = this.tex(gl.LUMINANCE_ALPHA, S, S, bed, gl.LINEAR, gl.REPEAT);
+      const wp = new Uint8Array(128 * 128 * 4);
+      for (let i = 0; i < 128 * 128; i++) { wp[i * 4] = U.clamp(128 + R.warpX[i] * 127, 0, 255); wp[i * 4 + 1] = U.clamp(128 + R.warpY[i] * 127, 0, 255); wp[i * 4 + 2] = R.tn((i & 127) / 16, (i >> 7) / 16, 8, 91) * 255; wp[i * 4 + 3] = 255; }
+      this.glob.warp = this.tex(gl.RGBA, 128, 128, wp, gl.LINEAR, gl.REPEAT);
+      const g = new Uint8Array(256 * 256); for (let i = 0; i < 65536; i++) g[i] = U.clamp(128 + R.grain[i] * 1.1, 0, 255);
+      this.glob.grain = this.tex(gl.LUMINANCE, 256, 256, g, gl.LINEAR, gl.REPEAT);
+      const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+      gl.uniform3fv(this.loc.uCS, hex(THEME.clean.shade)); gl.uniform3fv(this.loc.uCB, hex(THEME.clean.base)); gl.uniform3fv(this.loc.uCL, hex(THEME.clean.light));
+      ['uL', 'uC1', 'uC2', 'uN', 'uBed', 'uWarp', 'uGrain'].forEach((n, i) => gl.uniform1i(this.loc[n], i));
+      this.chunks.clear(); this.ok = true;
+    } catch (e) { console.warn('WebGL-Boden nicht verfügbar:', e.message); this.ok = false; }
+  },
+  tex(fmt, w, h, data, filter, wrap) {
+    const gl = this.gl, t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, fmt, w, h, 0, fmt, gl.UNSIGNED_BYTE, data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap || gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap || gl.CLAMP_TO_EDGE);
+    return t;
+  },
+  resize(w, h) { if (this.cv && (this.cv.width !== w || this.cv.height !== h)) { this.cv.width = w; this.cv.height = h; } },
+  show(on) { if (this.cv) { const v = on ? 'visible' : 'hidden'; if (this.cv.style.visibility !== v) this.cv.style.visibility = v; } },
+  // ganze Neuberechnung eines Chunks (Staub, Kante, Licht, Farben, Flags) – nur lesend
+  build(ci, rec) {
+    const R = Renderer, b = World.base(ci), ch = World.chunks[ci], D = ch ? ch.dust : b.dust;
+    R.fillPad(ci, b, D);
+    const pD = R.pD, pB = R.pB, pS = R.pS, pT = R.pT, pY = R.pY, DL = R.dustL, DK = R.dustD;
+    const N = 66 * 66, L = rec.dL || (rec.dL = new Uint8Array(N * 4)), C1 = rec.dC1 || (rec.dC1 = new Uint8Array(N * 4)), C2 = rec.dC2 || (rec.dC2 = new Uint8Array(N * 4)), NN = rec.dN || (rec.dN = new Uint8Array(N * 4));
+    const lk = CONFIG.regions.map(r => r.licence > G.licence), REG = b.region;
+    const M = ch && ch.meteor ? ch.meteor : null;
+    const cx = ci % NCH, cy = (ci / NCH) | 0;
+    const nbM = (ox, oy) => { const ny = cy + oy; if (ny < 0 || ny >= NCH) return null; const n = World.chunks[ny * NCH + ((cx + ox) % NCH + NCH) % NCH]; return n && n.meteor ? n.meteor : null; };
+    const mN = {}; let complete = true;
+    for (let py = -1; py <= 64; py++) for (let px = -1; px <= 64; px++) {
+      const k = (py + 1) * 66 + px + 1, o = k * 4, t = pT[k], ty = pY[k];
+      L[o] = pD[k] > 255 ? 255 : pD[k]; L[o + 1] = pB[k] * 255; L[o + 2] = Math.min(255, pS[k] / 2); L[o + 3] = t === T_CANYON ? 255 : 0;
+      const l = DL[ty] || DL[0], d = DK[ty] || DK[0];
+      let mv = 0;
+      if (px >= 0 && px < 64 && py >= 0 && py < 64) { if (M) mv = M[py * 64 + px]; }
+      else { const ox = px < 0 ? -1 : px > 63 ? 1 : 0, oy = py < 0 ? -1 : py > 63 ? 1 : 0, key = ox * 3 + oy; if (!(key in mN)) mN[key] = nbM(ox, oy); const mm = mN[key]; if (mm) mv = mm[((py + 64) & 63) * 64 + ((px + 64) & 63)]; }
+      C1[o] = l[0]; C1[o + 1] = l[1]; C1[o + 2] = l[2]; C1[o + 3] = mv;
+      C2[o] = d[0]; C2[o + 1] = d[1]; C2[o + 2] = d[2];
+      const inner = px >= 0 && px < 64 && py >= 0 && py < 64;
+      NN[o] = ty; NN[o + 1] = t === T_ROCK || t === T_GRAVEL ? 255 : 0; NN[o + 2] = lk[REG[inner ? py * 64 + px : U.clamp(py, 0, 63) * 64 + U.clamp(px, 0, 63)]] ? 255 : 0; NN[o + 3] = 255;
+    }
+    // vollständig nur, wenn alle Nachbarn vorlagen (sonst später erneut)
+    for (let oy = -1; oy <= 1 && complete; oy++) for (let ox = -1; ox <= 1; ox++) { const ny = cy + oy; if (ny < 0 || ny >= NCH || (!ox && !oy)) continue; const n = ny * NCH + ((cx + ox) % NCH + NCH) % NCH; if (!World.chunks[n] && !World.hasBase(n)) { complete = false; break; } }
+    rec.complete = complete;
+    this.applyFresh(ci, rec, false);
+    const gl = this.gl;
+    if (!rec.tL) { rec.tL = this.tex(gl.RGBA, 66, 66, L, gl.LINEAR); rec.tC1 = this.tex(gl.RGBA, 66, 66, C1, gl.LINEAR); rec.tC2 = this.tex(gl.RGBA, 66, 66, C2, gl.LINEAR); rec.tN = this.tex(gl.RGBA, 66, 66, NN, gl.NEAREST); }
+    else { for (const [t, d] of [[rec.tL, L], [rec.tC1, C1], [rec.tC2, C2], [rec.tN, NN]]) { gl.bindTexture(gl.TEXTURE_2D, t); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 66, 66, gl.RGBA, gl.UNSIGNED_BYTE, d); } }
+    rec.dirty = false;
+  },
+  // Frisch-geputzt-Schimmer (Alpha von C2), aus dem Ringpuffer der zuletzt sauber gewordenen Zellen
+  applyFresh(ci, rec, upload) {
+    const C2 = rec.dC2; if (!C2) return;
+    const F = Ground.fresh, now = VFX.t, life = FX_CONFIG.fresh.life, X0 = (ci % NCH) * 64, Y0 = ((ci / NCH) | 0) * 64;
+    for (let k = 3; k < C2.length; k += 4) C2[k] = 0;
+    let any = false;
+    for (let j = 0; j < Ground.fN; j++) {
+      const i = j * 3, age = now - F[i + 2]; if (age > life || age < 0) continue;
+      const lx = Math.floor(F[i] - X0), ly = Math.floor(F[i + 1] - Y0); if (lx < -1 || ly < -1 || lx > 64 || ly > 64) continue;
+      const v = Math.pow(1 - age / life, 1.6) * 255, o = ((ly + 1) * 66 + lx + 1) * 4 + 3; if (v > C2[o]) C2[o] = v; any = true;
+    }
+    rec.fresh = any;
+    if (upload) { const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, rec.tC2); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 66, 66, gl.RGBA, gl.UNSIGNED_BYTE, C2); }
+  },
+  markDirty(ci) { const r = this.chunks.get(ci); if (r) r.dirty = true; },
+  // Zeichnen aller sichtbaren Chunks; liefert false, wenn ein Chunk noch fehlt (2D zeichnet dort Ersatz)
+  draw(s, budgetEnd) {
+    const gl = this.gl, R = Renderer, W = R.cv.width, H = R.cv.height, k = R.k, L = this.loc, T = VFX.T, E = FX_CONFIG.edge;
+    this.resize(W, H); gl.viewport(0, 0, W, H);
+    gl.clearColor(0.012, 0.02, 0.024, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(this.prog);
+    const full = T.shade >= 2 ? 1 : 0, str = VFX.strength() / (VFX.reduce() ? 0.5 : 1);
+    gl.uniform4f(L.uE, E.warp, E.rim, E.wall, E.shadow);
+    gl.uniform4f(L.uF, full, 1 / (s * k), E.shadowOff, str);
+    const G2 = FX_CONFIG.gloss, ph = ((VFX.t % G2.period) / G2.period) * 1.6 - 0.3, boost = 1 + Clean.intensity * FX_CONFIG.clean.rampBoost;
+    gl.uniform4f(L.uG, ph, G2.width * 0.55, T.gloss ? G2.alpha * str * boost : 0, T.gloss ? FX_CONFIG.fresh.strength * 2.4 * str * boost : 0);
+    gl.uniform2f(L.uScr, W, H);
+    gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, this.glob.bed);
+    gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, this.glob.warp);
+    gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, this.glob.grain);
+    const vr = R.viewRect(), cx0 = Math.floor(vr.x0 / CH), cx1 = Math.floor(vr.x1 / CH), cy0 = Math.max(0, Math.floor(vr.y0 / CH)), cy1 = Math.min(NCH - 1, Math.floor(vr.y1 / CH));
+    const missing = [];
+    let built = 0;
+    for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) {
+      const ci = cy * NCH + ((cx % NCH) + NCH) % NCH;
+      let rec = this.chunks.get(ci);
+      if (!rec || rec.dirty || !rec.complete) {
+        // neue Chunks: Basisdaten erzeugen kostet Zeit → Budget (mindestens einer pro Frame)
+        const cheap = World.chunks[ci] || World.hasBase(ci);
+        if (!rec && !cheap && built > 0 && performance.now() > budgetEnd) { missing.push([ci, cx, cy]); continue; }
+        if (!rec) { rec = { stamp: 0 }; this.chunks.set(ci, rec); }
+        if (rec.dirty || !rec.tL || (!rec.complete && (performance.now() < budgetEnd || !built))) { this.build(ci, rec); built++; }
+      } else if (rec.fresh || this.freshDirty.has(ci)) this.applyFresh(ci, rec, true);
+      rec.stamp = R.stamp;
+      const X0 = (cx * CH - Camera.x) * s + R.W / 2, Y0 = (cy * CH - Camera.y) * s + R.H / 2;
+      const x0 = X0 / R.W * 2 - 1, x1 = (X0 + CH * s) / R.W * 2 - 1, y0 = 1 - Y0 / R.H * 2, y1 = 1 - (Y0 + CH * s) / R.H * 2;
+      gl.uniform4f(L.uRect, x0, y0, x1, y1);
+      gl.uniform2f(L.uOrg, (((cx % NCH) + NCH) % NCH) * CH, cy * CH);
+      gl.uniform2f(L.uMir, cx & 1, cy & 1);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, rec.tL);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, rec.tC1);
+      gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, rec.tC2);
+      gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, rec.tN);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+    this.freshDirty.clear();
+    // Speicher begrenzen
+    if (this.chunks.size > 140) {
+      const arr = [...this.chunks].sort((a, b) => a[1].stamp - b[1].stamp);
+      for (let i = 0; i < this.chunks.size - 120; i++) { const r = arr[i][1]; for (const t of [r.tL, r.tC1, r.tC2, r.tN]) if (t) gl.deleteTexture(t); this.chunks.delete(arr[i][0]); }
+    }
+    return missing;
+  },
+  freshDirty: new Set(),
+  reset() { const gl = this.gl; if (gl) for (const r of this.chunks.values()) for (const t of [r.tL, r.tC1, r.tC2, r.tN]) if (t) gl.deleteTexture(t); this.chunks.clear(); },
+};
+
+/* Putz-Effekte (wird in Phase 3 ausgebaut) */
+const Clean = { intensity: 0 };
 
 /* Zeichenroutinen für Welt-Objekte (flaches Vektordesign, ALOP-Farben) */
 const Draw = {
@@ -6797,11 +7460,11 @@ const Game = {
     for (let s = 0; s < NSEC * NSEC; s++) { World.secProgress[s] = 0; World.updateSector(s); }
     World.onSectorDone = s => Progression.sectorDone(s);
     World.onFind = f => Progression.onFind(f);
-    World.onCellClean = (x, y) => { if (VFX.r() < 0.18) Fx.sparkle(x, y); };
+    World.onCellClean = (x, y) => Ground.onClean(x, y);
     Economy.resetFx(); Economy.incSec = -1; Economy.incBuckets.fill(0);
     Vehicles.init(); Buildings.init(); Robots.init(); Player.init(); Progression.init();
     Camera.init();
-    Renderer.flushTextures(); Particles.n = 0; Fx.meteors.length = 0; VFX.autoTier = null; VFX.pickTier();
+    Renderer.flushTextures(); Ground.reset(); Particles.n = 0; Fx.meteors.length = 0; VFX.autoTier = null; VFX.pickTier();
     this.state = 'play'; this.paused = false; this.acc = 0;
     this.showWait(null);
     UI.enterGame();
@@ -6904,12 +7567,6 @@ const Game = {
       if (t === 4 && VFX.r() < 0.3) Particles.spawn(3, P.tx + (VFX.r() - 0.5) * 2, P.ty + (VFX.r() - 0.5) * 2, 0.2, 0, 0, 0.3, 0.6, 0.25, 0);
     }
     if (v && v.cleanFx > 0) { const back = v.def.body * 0.7, bx = v.x - Math.cos(v.a) * back, by = v.y - Math.sin(v.a) * back; const t = World.typeAt(Math.floor(bx), Math.floor(by)); for (let i = 0; i < 3; i++) Fx.dust(bx, by, Vehicles.width(v) / 2, v.a, t); }
-    // dezenter Glanz: vereinzeltes Funkeln auf sauberem Boden in Sichtweite
-    if (Camera.zoom > 0.6 && VFX.r() < 0.25 * VFX.strength()) {
-      const vr = Renderer.viewRect(), x = U.wrapX(vr.x0 + VFX.r() * (vr.x1 - vr.x0)), y = vr.y0 + VFX.r() * (vr.y1 - vr.y0);
-      const xi = Math.floor(x), yi = Math.floor(y);
-      if (yi > 0 && yi < WSIZE && World.dustAt(xi, yi) === 0 && World.isCleanableT(World.terrAt(xi, yi)) && !Buildings.at(xi, yi) && !Buildings.beltAt(xi, yi)) Particles.spawn(1, x, y, 0, 0, 0, 0, 0.7 + VFX.r() * 0.8, 0.14 + VFX.r() * 0.1, 0);
-    }
     // Roboter-Piepsen in der Nähe
     if (Robots.list.length && VFX.r() < 0.004) { const r = Robots.list[Math.floor(VFX.r() * Robots.list.length)]; if (r.near && U.dist2(r.x, r.y, P.x, P.y) < 900) Audio.sfx('robot'); }
     // Fußspuren im Staub
