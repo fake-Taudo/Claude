@@ -185,6 +185,7 @@ body.prof-phone.lefty #hud-load { left: calc(50% + 20px); }
   body.prof-phone #ctx { bottom: calc(var(--clean-size) + 30px + var(--sab)); }
 }
 body.touchmode #hud-hint { display: none; }
+body.building #hud-hint, body.building #hud-load, body.building #hud-glanz { display: none; }
 
 /* ---------- Panels, Menüs ---------- */
 #panel-root { position: absolute; inset: 0; }
@@ -321,7 +322,7 @@ body.prof-phone .tree .branch.on { display: block; }
 #map .minfo { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + var(--sab)); width: min(520px, calc(100vw - 20px)); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; pointer-events: auto; }
 #map .minfo h3 { margin: 0 0 4px; font-size: 16px; }
 #map .minfo .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-#map .legend { position: absolute; left: calc(10px + var(--sal)); bottom: calc(14px + var(--sab)); font-size: 11px; color: var(--muted); background: rgba(10,17,21,.8); padding: 6px 9px; border-radius: 10px; }
+#map .legend { position: absolute; left: calc(10px + var(--sal)); top: calc(62px + var(--sat)); font-size: 11px; color: var(--muted); background: rgba(10,17,21,.8); padding: 6px 9px; border-radius: 10px; }
 body.prof-phone #map .legend { display: none; }
 
 /* Hauptmenü */
@@ -634,7 +635,7 @@ const CONFIG = {
   camera: { zoomMin: 0.04, zoomMax: 4, zoomDesktop: 2.0, zoomPhone: 1.7, zoomPhonePortrait: 1.45, zoomTablet: 1.6,
     lerp: 6, lookAhead: 0.35, lod0: 0.3, lod2: 0.1 },
   perf: {
-    dprDesktop: 2, dprPhone: 1.5, chunkCachePhone: 120, chunkCacheDesktop: 300, lod1Cache: 420, sectorCache: 160,
+    dprDesktop: 2, dprPhone: 1.5, chunkCachePhone: 120, chunkCacheDesktop: 300, lod1Cache: 420, sectorCache: 600,
     baseCache: 900, texUpdatesPerFrame: 6, genBudgetMs: 5, dynResFrameMs: 18, dynResWindow: 2, dynResStep: 0.1, dynResMin: 0.6,
     particlesPhone: 300, particlesDesktop: 1000, hudHz: 10,
   },
@@ -1313,7 +1314,7 @@ const World = {
     for (let ly = 0; ly < 64; ly++) for (let lx = 0; lx < 64; lx++) {
       const k = (ly + 1) * 66 + lx + 1, li = ly * 64 + lx;
       const gx = H[k + 1] - H[k - 1], gy = H[k + 66] - H[k - 66];
-      let sh = 1 + (gx + gy) * 0.55;
+      let sh = 1 + 0.42 * Math.tanh((gx + gy) * 1.25);
       const cd = canyonDepth[k];
       if (cd > 0) sh = 0.22 + (1 - Math.min(1, cd)) * 0.25 + (gx + gy) * 0.1;
       shade[li] = U.clamp(Math.round(sh * 128), 0, 255);
@@ -4701,6 +4702,7 @@ const UI = {
   /* --- Bau-Dock --- */
   buildDock(on) {
     let dock = this.el('build-dock');
+    document.body.classList.toggle('building', !!on);
     if (!on) { if (dock) dock.remove(); this.show('build-bar', false); this.show('hud-build', false); this.show('hud-goal', true); this.cache.ctx = ''; return; }
     this.show('hud-goal', false);
     if (!dock) { dock = U.h('div', { id: 'build-dock', class: 'pe' }); this.el('ui').appendChild(dock); }
@@ -5366,10 +5368,10 @@ Object.assign(UI, {
       if (M.layers.orders) for (const o of G.orders) if (o.kind === 'sectorPct' && o.s === si) { ctx.strokeStyle = '#ffc23d'; ctx.lineWidth = 2; ctx.strokeRect(x + 2, y + 2, SEC * s - 4, SEC * s - 4); }
       if (G.ev.insp && G.ev.insp.s === si) { ctx.strokeStyle = '#ff6464'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.strokeRect(x + 3, y + 3, SEC * s - 6, SEC * s - 6); ctx.setLineDash([]); }
       if (si === M.sel) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, SEC * s - 2, SEC * s - 2); }
-      if (SEC * s > 34) { ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fillText(U.sectorLabel(si), x + 4, y + 13); const p = World.secProgress[si]; if (p > 0.0005 && SEC * s > 50) { ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillText(U.pct(Math.min(1, p)), x + 4, y + 26); } }
+      if (SEC * s > 64) { ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fillText(U.sectorLabel(si), x + 4, y + 13); const p = World.secProgress[si]; if (p > 0.0005 && SEC * s > 80) { ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillText(U.pct(Math.min(1, p)), x + 4, y + 26); } }
     }
     // Spalten-/Zeilenbeschriftung bei weitem Zoom
-    if (SEC * s <= 34) { ctx.fillStyle = 'rgba(255,255,255,0.7)'; for (let k = k0; k <= k1; k++) for (let i = 0; i < NSEC; i++) { const x = ox + k * WSIZE * s + (i + 0.5) * SEC * s; if (x > 0 && x < W) ctx.fillText(String.fromCharCode(65 + i), x - 3, Math.max(14, wy(0) - 4)); } for (let i = 0; i < NSEC; i++) ctx.fillText(String(i + 1), 4, wy((i + 0.5) * SEC) + 4); }
+    if (SEC * s <= 64) { ctx.fillStyle = 'rgba(255,255,255,0.7)'; for (let k = k0; k <= k1; k++) for (let i = 0; i < NSEC; i++) { const x = ox + k * WSIZE * s + (i + 0.5) * SEC * s; if (x > 0 && x < W) ctx.fillText(String.fromCharCode(65 + i), x - 3, Math.max(14, wy(0) - 4)); } for (let i = 0; i < NSEC; i++) ctx.fillText(String(i + 1), 4, wy((i + 0.5) * SEC) + 4); }
     const pt = (x, y) => this.mapToScreen(x, y);
     if (M.layers.robots) {
       for (const a of Robots.assigns) { const p0 = pt(a.x0, a.y0); ctx.strokeStyle = 'rgba(255,194,61,0.7)'; ctx.lineWidth = 1.5; ctx.strokeRect(p0.x, p0.y, a.w * s, a.h * s); }
@@ -5624,15 +5626,20 @@ const Save = {
     g.v = CONFIG.saveSchema;
     return g;
   },
+  // jüngster gültiger Kern-Datensatz (Hauptdatensatz, sonst Backups)
+  async bestCore(slot) {
+    const main = await this.get('core', 's' + slot);
+    if (this.validate(main)) return { rec: main, restored: false };
+    const backs = [];
+    for (let i = 0; i < CONFIG.save.backups; i++) { const r = await this.get('core', 's' + slot + 'b' + i); if (r) backs.push(r); }
+    backs.sort((a, b) => b.t - a.t);
+    for (const r of backs) if (this.validate(r)) return { rec: r, restored: true };
+    return null;
+  },
   async loadSlot(slot) {
-    let g = this.validate(await this.get('core', 's' + slot)), restored = false;
-    if (!g) {
-      const backs = [];
-      for (let i = 0; i < CONFIG.save.backups; i++) { const r = await this.get('core', 's' + slot + 'b' + i); if (r) backs.push(r); }
-      backs.sort((a, b) => b.t - a.t);
-      for (const r of backs) { g = this.validate(r); if (g) { restored = true; break; } }
-    }
-    if (!g) return null;
+    const best = await this.bestCore(slot);
+    if (!best) return null;
+    let g = this.validate(best.rec); const restored = best.restored;
     g = this.migrate(g); g.slot = slot;
     const raw = await this.allChunks(slot), chunks = [];
     for (const [, rec] of raw) { try { chunks.push(await this.decodeChunk(rec)); } catch (e) { console.warn('Chunk defekt', e); } }
@@ -5649,7 +5656,8 @@ const Save = {
     const ch = await this.allChunks(slot); await this.delKeys('chunks', ch.map(c => c[0]));
   },
   async exportSlot(slot) {
-    const rec = await this.get('core', 's' + slot); if (!rec) { UI.toast('Platz ist leer.'); return; }
+    const best = await this.bestCore(slot); if (!best) { UI.toast('Platz ist leer.'); return; }
+    const rec = best.rec;
     const ch = await this.allChunks(slot);
     const data = { format: 'staubmond-save', version: CONFIG.version, schema: CONFIG.saveSchema, core: rec, chunks: ch.map(([k, r]) => ({ ci: r.ci, d: this.b64(r.d), z: r.z, m: r.m ? this.b64(r.m) : null })) };
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }), a = document.createElement('a');
@@ -5750,9 +5758,11 @@ const Game = {
     const cs = G.chunkStats || [];
     for (let i = 0; i < cs.length; i += 3) { const ci = cs[i]; World.cleanable[ci] = cs[i + 1]; World.chunkClean[ci] = cs[i + 2]; const s = World.secOfChunk(ci); World.secCleanable[s] += cs[i + 1]; World.secClean[s] += cs[i + 2]; World.secKnown[s]++; }
     for (const s of G.secDone) World.secDone[s] = 1;
-    for (const ch of chunks) { World.chunks[ch.ci] = ch; World.secTouched[World.secOfChunk(ch.ci)] = 1; }
+    const touched = new Set();
+    for (const ch of chunks) { World.chunks[ch.ci] = ch; touched.add(World.secOfChunk(ch.ci)); }
     for (const ch of chunks) if (World.cleanable[ch.ci] < 0) World.ensureStats(ch.ci);
-    for (let s = 0; s < NSEC * NSEC; s++) { if (World.secTouched[s]) World.touchSector(s); World.secProgress[s] = 0; World.updateSector(s); }
+    for (const s of touched) World.touchSector(s);   // fehlende Chunk-Statistiken nachberechnen (über mehrere Frames)
+    for (let s = 0; s < NSEC * NSEC; s++) { World.secProgress[s] = 0; World.updateSector(s); }
     World.onSectorDone = s => Progression.sectorDone(s);
     World.onFind = f => Progression.onFind(f);
     World.onCellClean = (x, y) => { if (Math.random() < 0.18) Fx.sparkle(x, y); };
