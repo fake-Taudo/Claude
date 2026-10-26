@@ -436,11 +436,21 @@ body.prof-phone #map .legend { display: none; }
      alter und neuer Werkzeugposition. Fällt eine Zelle auf ≤ 8, wird sie auf 0 gesetzt.
    - Depot: Kapsel fasst 200 kg und startet automatisch; manueller Start ist jederzeit
      möglich (für den 60-Sekunden-Kern-Loop). Geld kommt beim Kapselstart.
-   - Damit die Pacing-Tabelle erreichbar ist: Startgebiet mit dünnerem Staub,
-     Tutorial-Prämie, frühe Aufträge und zwei Fundstücke nahe dem Start.
-     Bürstenbreiten der Fahrzeuge leicht erhöht (siehe CONFIG.vehicles).
-     Hinweis: 256×256 Zellen pro Sektor in 15 Minuten sind mit den Werten der Vorlage
-     physikalisch kaum machbar; erster Sektor ist daher nach ca. 20–25 Min. realistisch.
+   - Balancing per Pacing-Modell (Debug → „Pacing-Simulation“, F3): Startgebiet mit
+     dünnerem Staub, Tutorial-Prämie, frühe Aufträge, zwei Fundstücke am Start und
+     anfangs +50 % Erdnachfrage auf Mondstaub. Bürstenbreiten der Fahrzeuge verbreitert
+     (Kehrwagen 7 statt 3 Zellen, 15 Z/s, 600 kg), weil ein Sektor 65.536 Zellen hat:
+     mit den Vorlagewerten wäre der erste Sektor erst nach ca. 50 Min. fertig.
+     Modell eines zügigen Spielers: Kapsel 1 Min., Besen 3, Kehrwagen 14, erster
+     Sektor ~25, Lizenz 1 ~33, Lizenz 2 ~70, Lizenz 3–4 ~2–2,5 Std. Die Tabelle nennt
+     15 Min. für den ersten Sektor – das ist bei 256×256 Zellen nicht erreichbar.
+   - Der Mond ist endlich (≈ 23 Mio. ₥ Rohwert): Lizenz 5 kostet 15 Mio., Lizenz 6
+     80 Mio. ₥ statt 30/400 Mio., sonst wäre die Rückseite kaum erreichbar.
+   - „Stellenplan“: Die Roboterzahl ist je Lizenz begrenzt (6/12/24/30/40/60, Forschung
+     +10). Ohne Grenze explodiert die Flotte exponentiell und der Mond ist nach
+     1,5 Std. sauber. Verkaufen erstattet 100 %, alte Modelle lassen sich also
+     verlustfrei ersetzen. Roboter-Upgrades +4 %/Stufe, Forschung moderat.
+   - Rückseite: halber Funkradius und 60 % Robotertempo („Signal schwach“).
    - Prozent-Upgrades: Behälter multiplikativ, alle anderen additiv (sonst explodiert
      das Lauftempo). Verarbeitungsmaschinen reichen Waren, die sie nicht verarbeiten,
      einfach durch (kein Verstopfen). Der Verdichter nimmt nur Staubarten an, bei
@@ -453,7 +463,7 @@ body.prof-phone #map .legend { display: none; }
      Roboter mit 1-s-Schritten, Erlöse werden über den zuletzt gemessenen
      Durchschnittswert pro kg abgerechnet (Förderbänder ruhen offline).
    Bauen
-   - Förderband-Pakete à 5 kg, max. 2 Pakete pro Zelle; Stufe 1/2/3 = 1/3/9 Zellen/s
+   - Förderband-Pakete à 2,5 kg; Stufe 1/2/3 = 4/6/9 Zellen/s bei 1/2/4 Paketen pro Zelle
      → 10/30/90 kg/s. Pakete werden nur übergeben, wenn das Ziel Platz hat (Rückstau).
      Abriss erstattet 100 % und schreibt Ladung/Puffer als Geld (Grundwert) gut.
    - Ein "Verteiler" ist zugleich Zusammenführer: nimmt von allen Seiten, gibt
@@ -545,16 +555,16 @@ const CONFIG = {
     { id: 'magnet', name: 'Magnetstiefel', base: 2000, desc: 'Kraterhänge und Eisboden bremsen weniger', mode: 'add', step: 0.06, start: 0, unit: '', licence: 2 },
   ],
   upgradeLevels: 15, upgradeGrowth: 1.65, remoteUnloadLevel: 5,
-  // Fahrzeuge (Bürstenbreiten gegenüber der Vorlage +1 bis +2 für die Pacing-Tabelle)
+  // Fahrzeuge (Bürstenbreiten gegenüber der Vorlage verbreitert, siehe Kopfkommentar)
   vehicles: [
     { id: 'schubkarre', name: 'Schubkarre', price: 400, speed: 0, width: 0, cap: 80, body: 0.9, kind: 'cart', licence: 0, accel: 9, turn: 9 },
-    { id: 'kehrwagen', name: 'Kehrwagen', price: 1000, speed: 14, width: 4, cap: 500, body: 1.35, licence: 0, accel: 5, turn: 3.2 },
-    { id: 'rover', name: 'Rover-Kehrmaschine', price: 8000, speed: 18, width: 6, cap: 2000, body: 1.9, licence: 1, accel: 4.5, turn: 2.8 },
-    { id: 'crawler', name: 'Kehr-Crawler', price: 60000, speed: 10, width: 11, cap: 10000, body: 2.7, licence: 2, accel: 3, turn: 2.0, smallRims: true, gravel: true },
-    { id: 'hover', name: 'Schwebekehrer', price: 400000, speed: 26, width: 8, cap: 6000, body: 2.3, licence: 3, accel: 3.5, turn: 2.6, hover: true },
+    { id: 'kehrwagen', name: 'Kehrwagen', price: 1000, speed: 15, width: 7, cap: 600, body: 1.35, licence: 0, accel: 5, turn: 3.2 },
+    { id: 'rover', name: 'Rover-Kehrmaschine', price: 8000, speed: 18, width: 8, cap: 2000, body: 1.9, licence: 1, accel: 4.5, turn: 2.8 },
+    { id: 'crawler', name: 'Kehr-Crawler', price: 60000, speed: 10, width: 13, cap: 10000, body: 2.7, licence: 2, accel: 3, turn: 2.0, smallRims: true, gravel: true },
+    { id: 'hover', name: 'Schwebekehrer', price: 400000, speed: 26, width: 11, cap: 6000, body: 2.3, licence: 3, accel: 3.5, turn: 2.6, hover: true },
   ],
   vehicleUpgrades: [
-    { id: 'speed', name: 'Tempo', step: 0.10 },
+    { id: 'speed', name: 'Tempo', step: 0.06 },
     { id: 'width', name: 'Bürstenbreite', step: 1 },
     { id: 'cap', name: 'Kapazität', step: 0.5 },
   ],
@@ -600,20 +610,21 @@ const CONFIG = {
   ],
   robotPowerPerCell: 0.5,
   robotUpgrades: [
-    { id: 'speed', name: 'Tempo', step: 0.10 },
-    { id: 'radius', name: 'Putzradius', step: 0.10 },
-    { id: 'cap', name: 'Kapazität', step: 0.30 },
+    { id: 'speed', name: 'Tempo', step: 0.04 },
+    { id: 'radius', name: 'Putzradius', step: 0.04 },
+    { id: 'cap', name: 'Kapazität', step: 0.25 },
   ],
   robotUpgradeLevels: 10, robotUpgradeBase: 1500, robotUpgradeGrowth: 1.8,
   robotTerrain: { rock: 0.35, rim: 0.5, canyon: 0.22 },
   robotFarHz: 10, robotFarGroups: 6,
+  robotFleet: [0, 6, 12, 24, 30, 40, 60],   // „Stellenplan“: max. Roboter je Lizenzstufe
   licences: [
     { lvl: 1, name: 'Reinigungsfachkraft', price: 2000, sectors: 2 },
     { lvl: 2, name: 'Staubbeauftragte*r', price: 25000, sectors: 8 },
     { lvl: 3, name: 'Oberkehrrat', price: 250000, sectors: 25 },
     { lvl: 4, name: 'Mondhausmeister*in', price: 2.5e6, sectors: 60 },
-    { lvl: 5, name: 'Direktion für lunare Sauberkeit', price: 3e7, sectors: 120 },
-    { lvl: 6, name: 'Mondputz-Minister*in', price: 4e8, sectors: 220 },
+    { lvl: 5, name: 'Direktion für lunare Sauberkeit', price: 1.5e7, sectors: 120 },
+    { lvl: 6, name: 'Mondputz-Minister*in', price: 8e7, sectors: 220 },
   ],
   economy: {
     sectorIncomeBonus: 0.005, missionBonus: 0.25, crewBonus: 0.05,
@@ -665,10 +676,10 @@ const CONFIG = {
       { id: 'l6', name: 'Kapsel-Bündelung', desc: '+20 % Verkaufspreis über Kapselrampen', cost: 4, fx: { rampBonus: 1.2 } },
       { id: 'l7', name: 'Maschinenöl', desc: 'Verarbeitung +50 % schneller', cost: 5, fx: { machineSpeed: 1.5 } },
       { id: 'l8', name: 'Verstärkte Antennen', desc: 'Funkradius +50 %', cost: 5, fx: { radio: 1.5 } },
-      { id: 'l9', name: 'Hangar-Erweiterung', desc: 'Hangars fassen 10 statt 6 Roboter', cost: 6, fx: { hangarSlots: 4 } },
+      { id: 'l9', name: 'Hangar-Erweiterung', desc: 'Hangars fassen 10 statt 6 Roboter, Stellenplan +10', cost: 6, fx: { hangarSlots: 4, fleet: 10 } },
       { id: 'l10', name: 'Serienfertigung', desc: 'Roboter 20 % günstiger', cost: 8, fx: { robotPrice: 0.8 } },
       { id: 'l11', name: 'Turbobänder', desc: 'Förderbänder ×2 Tempo', cost: 10, fx: { beltSpeed: 2 } },
-      { id: 'l12', name: 'Flottenkommando', desc: 'Abschluss: ×2 auf alle Roboter (Tempo und Radius)', cost: 15, fx: { robotSpeed: 2, robotRadius: 1.4, robotPower: 2 }, final: true },
+      { id: 'l12', name: 'Flottenkommando', desc: 'Abschluss: ×2 auf alle Roboter (doppelte Saugleistung, Tempo und Radius je +25 %)', cost: 15, fx: { robotSpeed: 1.25, robotRadius: 1.25, robotPower: 2 }, final: true },
     ] },
     { branch: 'admin', name: 'Verwaltung', nodes: [
       { id: 'a1', name: 'Formularvorlage', desc: 'Aufträge geben +25 % Belohnung', cost: 1, fx: { orderReward: 1.25 } },
@@ -1572,7 +1583,7 @@ const World = {
    4. ECONOMY – Geld, Preise, Upgrades, Lizenzen, Forschungseffekte
    ============================================================================ */
 let G = null;   // aktueller Spielstand (serialisierbar)
-const ADDITIVE_FX = new Set(['vehWidth', 'hangarSlots', 'turbo', 'selfEmpty', 'findSensor', 'offlineEff', 'swaps']);
+const ADDITIVE_FX = new Set(['vehWidth', 'hangarSlots', 'fleet', 'turbo', 'selfEmpty', 'findSensor', 'offlineEff', 'swaps']);
 
 function newState(seed, mission, slot) {
   const st = CONFIG.world.start;
@@ -3172,6 +3183,7 @@ const Renderer = {
     Draw.buildings(lod);
     Draw.vehicles(a);
     Draw.robots(a, lod);
+    Draw.inspector();
     Draw.player(a);
     this.drawParticles();
     Draw.capsules();
@@ -3606,6 +3618,22 @@ const Draw = {
     }
   },
   robots(a, lod) { if (typeof Robots !== 'undefined') Robots.draw(a, lod); },
+  // ALOP-Inspektor: fährt Runden im inspizierten Sektor
+  inspector() {
+    const I = G.ev.insp; if (!I) return;
+    const R = Renderer, ctx = R.ctx, cx = (I.s % NSEC) * SEC + 128, cy = ((I.s / NSEC) | 0) * SEC + 128, t = G.t * 0.25;
+    const x = cx + Math.cos(t) * 70, y = cy + Math.sin(t * 1.3) * 55, a = Math.atan2(Math.cos(t * 1.3) * 55 * 1.3, -Math.sin(t) * 70);
+    if (!R.inView(x, y, 4)) return;
+    R.at(x, y, a);
+    ctx.fillStyle = 'rgba(15,12,10,0.3)'; this.rr(ctx, -1.2, -0.8, 2.6, 1.8, 0.4); ctx.fill();
+    ctx.fillStyle = '#23292c'; this.rr(ctx, -1.1, -1.0, 0.7, 0.3, 0.1); ctx.fill(); this.rr(ctx, -1.1, 0.7, 0.7, 0.3, 0.1); ctx.fill(); this.rr(ctx, 0.5, -1.0, 0.7, 0.3, 0.1); ctx.fill(); this.rr(ctx, 0.5, 0.7, 0.7, 0.3, 0.1); ctx.fill();
+    ctx.fillStyle = C_WHITE; this.rr(ctx, -1.3, -0.8, 2.6, 1.6, 0.4); ctx.fill();
+    ctx.fillStyle = '#c4362c'; ctx.fillRect(-1.3, -0.15, 2.6, 0.3);
+    ctx.fillStyle = Math.sin(G.t * 10) > 0 ? '#5fa8ff' : '#1d3b7a'; ctx.beginPath(); ctx.arc(-0.2, 0, 0.28, 0, Math.PI * 2); ctx.fill();
+    R.ctx.setTransform(R.k, 0, 0, R.k, 0, 0);
+    ctx.font = '800 11px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffdede'; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3;
+    const sx = R.sx(x), sy = R.sy(y) - 1.6 * R.s - 4; ctx.strokeText('INSPEKTION ' + U.clock(Math.max(0, I.until - G.t)), sx, sy); ctx.fillText('INSPEKTION ' + U.clock(Math.max(0, I.until - G.t)), sx, sy);
+  },
   sectorGrid(s) {
     const R = Renderer, ctx = R.ctx, k = R.k, vr = R.viewRect();
     ctx.setTransform(k, 0, 0, k, 0, 0);
@@ -3671,9 +3699,11 @@ const Robots = {
   loadKg(r) { let s = 0; for (let i = 0; i < NGOODS; i++) s += r.load[i]; return s; },
   upPrice(key) { return Math.round(CONFIG.robotUpgradeBase * Math.pow(CONFIG.robotUpgradeGrowth, G.robotUp[key]) * Economy.fx('upgradePrice')); },
   inHangar(h) { return this.list.filter(r => r.hangar === h.id).length; },
+  fleetCap() { return CONFIG.robotFleet[G.licence] + Economy.fx('fleet'); },
   buy(model, h) {
     const d = this.def(model), price = Economy.robotPrice(d);
     if (d.licence > G.licence) return { ok: false, why: 'Lizenz ' + d.licence + ' nötig' };
+    if (this.list.length >= this.fleetCap()) return { ok: false, why: 'Stellenplan ausgeschöpft (' + this.fleetCap() + ' Roboter bei Lizenz ' + G.licence + ')' };
     if (this.inHangar(h) >= Buildings.hangarSlots()) return { ok: false, why: 'Hangar voll (' + Buildings.hangarSlots() + ' Plätze)' };
     if (!Economy.spend(price)) return { ok: false, why: 'Es fehlen ' + U.money(price - G.money) };
     const c = Buildings.center(h);
@@ -3784,6 +3814,7 @@ const Robots = {
     const dx = U.dx(r.x, tx), dy = ty - r.y, d = Math.hypot(dx, dy);
     if (d < 1e-4) return true;
     let sp = this.speed(r) * this.terrainMul(r);
+    if (!r.def.fly && World.regionAt(Math.floor(r.x), Math.floor(r.y)) === R_RUECK) sp *= 0.6;   // schwaches Signal auf der Rückseite
     if (cleanIt && !this.offlineMode) {
       // vor dichtem Staub abbremsen, damit eine Bahn sauber wird
       const rad = this.radius(r), fx = r.x + Math.sign(dx) * (rad + 0.6);
@@ -4702,7 +4733,19 @@ const UI = {
     fx.appendChild(cer);
   },
   /* --- Debug-Overlay --- */
-  toggleDebug() { this.debugOn = !this.debugOn; this.show('debug', this.debugOn); },
+  toggleDebug() {
+    this.debugOn = !this.debugOn; this.show('debug', this.debugOn);
+    let tb = this.el('debug-tools');
+    if (!tb) {
+      tb = U.h('div', { id: 'debug-tools', class: 'pe', style: { position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 'calc(140px + var(--sat))', display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' } });
+      const b = (t, fn) => tb.appendChild(U.h('button', { class: 'btn sm', text: t, onclick: e => { e.stopPropagation(); fn(); } }));
+      b('Pacing-Simulation', () => Debug.showPacing());
+      for (const k of [1, 4, 16]) b('Zeitraffer ×' + k, () => Debug.setScale(k));
+      this.el('ui').insertBefore(tb, this.el('panel-root'));
+    }
+    tb.classList.toggle('hidden', !this.debugOn);
+    if (!this.debugOn) Debug.timeScale = 1;
+  },
   debug() {
     let pk = 0; for (const bl of Buildings.active) pk += bl.items.length;
     const t = Prof.t;
@@ -4978,12 +5021,13 @@ Object.assign(UI, {
   renderHangar(body, tab, h) {
     if (tab === 'buy') {
       body.appendChild(U.h('div', { class: 'note', style: { marginBottom: '10px' }, html: 'K.E.H.R. = <i>Kleine Emsige Haushalts-Reinigungs-Bots</i>. Laut Memo 4711/B „ausdrücklich keine Haushaltsgeräte“. Roboter arbeiten überall im Funknetz – auch wenn Sie weit weg sind.' }));
-      const g = U.h('div', { class: 'cards' }), full = Robots.inHangar(h) >= Buildings.hangarSlots();
+      body.appendChild(U.h('div', { class: 'note', style: { marginBottom: '10px' }, html: 'Stellenplan des ALOP: <b>' + Robots.list.length + ' / ' + Robots.fleetCap() + '</b> Roboter (steigt mit jeder Lizenz). Verkaufen erstattet 100 % – alte Modelle lassen sich also kostenlos ersetzen.' }));
+      const g = U.h('div', { class: 'cards' }), full = Robots.inHangar(h) >= Buildings.hangarSlots() || Robots.list.length >= Robots.fleetCap();
       for (const d of CONFIG.robots) {
         const price = Economy.robotPrice(d), locked = d.licence > G.licence, n = Robots.list.filter(r => r.model === d.id).length;
         g.appendChild(this.card({ icon: 'robot', title: d.name, meta: n ? n + ' im Dienst' : U.money(price), vals: [['Tempo', d.speed + ' Z/s'], ['Putzradius', U.f1(d.radius)], ['Kapazität', U.kg(d.cap)]],
           note: d.fly ? 'Fliegt über alle Hindernisse.' : d.smallRims ? 'Fährt über kleine Kraterränder.' : '', locked: locked ? 'Lizenz ' + d.licence + ' nötig' : null,
-          btn: full ? 'Hangar voll' : 'In Dienst nehmen · ' + U.money(price), disabled: full || G.money < price, miss: full ? 'Weiteren Hangar bauen' : this.missText(price),
+          btn: full ? (Robots.list.length >= Robots.fleetCap() ? 'Stellenplan voll' : 'Hangar voll') : 'In Dienst nehmen · ' + U.money(price), disabled: full || G.money < price, miss: full ? (Robots.list.length >= Robots.fleetCap() ? 'Nächste Lizenz erhöht den Stellenplan' : 'Weiteren Hangar bauen') : this.missText(price),
           onBuy: () => { const r = Robots.buy(d.id, h); if (r.ok) { G.stats.builtBy.robot = (G.stats.builtBy.robot || 0) + 1; this.toast(d.name + ' meldet sich zum Dienst!', 'good'); this.refreshTop(); } else this.toast(r.why, 'warn'); } }));
       }
       body.appendChild(g);
@@ -5842,10 +5886,10 @@ const Game = {
     if (this.state === 'menu') { Menu.frame(fdt); return; }
     if (this.state !== 'play') { if (this.state === 'offline') Renderer.frame(1, fdt); return; }
     if (!this.paused) {
-      this.acc += fdt;
-      let n = 0;
-      while (this.acc >= this.STEP && n < 8) { this.tick(this.STEP); this.acc -= this.STEP; n++; }
-      if (n >= 8) this.acc = 0;
+      this.acc += fdt * Debug.timeScale;
+      let n = 0; const maxN = 8 * Debug.timeScale;
+      while (this.acc >= this.STEP && n < maxN) { this.tick(this.STEP); this.acc -= this.STEP; n++; }
+      if (n >= maxN) this.acc = 0;
     }
     const alpha = this.paused ? 1 : this.acc / this.STEP;
     const P = Player, ip = Draw.lerpPos(P, alpha), v = P.veh;
@@ -5970,7 +6014,8 @@ const Debug = {
     const upV = (id, l) => { const d = C.upgrades.find(u => u.id === id); return d.mode === 'mul' ? d.start * Math.pow(1 + d.step, l) : d.start + (d.start || 1) * d.step * l; };
     const upP = (id, l) => C.upgrades.find(u => u.id === id).base * Math.pow(C.upgradeGrowth, l);
     const fx = k => { let v = ADDITIVE_FX.has(k) ? 0 : 1; for (const br of C.research) for (const n of br.nodes) if (S.res[n.id] && n.fx[k] !== undefined) v = ADDITIVE_FX.has(k) ? v + n.fx[k] : v * n.fx[k]; return v; };
-    const robotRate = m => { const d = C.robots[m]; return 2 * d.radius * (1 + 0.1 * S.ru.radius) * fx('robotRadius') * 0.86 * d.speed * (1 + 0.1 * S.ru.speed) * fx('robotSpeed'); };
+    const RU = C.robotUpgrades, VU = C.vehicleUpgrades;
+    const robotRate = m => { const d = C.robots[m]; return 2 * d.radius * (1 + RU[1].step * S.ru.radius) * fx('robotRadius') * 0.86 * d.speed * (1 + RU[0].step * S.ru.speed) * fx('robotSpeed'); };
     const nRob = () => S.rob.reduce((a, b) => a + b, 0);
     const buy = p => { if (S.money < p) return false; S.money -= p; return true; };
     let income = 20, carpetStart = -1;
@@ -5979,13 +6024,13 @@ const Debug = {
       const mapDone = best < 0; if (best < 0) best = 0;
       const kc = kgCell(best), suction = upV('suction', S.up.suction);
       let kgps, cap, spd, dist;
-      if (S.veh >= 0) { const v = C.vehicles[S.veh]; const w = v.width + S.vu.width + fx('vehWidth'), sp = v.speed * (1 + 0.1 * S.vu.speed) * fx('vehSpeed'); kgps = Math.min(w * sp * C.vehiclePowerPerCell * suction * fx('vehPower'), w * sp * 0.78 * kc); cap = v.cap * (1 + 0.5 * S.vu.cap) * fx('vehCap'); spd = sp; dist = S.hangars ? 60 : 100; }
-      else { kgps = C.tools[S.tool].power * suction * fx('toolPower'); cap = upV('container', S.up.container) * fx('container'); spd = upV('shoes', S.up.shoes); dist = Math.min(110, 6 + 0.8 * Math.sqrt(S.secCells / Math.PI)); }
+      if (S.veh >= 0) { const v = C.vehicles[S.veh]; const w = v.width + S.vu.width + fx('vehWidth'), sp = v.speed * (1 + VU[0].step * S.vu.speed) * fx('vehSpeed'); kgps = Math.min(w * sp * C.vehiclePowerPerCell * suction * fx('vehPower'), w * sp * 0.78 * kc); cap = v.cap * (1 + VU[2].step * S.vu.cap) * fx('vehCap'); spd = sp; dist = S.hangars ? 60 : 100; }
+      else { const tr = C.tools[S.tool].radius * fx('toolRadius'); kgps = Math.min(C.tools[S.tool].power * suction * fx('toolPower'), 2 * tr * upV('shoes', S.up.shoes) * 0.7 * kc * 1.6); cap = upV('container', S.up.container) * fx('container') + (S.cart ? C.vehicles[0].cap : 0); spd = upV('shoes', S.up.shoes) * (S.cart ? 0.8 : 1); dist = Math.min(110, 6 + 0.8 * Math.sqrt(S.secCells / Math.PI)); }
       const trip = 2 * dist / spd + 2, eff = (cap / kgps) / (cap / kgps + trip);
       const playerKg = mapDone ? 0 : kgps * eff * 0.9;
       let robotKg = 0;
       for (let m = 0; m < 4; m++) if (S.rob[m] && !mapDone) {
-        const d = C.robots[m], rate = robotRate(m), capR = d.cap * (1 + 0.3 * S.ru.cap) * fx('robotCap'), sp = d.speed * (1 + 0.1 * S.ru.speed) * fx('robotSpeed');
+        const d = C.robots[m], rate = robotRate(m), capR = d.cap * (1 + RU[2].step * S.ru.cap) * fx('robotCap'), sp = d.speed * (1 + RU[0].step * S.ru.speed) * fx('robotSpeed');
         const fill = capR / (rate * kc), tripR = 2 * (S.belts ? 45 : 110) / sp;
         const e = (fx('selfEmpty') && m > 0 ? 0.95 : fill / (fill + tripR)) * 0.85;
         robotKg += S.rob[m] * rate * kc * e;
@@ -5998,25 +6043,35 @@ const Debug = {
       const orders = S.t < 1200 ? Math.max(base * 0.6, C.orders.minReward / 75) : base * 0.45;
       const inc = base + orders;
       income = income * 0.985 + inc * 60 * 0.015;
-      if (this.trace && S.t % 120 === 0 && S.t < 3600) this.trace.push([Math.round(S.t / 60), Math.round(S.money), Math.round(income), S.tool, S.up.container, S.up.shoes, S.veh, +eff.toFixed(2), Math.round(dist)]);
+      if (this.trace && S.t % 300 === 0) this.trace.push([Math.round(S.t / 60), Math.round(income), S.lic, S.sectors, Math.round(playerKg / kc), Math.round(robotKg / kc), S.rob.join('/'), S.ru.speed + '/' + S.ru.radius, S.veh + ':' + S.vu.width, best]);
       S.money += inc;
       const dc = (playerKg + robotKg) / kc; S.cells += dc; S.secCells += dc;
       if (S.t === 45) { mark('Erste Kapsel gestartet'); S.money += C.economy.tutorialBonus; }
       if (S.t === 200) S.money += 2 * C.findReward.base;   // zwei Fundstücke am Start
-      while (S.secCells >= 65536 * 0.985 && S.sectors < 576) { S.secCells -= 65536 * 0.985; S.sectors++; secDone[best]++; S.fp++; S.money += C.regions[best].sectorBonus * fx('sectorBonus'); if (S.sectors === 1) mark('Erster Sektor abgeschlossen'); }
+      while (S.secCells >= 65536 * 0.98 && S.sectors < 576) { S.secCells -= 65536 * 0.98; S.sectors++; secDone[best]++; S.fp++; S.money += C.regions[best].sectorBonus * fx('sectorBonus'); if (S.sectors === 1) mark('Erster Sektor abgeschlossen'); }
       S.fp += 1 / 200;
       if (S.t % 5) continue;
       const nextTool = C.tools[S.tool + 1];
       if (nextTool && nextTool.licence <= S.lic && buy(nextTool.price)) { S.tool++; mark(nextTool.name + ' gekauft'); }
+      if (!S.cart && S.veh < 0 && S.tool >= 2 && buy(C.vehicles[0].price)) { S.cart = true; mark('Schubkarre gekauft'); }
       const nv = C.vehicles.findIndex((v, i) => i > S.veh && i > 0 && v.licence <= S.lic);
       if (nv > 0 && C.vehicles[nv].price < Math.max(1200, income * 30) && buy(C.vehicles[nv].price)) { S.veh = nv; S.vu = { speed: 0, width: 0, cap: 0 }; mark(C.vehicles[nv].name + ' gekauft'); }
-      if (S.veh >= 0) for (const k of ['width', 'cap', 'speed']) { const p = C.vehicles[S.veh].price * C.vehicleUpgradeCost * Math.pow(C.vehicleUpgradeGrowth, S.vu[k]); if (S.vu[k] < 5 && p < income * 4 && buy(p)) S.vu[k]++; }
-      for (const k of ['container', 'suction', 'haggle', 'shoes']) { const p = upP(k, S.up[k]); if (S.up[k] < 15 && p < income * 1.5 && buy(p)) S.up[k]++; }
+      if (S.veh >= 0) for (const k of ['width', 'cap', 'speed']) { const p = C.vehicles[S.veh].price * C.vehicleUpgradeCost * Math.pow(C.vehicleUpgradeGrowth, S.vu[k]); if (S.vu[k] < 5 && p < income * 3 && buy(p)) S.vu[k]++; }
+      // auf das nächste Werkzeug/Fahrzeug sparen, wenn es in Reichweite ist
+      const nvp = nv > 0 ? C.vehicles[nv].price : Infinity, ntp = nextTool && nextTool.licence <= S.lic ? nextTool.price : Infinity, target = Math.min(nvp, ntp);
+      const saving = target < Infinity && target < income * 5;
+      for (const k of ['container', 'suction', 'haggle', 'shoes']) { const p = upP(k, S.up[k]); if (S.up[k] < 15 && p < income * 1.5 && (!saving || p < target * 0.12) && buy(p)) S.up[k]++; }
       if (S.lic < 6) { const L = C.licences[S.lic]; if (S.sectors >= L.sectors && buy(L.price * fx('licencePrice'))) { S.lic++; mark('Lizenz ' + S.lic + ' (' + L.name + ')'); if (S.lic === 6) mark('Rückseite erreicht'); } }
       if (S.lic >= 1) {
         if (S.hangars * (6 + fx('hangarSlots')) <= nRob() && buy(5000 + 1500)) { S.hangars++; if (S.hangars === 1) mark('Erster Hangar'); }
         if (!S.belts && S.hangars && buy(300 + 300 + 60 * 5)) { S.belts = true; mark('Erstes Förderband'); }
-        for (let m = 3; m >= 0; m--) { const d = C.robots[m]; if (d.licence <= S.lic && nRob() < S.hangars * (6 + fx('hangarSlots')) && d.price * fx('robotPrice') < income * 6 && buy(d.price * fx('robotPrice'))) { S.rob[m]++; const n = nRob(); if (n === 1) mark('Erster Roboter'); if (n === 5) mark('5 Roboter'); if (n === 20) mark('20 Roboter'); if (n === 50) mark('50 Roboter'); break; } }
+        const fleet = C.robotFleet[S.lic] + fx('fleet');
+        let top = -1; for (let m = 3; m >= 0; m--) if (C.robots[m].licence <= S.lic) { top = m; break; }
+        if (top >= 0) {
+          const p = C.robots[top].price * fx('robotPrice');
+          if (nRob() < fleet) { if (nRob() < S.hangars * (6 + fx('hangarSlots')) && p < income * 6 && buy(p)) { S.rob[top]++; const n = nRob(); if (n === 1) mark('Erster Roboter'); if (n === 5) mark('5 Roboter'); if (n === 20) mark('20 Roboter'); if (n === 50) mark('50 Roboter'); } }
+          else { let w = -1; for (let m = 0; m < top; m++) if (S.rob[m]) { w = m; break; } if (w >= 0 && p - C.robots[w].price < income * 6) { S.money += C.robots[w].price * fx('robotPrice'); S.rob[w]--; if (buy(p)) S.rob[top]++; else S.rob[w]++; } }
+        }
       }
       if (S.lic >= 2 && S.proc < 1 && buy(4000 * 2)) { S.proc = 1; mark('Verdichter läuft'); }
       if (S.lic >= 3 && S.proc < 2 && buy(18000 + 25000 * 2)) { S.proc = 2; mark('Ziegelpresse + Teleport-Netz'); }
