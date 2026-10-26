@@ -623,7 +623,7 @@ const CONFIG = {
   },
   sectorReward: { fp: 1 },
   findReward: { base: 35, fp: 1 },
-  orders: { active: 3, swapPerHour: 1, minReward: 30, rewardMinutes: 3.0 },
+  orders: { active: 3, swapPerHour: 1, minReward: 25, rewardMinutes: 1.2 },
   events: {
     dayLength: 1440,           // 24 Spielminuten pro Mondtag
     nightFrac: 0.36,
@@ -2921,31 +2921,40 @@ const Renderer = {
         const gi = gr[((Y0 + py) & 255) * 256 + ((X0 + px) & 255)];
         if (t === T_ROCK || t === T_GRAVEL) {
           const s = SH[c] / 128 * (1 + gi * 0.0012); r = 96 * s; g = 92 * s; bb = 90 * s;
-        } else if (t === T_CANYON) {
-          const s = SH[c] / 128; r = 70 * s + 6; g = 58 * s + 6; bb = 60 * s + 10;
         } else {
-          let d, sh;
-          if (R === 1) { d = D[c]; sh = SH[c]; }
+          let d, sh, cw = 0, mb = M ? M[c] : 0;
+          if (R === 1) { d = D[c]; sh = SH[c]; cw = t === T_CANYON ? 1 : 0; }
           else {
+            // bilinear: Staub nur aus putzbaren Ecken, Schlucht-Anteil als weiche Überblendung
             const uu = (px + 0.5) * inv - 0.5; let i0 = Math.floor(uu); const fu = uu - i0;
             const i1 = i0 + 1 > 63 ? 63 : i0 + 1; if (i0 < 0) i0 = 0;
-            const a00 = j0 * 64 + i0, a10 = j0 * 64 + i1, a01 = j1 * 64 + i0, a11 = j1 * 64 + i1, dc = D[c];
-            const d00 = TER[a00] === T_ROCK || TER[a00] === T_GRAVEL || TER[a00] === T_CANYON ? dc : D[a00];
-            const d10 = TER[a10] === T_ROCK || TER[a10] === T_GRAVEL || TER[a10] === T_CANYON ? dc : D[a10];
-            const d01 = TER[a01] === T_ROCK || TER[a01] === T_GRAVEL || TER[a01] === T_CANYON ? dc : D[a01];
-            const d11 = TER[a11] === T_ROCK || TER[a11] === T_GRAVEL || TER[a11] === T_CANYON ? dc : D[a11];
-            const top = d00 + (d10 - d00) * fu, bot = d01 + (d11 - d01) * fu; d = top + (bot - top) * fv;
-            const s0 = SH[a00] + (SH[a10] - SH[a00]) * fu, s1 = SH[a01] + (SH[a11] - SH[a01]) * fu; sh = s0 + (s1 - s0) * fv;
+            const a00 = j0 * 64 + i0, a10 = j0 * 64 + i1, a01 = j1 * 64 + i0, a11 = j1 * 64 + i1;
+            const w00 = (1 - fu) * (1 - fv), w10 = fu * (1 - fv), w01 = (1 - fu) * fv, w11 = fu * fv;
+            let ds = 0, ws = 0, tt;
+            tt = TER[a00]; if (tt === T_CANYON) cw += w00; else if (tt !== T_ROCK && tt !== T_GRAVEL) { ds += D[a00] * w00; ws += w00; }
+            tt = TER[a10]; if (tt === T_CANYON) cw += w10; else if (tt !== T_ROCK && tt !== T_GRAVEL) { ds += D[a10] * w10; ws += w10; }
+            tt = TER[a01]; if (tt === T_CANYON) cw += w01; else if (tt !== T_ROCK && tt !== T_GRAVEL) { ds += D[a01] * w01; ws += w01; }
+            tt = TER[a11]; if (tt === T_CANYON) cw += w11; else if (tt !== T_ROCK && tt !== T_GRAVEL) { ds += D[a11] * w11; ws += w11; }
+            d = ws > 0 ? ds / ws : D[c];
+            sh = SH[a00] * w00 + SH[a10] * w10 + SH[a01] * w01 + SH[a11] * w11;
+            if (M) mb = M[a00] * w00 + M[a10] * w10 + M[a01] * w01 + M[a11] * w11;
           }
           const ty = TY[c], lo = (ty * 256 + (d | 0)) * 3;
           r = lut[lo]; g = lut[lo + 1]; bb = lut[lo + 2];
           // Körnung: auf Staub stärker, auf sauberem Boden fein
           const gs = d > 8 ? 0.0002 + d * 0.0000009 : 0.00008;
           let s = sh / 128 * (1 + gi * gs);
-          r *= s; g *= s; bb *= s;
-          if (M && M[c]) { const m = Math.min(1, M[c] / 110); r += (150 - r) * m; g += (70 - g) * m; bb += (52 - bb) * m; }
-          if (ty === 4 && d > 30 && gi > 96) { r = 255; g = 236; bb = 255; }
-          else if (ty === 5 && d > 30 && gi > 92) { r += 40; g += 44; bb += 40; }
+          if (cw < 0.999) {
+            r *= s; g *= s; bb *= s;
+            if (mb > 2) { const m = U.smooth(Math.min(1, mb / 140)), k2 = 0.75 + mb / 900; r += (128 * k2 * s - r) * m; g += (68 * k2 * s - g) * m; bb += (52 * k2 * s - bb) * m; if (gi > 90 && mb > 60) { r += 50; g += 30; bb += 10; } }
+            if (ty === 4 && d > 30 && gi > 96) { r = 255; g = 236; bb = 255; }
+            else if (ty === 5 && d > 30 && gi > 92) { r += 40; g += 44; bb += 40; }
+          }
+          if (cw > 0) {
+            const cs = Math.min(1, sh / 128), q = cw >= 0.999 ? 1 : U.smooth(U.clamp((cw - 0.12) / 0.76, 0, 1));
+            const cr = 62 * cs + 8, cg = 52 * cs + 8, cb = 56 * cs + 12;
+            r += (cr - r) * q; g += (cg - g) * q; bb += (cb - bb) * q;
+          }
         }
         if (lk[REG[c]]) { const st = ((X0 + px + Y0 + py) % (hatch * 2)) < hatch; const f = st ? 0.42 : 0.58; r = r * f + (st ? 40 : 10); g = g * f + (st ? 30 : 10); bb = bb * f + (st ? 6 : 14); }
         data[o] = r; data[o + 1] = g; data[o + 2] = bb; data[o + 3] = 255;
@@ -4034,7 +4043,7 @@ const Progression = {
     for (let i = 0; i < n; i++) {
       let x = 0, y = 0, ok = false;
       for (let k = 0; k < 12 && !ok; k++) {
-        const a = Math.random() * Math.PI * 2, d = 12 + Math.random() * 45;
+        const a = Math.random() * Math.PI * 2, d = (Player.veh ? 10 : 6) + Math.random() * (Player.veh ? 22 : 14);
         x = U.wrapX(Player.x + Math.cos(a) * d); y = U.clamp(Player.y + Math.sin(a) * d, 10, WSIZE - 10);
         ok = !World.locked(World.regionAt(Math.floor(x), Math.floor(y))) && World.isCleanableT(World.terrAt(Math.floor(x), Math.floor(y))) && !Buildings.at(Math.floor(x), Math.floor(y));
       }
@@ -5940,6 +5949,100 @@ const Menu = {
     ctx.strokeStyle = '#4fb6e8'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(6, -12); ctx.lineTo(18, -2 + Math.sin(this.t * 14) * 2); ctx.stroke();
     ctx.restore();
   },
+};
+
+/* ============================================================================
+   15. DEBUG – Pacing-Simulation (beschleunigt), Zeitraffer
+   ============================================================================ */
+const Debug = {
+  timeScale: 1,
+  // Modell eines zügigen Spielers auf Basis der CONFIG-Werte (1-s-Schritte)
+  pacing(hours) {
+    const C = CONFIG, H = (hours || 12) * 3600;
+    const kgCell = r => C.regions[r].density[0] / 255 * C.world.kgPerFullCell * (C.regions[r].massMul || 1);
+    const val = r => r === R_RUECK ? 1.6 : C.goods[C.regions[r].dust].value;
+    if (!World.secRegion) World.init(CONFIG.world.seed);
+    const secAvail = [0, 0, 0, 0, 0, 0, 0]; for (let i = 0; i < 576; i++) secAvail[World.secRegion[i]]++;
+    secAvail[R_GLITZER] += 12;   // viele Inseln liegen über Sektorgrenzen
+    const secDone = [0, 0, 0, 0, 0, 0, 0];
+    const S = { t: 0, money: 0, tool: 0, up: { container: 0, shoes: 0, suction: 0, haggle: 0 }, veh: -1, vu: { speed: 0, width: 0, cap: 0 }, lic: 0, rob: [0, 0, 0, 0], ru: { speed: 0, radius: 0, cap: 0 }, cells: 0, secCells: 0, sectors: 0, fp: 0, res: {}, proc: 0, belts: false, hangars: 0, region: 0 };
+    const ev = [], mark = txt => { if (!ev.some(e => e.txt === txt)) ev.push({ t: S.t, txt }); };
+    const upV = (id, l) => { const d = C.upgrades.find(u => u.id === id); return d.mode === 'mul' ? d.start * Math.pow(1 + d.step, l) : d.start + (d.start || 1) * d.step * l; };
+    const upP = (id, l) => C.upgrades.find(u => u.id === id).base * Math.pow(C.upgradeGrowth, l);
+    const fx = k => { let v = ADDITIVE_FX.has(k) ? 0 : 1; for (const br of C.research) for (const n of br.nodes) if (S.res[n.id] && n.fx[k] !== undefined) v = ADDITIVE_FX.has(k) ? v + n.fx[k] : v * n.fx[k]; return v; };
+    const robotRate = m => { const d = C.robots[m]; return 2 * d.radius * (1 + 0.1 * S.ru.radius) * fx('robotRadius') * 0.86 * d.speed * (1 + 0.1 * S.ru.speed) * fx('robotSpeed'); };
+    const nRob = () => S.rob.reduce((a, b) => a + b, 0);
+    const buy = p => { if (S.money < p) return false; S.money -= p; return true; };
+    let income = 20, carpetStart = -1;
+    for (S.t = 0; S.t < H; S.t++) {
+      let best = -1; for (const r of C.regions) if (r.licence <= S.lic && secDone[r.id] < secAvail[r.id] && (best < 0 || kgCell(r.id) * val(r.id) > kgCell(best) * val(best))) best = r.id;
+      const mapDone = best < 0; if (best < 0) best = 0;
+      const kc = kgCell(best), suction = upV('suction', S.up.suction);
+      let kgps, cap, spd, dist;
+      if (S.veh >= 0) { const v = C.vehicles[S.veh]; const w = v.width + S.vu.width + fx('vehWidth'), sp = v.speed * (1 + 0.1 * S.vu.speed) * fx('vehSpeed'); kgps = Math.min(w * sp * C.vehiclePowerPerCell * suction * fx('vehPower'), w * sp * 0.78 * kc); cap = v.cap * (1 + 0.5 * S.vu.cap) * fx('vehCap'); spd = sp; dist = S.hangars ? 60 : 100; }
+      else { kgps = C.tools[S.tool].power * suction * fx('toolPower'); cap = upV('container', S.up.container) * fx('container'); spd = upV('shoes', S.up.shoes); dist = Math.min(110, 6 + 0.8 * Math.sqrt(S.secCells / Math.PI)); }
+      const trip = 2 * dist / spd + 2, eff = (cap / kgps) / (cap / kgps + trip);
+      const playerKg = mapDone ? 0 : kgps * eff * 0.9;
+      let robotKg = 0;
+      for (let m = 0; m < 4; m++) if (S.rob[m] && !mapDone) {
+        const d = C.robots[m], rate = robotRate(m), capR = d.cap * (1 + 0.3 * S.ru.cap) * fx('robotCap'), sp = d.speed * (1 + 0.1 * S.ru.speed) * fx('robotSpeed');
+        const fill = capR / (rate * kc), tripR = 2 * (S.belts ? 45 : 110) / sp;
+        const e = (fx('selfEmpty') && m > 0 ? 0.95 : fill / (fill + tripR)) * 0.85;
+        robotKg += S.rob[m] * rate * kc * e;
+      }
+      const procMul = [1, 1.3, 1.6, 2.1][S.proc];
+      const demand = S.t < C.economy.demandInterval && C.regions[best].dust === 0 ? 1.5 : 1.08;
+      const mul = upV('haggle', S.up.haggle) * (1 + S.sectors * C.economy.sectorIncomeBonus) * demand * fx('income');
+      const base = (playerKg + robotKg * procMul) * val(best) * mul;
+      // Aufträge: früh viele kleine Prämien, später ca. +45 %
+      const orders = S.t < 1200 ? Math.max(base * 0.6, C.orders.minReward / 75) : base * 0.45;
+      const inc = base + orders;
+      income = income * 0.985 + inc * 60 * 0.015;
+      if (this.trace && S.t % 120 === 0 && S.t < 3600) this.trace.push([Math.round(S.t / 60), Math.round(S.money), Math.round(income), S.tool, S.up.container, S.up.shoes, S.veh, +eff.toFixed(2), Math.round(dist)]);
+      S.money += inc;
+      const dc = (playerKg + robotKg) / kc; S.cells += dc; S.secCells += dc;
+      if (S.t === 45) { mark('Erste Kapsel gestartet'); S.money += C.economy.tutorialBonus; }
+      if (S.t === 200) S.money += 2 * C.findReward.base;   // zwei Fundstücke am Start
+      while (S.secCells >= 65536 * 0.985 && S.sectors < 576) { S.secCells -= 65536 * 0.985; S.sectors++; secDone[best]++; S.fp++; S.money += C.regions[best].sectorBonus * fx('sectorBonus'); if (S.sectors === 1) mark('Erster Sektor abgeschlossen'); }
+      S.fp += 1 / 200;
+      if (S.t % 5) continue;
+      const nextTool = C.tools[S.tool + 1];
+      if (nextTool && nextTool.licence <= S.lic && buy(nextTool.price)) { S.tool++; mark(nextTool.name + ' gekauft'); }
+      const nv = C.vehicles.findIndex((v, i) => i > S.veh && i > 0 && v.licence <= S.lic);
+      if (nv > 0 && C.vehicles[nv].price < Math.max(1200, income * 30) && buy(C.vehicles[nv].price)) { S.veh = nv; S.vu = { speed: 0, width: 0, cap: 0 }; mark(C.vehicles[nv].name + ' gekauft'); }
+      if (S.veh >= 0) for (const k of ['width', 'cap', 'speed']) { const p = C.vehicles[S.veh].price * C.vehicleUpgradeCost * Math.pow(C.vehicleUpgradeGrowth, S.vu[k]); if (S.vu[k] < 5 && p < income * 4 && buy(p)) S.vu[k]++; }
+      for (const k of ['container', 'suction', 'haggle', 'shoes']) { const p = upP(k, S.up[k]); if (S.up[k] < 15 && p < income * 1.5 && buy(p)) S.up[k]++; }
+      if (S.lic < 6) { const L = C.licences[S.lic]; if (S.sectors >= L.sectors && buy(L.price * fx('licencePrice'))) { S.lic++; mark('Lizenz ' + S.lic + ' (' + L.name + ')'); if (S.lic === 6) mark('Rückseite erreicht'); } }
+      if (S.lic >= 1) {
+        if (S.hangars * (6 + fx('hangarSlots')) <= nRob() && buy(5000 + 1500)) { S.hangars++; if (S.hangars === 1) mark('Erster Hangar'); }
+        if (!S.belts && S.hangars && buy(300 + 300 + 60 * 5)) { S.belts = true; mark('Erstes Förderband'); }
+        for (let m = 3; m >= 0; m--) { const d = C.robots[m]; if (d.licence <= S.lic && nRob() < S.hangars * (6 + fx('hangarSlots')) && d.price * fx('robotPrice') < income * 6 && buy(d.price * fx('robotPrice'))) { S.rob[m]++; const n = nRob(); if (n === 1) mark('Erster Roboter'); if (n === 5) mark('5 Roboter'); if (n === 20) mark('20 Roboter'); if (n === 50) mark('50 Roboter'); break; } }
+      }
+      if (S.lic >= 2 && S.proc < 1 && buy(4000 * 2)) { S.proc = 1; mark('Verdichter läuft'); }
+      if (S.lic >= 3 && S.proc < 2 && buy(18000 + 25000 * 2)) { S.proc = 2; mark('Ziegelpresse + Teleport-Netz'); }
+      if (S.lic >= 4 && S.proc < 3 && buy(90000)) { S.proc = 3; mark('Mondglas-Produktion'); }
+      for (const k of ['speed', 'radius', 'cap']) { const p = C.robotUpgradeBase * Math.pow(C.robotUpgradeGrowth, S.ru[k]); if (S.ru[k] < 10 && nRob() > 3 && p < income * 3 && buy(p)) S.ru[k]++; }
+      for (const br of C.research) for (let i = 0; i < br.nodes.length; i++) { const n = br.nodes[i]; if (S.res[n.id]) continue; if (S.fp >= n.cost) { S.fp -= n.cost; S.res[n.id] = 1; } break; }
+      if (S.lic >= 6 && carpetStart < 0) carpetStart = S.sectors;
+      if (carpetStart >= 0 && S.sectors - carpetStart >= 24) mark('Großer Teppichkrater gereinigt');
+    }
+    return { events: ev, final: { money: S.money, income, sectors: S.sectors, robots: nRob(), licence: S.lic } };
+  },
+  showPacing() {
+    const r = this.pacing(12);
+    UI.panel({ title: 'Pacing-Simulation', sub: 'Modell eines zügigen Spielers mit den aktuellen CONFIG-Werten (12 Std. in Millisekunden)', icon: 'chart', render: b => {
+      const kv = U.h('div', { class: 'kv' });
+      for (const e of r.events) { kv.appendChild(U.h('span', { text: e.txt })); kv.appendChild(U.h('span', { text: U.time(e.t) })); }
+      b.appendChild(kv);
+      b.appendChild(U.h('div', { class: 'sect-title', text: 'Zielwerte (Pacing-Tabelle)' }));
+      const t2 = U.h('div', { class: 'kv' });
+      for (const p of CONFIG.pacing) { t2.appendChild(U.h('span', { text: p.goal })); t2.appendChild(U.h('span', { text: p.t + ' Min.' })); }
+      b.appendChild(t2);
+      b.appendChild(U.h('div', { class: 'note', style: { marginTop: '10px' }, text: 'Nach 12 Std.: ' + U.money(r.final.income) + '/Min., ' + r.final.sectors + ' Sektoren, ' + r.final.robots + ' Roboter, Lizenz ' + r.final.licence + '.' }));
+    } });
+    return r;
+  },
+  setScale(k) { this.timeScale = k; UI.toast('Zeitraffer ×' + k); },
 };
 
 window.addEventListener('load', () => { Game.boot().catch(e => { console.error(e); const b = document.getElementById('boot'); b.classList.remove('gone'); b.textContent = 'Fehler beim Start: ' + e.message; }); });
