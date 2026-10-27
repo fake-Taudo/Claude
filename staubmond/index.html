@@ -3217,7 +3217,7 @@ const VFX = {
     // Rücken-Tank der Figur (Ziel für eingesaugte Partikel)
     const P = Player, a = (Draw.vis && Draw.vis.dir !== undefined) ? Draw.vis.dir : P.dir;
     this.tank.x = P.x - Math.cos(a) * 0.45 * 1.3; this.tank.y = P.y - Math.sin(a) * 0.45 * 1.3; this.tank.z = 0.7;
-    if (!Game.paused) { Clean.frame(fdt); Payday.frame(fdt); Particles.update(fdt); }
+    if (!Game.paused) { Clean.frame(fdt); Payday.frame(fdt); Actors.frame(fdt); Particles.update(fdt); }
   },
   // Zeitmessung (Debug): Effekt-Zeit pro Frame
   begin() { this.t0 = performance.now(); },
@@ -3330,7 +3330,7 @@ const Renderer = {
       wrap((X, Y) => {
         const g = x.createRadialGradient(X + rad * 0.25, Y + rad * 0.25, rad * 0.1, X, Y, rad); g.addColorStop(0, 'rgba(60,60,60,0.55)'); g.addColorStop(0.75, 'rgba(90,90,90,0.25)'); g.addColorStop(1, 'rgba(128,128,128,0)');
         x.fillStyle = g; x.beginPath(); x.arc(X, Y, rad, 0, 6.283); x.fill();
-        x.strokeStyle = 'rgba(205,205,205,0.55)'; x.lineWidth = Math.max(1, rad * 0.16); x.beginPath(); x.arc(X, Y, rad * 0.94, Math.PI * 0.85, Math.PI * 1.75); x.stroke();
+        x.strokeStyle = 'rgba(190,190,190,0.38)'; x.lineWidth = Math.max(1, rad * 0.14); x.beginPath(); x.arc(X, Y, rad * 0.94, Math.PI * 0.85, Math.PI * 1.75); x.stroke();
         x.strokeStyle = 'rgba(70,70,70,0.35)'; x.lineWidth = Math.max(1, rad * 0.1); x.beginPath(); x.arc(X, Y, rad * 0.96, Math.PI * -0.15, Math.PI * 0.7); x.stroke();
       }, px, py, rad);
     }
@@ -3343,11 +3343,11 @@ const Renderer = {
     }
     // Kiesel (eigener Kanal für Geröllstaub)
     const peb = document.createElement('canvas'); peb.width = peb.height = S; const pq = peb.getContext('2d', { willReadFrequently: true });
-    for (let i = 0; i < 900; i++) {
-      const px = r() * S, py = r() * S, rad = 0.8 + Math.pow(r(), 3) * 3.4, tone = r();
+    for (let i = 0; i < 520; i++) {
+      const px = r() * S, py = r() * S, rad = 0.8 + Math.pow(r(), 3) * 3.0, tone = r() * 0.6;
       wrap((X, Y) => {
         x.fillStyle = 'rgba(70,70,70,0.45)'; x.beginPath(); x.arc(X + rad * 0.35, Y + rad * 0.35, rad, 0, 6.283); x.fill();
-        x.fillStyle = 'rgba(' + (150 + tone * 70 | 0) + ',' + (150 + tone * 70 | 0) + ',' + (150 + tone * 70 | 0) + ',0.8)'; x.beginPath(); x.arc(X, Y, rad, 0, 6.283); x.fill();
+        x.fillStyle = 'rgba(' + (130 + tone * 60 | 0) + ',' + (130 + tone * 60 | 0) + ',' + (130 + tone * 60 | 0) + ',0.6)'; x.beginPath(); x.arc(X, Y, rad, 0, 6.283); x.fill();
         pq.fillStyle = 'rgb(' + (90 + tone * 160 | 0) + ',0,0)'; pq.beginPath(); pq.arc(X, Y, rad * 1.3, 0, 6.283); pq.fill();
       }, px, py, rad + 2);
     }
@@ -3702,8 +3702,9 @@ const Renderer = {
     Prof.start('ground'); this.drawGround(s, budgetEnd); if (Camera.zoom > 1.25 && !this.gl) this.drawGrain(s); Prof.end('ground');
     VFX.begin(); Ground.draw(s); VFX.end();
     Prof.start('objs'); this.drawWorld(s); Prof.end('objs');
+    EventsFx.dusk();
     this.drawNight(s);
-    VFX.begin(); Ground.drawAtmos(s); VFX.end();
+    VFX.begin(); Ground.drawAtmos(s); EventsFx.drawScreen(); VFX.end();
     this.drawOverlay(s);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   },
@@ -3814,6 +3815,7 @@ const Renderer = {
     VFX.begin(); Particles.draw(1); VFX.end();
     Payday.draw();
     Rewards.draw();
+    EventsFx.draw();
   },
   drawRocks() {
     const ctx = this.ctx, soft = VFX.T.softShadow;
@@ -3858,7 +3860,7 @@ const Renderer = {
         if (reg === R_POLAR) { c.fillStyle = 'rgba(3,6,16,0.82)'; c.fillRect(x, y, 2, 2); }
       }
     }
-    if (night > 0.01) { c.fillStyle = 'rgba(4,8,22,' + (night * 0.8).toFixed(3) + ')'; c.fillRect(0, 0, nw, nh); }
+    if (night > 0.01) { c.fillStyle = 'rgba(6,10,30,' + (night * 0.8).toFixed(3) + ')'; c.fillRect(0, 0, nw, nh); }
     c.globalCompositeOperation = 'destination-out';
     const light = (wx, wy, r, a) => {
       const x = this.sx(wx) / 8, y = this.sy(wy) / 8, rr = r * s / 8;
@@ -4131,7 +4133,7 @@ const GLGround = {
     'uniform vec4 uE;',      // warp, rim, wall, shadow
     'uniform vec4 uF;',      // full, cellsPerPx, shadowOff, strength
     'uniform vec4 uG;',      // bandPhase, bandWidth, glossA, freshK
-    'uniform vec2 uScr; uniform vec4 uW;',
+    'uniform vec2 uScr; uniform vec4 uW; uniform float uTime, uNight; uniform vec4 uLt[6];',
     'varying vec2 vCell; varying vec2 vWorld;',
     'vec4 L(vec2 c){ return texture2D(uL, (c + 1.0) / 66.0); }',
     'vec3 floorCol(float b){ if (b < 1.0) { float t = clamp((b - 0.35) / 0.65, 0.0, 1.0); return uCS * (0.55 + 0.45 * t) + (uCB - uCS) * t * t; } return mix(uCB, uCL, clamp((b - 1.0) / 0.55, 0.0, 1.0)); }',
@@ -4150,7 +4152,7 @@ const GLGround = {
     '  float bm = smoothstep(0.25, 0.75, texture2D(uWarp, vWorld / 211.0).b);',
     '  vec4 bed = mix(texture2D(uBed, vWorld / 64.0), texture2D(uBed, vec2(vWorld.y, -vWorld.x) / 83.0 + 0.37), bm);',
     '  float gr = texture2D(uGrain, vWorld / 16.0).r - 0.5;',
-    '  float fb = (1.0 + (sh - 1.0) * 0.62) * (1.0 + (bed.r - 0.5) * 0.95 * uF.x) * (1.0 + gr * 0.05);',
+    '  float fb = (1.0 + (sh - 1.0) * 0.62) * (1.0 + (bed.r - 0.5) * 0.7 * uF.x) * (1.0 + gr * 0.04) * 0.97;',
     '  if (uF.x > 0.5 && cov < 0.999) { float rs = L(c - vec2(uF.z)).g; float sd = clamp(rs - raw, 0.0, 1.0); fb *= 1.0 - sd * uE.w * 1.6; }',
     '  vec3 col;',
     '  vec3 fl = floorCol(fb);',
@@ -4184,9 +4186,10 @@ const GLGround = {
     '    col = mix(fl, dc, op);',
     '  } else col = fl;',
     '  float mb = c1.a * 255.0;',
-    '  if (mb > 2.0) { float m = smoothstep(0.0, 1.0, min(1.0, mb / 140.0)), k2 = 0.78 + mb / 900.0, s2 = pow(max(sh, 0.0), 0.75); col = mix(col, vec3(176.0, 100.0, 74.0) * k2 * s2, m); }',
+    '  if (mb > 2.0) { float m = smoothstep(0.0, 1.0, min(1.0, mb / 140.0)), k2 = 0.78 + mb / 900.0, s2 = pow(max(sh, 0.0), 0.75); col = mix(col, vec3(176.0, 100.0, 74.0) * k2 * s2, m); col += vec3(70.0, 26.0, 8.0) * m * (0.55 + 0.45 * sin(uTime * 2.2 + vWorld.x * 0.7 + vWorld.y * 0.4)); }',
+    '  if (uNight > 0.01) { float rf = 0.0; for (int i = 0; i < 6; i++) { vec4 lt = uLt[i]; if (lt.z > 0.0) { float lx = vWorld.x - lt.x; lx -= 6144.0 * floor(lx / 6144.0 + 0.5); float dd = length(vec2(lx, vWorld.y - lt.y)) / lt.z; rf += lt.w * max(0.0, 1.0 - dd * dd); } } col += vec3(70.0, 62.0, 44.0) * rf * uNight * (1.0 - cov * 0.8); }',
     '  if (cw > 0.0) { float cs = min(1.0, sh), q = cw >= 0.999 ? 1.0 : smoothstep(0.0, 1.0, clamp((cw - 0.12) / 0.76, 0.0, 1.0)); col = mix(col, vec3(52.0 * cs + 10.0, 46.0 * cs + 10.0, 54.0 * cs + 14.0), q); }',
-    '  if (rock > 0.5) { float s3 = sh * (1.0 + (bed.r - 0.5) * 1.0 + gr * 0.2); col = vec3(92.0, 90.0, 92.0) * s3; }',
+    '  if (rock > 0.5) col *= 0.9;',
     '  if (lockd > 0.5) { float st = step(0.5, fract((vWorld.x + vWorld.y) / 1.5)); col = col * mix(0.58, 0.42, st) + mix(vec3(10.0, 10.0, 14.0), vec3(40.0, 30.0, 6.0), st); }',
     '  gl_FragColor = vec4(col / 255.0, 1.0);',
     '}',
@@ -4210,7 +4213,7 @@ const GLGround = {
       if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
       this.prog = p; gl.useProgram(p);
       for (const n of ['aP']) this.loc[n] = gl.getAttribLocation(p, n);
-      for (const n of ['uRect', 'uOrg', 'uL', 'uC1', 'uC2', 'uN', 'uBed', 'uWarp', 'uGrain', 'uMir', 'uCS', 'uCB', 'uCL', 'uE', 'uF', 'uG', 'uScr', 'uW']) this.loc[n] = gl.getUniformLocation(p, n);
+      for (const n of ['uRect', 'uOrg', 'uL', 'uC1', 'uC2', 'uN', 'uBed', 'uWarp', 'uGrain', 'uMir', 'uCS', 'uCB', 'uCL', 'uE', 'uF', 'uG', 'uScr', 'uW', 'uTime', 'uNight', 'uLt']) this.loc[n] = gl.getUniformLocation(p, n);
       const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
       gl.enableVertexAttribArray(this.loc.aP); gl.vertexAttribPointer(this.loc.aP, 2, gl.FLOAT, false, 0, 0);
       gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -4299,6 +4302,17 @@ const GLGround = {
     gl.uniform4f(L.uG, ph, G2.width * 0.55, T.gloss ? G2.alpha * str * boost : 0, T.gloss ? FX_CONFIG.fresh.strength * 2.4 * str * boost : 0);
     gl.uniform2f(L.uScr, W, H);
     const wv = Rewards.waveU(); gl.uniform4f(L.uW, wv[0], wv[1], wv[2], wv[3]);
+    gl.uniform1f(L.uTime, VFX.t % 1000);
+    // Lichter für Spiegelungen auf sauberem Boden (Lampen, Scheinwerfer) – nur nachts
+    const night = Math.max(Progression.darkness(), Camera.y < WSIZE * 0.15 || Camera.y > WSIZE * 0.85 ? 0.7 : 0);
+    gl.uniform1f(L.uNight, night);
+    if (night > 0.01) {
+      const lt = this.lt || (this.lt = new Float32Array(24)); lt.fill(0); let n = 0;
+      const P = Player, pv = P.veh, add = (x, y, r, a) => { if (n < 6) { lt[n * 4] = x; lt[n * 4 + 1] = y; lt[n * 4 + 2] = r; lt[n * 4 + 3] = a; n++; } };
+      add(P.x + Math.cos(P.dir) * (pv ? 6 : 3.5), P.y + Math.sin(P.dir) * (pv ? 6 : 3.5), pv ? 8 : 5, 1);
+      for (const b of Buildings.list) if (b.type === 'lamp' && R.inView(b.x, b.y, CONFIG.lampRadius)) add(b.x + 0.5, b.y + 0.5, CONFIG.lampRadius, 0.9);
+      gl.uniform4fv(L.uLt, lt);
+    }
     gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, this.glob.bed);
     gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, this.glob.warp);
     gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, this.glob.grain);
@@ -4737,6 +4751,163 @@ const Rewards = {
   relic(ctx) { ctx.beginPath(); ctx.moveTo(0, -0.42); ctx.lineTo(0.36, -0.1); ctx.lineTo(0.24, 0.38); ctx.lineTo(-0.24, 0.38); ctx.lineTo(-0.36, -0.1); ctx.closePath(); ctx.fill(); ctx.strokeStyle = THEME.outline; ctx.lineWidth = 0.06; ctx.stroke(); },
 };
 
+/* ============================================================================
+   8i. ACTORS – optischer Zustand von Fahrzeugen, Robotern und Gebäuden
+   (Raddrehung, Federung, Neigung, Ein-/Ausstieg, Landung, Bau-/Abriss-Animation,
+   Rückstau auf Bändern). Nur gelesen aus der Logik, nie gespeichert.
+   ============================================================================ */
+const Actors = {
+  veh: new Map(), rob: new Map(), bld: new Map(), belt: new Map(), jump: null, lastVeh: null, land: new Map(), antT: 0,
+  vs(v) { let s = this.veh.get(v.id); if (!s) { s = { wheel: 0, bounce: 0, bv: 0, lean: 0, pa: v.a, pvx: v.vx, pvy: v.vy, spring: 0, track: 0 }; this.veh.set(v.id, s); } return s; },
+  rs(r) { let s = this.rob.get(r.id); if (!s) { s = { load: Robots.loadKg(r), blink: VFX.r() * 4, ph: VFX.r() * 6.28 }; this.rob.set(r.id, s); } return s; },
+  reset() { this.veh.clear(); this.rob.clear(); this.bld.clear(); this.belt.clear(); this.jump = null; this.land.clear(); this.lastVeh = Player.veh; },
+  frame(dt) {
+    if (!G || dt <= 0) return;
+    const P = Player;
+    // Ein- und Aussteigen: Figur springt im Bogen, Fahrzeug federt ein
+    if (P.veh !== this.lastVeh) {
+      const nv = P.veh, ov = this.lastVeh;
+      if (nv && nv.def.kind !== 'cart') { this.jump = { x0: this.lastPX, y0: this.lastPY, v: nv, t0: VFX.t, enter: true }; this.vs(nv).spring = 1; }
+      else if (ov && ov.def.kind !== 'cart') { this.jump = { x0: ov.x, y0: ov.y, t0: VFX.t, enter: false }; this.vs(ov).spring = 0.7; }
+      this.lastVeh = nv;
+    }
+    this.lastPX = P.x; this.lastPY = P.y;
+    if (this.jump && VFX.t - this.jump.t0 > 0.28) this.jump = null;
+    for (const v of Vehicles.list) {
+      const s = this.vs(v), sp = Math.hypot(v.vx, v.vy), ca = Math.cos(v.a), sa = Math.sin(v.a), fs = v.vx * ca + v.vy * sa;
+      s.wheel += fs * dt;
+      // Federung: Beschleunigung längs → Nicken, Drehrate → Neigung in Kurven
+      const ax = (v.vx - s.pvx) / dt, ay = (v.vy - s.pvy) / dt, along = U.clamp(ax * ca + ay * sa, -40, 40);
+      const turn = U.clamp(U.angDiff(s.pa, v.a) / dt, -6, 6);
+      // gedämpfte Feder (stabil, begrenzt)
+      const kd = Math.min(dt, 0.05);
+      s.bv += (-along * 0.0012 - s.bounce * 90 - s.bv * 9) * kd; s.bounce = U.clamp(s.bounce + s.bv * kd, -0.08, 0.08);
+      s.lean += (U.clamp(turn * sp * 0.012, -0.12, 0.12) - s.lean) * Math.min(1, dt * 8);
+      if (!isFinite(s.bounce) || !isFinite(s.bv)) { s.bounce = 0; s.bv = 0; }
+      if (s.spring > 0) s.spring -= dt * 2.5;
+      s.pvx = v.vx; s.pvy = v.vy; s.pa = v.a;
+      // Bremsspuren und Drift-Streifen im Staub
+      const lat = Math.abs(-v.vx * sa + v.vy * ca);
+      if (v.def.kind !== 'cart' && !v.def.hover && VFX.T.decals >= 2 && (lat > 2.2 || along < -9) && sp > 3) {
+        s.track += sp * dt; if (s.track > 0.6) { s.track = 0; if (World.dustAt(Math.floor(v.x), Math.floor(v.y)) > 30) World.addDecal(v.x, v.y, v.a, 1, v.def.body * 1.25); }
+      }
+      // Bürstenwalze: Staubfontäne seitlich nach hinten
+      if (v.cleanFx > 0 && Renderer.inView(v.x, v.y, 4) && v.def.kind !== 'cart') {
+        const b = v.def.body, W = Vehicles.width(v), bx = v.x - ca * b * 0.62, by = v.y - sa * b * 0.62, ty = World.typeAt(Math.floor(bx), Math.floor(by));
+        const n = Math.min(3, 1 + (v.cleanFx * dt * 4 * VFX.strength() | 0));
+        for (let i = 0; i < n; i++) {
+          const side = VFX.r() < 0.5 ? -1 : 1, off = VFX.rr(0.2, 0.5) * W * side;
+          const px = bx - sa * off, py = by + ca * off, a = v.a + Math.PI + side * VFX.rr(0.6, 1.3), spd = VFX.rr(2, 5);
+          Particles.emit('dust', px, py, 0.05, Math.cos(a) * spd + v.vx * 0.3, Math.sin(a) * spd + v.vy * 0.3, VFX.rr(1, 2.2), VFX.rr(0.35, 0.7), VFX.rr(0.12, 0.24), ty);
+        }
+      }
+    }
+    // Roboter: Abladen als kleiner Staubstrom, Sonnenwind-Leuchtspur
+    const wind = G.ev.windUntil > G.t;
+    for (const r of Robots.list) {
+      const s = this.rs(r), kg = Robots.loadKg(r);
+      if (s.load - kg > 0.5 && r.near && Renderer.inView(r.x, r.y, 3)) {
+        const b = Buildings.nearest(r.x, r.y, x => x.def.drop, 6);
+        if (b) { const p = Payday.intake(b), ty = World.typeAt(Math.floor(r.x), Math.floor(r.y)); for (let i = 0; i < 8; i++) { const j = Particles.emit('stream', r.x + VFX.rr(-0.2, 0.2), r.y + VFX.rr(-0.2, 0.2), 0.5, VFX.rr(-1, 1), VFX.rr(-2, -0.5), VFX.rr(0.5, 1.5), 0.8, VFX.rr(0.08, 0.13), ty, 2, p.x, p.y, true); if (j >= 0) Particles.hs[j] = 0.9; } }
+      }
+      s.load = kg;
+      s.blink -= dt; if (s.blink < -0.14) s.blink = VFX.rr(2.5, 5.5);
+      if (wind && r.near && r.state === 'work' && VFX.r() < 0.35 * VFX.strength() && Renderer.inView(r.x, r.y, 3)) Particles.emit('ember', r.x - Math.cos(r.a) * 0.5, r.y - Math.sin(r.a) * 0.5, 0.2, 0, 0, 0.2, 0.9, 0.22, VFX.PAL.flame);
+    }
+    if (this.rob.size > Robots.list.length + 20) { const ids = new Set(Robots.list.map(r => r.id)); for (const k of this.rob.keys()) if (!ids.has(k)) this.rob.delete(k); }
+    // Gebäude-Animationen auslaufen lassen; Rückstau auf Bändern erkennen
+    for (const [id, s] of this.bld) { if (s.t0 !== undefined && VFX.t - s.t0 > 1.2 && !s.rotFrom) this.bld.delete(id); }
+    this.antT += dt;
+  },
+  // Rückstau: Pakete stehen still → Band leuchtet am Engpass
+  beltStuck(bl) {
+    let s = this.belt.get(bl.k); if (!s) { s = { sum: -1, still: 0 }; this.belt.set(bl.k, s); }
+    let sum = 0; for (const it of bl.items) sum += it.p;
+    if (bl.items.length >= 2 && Math.abs(sum - s.sum) < 1e-4) s.still += 1 / 60; else s.still = 0;
+    s.sum = sum;
+    return s.still > 0.6;
+  },
+  onBuilt(b) { this.bld.set(b.id, { t0: VFX.t, kind: 'place' }); const c = Buildings.center(b); if (Renderer.inView(c.x, c.y, 4)) { const n = 14, r = Math.max(b.w, b.h) * 0.6, ty = World.typeAt(Math.floor(c.x), Math.floor(c.y)); for (let i = 0; i < n; i++) { const a = i / n * 6.283; Particles.emit('puff', c.x + Math.cos(a) * r, c.y + Math.sin(a) * r, 0.05, Math.cos(a) * 3, Math.sin(a) * 3, 0.2, 0.7, 0.3, ty, 0, 0, 0, true); } } },
+  onRemoved(b, refund) {
+    const c = Buildings.center(b); if (!Renderer.inView(c.x, c.y, 4)) return;
+    const col = b.type === 'depot' || b.type === 'hopper' ? VFX.PAL.orange : b.type === 'hangar' || b.type === 'compressor' ? VFX.PAL.petrol : VFX.PAL.steel;
+    for (let i = 0; i < 18; i++) { const a = VFX.r() * 6.283, sp = VFX.rr(2, 6); Particles.emit('shard', c.x + VFX.rr(-b.w / 3, b.w / 3), c.y + VFX.rr(-b.h / 3, b.h / 3), 0.3, Math.cos(a) * sp, Math.sin(a) * sp, VFX.rr(2, 4), VFX.rr(0.6, 1.1), VFX.rr(0.15, 0.32), i % 3 ? col : VFX.PAL.white, 0, 0, 0, true); }
+    for (let i = 0; i < 8; i++) { const a = VFX.r() * 6.283; Particles.emit('puff', c.x + Math.cos(a) * 0.5, c.y + Math.sin(a) * 0.5, 0.1, Math.cos(a) * 2.5, Math.sin(a) * 2.5, 0.4, 0.8, 0.35, VFX.PAL.smoke, 0, 0, 0, true); }
+    if (refund > 0) Renderer.popup(c.x, c.y, '+' + U.money(refund), THEME.money, refund, 'money');
+  },
+  onRotate(b, oldRot) { this.bld.set(b.id, { rotFrom: oldRot, t0: VFX.t, kind: 'rot' }); },
+  // Animationszustand eines Gebäudes für das Zeichnen: Federung beim Platzieren, Drehung
+  anim(b) {
+    const s = b && this.bld.get(b.id); if (!s) return null;
+    const e = VFX.t - s.t0;
+    if (s.kind === 'place') { if (e > 0.6) return null; const u = e / 0.6; return { drop: (1 - Math.min(1, u * 2.2)) * 1.4, sc: 1 + Math.sin(Math.min(1, u * 1.6) * Math.PI) * 0.06 * (1 - u), glow: Math.max(0, 1 - u * 1.6) }; }
+    if (s.kind === 'rot') { if (e > 0.15) { this.bld.delete(b.id); return null; } const u = e / 0.15, d = ((b.rot - s.rotFrom + 4) % 4) || 4; return { rot: -(1 - u) * (d === 3 ? -1 : d) * Math.PI / 2, lift: Math.sin(u * Math.PI) * 0.3 }; }
+    return null;
+  },
+};
+
+/* ============================================================================
+   8j. EVENTS-FX – Meteoritenschauer, Sonnenwind, Inspektion, Dämmerung (optisch)
+   ============================================================================ */
+const EventsFx = {
+  // Meteor-Streifen: leuchtender Kopf mit Schweif (liest Fx.meteors, ändert nichts daran)
+  draw() {
+    const R = Renderer, ctx = R.ctx, s = R.s;
+    if (!Fx.meteors.length) return;
+    ctx.save(); ctx.setTransform(R.k, 0, 0, R.k, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    const sp = VFX.spr('soft', VFX.PAL.flame);
+    for (const m of Fx.meteors) {
+      if (m.t < 0) continue;
+      const pos = q => { const x = U.lerp(m.sx, m.x, q), y = U.lerp(m.sy, m.y, q), z = (1 - q) * 30; return [R.sx(x), R.sy(y) - z * 0.6 * s]; };
+      const p = Math.min(1, m.t / 1.4), a = pos(p), b = pos(Math.max(0, p - 0.12));
+      if (a[0] < -200 || a[0] > R.W + 200 || a[1] < -200 || a[1] > R.H + 200) continue;
+      const g = ctx.createLinearGradient(b[0], b[1], a[0], a[1]); g.addColorStop(0, 'rgba(255,140,60,0)'); g.addColorStop(1, 'rgba(255,230,190,0.9)');
+      ctx.strokeStyle = g; ctx.lineWidth = Math.max(2, s * 0.18); ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(a[0], a[1]); ctx.stroke();
+      const r = Math.max(6, s * 0.7); ctx.drawImage(VFX.atlas, sp[0], sp[1], 64, 64, a[0] - r, a[1] - r, r * 2, r * 2);
+      // Bodenmarke, wo er einschlagen wird
+      const gx = R.sx(m.x), gy = R.sy(m.y); ctx.globalAlpha = 0.25 + p * 0.45; ctx.strokeStyle = 'rgba(255,120,60,0.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(gx, gy, m.r * s * (1.2 - p * 0.5), 0, 6.283); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  },
+  // Einschlag: kurzes Aufblitzen, Staubring
+  impact(x, y, r) {
+    if (!Renderer.inView(x, y, 6)) return;
+    if (Settings.d.flashes) Particles.emit('glint', x, y, 0.2, 0, 0, 0, 0.3, 2.6 + r, VFX.PAL.flame, 0, 0, 0, true);
+    Particles.emit('ring', x, y, 0, 0, 0, 0, 0.6, 1 + r * 0.4, VFX.PAL.smoke, 0, 0, 0, true);
+    const ty = World.typeAt(Math.floor(x), Math.floor(y));
+    for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283, sp = VFX.rr(3, 6); Particles.emit('puff', x + Math.cos(a) * r * 0.6, y + Math.sin(a) * r * 0.6, 0.05, Math.cos(a) * sp, Math.sin(a) * sp, 0.3, VFX.rr(0.6, 1), VFX.rr(0.3, 0.5), i & 1 ? 6 : ty, 0, 0, 0, true); }
+  },
+  // Bildschirmrand: Sonnenwind-Schimmern, Dämmerungsfarbe
+  drawScreen() {
+    if (!G) return;
+    const R = Renderer, ctx = R.ctx, W = R.W, H = R.H, now = VFX.t;
+    if (G.ev.windUntil > G.t) {
+      const left = G.ev.windUntil - G.t, a = Math.min(1, left / 2, (CONFIG.events.solarWind.duration - left) / 2) * 0.55 * VFX.strength() / (VFX.reduce() ? 0.5 : 1);
+      if (a > 0.01) {
+        ctx.save(); ctx.setTransform(R.k, 0, 0, R.k, 0, 0); ctx.globalCompositeOperation = 'lighter';
+        const e = Math.min(W, H) * 0.16;
+        for (let i = 0; i < 4; i++) {
+          const w = e * (0.7 + 0.3 * Math.sin(now * 1.7 + i * 1.6)), al = a * (0.5 + 0.5 * Math.sin(now * 2.3 + i));
+          let g;
+          if (i === 0) { g = ctx.createLinearGradient(0, 0, w, 0); } else if (i === 1) { g = ctx.createLinearGradient(W, 0, W - w, 0); } else if (i === 2) { g = ctx.createLinearGradient(0, 0, 0, w); } else { g = ctx.createLinearGradient(0, H, 0, H - w); }
+          g.addColorStop(0, 'rgba(255,170,70,' + (al * 0.35).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,170,70,0)');
+          ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        }
+        ctx.restore();
+      }
+    }
+  },
+  // Dämmerung: warmes Orange beim Übergang (vor der Nacht-Ebene)
+  dusk() {
+    const n = Progression.darkness(), tr = 1 - Math.abs(2 * n - 1);
+    if (n <= 0.01 || n >= 0.99 || tr < 0.02) return;
+    const R = Renderer, ctx = R.ctx;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = 'rgba(255,170,110,' + (tr * 0.55).toFixed(3) + ')'; ctx.fillRect(0, 0, R.cv.width, R.cv.height);
+    ctx.restore();
+  },
+};
+
 /* Zeichenroutinen für Welt-Objekte (flaches Vektordesign, ALOP-Farben) */
 const Draw = {
   rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); },
@@ -4756,10 +4927,12 @@ const Draw = {
     const p = this.lerpPos(P, a); if (!R.inView(p.x, p.y, 3)) return;
     const tx = U.wrapX(P.ptx + U.dx(P.ptx, P.tx) * a), ty = P.pty + (P.ty - P.pty) * a;
     if (P.veh) this.cart(P.veh, a);
+    const J = Actors.jump; let jh = 0;
+    if (J && !J.enter) { const u = Math.min(1, (VFX.t - J.t0) / 0.28); p.x = U.wrapX(J.x0 + U.dx(J.x0, p.x) * u); p.y = J.y0 + (p.y - J.y0) * u; jh = Math.sin(u * Math.PI) * 0.8; }
     const H = C.head(P, tx, ty, p.x, p.y), dir = this.vis.dir !== undefined ? this.vis.dir : P.dir;
     const kg = P.ctxLoad(), cap = P.ctxCap(), full = kg >= cap - 0.01;
     this.astronaut(p.x, p.y, dir, {
-      hop: C.hopH, land: C.land, suit: Net.role ? Net.myColor : THEME.alop.orange, fill: C.fillVis, fillCol: GOOD_COL[C.lastType],
+      hop: C.hopH + jh, land: C.land, suit: Net.role ? Net.myColor : THEME.alop.orange, fill: C.fillVis, fillCol: GOOD_COL[C.lastType],
       look: C.look, pulse: C.pulse, warn: full && Math.sin(VFX.t * 12) > 0, tool: G.tool, head: H, active: P.cleaning, swap: C.swapT, flash: C.flash,
     });
   },
@@ -4948,15 +5121,19 @@ const Draw = {
   // Kompatibilität (Mitspieler): alter Aufruf mit logischer Werkzeugposition
   tool(tx, ty, p, active) { const hd = { x: tx, y: ty, a: Math.atan2(ty - p.y, U.dx(p.x, tx)), reach: Math.hypot(U.dx(p.x, tx), ty - p.y) }; this.toolFx(G.tool, hd, p.x, p.y, active, 0); },
   cart(v, a) {
-    const R = Renderer, ctx = R.ctx, p = { x: v.x, y: v.y };
-    R.at(p.x, p.y, v.a);
-    ctx.fillStyle = 'rgba(15,12,10,0.3)'; this.rr(ctx, -0.65, -0.5, 1.4, 1.1, 0.25); ctx.fill();
-    ctx.fillStyle = '#5a6468'; ctx.fillRect(-0.9, -0.35, 0.4, 0.08); ctx.fillRect(-0.9, 0.27, 0.4, 0.08);
-    ctx.fillStyle = C_ORANGE; this.rr(ctx, -0.55, -0.55, 1.15, 1.1, 0.22); ctx.fill();
+    const R = Renderer, ctx = R.ctx, T = THEME, s = Actors.vs(v);
+    R.at(v.x, v.y, v.a);
+    ctx.fillStyle = 'rgba(12,10,8,0.26)'; this.rr(ctx, -0.55, -0.45, 1.45, 1.1, 0.3); ctx.fill();
+    // Griffe und Rad (dreht sich mit)
+    ctx.strokeStyle = T.metal.dark; ctx.lineWidth = 0.1; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-0.55, -0.3); ctx.lineTo(-0.95, -0.34); ctx.moveTo(-0.55, 0.3); ctx.lineTo(-0.95, 0.34); ctx.stroke(); ctx.lineCap = 'butt';
+    ctx.save(); ctx.translate(0.62, 0); ctx.fillStyle = '#20262a'; this.rr(ctx, -0.2, -0.1, 0.4, 0.2, 0.08); ctx.fill();
+    ctx.strokeStyle = '#4a5357'; ctx.lineWidth = 0.04; for (let i = 0; i < 3; i++) { const xx = -0.18 + (((s.wheel * 1.4 + i / 3) % 1) + 1) % 1 * 0.36; ctx.beginPath(); ctx.moveTo(xx, -0.1); ctx.lineTo(xx, 0.1); ctx.stroke(); } ctx.restore();
+    // Mulde mit Lichtkante, Füllung in Staubfarbe
+    const g = ctx.createLinearGradient(-0.5, -0.5, 0.5, 0.5); g.addColorStop(0, T.alop.orangeLight); g.addColorStop(0.4, T.alop.orange); g.addColorStop(1, T.alop.orangeDeep);
+    ctx.fillStyle = g; this.rr(ctx, -0.55, -0.52, 1.12, 1.04, 0.24); ctx.fill(); ctx.strokeStyle = T.outline; ctx.lineWidth = 0.06; ctx.stroke();
     const f = Math.min(1, Vehicles.loadKg(v) / Vehicles.cap(v));
-    ctx.fillStyle = '#3a2f26'; this.rr(ctx, -0.42, -0.42, 0.9, 0.84, 0.16); ctx.fill();
-    if (f > 0) { ctx.fillStyle = '#a89070'; this.rr(ctx, -0.42, -0.42 + 0.84 * (1 - f), 0.9, 0.84 * f, 0.12); ctx.fill(); }
-    ctx.fillStyle = '#20262a'; ctx.fillRect(0.55, -0.12, 0.25, 0.24);
+    ctx.fillStyle = '#3a2f26'; this.rr(ctx, -0.42, -0.4, 0.86, 0.8, 0.16); ctx.fill();
+    if (f > 0) { ctx.fillStyle = GOOD_COL[Clean.lastType] || '#a89070'; this.rr(ctx, -0.42, -0.4 + 0.8 * (1 - f), 0.86, 0.8 * f, 0.12); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(-0.4, -0.4 + 0.8 * (1 - f), 0.82, 0.05); }
   },
   vehicles(a) {
     const R = Renderer, ctx = R.ctx;
@@ -4966,50 +5143,185 @@ const Draw = {
       if (!R.inView(p.x, p.y, v.def.body + 6)) continue;
       const ang = v === Player.veh ? U.angLerp(v.pa, v.a, a) : v.a;
       if (v.def.kind === 'cart') { this.cart(v, a); continue; }
+      // Herbeirufen: Landung mit Lieferfallschirm und Staubring
+      const L = Actors.land.get(v.id), le = L ? VFX.t - L : 9;
+      if (le < 0.7) {
+        const u = le / 0.7, h = (1 - u) * (1 - u) * 9;
+        R.at(p.x, p.y - h); ctx.strokeStyle = 'rgba(40,40,40,0.55)'; ctx.lineWidth = 0.05;
+        const cw = v.def.body * 1.6;
+        ctx.fillStyle = THEME.alop.orange; ctx.beginPath(); ctx.ellipse(0, -cw * 1.2, cw, cw * 0.45, 0, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = THEME.suit.white; for (let q = -1; q <= 1; q += 2) { ctx.beginPath(); ctx.ellipse(q * cw * 0.5, -cw * 1.2, cw * 0.18, cw * 0.4, 0, Math.PI, 0); ctx.fill(); }
+        ctx.beginPath(); ctx.moveTo(-cw, -cw * 1.2); ctx.lineTo(-v.def.body * 0.5, 0); ctx.moveTo(cw, -cw * 1.2); ctx.lineTo(v.def.body * 0.5, 0); ctx.stroke();
+        this.vehicle(v, p.x, p.y - h, ang, false, 1 + h * 0.06);
+        continue;
+      }
       this.vehicle(v, p.x, p.y, ang, v === Player.veh);
     }
+    // Einsteigen: Figur springt im Bogen ins Fahrzeug
+    const J = Actors.jump;
+    if (J && J.enter && J.v) {
+      const u = Math.min(1, (VFX.t - J.t0) / 0.28), x = U.wrapX(J.x0 + U.dx(J.x0, J.v.x) * u), y = J.y0 + (J.v.y - J.y0) * u;
+      this.astronaut(x, y, J.v.a, { hop: Math.sin(u * Math.PI) * 0.8, suit: Net.role ? Net.myColor : THEME.alop.orange, fill: 0 });
+    }
   },
-  vehicle(v, x, y, ang, driven) {
-    const R = Renderer, ctx = R.ctx, d = v.def, b = d.body, W = Vehicles.width(v);
+  // Fahrzeuge in Draufsicht: Räder/Ketten drehen mit, Federung und Kurvenneigung,
+  // Bürstenwalze an der Putzkante (hinten), Seitenbesen vorn, Scheinwerferkegel, Rundumlicht
+  vehicle(v, x, y, ang, driven, scale) {
+    const R = Renderer, ctx = R.ctx, d = v.def, b = d.body, W = Vehicles.width(v), T = THEME, s = Actors.vs(v), night = Progression.darkness();
     let cleaning = driven && Player.cleaning;
     if (!driven && v.driver && Net.role) { const o = Net.list().find(q => q.veh === v.id); if (o) { cleaning = o.clean; driven = true; } }
+    const hov = d.hover ? 0.38 + Math.sin(VFX.t * 3 + v.id) * 0.06 : 0;
+    // weicher Schatten (Schwebekehrer: weiter versetzt, weil höher)
     R.at(x, y, ang);
-    const hov = d.hover ? 0.35 + Math.sin(G.t * 3) * 0.05 : 0;
-    ctx.fillStyle = 'rgba(15,12,10,0.3)'; this.rr(ctx, -b * 1.05 + 0.2 + hov, -b * 0.8 + 0.25 + hov, b * 2.1, b * 1.6, b * 0.4); ctx.fill();
-    ctx.translate(-hov * 0.4, -hov);
-    // Bürstenbalken hinten
-    ctx.fillStyle = cleaning ? '#e2c27a' : '#8f8064';
-    this.rr(ctx, -b * 1.02, -W / 2, b * 0.36, W, 0.15); ctx.fill();
-    ctx.strokeStyle = 'rgba(60,40,20,0.6)'; ctx.lineWidth = 0.05;
-    for (let i = 0; i < W * 3; i++) { const yy = -W / 2 + (i + ((v.spin * 3) % 1 + 1) % 1) / 3; if (yy < W / 2) { ctx.beginPath(); ctx.moveTo(-b * 1.02, yy); ctx.lineTo(-b * 0.68, yy); ctx.stroke(); } }
-    // Räder / Ketten
+    const so = 0.22 + hov * 0.9;
+    ctx.fillStyle = 'rgba(12,10,8,0.18)'; this.rr(ctx, -b * 1.1 + so * 1.4, -b * 0.85 + so * 1.4, b * 2.2, b * 1.7, b * 0.45); ctx.fill();
+    ctx.fillStyle = 'rgba(12,10,8,0.2)'; this.rr(ctx, -b * 1.04 + so, -b * 0.8 + so, b * 2.08, b * 1.6, b * 0.4); ctx.fill();
+    // Scheinwerferkegel (tags kaum, nachts kräftig)
+    const hl = (driven ? 0.06 : 0.025) + night * (driven ? 0.55 : 0.25);
+    if (hl > 0.03) {
+      ctx.globalCompositeOperation = 'lighter';
+      const g = ctx.createLinearGradient(b * 0.8, 0, b * 0.8 + 7, 0); g.addColorStop(0, 'rgba(255,246,210,' + hl.toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,246,210,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(b * 0.8, -b * 0.35); ctx.lineTo(b * 0.8 + 7, -b * 0.35 - 2.6); ctx.lineTo(b * 0.8 + 7, b * 0.35 + 2.6); ctx.lineTo(b * 0.8, b * 0.35); ctx.closePath(); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    // Neigung in Kurven, Nicken beim Beschleunigen, Einfedern beim Einsteigen
+    const sc = (scale || 1) * (1 - Math.max(0, s.spring) * 0.05);
+    ctx.translate(-hov * 0.35, -hov - s.lean * b * 0.6); ctx.scale(sc * (1 + s.bounce * 0.4), sc * (1 - Math.abs(s.lean) * 0.4));
+    // Bürstenwalze hinten (dort putzt die Logik), dreht beim Bürsten
+    s.unfold = (s.unfold || 0) + ((cleaning ? 1 : 0) - (s.unfold || 0)) * Math.min(1, 0.06 + (cleaning ? 0.25 : 0.04));
+    const Wf = W, W2 = Math.min(W, b * 1.5) + (W - Math.min(W, b * 1.5)) * s.unfold;
+    const rollerX = -b * 1.02, rw = b * 0.36;
+    // Tragarme zur Karosserie
+    ctx.fillStyle = T.metal.dark; ctx.fillRect(rollerX + rw * 0.4, -b * 0.42, b * 0.5, 0.14); ctx.fillRect(rollerX + rw * 0.4, b * 0.42 - 0.14, b * 0.5, 0.14);
+    // Walze als Zylinder (Licht oben, Schatten unten), Borsten laufen beim Bürsten
+    const rg = ctx.createLinearGradient(rollerX, 0, rollerX + rw, 0); rg.addColorStop(0, cleaning ? '#f2d690' : '#a89577'); rg.addColorStop(0.55, cleaning ? '#d9b867' : '#8f8064'); rg.addColorStop(1, cleaning ? '#9c7d3c' : '#6a5d48');
+    ctx.fillStyle = rg; this.rr(ctx, rollerX, -W2 / 2, rw, W2, 0.15); ctx.fill();
+    ctx.strokeStyle = 'rgba(70,46,20,0.55)'; ctx.lineWidth = 0.045;
+    const rp = cleaning ? VFX.t * 6 : s.wheel * 1.5;
+    for (let i = 0; i < W2 * 3; i++) { const yy = -W2 / 2 + (i + ((rp % 1) + 1) % 1) / 3; if (yy < W2 / 2) { ctx.beginPath(); ctx.moveTo(rollerX + 0.02, yy); ctx.lineTo(rollerX + rw - 0.02, yy + 0.1); ctx.stroke(); } }
+    ctx.strokeStyle = T.outline; ctx.lineWidth = 0.05; this.rr(ctx, rollerX, -W2 / 2, rw, W2, 0.15); ctx.stroke();
+    ctx.fillStyle = T.metal.darker; this.rr(ctx, rollerX - 0.03, -W2 / 2 - 0.12, rw + 0.06, 0.2, 0.06); ctx.fill(); this.rr(ctx, rollerX - 0.03, W2 / 2 - 0.08, rw + 0.06, 0.2, 0.06); ctx.fill();
+    // Räder / Ketten (drehen mit dem Tempo)
     if (!d.hover) {
-      ctx.fillStyle = '#23292c';
-      if (d.id === 'crawler') { this.rr(ctx, -b * 0.85, -b * 0.82, b * 1.75, b * 0.36, 0.12); ctx.fill(); this.rr(ctx, -b * 0.85, b * 0.46, b * 1.75, b * 0.36, 0.12); ctx.fill(); ctx.strokeStyle = '#4a5357'; ctx.lineWidth = 0.08; for (let i = 0; i < 9; i++) { const xx = -b * 0.85 + ((i + v.spin * 2) % 9 + 9) % 9 / 9 * b * 1.75; ctx.beginPath(); ctx.moveTo(xx, -b * 0.82); ctx.lineTo(xx, -b * 0.46); ctx.moveTo(xx, b * 0.46); ctx.lineTo(xx, b * 0.82); ctx.stroke(); } }
-      else { const n = d.id === 'rover' ? 3 : 2; for (let i = 0; i < n; i++) { const xx = -b * 0.55 + i * (b * 1.1 / (n - 1)) - 0.3; this.rr(ctx, xx, -b * 0.78, 0.6, 0.3, 0.1); ctx.fill(); this.rr(ctx, xx, b * 0.48, 0.6, 0.3, 0.1); ctx.fill(); } }
-    } else { const g = ctx.createRadialGradient(0, 0, 0, 0, 0, b * 1.1); g.addColorStop(0, 'rgba(120,230,255,0.35)'); g.addColorStop(1, 'rgba(120,230,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, b * 1.1, 0, Math.PI * 2); ctx.fill(); }
-    // Karosserie
-    const bodyCol = d.id === 'rover' ? C_PETROL : d.id === 'hover' ? '#e9eef0' : C_ORANGE;
+      ctx.fillStyle = '#20262a';
+      if (d.id === 'crawler') {
+        for (const sy of [-1, 1]) { this.rr(ctx, -b * 0.88, sy > 0 ? b * 0.44 : -b * 0.84, b * 1.8, b * 0.4, 0.14); ctx.fill(); }
+        ctx.strokeStyle = '#4a5357'; ctx.lineWidth = 0.08;
+        for (let i = 0; i < 10; i++) { const xx = -b * 0.86 + ((((i / 10) + s.wheel * 0.25) % 1) + 1) % 1 * b * 1.74; ctx.beginPath(); ctx.moveTo(xx, -b * 0.82); ctx.lineTo(xx, -b * 0.46); ctx.moveTo(xx, b * 0.46); ctx.lineTo(xx, b * 0.82); ctx.stroke(); }
+      } else {
+        const n = d.id === 'rover' ? 3 : 2;
+        for (let i = 0; i < n; i++) {
+          const xx = -b * 0.55 + i * (b * 1.1 / (n - 1)) - 0.3;
+          for (const sy of [-1, 1]) {
+            const yy = sy > 0 ? b * 0.48 : -b * 0.78;
+            ctx.fillStyle = '#20262a'; this.rr(ctx, xx, yy, 0.62, 0.3, 0.1); ctx.fill();
+            ctx.strokeStyle = '#4a5357'; ctx.lineWidth = 0.05; for (let q = 0; q < 3; q++) { const tx = xx + (((q / 3 + s.wheel * 0.9) % 1) + 1) % 1 * 0.62; ctx.beginPath(); ctx.moveTo(tx, yy); ctx.lineTo(tx, yy + 0.3); ctx.stroke(); }
+          }
+        }
+      }
+    } else {
+      // Schwebe-Glühen und Hitzeflimmern
+      ctx.globalCompositeOperation = 'lighter';
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, b * 1.15); g.addColorStop(0, 'rgba(120,230,255,0.42)'); g.addColorStop(1, 'rgba(120,230,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, b * 1.15, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = 'rgba(200,245,255,0.18)'; ctx.lineWidth = 0.05;
+      for (let k = 0; k < 3; k++) { const rr = b * (0.95 + k * 0.12) + Math.sin(VFX.t * 9 + k) * 0.05; ctx.beginPath(); ctx.arc(0, 0, rr, 0, 6.283); ctx.stroke(); }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    // Karosserie mit Lichtkante oben links (Licht in Weltrichtung)
+    const bodyCol = d.id === 'rover' ? T.alop.petrol : d.id === 'hover' ? '#e9eef0' : d.id === 'crawler' ? '#c46a22' : T.alop.orange;
     ctx.fillStyle = bodyCol; this.rr(ctx, -b * 0.75, -b * 0.55, b * 1.6, b * 1.1, b * 0.28); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.06; ctx.stroke();
-    // Ladebehälter
+    ctx.save(); this.rr(ctx, -b * 0.75, -b * 0.55, b * 1.6, b * 1.1, b * 0.28); ctx.clip(); ctx.rotate(-ang);
+    const lg = ctx.createLinearGradient(-b, -b, b, b); lg.addColorStop(0, 'rgba(255,255,255,0.28)'); lg.addColorStop(0.5, 'rgba(255,255,255,0)'); lg.addColorStop(1, 'rgba(0,0,0,0.22)');
+    ctx.fillStyle = lg; ctx.fillRect(-b * 2, -b * 2, b * 4, b * 4); ctx.restore();
+    ctx.strokeStyle = T.outline; ctx.lineWidth = 0.07; this.rr(ctx, -b * 0.75, -b * 0.55, b * 1.6, b * 1.1, b * 0.28); ctx.stroke();
+    // Ladebehälter in Staubfarbe
     const f = Math.min(1, Vehicles.loadKg(v) / Vehicles.cap(v));
-    ctx.fillStyle = 'rgba(30,24,20,0.75)'; this.rr(ctx, -b * 0.62, -b * 0.4, b * 0.75, b * 0.8, 0.12); ctx.fill();
-    if (f > 0.01) { ctx.fillStyle = '#ad9573'; this.rr(ctx, -b * 0.62, -b * 0.4 + b * 0.8 * (1 - f), b * 0.75, b * 0.8 * f, 0.1); ctx.fill(); }
+    ctx.fillStyle = 'rgba(30,24,20,0.78)'; this.rr(ctx, -b * 0.62, -b * 0.4, b * 0.75, b * 0.8, 0.12); ctx.fill();
+    if (f > 0.01) { ctx.fillStyle = driven ? GOOD_COL[Clean.lastType] : '#ad9573'; this.rr(ctx, -b * 0.62, -b * 0.4 + b * 0.8 * (1 - f), b * 0.75, b * 0.8 * f, 0.1); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillRect(-b * 0.6, -b * 0.4 + b * 0.8 * (1 - f), b * 0.71, 0.06); }
     // Kabine
-    ctx.fillStyle = d.id === 'hover' ? C_ORANGE : C_WHITE; this.rr(ctx, b * 0.2, -b * 0.42, b * 0.55, b * 0.84, b * 0.2); ctx.fill();
-    ctx.fillStyle = '#28506e'; this.rr(ctx, b * 0.48, -b * 0.34, b * 0.22, b * 0.68, 0.08); ctx.fill();
+    ctx.fillStyle = d.id === 'hover' ? T.alop.orange : T.suit.white; this.rr(ctx, b * 0.2, -b * 0.42, b * 0.55, b * 0.84, b * 0.2); ctx.fill(); ctx.strokeStyle = T.outline; ctx.lineWidth = 0.05; ctx.stroke();
+    const wg = ctx.createLinearGradient(b * 0.48, -b * 0.34, b * 0.7, b * 0.34); wg.addColorStop(0, '#163a56'); wg.addColorStop(1, '#5d93b8');
+    ctx.fillStyle = wg; this.rr(ctx, b * 0.48, -b * 0.34, b * 0.22, b * 0.68, 0.08); ctx.fill();
     // Seitenbesen vorn
-    if (d.id !== 'hover') for (const sgn of [-1, 1]) { ctx.save(); ctx.translate(b * 0.78, sgn * b * 0.6); ctx.rotate(v.spin * 4 * sgn); ctx.strokeStyle = '#d9b867'; ctx.lineWidth = 0.07; for (let i = 0; i < 6; i++) { const aa = i / 6 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(aa) * b * 0.32, Math.sin(aa) * b * 0.32); ctx.stroke(); } ctx.restore(); }
-    // Streifen und Logo
-    ctx.fillStyle = d.id === 'rover' ? C_ORANGE : C_PETROL; ctx.fillRect(-b * 0.75, -0.06, b * 0.9, 0.12);
+    if (d.id !== 'hover') for (const sgn of [-1, 1]) { ctx.save(); ctx.translate(b * 0.78, sgn * b * 0.6); ctx.rotate((cleaning ? VFX.t * 9 : s.wheel * 2) * sgn); ctx.strokeStyle = '#d9b867'; ctx.lineWidth = 0.07; for (let i = 0; i < 6; i++) { const aa = i / 6 * 6.283; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(aa) * b * 0.32, Math.sin(aa) * b * 0.32); ctx.stroke(); } ctx.fillStyle = '#5a4a2a'; ctx.beginPath(); ctx.arc(0, 0, 0.08, 0, 6.283); ctx.fill(); ctx.restore(); }
+    // Streifen, Logo
+    ctx.fillStyle = d.id === 'rover' ? T.alop.orange : T.alop.petrol; ctx.fillRect(-b * 0.75, -0.06, b * 0.9, 0.12);
     this.logo(ctx, -b * 0.25, 0, Math.min(0.42, b * 0.22));
-    if (driven) { ctx.fillStyle = '#fff6c8'; ctx.beginPath(); ctx.arc(b * 0.84, -b * 0.3, 0.1, 0, Math.PI * 2); ctx.arc(b * 0.84, b * 0.3, 0.1, 0, Math.PI * 2); ctx.fill(); }
+    // Scheinwerfer und Rücklichter
+    ctx.fillStyle = driven || night > 0.2 ? '#fff6c8' : '#c9c3a4'; ctx.beginPath(); ctx.arc(b * 0.84, -b * 0.3, 0.1, 0, 6.283); ctx.arc(b * 0.84, b * 0.3, 0.1, 0, 6.283); ctx.fill();
+    ctx.fillStyle = driven ? '#ff5a4a' : '#7a2a22'; ctx.fillRect(-b * 0.77, -b * 0.45, 0.08, 0.18); ctx.fillRect(-b * 0.77, b * 0.27, 0.08, 0.18);
+    // Rundumlicht (ALOP-Orange) auf größeren Fahrzeugen
+    if (d.id === 'rover' || d.id === 'crawler' || d.id === 'hover') {
+      const bx = b * 0.45, on = driven || cleaning;
+      ctx.fillStyle = on ? T.alop.orange : '#7a4a2a'; ctx.beginPath(); ctx.arc(bx, 0, 0.13, 0, 6.283); ctx.fill();
+      if (on) { const ra = VFX.t * 7; ctx.globalCompositeOperation = 'lighter'; const sp = VFX.spr('soft', VFX.PAL.orange); ctx.globalAlpha = 0.35 + 0.25 * Math.abs(Math.sin(ra)); ctx.drawImage(VFX.atlas, sp[0], sp[1], 64, 64, bx - 0.7, -0.7, 1.4, 1.4); ctx.globalAlpha = 0.25; ctx.fillStyle = T.alop.orange; ctx.beginPath(); ctx.moveTo(bx, 0); ctx.arc(bx, 0, 1.6, ra, ra + 0.5); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+    }
+  },
+  // K.E.H.R.-Bots: freundliches Auge (blinzelt), Antenne mit Statuslicht, drehende Bürste, Status-Badge
+  robotList(alpha, lod) {
+    const R = Renderer, ctx = R.ctx, T = THEME, now = VFX.t;
+    for (const r of Robots.list) {
+      if (!R.inView(r.x, r.y, 3)) continue;
+      const x = r.near ? U.wrapX(r.px + U.dx(r.px, r.x) * alpha) : r.x, y = r.near ? r.py + (r.y - r.py) * alpha : r.y;
+      const st = r.warn ? 'bad' : r.state === 'radio' ? 'radio' : r.state === 'work' ? 'work' : 'wait';
+      const sc = st === 'work' ? T.success : st === 'wait' ? T.warn : T.danger;
+      if (lod > 0 || R.s < 4) { R.at(x, y); ctx.fillStyle = st === 'work' ? T.alop.orange : sc; ctx.beginPath(); ctx.arc(0, 0, Math.max(1.2, 3 / R.s), 0, 6.283); ctx.fill(); continue; }
+      const rad = Robots.radius(r), s = r.def.fly ? 0.9 : r.model === 'mk1' ? 0.62 : r.model === 'mk2' ? 0.8 : 1.15, A = Actors.rs(r);
+      if (r.def.fly) {
+        // Schwarm-Drohne: Schatten versetzt, Rotor-Unschärfe, leichtes Schweben
+        const bob = Math.sin(now * 4 + A.ph) * 0.12;
+        R.at(x, y); ctx.fillStyle = 'rgba(12,10,8,0.2)'; ctx.beginPath(); ctx.ellipse(0.7, 0.85, s * 0.75, s * 0.6, 0, 0, 6.283); ctx.fill();
+        R.at(x, y - 0.6 - bob, r.a);
+        ctx.strokeStyle = T.metal.dark; ctx.lineWidth = 0.12; ctx.beginPath(); ctx.moveTo(-s, -s); ctx.lineTo(s, s); ctx.moveTo(-s, s); ctx.lineTo(s, -s); ctx.stroke();
+        for (const [px, py] of [[-s, -s], [s, s], [-s, s], [s, -s]]) { ctx.fillStyle = 'rgba(210,228,236,0.28)'; ctx.beginPath(); ctx.arc(px, py, 0.5, 0, 6.283); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 0.03; ctx.beginPath(); ctx.arc(px, py, 0.5, now * 30, now * 30 + 0.8); ctx.stroke(); }
+        ctx.fillStyle = T.alop.orange; ctx.beginPath(); ctx.arc(0, 0, s * 0.45, 0, 6.283); ctx.fill(); ctx.strokeStyle = T.outline; ctx.lineWidth = 0.05; ctx.stroke();
+        ctx.fillStyle = sc; ctx.beginPath(); ctx.arc(s * 0.22, 0, 0.12, 0, 6.283); ctx.fill();
+        if (r.cleanFx > 0) { ctx.fillStyle = 'rgba(160,230,255,0.14)'; ctx.beginPath(); ctx.arc(0.2, 0.5, rad, 0, 6.283); ctx.fill(); }
+      } else {
+        R.at(x, y, r.a);
+        ctx.fillStyle = 'rgba(12,10,8,0.28)'; ctx.beginPath(); ctx.arc(0.14, 0.18, s * 1.02, 0, 6.283); ctx.fill();
+        // drehende Putzbürste unten
+        if (r.cleanFx > 0 || r.state === 'work') { ctx.save(); ctx.rotate(now * 7 + A.ph); ctx.strokeStyle = '#d9b867'; ctx.lineWidth = 0.06; const br = Math.min(rad, s * 1.25); for (let i = 0; i < 10; i++) { const aa = i / 10 * 6.283; ctx.beginPath(); ctx.moveTo(Math.cos(aa) * br * 0.3, Math.sin(aa) * br * 0.3); ctx.lineTo(Math.cos(aa) * br, Math.sin(aa) * br); ctx.stroke(); } ctx.restore(); }
+        // Kuppel mit Lichtkante
+        const dg = ctx.createRadialGradient(-s * 0.3, -s * 0.3, s * 0.1, 0, 0, s * 0.85); dg.addColorStop(0, '#ffffff'); dg.addColorStop(1, '#c3cdd2');
+        ctx.fillStyle = dg; ctx.beginPath(); ctx.arc(0, 0, s * 0.82, 0, 6.283); ctx.fill(); ctx.strokeStyle = T.outline; ctx.lineWidth = 0.06; ctx.stroke();
+        ctx.fillStyle = T.alop.orange; ctx.beginPath(); ctx.arc(0, 0, s * 0.82, Math.PI * 0.72, Math.PI * 1.28); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = T.alop.petrol; ctx.fillRect(-s * 0.55, -0.06, s * 0.45, 0.12);
+        // Auge (Visier vorn), blinzelt gelegentlich
+        ctx.fillStyle = '#14202a'; this.rr(ctx, s * 0.2, -s * 0.34, s * 0.46, s * 0.68, s * 0.2); ctx.fill();
+        const open = A.blink < 0 ? 0.15 : 1, pulse = st === 'work' ? 0.75 + 0.25 * Math.sin(now * 3 + A.ph) : st === 'wait' ? 1 : (Math.sin(now * 10) > 0 ? 1 : 0.25);
+        ctx.save(); ctx.translate(s * 0.44, 0); ctx.scale(1, open);
+        const sp = VFX.spr('soft', st === 'work' ? VFX.PAL.success : st === 'wait' ? VFX.PAL.warn : VFX.PAL.danger);
+        ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.6 * pulse; ctx.drawImage(VFX.atlas, sp[0], sp[1], 64, 64, -0.32, -0.32, 0.64, 0.64); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = sc; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.1, s * 0.16, 0, 0, 6.283); ctx.fill();
+        ctx.restore();
+        // Antenne mit Statuslicht
+        ctx.strokeStyle = T.metal.dark; ctx.lineWidth = 0.05; ctx.beginPath(); ctx.moveTo(-s * 0.45, -s * 0.2); ctx.lineTo(-s * 0.75, -s * 0.55); ctx.stroke();
+        ctx.fillStyle = pulse > 0.6 ? sc : '#333'; ctx.beginPath(); ctx.arc(-s * 0.78, -s * 0.58, 0.08, 0, 6.283); ctx.fill();
+        const f = Robots.loadKg(r) / Robots.cap(r);
+        if (f > 0.02) { ctx.fillStyle = 'rgba(40,30,20,0.7)'; ctx.fillRect(-s * 0.45, s * 0.36, s * 0.6, 0.1); ctx.fillStyle = GOOD_COL[0]; ctx.fillRect(-s * 0.45, s * 0.36, s * 0.6 * Math.min(1, f), 0.1); }
+      }
+      // Status ohne Antippen lesbar: runde Badges mit Symbol (nicht nur Farbe)
+      if (st !== 'work') {
+        R.at(x, y - 1.35);
+        ctx.fillStyle = 'rgba(18,23,34,0.9)'; ctx.beginPath(); ctx.arc(0, 0, 0.42, 0, 6.283); ctx.fill();
+        ctx.strokeStyle = sc; ctx.lineWidth = 0.08; ctx.stroke();
+        ctx.strokeStyle = sc; ctx.fillStyle = sc; ctx.lineWidth = 0.07; ctx.lineCap = 'round';
+        if (st === 'radio') { ctx.beginPath(); ctx.arc(0, 0.12, 0.1, 0, 6.283); ctx.fill(); ctx.beginPath(); ctx.arc(0, 0.12, 0.25, -2.4, -0.7); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-0.22, -0.22); ctx.lineTo(0.22, 0.22); ctx.stroke(); }
+        else if (st === 'bad') { ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.lineTo(0, 0.06); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0.19, 0.04, 0, 6.283); ctx.fill(); }
+        else if (r.state === 'toDrop') { ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.lineTo(0, 0.16); ctx.moveTo(-0.13, 0.04); ctx.lineTo(0, 0.18); ctx.lineTo(0.13, 0.04); ctx.stroke(); }
+        else { ctx.beginPath(); ctx.moveTo(-0.09, -0.15); ctx.lineTo(-0.09, 0.15); ctx.moveTo(0.09, -0.15); ctx.lineTo(0.09, 0.15); ctx.stroke(); }
+        ctx.lineCap = 'butt';
+      }
+    }
   },
   /* --- Gebäude --- */
+  rots: new Map(),
   buildings(lod) {
     const R = Renderer;
     for (const b of Buildings.list) {
+      const pr = this.rots.get(b.id); if (pr !== undefined && pr !== b.rot) Actors.onRotate(b, pr); this.rots.set(b.id, b.rot);
       if (b.type === 'bridge') continue;
       if (!R.inView(b.x + b.w / 2, b.y + b.h / 2, Math.max(b.w, b.h) + 2)) continue;
       if (lod === 2) { R.at(b.x, b.y); R.ctx.fillStyle = b.type === 'depot' ? C_ORANGE : C_PETROL; R.ctx.fillRect(0, 0, Math.max(b.w, 12), Math.max(b.h, 12)); continue; }
@@ -5017,14 +5329,28 @@ const Draw = {
     }
   },
   building(type, x, y, rot, w, h, b, alpha) {
-    const R = Renderer, ctx = R.ctx;
+    const R = Renderer, ctx = R.ctx, TH = THEME, an = b ? Actors.anim(b) : null;
+    const hw = w / 2, hh = h / 2, t = G ? G.t : 0, soft = VFX.T.softShadow;
+    // weicher Schatten (Sonne oben links; beim Anheben/Fallen größer)
+    const lift = an ? (an.drop || 0) + (an.lift || 0) : 0;
     R.at(U.wrapX(x + w / 2), y + h / 2, 0);
     ctx.globalAlpha = alpha;
-    const hw = w / 2, hh = h / 2, t = G ? G.t : 0;
-    // Fundament
-    if (type !== 'antenna' && type !== 'lamp' && type !== 'splitter') { ctx.fillStyle = 'rgba(15,12,10,0.25)'; this.rr(ctx, -hw + 0.25, -hh + 0.3, w, h, 0.4); ctx.fill(); ctx.fillStyle = '#6b757a'; this.rr(ctx, -hw + 0.05, -hh + 0.05, w - 0.1, h - 0.1, 0.35); ctx.fill(); ctx.strokeStyle = '#3f474b'; ctx.lineWidth = 0.08; ctx.stroke(); }
+    if (type !== 'lamp') {
+      const so = 0.28 + lift * 0.5, sr = type === 'antenna' || type === 'splitter' ? 0.5 : 0.4;
+      if (soft) { ctx.fillStyle = 'rgba(12,10,8,0.12)'; this.rr(ctx, -hw + so * 1.6, -hh + so * 1.7, w, h, sr + 0.2); ctx.fill(); }
+      ctx.fillStyle = 'rgba(12,10,8,' + (soft ? 0.18 : 0.26) + ')'; this.rr(ctx, -hw + so, -hh + so * 1.1, w, h, sr); ctx.fill();
+    }
+    if (an) { ctx.translate(-lift * 0.15, -lift * 0.9); if (an.sc) ctx.scale(an.sc, an.sc); }
+    // Fundament: Metallplatte, Lichtkante oben links, Outline
+    if (type !== 'antenna' && type !== 'lamp' && type !== 'splitter') {
+      const fg = ctx.createLinearGradient(-hw, -hh, hw, hh); fg.addColorStop(0, '#8b969b'); fg.addColorStop(0.5, '#6b757a'); fg.addColorStop(1, '#525b60');
+      ctx.fillStyle = fg; this.rr(ctx, -hw + 0.05, -hh + 0.05, w - 0.1, h - 0.1, 0.35); ctx.fill(); ctx.strokeStyle = TH.outline; ctx.lineWidth = 0.08; ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 0.06; ctx.beginPath(); ctx.moveTo(-hw + 0.3, hh - 0.25); ctx.lineTo(-hw + 0.15, -hh + 0.4); ctx.quadraticCurveTo(-hw + 0.15, -hh + 0.15, -hw + 0.4, -hh + 0.15); ctx.lineTo(hw - 0.3, -hh + 0.15); ctx.stroke();
+    }
+    // Einrast-Leuchten beim Platzieren
+    if (an && an.glow > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(99,203,198,' + (an.glow * 0.8).toFixed(3) + ')'; ctx.lineWidth = 0.18; this.rr(ctx, -hw, -hh, w, h, 0.4); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
     // gedreht zeichnen (Ausgang zeigt in Richtung rot)
-    ctx.rotate(rot * Math.PI / 2);
+    ctx.rotate(rot * Math.PI / 2 + (an && an.rot ? an.rot : 0));
     const lw = (rot & 1) ? h : w, lh = (rot & 1) ? w : h, lx = lw / 2, ly = lh / 2;
     switch (type) {
       case 'depot': case 'outpost': {
@@ -5097,15 +5423,20 @@ const Draw = {
       case 'compressor': case 'brickpress': {
         ctx.fillStyle = type === 'compressor' ? C_PETROL : '#8c4a32'; this.rr(ctx, -lx + 0.25, -ly + 0.25, lw - 0.5, lh - 0.5, 0.35); ctx.fill();
         ctx.fillStyle = C_WHITE; this.rr(ctx, -lx + 0.55, -ly + 0.55, lw - 1.1, lh - 1.1, 0.25); ctx.fill();
-        const ph = b && b.status === 'ok' ? Math.abs(Math.sin(t * 5)) : 0.3;
+        const work = b && b.status === 'ok', ph = work ? Math.abs(Math.sin(VFX.t * 5)) : 0.3;
         ctx.fillStyle = '#3a4246'; ctx.fillRect(-0.5, -0.7 + ph * 0.3, 1.0, 0.5); ctx.fillRect(-0.5, 0.2 - ph * 0.3, 1.0, 0.5);
+        ctx.fillStyle = TH.metal.light; ctx.fillRect(-0.5, -0.7 + ph * 0.3, 1.0, 0.08); ctx.fillRect(-0.5, 0.2 - ph * 0.3, 1.0, 0.08);
+        // Leuchtfenster zeigt das Produkt
+        ctx.fillStyle = work ? GOOD_COL[type === 'compressor' ? 7 : 8] : '#2a3236'; this.rr(ctx, -lx + 0.65, -0.25, 0.4, 0.5, 0.1); ctx.fill();
+        if (work && b && Renderer.inView(b.x + b.w / 2, b.y + b.h / 2, 2) && VFX.r() < 0.06 * VFX.strength()) Particles.emit('smoke', b.x + b.w / 2 + VFX.rr(-0.4, 0.4), b.y + b.h / 2 - 0.4, 0.4, VFX.rr(-0.2, 0.2), -0.4, 0.4, VFX.rr(1, 1.6), VFX.rr(0.3, 0.5), VFX.PAL.smoke);
         if (type === 'brickpress') { ctx.fillStyle = '#c4643f'; for (let i = 0; i < 3; i++) ctx.fillRect(0.55, -0.6 + i * 0.42, 0.45, 0.32); }
         this.portArrow(ctx, lx, 0);
         break;
       }
       case 'glassoven': {
         ctx.fillStyle = '#6a3a7a'; this.rr(ctx, -lx + 0.3, -ly + 0.3, lw - 0.6, lh - 0.6, 0.6); ctx.fill();
-        const glow = b && b.status === 'ok' ? 0.7 + Math.sin(t * 6) * 0.2 : 0.25;
+        const glow = b && b.status === 'ok' ? 0.7 + Math.sin(VFX.t * 6) * 0.2 : 0.25;
+        if (b && b.status === 'ok' && Renderer.inView(b.x + b.w / 2, b.y + b.h / 2, 2) && VFX.r() < 0.07 * VFX.strength()) Particles.emit('ember', b.x + b.w / 2 + VFX.rr(-0.5, 0.5), b.y + b.h / 2, 0.6, VFX.rr(-0.2, 0.2), -0.5, 0.6, 0.8, 0.25, VFX.PAL.heat);
         const g = ctx.createRadialGradient(0, 0, 0.1, 0, 0, 1.4); g.addColorStop(0, 'rgba(255,200,90,' + glow + ')'); g.addColorStop(1, 'rgba(255,90,20,0)');
         ctx.fillStyle = '#3a2032'; ctx.beginPath(); ctx.arc(0, 0, 1.2, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 1.4, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#8fe6e8'; ctx.fillRect(lx - 1.2, -0.3, 0.5, 0.6);
@@ -5118,7 +5449,8 @@ const Draw = {
         ctx.strokeStyle = '#d9dfe2'; ctx.lineWidth = 0.1; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-0.3, -0.9); ctx.stroke();
         ctx.fillStyle = C_WHITE; ctx.beginPath(); ctx.ellipse(-0.35, -0.95, 0.4, 0.2, -0.5, 0, Math.PI * 2); ctx.fill();
         const on = b ? Buildings.online.has(b) : true;
-        ctx.fillStyle = on ? (Math.sin(t * 4) > 0 ? '#4fd18b' : '#1b5a3a') : '#ff6464'; ctx.beginPath(); ctx.arc(0, 0, 0.13, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = on ? (Math.sin(VFX.t * 4) > 0 ? TH.success : '#1b5a3a') : TH.danger; ctx.beginPath(); ctx.arc(0, 0, 0.13, 0, Math.PI * 2); ctx.fill();
+        if (b && on && alpha >= 1) { const ph = ((VFX.t + b.id * 0.37) % 3) / 3, rr = 0.6 + ph * 7; ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(99,203,198,' + ((1 - ph) * 0.5).toFixed(3) + ')'; ctx.lineWidth = 0.12 * (1 - ph) + 0.03; ctx.beginPath(); ctx.arc(-0.35, -0.95, rr, 0, 6.283); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
         break;
       }
       case 'hangar': {
@@ -5149,15 +5481,22 @@ const Draw = {
         ctx.fillStyle = '#4c565b'; ctx.beginPath(); ctx.arc(0, 0, 0.32, 0, Math.PI * 2); ctx.fill();
         const n = Progression.darkness() > 0.1 || (b && World.chunkRegion[World.ci(b.x, b.y)] === R_POLAR);
         ctx.fillStyle = n ? '#fff3b8' : '#c9c3a4'; ctx.beginPath(); ctx.arc(0, 0, 0.18, 0, Math.PI * 2); ctx.fill();
+        if (n) { const sp = VFX.spr('soft', VFX.PAL.flame); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.5; ctx.drawImage(VFX.atlas, sp[0], sp[1], 64, 64, -1.2, -1.2, 2.4, 2.4); ctx.globalAlpha = alpha; ctx.globalCompositeOperation = 'source-over'; }
         break;
       }
     }
     ctx.globalAlpha = 1;
     if (b && b.status && (type === 'compressor' || type === 'brickpress' || type === 'glassoven' || ((type === 'hopper' || type === 'hangar' || type === 'silo') && b.status !== 'ok'))) {
-      const c = b.status === 'ok' ? '#4fd18b' : b.status === 'wait' ? '#ffc23d' : '#ff6464';
-      ctx.setTransform(1, 0, 0, 1, 0, 0); R.at(U.wrapX(x + w / 2), y + h / 2, 0);
-      ctx.fillStyle = 'rgba(10,16,20,0.8)'; ctx.beginPath(); ctx.arc(hw - 0.35, -hh + 0.35, 0.36, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = c; ctx.beginPath(); ctx.arc(hw - 0.35, -hh + 0.35, 0.22, 0, Math.PI * 2); ctx.fill();
+      const c = b.status === 'ok' ? TH.success : b.status === 'wait' ? TH.warn : TH.danger;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); R.at(U.wrapX(x + w / 2) + hw - 0.35, y + 0.2, 0);
+      const pz = b.status === 'ok' ? 1 + Math.sin(VFX.t * 3) * 0.05 : 1;
+      ctx.scale(pz, pz);
+      ctx.fillStyle = 'rgba(18,23,34,0.92)'; ctx.beginPath(); ctx.arc(0, 0, 0.42, 0, 6.283); ctx.fill(); ctx.strokeStyle = c; ctx.lineWidth = 0.08; ctx.stroke();
+      ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineWidth = 0.08; ctx.lineCap = 'round';
+      if (b.status === 'ok') { ctx.save(); ctx.rotate(VFX.t * 2); for (let q = 0; q < 6; q++) { ctx.rotate(1.047); ctx.beginPath(); ctx.moveTo(0.12, 0); ctx.lineTo(0.22, 0); ctx.stroke(); } ctx.restore(); ctx.beginPath(); ctx.arc(0, 0, 0.08, 0, 6.283); ctx.fill(); }
+      else if (b.status === 'wait') { ctx.beginPath(); ctx.moveTo(-0.08, -0.15); ctx.lineTo(-0.08, 0.15); ctx.moveTo(0.08, -0.15); ctx.lineTo(0.08, 0.15); ctx.stroke(); }
+      else { ctx.beginPath(); ctx.moveTo(-0.14, -0.14); ctx.lineTo(0.14, 0.14); ctx.moveTo(0.14, -0.14); ctx.lineTo(-0.14, 0.14); ctx.stroke(); }
+      ctx.lineCap = 'butt';
     }
   },
   portArrow(ctx, lx, ly) { ctx.fillStyle = '#ffc23d'; ctx.beginPath(); ctx.moveTo(lx - 0.05, ly); ctx.lineTo(lx - 0.42, ly - 0.28); ctx.lineTo(lx - 0.42, ly + 0.28); ctx.closePath(); ctx.fill(); },
@@ -5211,7 +5550,7 @@ const Draw = {
   },
   /* --- Förderbänder mit Paketen --- */
   belts(lod) {
-    const R = Renderer, ctx = R.ctx, t = G.t, vr = R.viewRect(), detail = R.s > 6;
+    const R = Renderer, ctx = R.ctx, detail = R.s > 6, T = THEME, now = VFX.t;
     if (!Buildings.belts.size) return;
     for (const bl of Buildings.belts.values()) {
       if (!R.inView(bl.x + 0.5, bl.y + 0.5, 1)) continue;
@@ -5220,34 +5559,50 @@ const Draw = {
       const curve = !back && (left ^ right) ? (left ? -1 : 1) : 0;
       bl.curve = curve;
       const col = bl.tier === 1 ? '#3b4448' : bl.tier === 2 ? '#2f4e5a' : '#4a3a5c';
-      const acc = bl.tier === 1 ? '#ffc23d' : bl.tier === 2 ? '#5fc4c4' : '#c9a6f2';
-      // Kurve: Viertelkreis um die Ecke (0.5, curve·0.5), Eingang von der Seite
+      const acc = bl.tier === 1 ? '#d6a630' : bl.tier === 2 ? T.alop.petrolLight : '#c9a6f2';
+      const stuck = detail && Actors.beltStuck(bl);
+      const spd = CONFIG.belts.speeds[bl.tier] * Economy.fx('beltSpeed'), ph = stuck ? 0 : ((now * spd * 0.5) % 0.25 + 0.25) % 0.25;
       if (curve) {
-        ctx.fillStyle = 'rgba(30,36,40,0.55)'; ctx.fillRect(-0.5, -0.5, 1, 1);
+        ctx.fillStyle = 'rgba(30,36,40,0.5)'; ctx.fillRect(-0.5, -0.5, 1, 1);
         ctx.strokeStyle = col; ctx.lineWidth = 0.84; ctx.beginPath(); ctx.arc(0.5, curve * 0.5, 0.5, Math.PI, Math.PI + curve * Math.PI / 2, curve < 0); ctx.stroke();
-      } else { ctx.fillStyle = col; ctx.fillRect(-0.5, -0.42, 1, 0.84); }
-      if (detail) {
-        ctx.strokeStyle = acc; ctx.lineWidth = 0.07;
-        const ph = ((t * CONFIG.belts.speeds[bl.tier] * Economy.fx('beltSpeed') * 0.25) % 0.5 + 0.5) % 0.5;
-        if (!curve) for (let q = -0.5 + ph; q < 0.5; q += 0.5) { ctx.beginPath(); ctx.moveTo(q - 0.12, -0.2); ctx.lineTo(q + 0.05, 0); ctx.lineTo(q - 0.12, 0.2); ctx.stroke(); }
-        else { ctx.beginPath(); ctx.moveTo(0.14, -0.18); ctx.lineTo(0.32, 0); ctx.lineTo(0.14, 0.18); ctx.stroke(); }
-        if (!curve) { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(-0.5, -0.45, 1, 0.06); ctx.fillRect(-0.5, 0.39, 1, 0.06); }
+        if (detail) { ctx.strokeStyle = acc; ctx.lineWidth = 0.06; ctx.beginPath(); ctx.moveTo(0.14, -0.18); ctx.lineTo(0.32, 0); ctx.lineTo(0.14, 0.18); ctx.stroke(); }
+      } else {
+        ctx.fillStyle = '#20262a'; ctx.fillRect(-0.5, -0.47, 1, 0.94);
+        ctx.fillStyle = col; ctx.fillRect(-0.5, -0.38, 1, 0.76);
+        if (detail) {
+          // laufende Bandrillen (scrollen mit dem Bandtempo)
+          ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 0.05;
+          for (let q = -0.5 + ph; q < 0.5; q += 0.25) { ctx.beginPath(); ctx.moveTo(q, -0.36); ctx.lineTo(q, 0.36); ctx.stroke(); }
+          ctx.strokeStyle = acc; ctx.lineWidth = 0.06; ctx.globalAlpha = 0.85;
+          const cq = ((ph * 2) % 0.5) - 0.5; for (let q = cq; q < 0.5; q += 0.5) { ctx.beginPath(); ctx.moveTo(q - 0.1, -0.16); ctx.lineTo(q + 0.04, 0); ctx.lineTo(q - 0.1, 0.16); ctx.stroke(); }
+          ctx.globalAlpha = 1;
+          // Seitenrahmen: Lichtkante oben, Schatten unten (in Weltrichtung genähert)
+          ctx.fillStyle = T.metal.base; ctx.fillRect(-0.5, -0.47, 1, 0.09); ctx.fillRect(-0.5, 0.38, 1, 0.09);
+          ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fillRect(-0.5, -0.47, 1, 0.03);
+        }
       }
-      // Pakete (nur im sichtbaren Bereich einzeln gezeichnet)
+      if (stuck) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,176,32,' + (0.25 + 0.15 * Math.sin(now * 6)).toFixed(3) + ')'; ctx.fillRect(-0.5, -0.45, 1, 0.9); ctx.globalCompositeOperation = 'source-over'; }
+      // Pakete: Kisten (Verarbeitetes) bzw. Säcke (Staub) in Produktfarbe, wippen beim Fahren
       for (const it of bl.items) {
         let x, y;
         if (curve) { const ang = Math.PI + curve * (Math.PI / 2) * it.p; x = 0.5 + Math.cos(ang) * 0.5; y = curve * 0.5 + Math.sin(ang) * 0.5; }
         else { x = it.p - 0.5; y = 0; }
-        ctx.fillStyle = GOOD_COL[it.t]; ctx.fillRect(x - 0.15, y - 0.15, 0.3, 0.3);
-        if (detail) { ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.04; ctx.strokeRect(x - 0.15, y - 0.15, 0.3, 0.3); }
+        const bob = stuck ? 0 : Math.sin((it.p + bl.x * 0.3) * 18) * 0.025;
+        const c = GOOD_COL[it.t];
+        if (!detail) { ctx.fillStyle = c; ctx.fillRect(x - 0.15, y - 0.15, 0.3, 0.3); continue; }
+        ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(x - 0.13, y - 0.11, 0.32, 0.3);
+        if (it.t >= 7) { ctx.fillStyle = c; ctx.fillRect(x - 0.16, y - 0.16 + bob, 0.32, 0.32); ctx.strokeStyle = 'rgba(26,31,41,0.7)'; ctx.lineWidth = 0.035; ctx.strokeRect(x - 0.16, y - 0.16 + bob, 0.32, 0.32); ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(x - 0.16, y - 0.16 + bob, 0.32, 0.06); }
+        else { ctx.fillStyle = c; this.rr(ctx, x - 0.17, y - 0.15 + bob, 0.34, 0.3, 0.12); ctx.fill(); ctx.strokeStyle = 'rgba(26,31,41,0.6)'; ctx.lineWidth = 0.035; ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.arc(x - 0.06, y - 0.06 + bob, 0.06, 0, 6.283); ctx.fill(); }
       }
     }
   },
-  robots(a, lod) { if (typeof Robots !== 'undefined') Robots.draw(a, lod); },
+  robots(a, lod) { this.robotList(a, lod); },
   // ALOP-Inspektor: fährt Runden im inspizierten Sektor
   inspector() {
     const I = G.ev.insp; if (!I) return;
     const R = Renderer, ctx = R.ctx, cx = (I.s % NSEC) * SEC + 128, cy = ((I.s / NSEC) | 0) * SEC + 128, t = G.t * 0.25;
+    // Zielsektor gestrichelt umrandet
+    { const sx0 = (I.s % NSEC) * SEC, sy0 = ((I.s / NSEC) | 0) * SEC; if (R.inView(sx0 + SEC / 2, sy0 + SEC / 2, SEC)) { R.at(sx0, sy0); ctx.strokeStyle = 'rgba(255,84,112,0.75)'; ctx.lineWidth = 3 / R.s; ctx.setLineDash([12 / R.s, 8 / R.s]); ctx.lineDashOffset = -VFX.t * 20 / R.s; ctx.strokeRect(0.5, 0.5, SEC - 1, SEC - 1); ctx.setLineDash([]); ctx.lineDashOffset = 0; } }
     const x = cx + Math.cos(t) * 70, y = cy + Math.sin(t * 1.3) * 55, a = Math.atan2(Math.cos(t * 1.3) * 55 * 1.3, -Math.sin(t) * 70);
     if (!R.inView(x, y, 4)) return;
     R.at(x, y, a);
@@ -5255,8 +5610,13 @@ const Draw = {
     ctx.fillStyle = '#23292c'; this.rr(ctx, -1.1, -1.0, 0.7, 0.3, 0.1); ctx.fill(); this.rr(ctx, -1.1, 0.7, 0.7, 0.3, 0.1); ctx.fill(); this.rr(ctx, 0.5, -1.0, 0.7, 0.3, 0.1); ctx.fill(); this.rr(ctx, 0.5, 0.7, 0.7, 0.3, 0.1); ctx.fill();
     ctx.fillStyle = C_WHITE; this.rr(ctx, -1.3, -0.8, 2.6, 1.6, 0.4); ctx.fill();
     ctx.fillStyle = '#c4362c'; ctx.fillRect(-1.3, -0.15, 2.6, 0.3);
-    ctx.fillStyle = Math.sin(G.t * 10) > 0 ? '#5fa8ff' : '#1d3b7a'; ctx.beginPath(); ctx.arc(-0.2, 0, 0.28, 0, Math.PI * 2); ctx.fill();
+    const on = Math.sin(VFX.t * 10) > 0;
+    ctx.fillStyle = on ? '#5fa8ff' : '#1d3b7a'; ctx.beginPath(); ctx.arc(-0.2, 0, 0.28, 0, Math.PI * 2); ctx.fill();
+    if (on) { const sp = VFX.spr('soft', VFX.PAL.plasma); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.6; ctx.drawImage(VFX.atlas, sp[0], sp[1], 64, 64, -1.4, -1.2, 2.4, 2.4); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
     R.ctx.setTransform(R.k, 0, 0, R.k, 0, 0);
+    const left = Math.max(0, I.until - G.t), tot = CONFIG.events.inspection.window || 300, rx = R.sx(x) - 46, ry = R.sy(y) - 1.6 * R.s - 8;
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(rx, ry, 8, 0, 6.283); ctx.stroke();
+    ctx.strokeStyle = THEME.danger; ctx.beginPath(); ctx.arc(rx, ry, 8, -Math.PI / 2, -Math.PI / 2 + 6.283 * Math.min(1, left / tot)); ctx.stroke();
     ctx.font = '800 11px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffdede'; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3;
     const sx = R.sx(x), sy = R.sy(y) - 1.6 * R.s - 4; ctx.strokeText('INSPEKTION ' + U.clock(Math.max(0, I.until - G.t)), sx, sy); ctx.fillText('INSPEKTION ' + U.clock(Math.max(0, I.until - G.t)), sx, sy);
   },
@@ -5568,41 +5928,7 @@ const Robots = {
   },
   // Offline: Roboter mit groben Schritten nachsimulieren (Erlöse über Durchschnittswert)
   offlineStep(dt) { for (const r of this.list) { r.far = true; this.step(r, dt); } },
-  draw(alpha, lod) {
-    const R = Renderer, ctx = R.ctx;
-    for (const r of this.list) {
-      if (!R.inView(r.x, r.y, 3)) continue;
-      const x = r.near ? U.wrapX(r.px + U.dx(r.px, r.x) * alpha) : r.x, y = r.near ? r.py + (r.y - r.py) * alpha : r.y;
-      const rad = this.radius(r);
-      if (lod > 0 || R.s < 4) { R.at(x, y); ctx.fillStyle = r.warn ? '#ff6464' : C_ORANGE; ctx.beginPath(); ctx.arc(0, 0, Math.max(1.2, 3 / R.s), 0, Math.PI * 2); ctx.fill(); continue; }
-      R.at(x, y, r.a);
-      const s = r.def.fly ? 0.9 : r.model === 'mk1' ? 0.62 : r.model === 'mk2' ? 0.8 : 1.15;
-      if (r.def.fly) {
-        ctx.fillStyle = 'rgba(15,12,10,0.25)'; ctx.beginPath(); ctx.arc(0.5, 0.6, s * 0.7, 0, Math.PI * 2); ctx.fill();
-        ctx.translate(-0.2, -0.5);
-        ctx.strokeStyle = '#59646a'; ctx.lineWidth = 0.12; ctx.beginPath(); ctx.moveTo(-s, -s); ctx.lineTo(s, s); ctx.moveTo(-s, s); ctx.lineTo(s, -s); ctx.stroke();
-        for (const [px, py] of [[-s, -s], [s, s], [-s, s], [s, -s]]) { ctx.fillStyle = 'rgba(200,220,230,0.45)'; ctx.beginPath(); ctx.ellipse(px, py, 0.45, 0.12, G.t * 30 + px, 0, Math.PI * 2); ctx.fill(); }
-        ctx.fillStyle = C_ORANGE; ctx.beginPath(); ctx.arc(0, 0, s * 0.45, 0, Math.PI * 2); ctx.fill();
-        if (r.cleanFx > 0) { ctx.fillStyle = 'rgba(160,230,255,0.15)'; ctx.beginPath(); ctx.arc(0.2, 0.5, rad, 0, Math.PI * 2); ctx.fill(); }
-      } else {
-        ctx.fillStyle = 'rgba(15,12,10,0.3)'; ctx.beginPath(); ctx.arc(0.1, 0.14, s, 0, Math.PI * 2); ctx.fill();
-        if (r.cleanFx > 0 || r.state === 'work') { ctx.save(); ctx.rotate(r.spin * 3); ctx.strokeStyle = '#d9b867'; ctx.lineWidth = 0.06; for (let i = 0; i < 8; i++) { const aa = i / 8 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(aa) * Math.min(rad, s * 1.25), Math.sin(aa) * Math.min(rad, s * 1.25)); ctx.stroke(); } ctx.restore(); }
-        ctx.fillStyle = C_WHITE; ctx.beginPath(); ctx.arc(0, 0, s * 0.82, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#7b878c'; ctx.lineWidth = 0.05; ctx.stroke();
-        ctx.fillStyle = C_ORANGE; ctx.beginPath(); ctx.arc(0, 0, s * 0.55, -Math.PI * 0.75, Math.PI * 0.75); ctx.lineTo(0, 0); ctx.fill();
-        ctx.fillStyle = C_PETROL; ctx.fillRect(-s * 0.55, -0.06, s * 0.6, 0.12);
-        ctx.fillStyle = (Math.sin(G.t * 6 + r.id) > 0) ? '#7cf0a8' : '#2a6a48'; ctx.beginPath(); ctx.arc(s * 0.52, 0, 0.09, 0, Math.PI * 2); ctx.fill();
-        const f = this.loadKg(r) / this.cap(r);
-        if (f > 0.02) { ctx.fillStyle = 'rgba(40,30,20,0.7)'; ctx.fillRect(-s * 0.4, s * 0.25, s * 0.8, 0.12); ctx.fillStyle = '#b39c7c'; ctx.fillRect(-s * 0.4, s * 0.25, s * 0.8 * Math.min(1, f), 0.12); }
-      }
-      if (r.warn || r.state === 'toDrop' || r.state === 'radio') {
-        R.at(x, y - 1.3);
-        ctx.fillStyle = r.warn ? '#ff6464' : r.state === 'radio' ? '#5fc4c4' : '#ffc23d';
-        ctx.beginPath(); ctx.moveTo(0, -0.42); ctx.lineTo(0.38, 0.25); ctx.lineTo(-0.38, 0.25); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#111'; ctx.font = '700 0.42px system-ui'; ctx.textAlign = 'center'; ctx.fillText(r.warn ? '!' : r.state === 'radio' ? '~' : '↓', 0, 0.18);
-      }
-    }
-  },
+  draw(alpha, lod) { Draw.robotList(alpha, lod); },
 };
 
 /* ============================================================================
@@ -5847,12 +6173,12 @@ const Fx = {
       const p = m.t / 1.4;
       if (p >= 1) {
         World.addMeteor(m.x, m.y, m.r, 200);
-        this.burst(m.x, m.y, 4, 26); Audio.sfx('impact', U.dist(m.x, m.y, Player.x, Player.y));
+        this.burst(m.x, m.y, 4, 26); EventsFx.impact(m.x, m.y, m.r); Audio.sfx('impact', U.dist(m.x, m.y, Player.x, Player.y));
         if (U.dist(m.x, m.y, Player.x, Player.y) < 40) Camera.kick(3, 160);
         this.meteors.splice(i, 1); continue;
       }
       const x = U.lerp(m.sx, m.x, p), y = U.lerp(m.sy, m.y, p);
-      if (Renderer.inView(x, y, 4)) Particles.spawn(5, x, y, (1 - p) * 30, 0, 0, -1, 0.5, 0.35, 0);
+      if (Renderer.inView(x, y, 4) && VFX.r() < 0.6) Particles.spawn(5, x, y, (1 - p) * 30, 0, 0, -1, 0.5, 0.35, 0);
     }
   },
 };
@@ -6035,10 +6361,28 @@ const Build = {
       else { R.at(Math.floor(g.wx), Math.floor(g.wy)); ctx.fillStyle = 'rgba(255,90,90,0.5)'; ctx.fillRect(0, 0, 1, 1); }
       return;
     }
-    Draw.building(this.sel, g.x, g.y, this.rot, g.w, g.h, this.moving, 0.6);
-    R.at(g.x, g.y);
-    ctx.fillStyle = g.ok ? 'rgba(79,209,139,0.28)' : 'rgba(255,90,90,0.35)'; ctx.fillRect(0, 0, g.w, g.h);
-    ctx.strokeStyle = g.ok ? '#4fd18b' : '#ff6464'; ctx.lineWidth = 0.1; ctx.strokeRect(0, 0, g.w, g.h);
+    const T = THEME, now = VFX.t, shake = g.ok || VFX.reduce() ? 0 : Math.sin(now * 40) * 0.08 * Math.max(0, 1 - ((now - (this.badT || 0)) / 0.35));
+    if (!g.ok && this.lastOk !== false) this.badT = now; this.lastOk = g.ok;
+    const fl = 0.52 + Math.sin(now * 23) * 0.03 + (VFX.r() < 0.03 ? -0.12 : 0);
+    // Funkabdeckung beim Bauen von Antennen/Hangars als weiche Fläche mit gestricheltem Rand
+    if (this.sel === 'antenna' || this.sel === 'hangar') {
+      const rr0 = CONFIG.antennaRadius * Economy.fx('radio');
+      for (const a of Buildings.list) { if (a.type !== 'antenna' && a.type !== 'depot' && a.type !== 'outpost') continue; const c = Buildings.center(a); if (!R.inView(c.x, c.y, rr0 + 2)) continue; R.at(c.x, c.y); const gr = ctx.createRadialGradient(0, 0, rr0 * 0.2, 0, 0, rr0); gr.addColorStop(0, 'rgba(99,203,198,0.05)'); gr.addColorStop(1, 'rgba(99,203,198,0.02)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, rr0, 0, 6.283); ctx.fill(); ctx.strokeStyle = 'rgba(99,203,198,0.55)'; ctx.lineWidth = 2 / R.s; ctx.setLineDash([8 / R.s, 6 / R.s]); ctx.stroke(); ctx.setLineDash([]); }
+    }
+    Draw.building(this.sel, g.x + shake, g.y, this.rot, g.w, g.h, this.moving, fl);
+    R.at(g.x + shake, g.y);
+    ctx.fillStyle = g.ok ? 'rgba(31,143,140,0.22)' : 'rgba(255,84,112,0.3)'; ctx.fillRect(0, 0, g.w, g.h);
+    // Scanlinien
+    ctx.fillStyle = g.ok ? 'rgba(99,203,198,0.22)' : 'rgba(255,84,112,0.25)';
+    const sl = ((now * 1.6) % 0.5); for (let yy = sl; yy < g.h; yy += 0.5) ctx.fillRect(0, yy, g.w, 0.07);
+    ctx.strokeStyle = g.ok ? T.alop.petrolLight : T.danger; ctx.lineWidth = 0.12; ctx.strokeRect(0, 0, g.w, g.h);
+    ctx.lineWidth = 0.06; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; for (const [cx2, cy2] of [[0, 0], [g.w, 0], [0, g.h], [g.w, g.h]]) { ctx.beginPath(); ctx.moveTo(cx2 + (cx2 ? -0.5 : 0.5), cy2); ctx.lineTo(cx2, cy2); ctx.lineTo(cx2, cy2 + (cy2 ? -0.5 : 0.5)); ctx.stroke(); }
+    if (!g.ok && g.why) {
+      ctx.setTransform(R.k, 0, 0, R.k, 0, 0);
+      const lx = R.sx(g.x + g.w / 2), ly = R.sy(g.y) - 12; ctx.font = '800 12px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const tw = ctx.measureText(g.why).width + 18; ctx.fillStyle = 'rgba(18,23,34,0.92)'; Draw.rr(ctx, lx - tw / 2, ly - 11, tw, 22, 11); ctx.fill(); ctx.strokeStyle = T.danger; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#FFD5DC'; ctx.fillText(g.why, lx, ly + 0.5); ctx.textBaseline = 'alphabetic';
+    }
     // Ausgang anzeigen
     if (def.out) { const fake = { x: g.x, y: g.y, w: g.w, h: g.h, rot: this.rot }; const p = Buildings.outPort(fake); R.at(p.x + 0.5, p.y + 0.5, this.rot * Math.PI / 2); ctx.fillStyle = '#ffc23d'; ctx.beginPath(); ctx.moveTo(0.4, 0); ctx.lineTo(-0.3, -0.35); ctx.lineTo(-0.3, 0.35); ctx.fill(); }
     // Funkradius bei Antennen
@@ -8031,10 +8375,11 @@ const Game = {
     Bus.on('find', f => Rewards.find(f));
     Bus.on('unload', (kg, b, actor) => { Progression.tutFlags.unload = true; Payday.onUnload(kg, b, actor); });
     Bus.on('launch', (b, money, kg) => { Net.fx('launch', [b.id, money, kg]); Audio.sfx('launch'); Payday.onLaunch(b, money, kg); });
-    Bus.on('built', b => { G.stats.builtBy[b.type] = (G.stats.builtBy[b.type] || 0) + 1; });
+    Bus.on('built', b => { G.stats.builtBy[b.type] = (G.stats.builtBy[b.type] || 0) + 1; Actors.onBuilt(b); });
+    Bus.on('removed', b => Actors.onRemoved(b, Buildings.price(b.type)));
     Bus.on('beltsBuilt', n => { G.stats.builtBy.belt = (G.stats.builtBy.belt || 0) + n; });
     Bus.on('licence', l => { Save.soon(); Economy.updateDemand(); Net.fx('cert', l); });
-    Bus.on('vehicleArrived', v => { Fx.burst(v.x, v.y, 4, 20); Audio.sfx('build'); UI.toast(v.def.name + ' ist eingetroffen.'); });
+    Bus.on('vehicleArrived', v => { Actors.land.set(v.id, VFX.t); setTimeout(() => { if (Renderer.inView(v.x, v.y, 4)) { Particles.emit('ring', v.x, v.y, 0, 0, 0, 0, 0.6, 1.2, VFX.PAL.smoke, 0, 0, 0, true); for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283; Particles.emit('puff', v.x + Math.cos(a) * v.def.body, v.y + Math.sin(a) * v.def.body, 0.05, Math.cos(a) * 3.5, Math.sin(a) * 3.5, 0.2, 0.8, 0.35, World.typeAt(Math.floor(v.x), Math.floor(v.y)), 0, 0, 0, true); } } }, 700); Audio.sfx('build'); UI.toast(v.def.name + ' ist eingetroffen.'); });
   },
   toMenu() {
     if (this.state === 'play') Save.saveNow();
@@ -8082,7 +8427,7 @@ const Game = {
     Economy.resetFx(); Economy.incSec = -1; Economy.incBuckets.fill(0);
     Vehicles.init(); Buildings.init(); Robots.init(); Player.init(); Progression.init();
     Camera.init();
-    Renderer.flushTextures(); Ground.reset(); Payday.reset(); Particles.n = 0; Fx.meteors.length = 0; VFX.autoTier = null; VFX.pickTier();
+    Renderer.flushTextures(); Ground.reset(); Payday.reset(); Actors.reset(); Particles.n = 0; Fx.meteors.length = 0; VFX.autoTier = null; VFX.pickTier();
     this.state = 'play'; this.paused = false; this.acc = 0;
     this.showWait(null);
     UI.enterGame();
@@ -8179,7 +8524,6 @@ const Game = {
   // Partikel, Fußspuren, Reifenspuren
   effects(dt) {
     const P = Player, v = P.veh && P.veh.def.kind !== 'cart' ? P.veh : null;
-    if (v && v.cleanFx > 0) { const back = v.def.body * 0.7, bx = v.x - Math.cos(v.a) * back, by = v.y - Math.sin(v.a) * back; const t = World.typeAt(Math.floor(bx), Math.floor(by)); for (let i = 0; i < 3; i++) Fx.dust(bx, by, Vehicles.width(v) / 2, v.a, t); }
     // Roboter-Piepsen in der Nähe
     if (Robots.list.length && VFX.r() < 0.004) { const r = Robots.list[Math.floor(VFX.r() * Robots.list.length)]; if (r.near && U.dist2(r.x, r.y, P.x, P.y) < 900) Audio.sfx('robot'); }
     if (v && !P.cleaning && Math.hypot(v.vx, v.vy) > 1) {
