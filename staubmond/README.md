@@ -8,7 +8,7 @@ Das ganze Spiel steckt in einer einzigen Datei, `index.html`. Es braucht keinen 
 - `index.html` direkt im Browser öffnen, oder
 - lokal ausliefern, z. B. `python3 -m http.server` in diesem Ordner und dann `http://localhost:8000` aufrufen.
 
-Am Smartphone/iPad: Seite im Browser öffnen und „Zum Home-Bildschirm“ hinzufügen, dann läuft das Spiel im Vollbild.
+Am Smartphone/iPad: Seite im Browser öffnen und „Zum Home-Bildschirm“ hinzufügen, dann läuft das Spiel im Vollbild. Beim ersten Start am Touch-Gerät erklärt eine kleine Karte, wie das geht.
 
 ## Steuerung
 
@@ -22,7 +22,9 @@ Am Smartphone/iPad: Seite im Browser öffnen und „Zum Home-Bildschirm“ hinzu
 | Zoom | Mausrad, + / − | Zwei-Finger-Pinch |
 | Crew & Emotes (Koop) | C | Crew-Knopf im HUD |
 
-Alle Tasten lassen sich in den Einstellungen neu belegen. Dort gibt es auch einen Linkshänder-Modus und den festen Joystick.
+Alle Tasten lassen sich in den Einstellungen (Steuerung) neu belegen. Dort gibt es auch einen Linkshänder-Modus und den festen Joystick. Tastenkürzel werden nur angezeigt, wenn eine Tastatur benutzt wird.
+
+Panels schließen per X, Esc, Antippen der abgedunkelten Welt oder Wischen nach rechts (am Handy: Griff nach unten ziehen). Wischen nach links/rechts wechselt die Tabs.
 
 ## Koop (optional)
 
@@ -33,8 +35,12 @@ Pausenmenü → **Koop (Einladungscode)** → **Hosten**. Mitspieler geben den 6
 
 Die Kasse ist gemeinsam, gespeichert wird beim Host. Clients behalten ihren eigenen Spielstand.
 
+## Grafik und Effekte
+
+Einstellungen → **Grafik** (Qualitätsstufe Niedrig/Mittel/Hoch/Ultra oder Automatisch) und **Effekte** (Effektstärke, Lichtblitze, Kamera-Wackeln, Kamera-Impulse, Bewegung reduzieren) – jeweils mit Live-Vorschau. „Bewegung reduzieren“ übernimmt beim ersten Start die Systemeinstellung. Der Boden wird per WebGL gezeichnet; ohne WebGL fällt das Spiel auf Canvas zurück.
+
 ## Debug
 
-F3 oder fünfmal auf den Geldbetrag tippen öffnet das Debug-Overlay. Dort gibt es FPS und Profiling, die Pacing-Simulation und den Zeitraffer (×1/×4/×16).
+F3 oder fünfmal auf den Geldbetrag tippen öffnet das Debug-Overlay. Dort gibt es FPS und Profiling (inkl. Effektkosten pro Frame), die Pacing-Simulation, den Zeitraffer (×1/×4/×16) und ein Effekt-Testmenü (Sektor, Lizenz, Kapsel, Meteorschauer, Fundstück, Kauf, Auftrag), das die Effekte rein optisch abspielt, ohne Spielwerte zu ändern.
 
-Alle Balancing-Werte stehen zentral im `CONFIG`-Objekt. Die Design-Entscheidungen sind im Kommentarblock am Anfang des Skripts dokumentiert.
+Alle Balancing-Werte stehen zentral im `CONFIG`-Objekt, alle optischen Werte in `THEME` (Farben, Bewegung, HUD) und `FX_CONFIG` (Qualitätsstufen, Partikel, Effekte). Die Design-Entscheidungen sind im Kommentarblock am Anfang des Skripts dokumentiert; die Vorgabe für die VFX- und UI-Überarbeitung steht in `VFX_UI_SPEC.md`.
