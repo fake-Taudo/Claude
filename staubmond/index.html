@@ -744,15 +744,116 @@ body.reduce-motion .certificate, body.reduce-motion .alop-stamp, body.reduce-mot
 /* Debug */
 #debug { position: absolute; top: calc(8px + var(--sat)); left: 50%; transform: translateX(-50%); margin-top: 52px; background: rgba(0,0,0,.72); color: #8f8; font: 11px/1.4 ui-monospace, Menlo, Consolas, monospace; padding: 6px 9px; border-radius: 8px; white-space: pre; }
 #fps { position: absolute; bottom: calc(4px + var(--sab)); right: calc(6px + var(--sar)); font: 11px ui-monospace, Menlo, monospace; color: #8f8; background: rgba(0,0,0,.5); padding: 2px 5px; border-radius: 5px; }
-#boot { position: absolute; inset: 0; display: grid; place-items: center; background: var(--ink); color: var(--muted); font-size: 14px; z-index: 5; transition: opacity var(--t-slow); }
-#boot.gone { opacity: 0; pointer-events: none; }
 .rebind { min-width: 90px; }
 .setting .btn.sm { min-width: 56px; }
 .rebind.wait { background: var(--orange); }
 .help-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 13px; align-items: center; }
 </style>
+<style id="ld-css">
+/* ==========================================================================
+   LADEBILDSCHIRM – Sofort-Phase in reinem HTML/CSS (vor jedem Skript sichtbar),
+   danach übernimmt die Canvas-Szene des Ladeskripts.
+   ========================================================================== */
+#loader { position: fixed; left: 0; top: 0; width: 100%; height: 100%; height: 100dvh; z-index: 60; overflow: hidden; color: var(--white, #F4F6FA);
+  background: linear-gradient(180deg, var(--void, #0B0E14) 0%, #141B2B 100%); font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-user-select: none; user-select: none; touch-action: manipulation; transition: opacity 600ms cubic-bezier(.16,1,.3,1); }
+#loader.leave { opacity: 0; pointer-events: none; }
+#loader .ld-moon0 { position: absolute; left: 50%; width: 140vw; height: 140vw; bottom: calc(40% - 140vw); transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(circle at 34% 22%, #B5A184 0, #8A775E 34%, #5C4F3E 72%, #3A3128 100%); box-shadow: 0 -8px 60px rgba(201,186,160,.16); }
+@media (orientation: landscape) { #loader .ld-moon0 { width: 140vw; height: 140vw; } }
+#loader .ld-earth0 { position: absolute; left: 18%; top: 30%; width: 15vmin; height: 15vmin; margin: -7.5vmin 0 0 -7.5vmin; border-radius: 50%; opacity: .55;
+  background: radial-gradient(circle at 35% 30%, #CFE8FF 0, #4C8FD6 38%, #1E4F8F 70%, #0F2A4D 100%); box-shadow: 0 0 40px rgba(127,195,255,.25); }
+#loader canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 500ms linear; }
+#loader.live canvas { opacity: 1; }
+#loader.live .ld-moon0, #loader.live .ld-earth0 { opacity: 0; transition: opacity 500ms linear; }
+#loader .ld-top { position: absolute; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + 7vh); text-align: center; padding: 0 16px; pointer-events: none; }
+#loader .ld-logo { margin: 0; font-weight: 900; font-size: clamp(38px, 10vw, 96px); letter-spacing: .06em; line-height: 1; padding-left: .06em;
+  background: radial-gradient(circle at 18% 40%, rgba(138,119,94,.38) 0 1.2px, transparent 1.6px) 0 0 / 9px 7px, radial-gradient(circle at 70% 70%, rgba(169,149,121,.3) 0 1px, transparent 1.4px) 0 0 / 7px 9px,
+    linear-gradient(180deg, var(--white, #F4F6FA) 0%, #E2D8C6 52%, #C9A27E 78%, #FF9A5A 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 6px 30px rgba(0,0,0,.35); }
+#loader .ld-sub { margin-top: 10px; font-size: clamp(12px, 1.9vw, 16px); letter-spacing: .22em; text-transform: uppercase; color: var(--muted, #AEB8C7); font-weight: 700; }
+#loader .ld-card { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + max(16px, 4vh)); width: min(560px, calc(100% - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  background: rgba(11,14,20,.74); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 14px 16px 13px; box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+#loader .ld-row { display: flex; align-items: center; gap: 12px; }
+#loader .ld-lbl { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted, #AEB8C7); font-weight: 800; margin-bottom: 7px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; }
+#loader .ld-lbl span { white-space: nowrap; }
+#loader .ld-st { margin-left: auto; }
+#loader .ld-bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.1); overflow: hidden; position: relative; }
+#loader .ld-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 3px; background: linear-gradient(90deg, #8A775E 0%, #EAF1F8 62%, #1F8F8C 100%); background-size: 100vw 100%; }
+#loader .ld-bar i::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: translateX(-100%); opacity: 0; }
+#loader.slow .ld-bar i::after { opacity: 1; animation: ldshimmer 1.6s linear infinite; }
+@keyframes ldshimmer { to { transform: translateX(100%); } }
+#loader .ld-pct { font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; min-width: 84px; text-align: right; white-space: nowrap; }
+#loader .ld-msg { margin-top: 10px; font-size: 14px; line-height: 1.45; min-height: 2.9em; color: var(--white, #F4F6FA); transition: opacity var(--t-tab, 180ms) linear; }
+#loader .ld-msg.fade, #loader .ld-tip.fade { opacity: 0; }
+#loader .ld-tip { margin-top: 6px; font-size: 12.5px; line-height: 1.45; color: var(--muted, #AEB8C7); min-height: 1.45em; transition: opacity var(--t-tab, 180ms) linear; }
+#loader .ld-tip b { color: #C9D1DD; }
+#loader .ld-warn { margin-top: 10px; display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.4; color: #FFE2A6; background: rgba(255,176,32,.12); border: 1px solid rgba(255,176,32,.45); border-radius: 10px; padding: 7px 10px; }
+#loader .ld-warn[hidden], #loader .ld-slow[hidden], #loader .ld-ready[hidden], #loader .ld-err[hidden] { display: none; }
+#loader .ld-slow { margin-top: 8px; font-size: 12.5px; color: #C9D1DD; }
+#loader .ld-ready { text-align: center; margin-top: 4px; }
+#loader .ld-ready .rd { font-size: clamp(30px, 6vw, 44px); font-weight: 900; letter-spacing: .04em; color: #EAF1F8; text-shadow: 0 0 18px rgba(99,203,198,.75), 0 0 46px rgba(31,143,140,.55); animation: ldready 900ms cubic-bezier(.16,1,.3,1) both; }
+@keyframes ldready { from { opacity: 0; transform: scale(.92); letter-spacing: .3em; } }
+#loader .ld-start { margin-top: 10px; min-height: 52px; min-width: 220px; padding: 12px 22px; border-radius: 14px; border: 1px solid rgba(255,178,122,.55); background: var(--btn-orange, #C4500E); color: #fff; font: 800 16px system-ui, sans-serif; cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 0 0 0 rgba(255,122,47,.5); animation: ldpulse 1.8s ease-in-out infinite; touch-action: manipulation; }
+#loader .ld-start:active { transform: scale(.96); background: var(--btn-orange-d, #A3420B); }
+#loader .ld-start:focus-visible, #loader button:focus-visible { outline: 2px solid var(--petrol-l, #63CBC6); outline-offset: 3px; }
+@keyframes ldpulse { 50% { box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 0 0 10px rgba(255,122,47,0); transform: scale(1.02); } }
+#loader .ld-corner { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); min-height: 44px; min-width: 44px; border: 0; background: transparent; color: var(--muted, #AEB8C7); font: 600 12.5px system-ui, sans-serif; cursor: pointer; display: grid; place-items: center; padding: 0 8px; }
+#loader .ld-simple { left: calc(env(safe-area-inset-left, 0px) + 8px); text-decoration: underline; text-underline-offset: 3px; }
+#loader .ld-mute { right: calc(env(safe-area-inset-right, 0px) + 8px); }
+#loader .ld-mute svg { width: 22px; height: 22px; }
+#loader .ld-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#loader .ld-err { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(460px, calc(100% - 32px)); background: rgba(18,23,34,.97); border: 1px solid rgba(255,84,112,.5); border-radius: 18px; padding: 18px; text-align: left; z-index: 3; }
+#loader .ld-err b { font-size: 18px; display: block; margin-bottom: 6px; }
+#loader .ld-err p { margin: 0 0 12px; color: #C9D1DD; font-size: 14px; line-height: 1.45; }
+#loader .ld-err button { min-height: 44px; padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,178,122,.55); background: var(--btn-orange, #C4500E); color: #fff; font: 800 15px system-ui, sans-serif; cursor: pointer; }
+#loader .ld-err .ld-go { margin-left: 8px; background: transparent; border-color: rgba(255,255,255,.28); }
+#loader .ld-err details { margin-top: 12px; font-size: 12px; color: var(--muted, #AEB8C7); }
+#loader .ld-err summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+#loader .ld-err pre { white-space: pre-wrap; word-break: break-word; max-height: 30vh; overflow: auto; background: rgba(0,0,0,.35); padding: 8px; border-radius: 8px; user-select: text; -webkit-user-select: text; }
+#loader.error .ld-card, #loader.error .ld-corner { display: none; }
+@media (max-width: 600px) and (orientation: portrait) {
+  #loader .ld-top { top: calc(env(safe-area-inset-top, 0px) + 6vh); }
+  #loader .ld-card { padding: 12px 13px 11px; border-radius: 16px; }
+  #loader .ld-msg { font-size: 13.5px; }
+  #loader .ld-pct { font-size: 14px; min-width: 78px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  #loader .ld-top { top: calc(env(safe-area-inset-top, 0px) + 4vh); }
+  #loader .ld-logo { font-size: clamp(30px, 7vw, 56px); }
+  #loader .ld-sub { margin-top: 6px; }
+  #loader .ld-card { bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); left: auto; right: calc(env(safe-area-inset-right, 0px) + 14px); transform: none; padding: 10px 14px; width: min(380px, 46%); }
+  #loader .ld-msg { min-height: 0; margin-top: 7px; }
+}
+@media (prefers-reduced-motion: reduce) { #loader .ld-start { animation: none; } #loader .ld-ready .rd { animation-duration: 1ms; } #loader.slow .ld-bar i::after { animation: none; opacity: .4; } }
+.ld-noscript { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; background: var(--void, #0B0E14); color: var(--white, #F4F6FA); font: 600 16px system-ui, sans-serif; text-align: center; padding: 24px; line-height: 1.5; }
+</style>
 </head>
 <body>
+<div id="loader" role="dialog" aria-modal="true" aria-label="Staubmond wird geladen">
+  <div class="ld-moon0" aria-hidden="true"></div>
+  <div class="ld-earth0" aria-hidden="true"></div>
+  <canvas id="ld-cv" aria-hidden="true"></canvas>
+  <div class="ld-top"><h1 class="ld-logo">STAUBMOND</h1><div class="ld-sub">Amt für Lunare Oberflächenpflege</div></div>
+  <div class="ld-card">
+    <div class="ld-lbl"><span>Mondglanz-Index</span><span class="ld-st">Stufe 1 von 6</span></div>
+    <div class="ld-row">
+      <div class="ld-bar" role="progressbar" aria-label="Ladefortschritt (Mondglanz-Index)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
+      <span class="ld-pct">0,0000 %</span>
+    </div>
+    <div class="ld-msg">Amt für Lunare Oberflächenpflege: Ihr Antrag auf einen Besen wurde abgelehnt. Zahnbürste genehmigt.</div>
+    <div class="ld-tip"></div>
+    <div class="ld-slow" hidden>Das dauert heute etwas länger, danke für die Geduld.</div>
+    <div class="ld-warn" role="status" hidden></div>
+    <div class="ld-ready" hidden><div class="rd">Bereit</div><button class="ld-start" type="button">Zum Starten tippen</button></div>
+  </div>
+  <div class="ld-sr" aria-live="polite"></div>
+  <button class="ld-corner ld-simple" type="button" hidden>Effekte vereinfachen</button>
+  <button class="ld-corner ld-mute" type="button" aria-label="Ton ausschalten" hidden></button>
+  <div class="ld-err" role="alert" hidden><b>Beim Start ist etwas schiefgegangen</b><p>Das ALOP bittet um Entschuldigung. Meist hilft es, die Seite neu zu laden. Ihr Spielstand bleibt dabei erhalten.</p><button type="button" class="ld-reload">Neu laden</button><button type="button" class="ld-go" hidden>Trotzdem starten</button><details><summary>Technische Details</summary><pre class="ld-errtxt"></pre></details></div>
+</div>
+<noscript><div class="ld-noscript">Staubmond braucht JavaScript.<br>Bitte aktivieren Sie JavaScript in Ihrem Browser, um das Spiel zu starten.</div></noscript>
 <canvas id="ground" aria-hidden="true"></canvas>
   <canvas id="game" tabindex="0" aria-label="Spielfläche"></canvas>
 <div id="ui">
@@ -784,8 +885,502 @@ body.reduce-motion .certificate, body.reduce-motion .alop-stamp, body.reduce-mot
   <div id="debug" class="hidden"></div>
   <div id="fps" class="hidden"></div>
 </div>
-<div id="boot">Staubmond wird geladen …</div>
 <script>
+'use strict';
+/* ============================================================================
+   0a. THEME – rein optische Werte (Farben, Bewegung, HUD, Ladebildschirm).
+   Steht vor dem Hauptskript, damit Ladebildschirm und Spiel dieselben Tokens nutzen.
+   Nichts hier beeinflusst Spiellogik, Balancing oder Speicherstand.
+   ============================================================================ */
+const THEME = {
+  void: '#0B0E14',
+  clean: { base: '#C7D1DC', light: '#EAF1F8', shade: '#97A4B4' },
+  dust: { base: '#8A775E', light: '#A99579', dark: '#5C4F3E' },
+  regolith: '#4B4D55', ice: '#CFE4F4', glitter: ['#C9AE6E', '#FFE9A8'],
+  alop: { orange: '#FF7A2F', orangeDeep: '#D9560F', orangeLight: '#FFB27A', petrol: '#1F8F8C', petrolDeep: '#105957', petrolLight: '#63CBC6' },
+  money: '#FFC24A', success: '#5BE39A', warn: '#FFB020', danger: '#FF5470',
+  ui: { btnOrange: '#C4500E', btnOrangeDeep: '#A3420B', btnPetrol: '#17706D', surface: 'rgba(18,23,34,.88)', surfaceSolid: '#121722', surface2: 'rgba(27,34,48,.94)', border: 'rgba(255,255,255,.08)', borderStrong: 'rgba(255,255,255,.16)', text: '#F4F6FA', textDim: '#AEB8C7', textFaint: '#8793A5' },
+  paper: { base: '#F3ECDD', ink: '#2B2A26', stamp: '#C4362C', line: '#D9CDB4' },
+  outline: 'rgba(26,31,41,.7)', shadow: 'rgba(8,10,16,.34)',
+  suit: { white: '#EEF3F4', grey: '#D9DEE0', greyDark: '#6B7478', visorTop: '#1F8F8C', visorBottom: '#EAF1F8' },
+  metal: { light: '#C8D0D6', base: '#8C979E', dark: '#4A545A', darker: '#2A3236' },
+  // Staubarten 0–6 (Mondstaub, Regolith, Geröll, Rillen, Glitzer, Eis, Meteor) – hell / dunkel
+  dustTypes: [
+    ['#A99579', '#5C4F3E'], ['#6E6E76', '#34353C'], ['#A08A6C', '#5A4C3B'], ['#9A7C64', '#4F3C30'],
+    ['#AC97C6', '#5F4D7C'], ['#BCD4EA', '#6E8EB0'], ['#B06A4E', '#62301F'],
+  ],
+  goods: ['#B8A283', '#77737A', '#A68E6E', '#9C735C', '#C9A6F2', '#ACD3F2', '#B8583E', '#E6D29E', '#C4643F', '#8FE6E8'],
+  crew: ['#FF7A2F', '#63CBC6', '#C9A6F2', '#FFC24A', '#5BE39A', '#FF6E7F', '#7FB2FF', '#E8EEF0'],
+  // Lichtrichtung: Sonne oben links (315°), Erdschein schwach von unten rechts
+  sun: { x: -0.7071, y: -0.7071 },
+  motion: { instant: 80, fast: 140, base: 240, spring: 260, slow: 420, celebrate: 1200, tab: 180, exit: 200, joyIn: 120, joyOut: 300, ease: 'cubic-bezier(.2,.8,.2,1)', easeSlow: 'cubic-bezier(.16,1,.3,1)', springCurve: 'cubic-bezier(.34,1.56,.64,1)' },
+  // Ladebildschirm: Bühne, Stufen-Gewichte, Zeiten (ms), Partikel-Grenzen
+  loader: {
+    sky: ['#0B0E14', '#141B2B'], stars: [40, 25, 12], starSpeed: [3, 7, 14], shootEvery: [8, 12],
+    weights: [5, 10, 30, 25, 10, 20], maxRate: 0.25, catchUp: 0.7, catchUpShort: 0.45,
+    minShow: 1800, shortIf: 600, finale: 2200, finaleShort: 1200, slowStage: 6000, hangAfter: 25000, leave: 900,
+    memoEvery: 2200, tipEvery: 6000, srEvery: 4000, particles: 300, particlesPhone: 120, glints: 5, streakEvery: 5000,
+    earthRise: 3000, earthLift: 40, zoomOut: 0.08, cap: 0.4, capPhone: 0.5, capLand: 0.44, moonR: 0.7, patch: 1.0,
+    dust: ['#B5A184', '#8A775E', '#5C4F3E', '#3A3128'], clean: ['#F4F8FC', '#C7D1DC', '#97A4B4', '#5E6A79'],
+    earth: ['#CFE8FF', '#4C8FD6', '#1E4F8F', '#0F2A4D'], halo: 'rgba(127,195,255,',
+  },
+  // HUD: Minimap (weich, gleiche Farben wie die Welt) und Einnahmen-Kurve
+  hud: {
+    sparkFill: 'rgba(91,227,154,.32)',
+    map: { void: '#0B0E14', voidRGB: [11, 14, 20], grid: 'rgba(255,255,255,.07)', done: 'rgba(99,203,198,.16)', building: '#63CBC6', vehicle: '#FFC24A', robot: '#FFB27A', outline: 'rgba(11,14,20,.8)', cone: 'rgba(255,122,47,.42)', ring: 'rgba(255,255,255,.3)', tick: 'rgba(255,255,255,.55)' },
+  },
+};
+
+/* ============================================================================
+   0b. LADEBILDSCHIRM – „Der Mond hat einen Termin“
+   Läuft vor dem Hauptskript (das erst nach dem ersten gezeichneten Frame ausgeführt
+   wird), zeigt den echten Fortschritt der Start-Stufen (Loader.stage / bootDone),
+   spielt das Kapselfinale und führt nach einem Tippen ins Hauptmenü. Danach wird
+   alles entfernt: DOM, Canvas, Ereignisse, Ton. Liest nur Einstellungen, ändert nie
+   Spielzustand; eigener Zufall, keine Objekte pro Frame im Zeichen-Loop.
+   ============================================================================ */
+window.Loader = (function () {
+  const root = document.getElementById('loader'); if (!root) return null;
+  const T = THEME, L = T.loader, q = s => root.querySelector(s);
+  const cv = q('#ld-cv'), ctx = cv.getContext('2d');
+  const elBar = q('.ld-bar'), elFill = q('.ld-bar i'), elPct = q('.ld-pct'), elMsg = q('.ld-msg'), elTip = q('.ld-tip'), elSt = q('.ld-st'), elSlow = q('.ld-slow'), elWarn = q('.ld-warn');
+  const elReady = q('.ld-ready'), elStart = q('.ld-start'), elSr = q('.ld-sr'), elSimple = q('.ld-simple'), elMute = q('.ld-mute'), elErr = q('.ld-err');
+  const now = () => performance.now(), mq = s => { try { return matchMedia(s).matches; } catch (e) { return false; } };
+  let S = {}; try { S = JSON.parse(localStorage.getItem('staubmond.settings') || '{}') || {}; } catch (e) { S = {}; }
+  const reduce = S.reduceMotion !== undefined && S.reduceMotion !== null ? !!S.reduceMotion : mq('(prefers-reduced-motion: reduce)');
+  const coarse = mq('(pointer: coarse)'), phone = coarse && Math.min(screen.width, screen.height) < 600;
+  let simple = !!S.loaderSimple, muted = !!S.loaderMute;
+  const still = () => reduce || simple, PMAX = phone ? L.particlesPhone : L.particles;
+  // eigener Zufall (nie Math.random – der gehört der Spiellogik)
+  let seed = (20261029 ^ Date.now()) >>> 0; const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296, rr = (a, b) => a + rnd() * (b - a);
+  const ease = u => u < 0 ? 0 : u > 1 ? 1 : 1 - Math.pow(1 - u, 3), easeIO = u => u < 0 ? 0 : u > 1 ? 1 : u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+  const store = (k, v) => { try { if (typeof Settings !== 'undefined' && Settings.d && Settings.d.binds) { Settings.set(k, v); return; } const o = JSON.parse(localStorage.getItem('staubmond.settings') || '{}') || {}; o[k] = v; localStorage.setItem('staubmond.settings', JSON.stringify(o)); } catch (e) { } };
+  const t0 = now();
+
+  /* --- Texte: ALOP-Behördenmemos und Spieltipps (nur echte Spielfunktionen) --- */
+  const MEMOS = [
+    'Amt für Lunare Oberflächenpflege: Ihr Antrag auf einen Besen wurde abgelehnt. Zahnbürste genehmigt.',
+    'Staubsorten werden sortiert, nach Gefühl.', 'Der Mond wird vermessen. Ergebnis: groß.',
+    'Formular 27-B (Vorläufiges Putzen) wird in dreifacher Ausfertigung abgeheftet.', 'Die Erde wird gebeten, kurz zu winken.',
+    'Beförderung zum Reinigungsfachkraft-Anwärter ist in Prüfung.', 'Schwerkraft wird auf ein Sechstel gestellt, bitte nicht widersprechen.',
+    'Kaffeemaschine im Depot wurde noch nicht geliefert.', 'Krater werden gezählt. Zwischenstand: viele.',
+    'Die Zahnbürste wird auf Mondtauglichkeit geprüft. Der Prüfer ist zuversichtlich.', 'Antrag auf Atmosphäre eingegangen. Bearbeitungszeit derzeit vier bis sechs Milliarden Jahre.',
+    'Der Putzplan wird ausgedruckt. Der Drucker kennt nur eine Farbe: Grau.', 'Stempelkissen werden nachgefüllt. Ohne Stempel kein Staub.',
+    'Sektor M-13 wurde zum Startgebiet erklärt. Einspruch war bis gestern möglich.', 'Die Kapsel wird betankt. Rauchen bleibt verboten, obwohl es keine Luft gibt.',
+    'Mondstaub wird nach Hausnorm ALOP-4711 als „ziemlich staubig“ eingestuft.', 'Die Roboter werden über ihre Rechte belehrt. Die Belehrung war kurz.',
+    'Ein Fundstück wurde gemeldet. Vorläufige Einschätzung: ein Fingerabdruck.', 'Der Mondglanz-Index wird auf vier Nachkommastellen genau geschätzt.',
+    'Die Rückseite des Mondes ist heute geschlossen. Bitte nutzen Sie die Vorderseite.', 'Ihr Spind im Depot wurde zugeteilt: Nummer 1. Es gibt nur einen.',
+    'Die Inspektion kündigt sich an. Bitte sehen Sie beschäftigt aus.', 'Haftungsausschluss: Das Amt haftet nicht für Staub in Helmen.',
+    'Die Zahnbürste wurde inventarisiert, versichert und liebevoll benannt.', 'Budgetsitzung beendet. Ergebnis: Die Zahnbürste bleibt.',
+    'Mondzeit wird mit Erdzeit abgeglichen. Beide behaupten, pünktlich zu sein.', 'Die Dienstanweisung zum Putzen wird zum Putzen vorgelegt.',
+    'Der Mond hat einen Termin. Sie auch.',
+  ];
+  const TIPS = [
+    'Gebäude lassen sich nur auf sauberem Boden bauen.', 'Roboter arbeiten, solange eine Antenne oder ein Depot sie per Funk abdeckt.',
+    'Ab „Kapsel-Logistik“ Stufe 5 laden Sie per Funk aus der Ferne ab.', 'Die Erde zahlt zeitweise 50 % mehr für eine Staubart – achten Sie auf den Nachfrage-Chip.',
+    'Roboter verkaufen erstattet den vollen Kaufpreis.', 'Abreißen gibt den vollen Baupreis zurück.', 'Jeder gereinigte Sektor bringt Forschungspunkte und +0,5 % Einnahmen.',
+    'Fundstücke bringen Geld und Forschungspunkte und landen im Album.', 'Aufträge, die nicht passen, lassen sich kostenlos tauschen.',
+    'Fahrzeuge rufen Sie am Terminal herbei – gegen eine kleine Gebühr.', 'Auf der Karte weisen Sie Robotern einen Sektor oder ein Rechteck zu.',
+    'Der Verdichter macht aus 2 kg Staub 1 kg Mondsand, der mehr wert ist.', '„Auto-Putzen“ in den Einstellungen putzt automatisch, solange Sie laufen.',
+    'Beim Putzen laufen Sie mit 70 % Tempo – die Forschung „Turbofegen“ hebt das auf.', 'Die Kapsel startet bei 200 kg von selbst, früher per Knopfdruck.',
+    'Bei einer Inspektion muss der Sektor zu 95 % sauber sein.', 'Der Schwebekehrer überquert Schluchten.', 'Im Koop putzen bis zu 8 Personen per Einladungscode gemeinsam.',
+    'Ein Tipp auf das Ziel-Kärtchen setzt einen Wegpunkt zum Terminal.',
+  ];
+  const STAGES = ['Seite und Skripte', 'Einstellungen und Farbtabellen', 'Bodentexturen', 'Grafik und Effekte', 'Oberfläche', 'Spielstände und Hauptmenü'];
+  const deck = (n) => { const a = []; for (let i = 0; i < n; i++) a.push(i); for (let i = n - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0, t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+  let memoDeck = deck(MEMOS.length), memoI = 0, tipDeck = deck(TIPS.length), tipI = 0, memoT = 0, tipT = 0, srT = -1e9, curMemo = MEMOS[0];
+
+  /* --- Fortschritt: echte Stufen, sanft nachlaufender Wert, nie zurück --- */
+  const W8 = L.weights, stg = { i: 0, f: 0, t: t0 };
+  let real = 0, shown = 0, done = false, doneAt = 0, short = false, catchRate = L.maxRate, phase = 'load', phaseT = 0, finDur = L.finale, lastProg = t0, failed = false, hung = false;
+  function calcReal() { let s = 0; for (let k = 0; k < stg.i; k++) s += W8[k]; s += W8[stg.i] * stg.f; real = Math.max(real, Math.min(100, s) / 100); lastProg = now(); }
+
+  /* --- Ton (nur wenn der Browser ihn schon erlaubt; sonst nach dem ersten Tippen im Spiel) --- */
+  let ac = null, mg = null, nbuf = null;
+  function audioInit() {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    try { ac = new AC(); } catch (e) { ac = null; return; }
+    if (ac.state !== 'running') { try { ac.close(); } catch (e) { } ac = null; return; }
+    mg = ac.createGain(); mg.gain.value = muted ? 0 : 1; mg.connect(ac.destination);
+    nbuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = nbuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = rnd() * 2 - 1;
+    const n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    n.buffer = nbuf; n.loop = true; f.type = 'lowpass'; f.frequency.value = 380; g.gain.value = 0.03 * (S.music !== undefined ? S.music : 0.55);
+    n.connect(f); f.connect(g); g.connect(mg); n.start();
+  }
+  const vol = () => (S.sfx !== undefined ? S.sfx : 0.8);
+  function tone(fr, dur, gain, type, at) {
+    if (!ac) return; const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + (at || 0);
+    o.type = type || 'sine'; o.frequency.value = fr; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain * vol(), t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(mg); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function noise(freq, qv, dur, gain, type, sweep) {
+    if (!ac) return; const n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), t = ac.currentTime;
+    n.buffer = nbuf; f.type = type || 'bandpass'; f.frequency.setValueAtTime(freq, t); if (sweep) f.frequency.exponentialRampToValueAtTime(sweep, t + dur); f.Q.value = qv;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain * vol(), t + Math.min(0.3, dur * 0.25)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(f); f.connect(g); g.connect(mg); n.start(t); n.stop(t + dur + 0.05);
+  }
+  const sndStage = i => tone([392, 440, 523.3, 587.3, 659.3, 784][i % 6], 0.9, 0.05);
+  const sndScrub = () => noise(2600, 1.3, 0.07, 0.025);
+  const sndRumble = () => { noise(160, 0.7, 1.9, 0.16, 'lowpass'); if (ac) { const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(), t = ac.currentTime; o.type = 'sawtooth'; o.frequency.setValueAtTime(60, t); o.frequency.exponentialRampToValueAtTime(330, t + 1.6); f.type = 'lowpass'; f.frequency.value = 900; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.035 * vol(), t + 0.2); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8); o.connect(f); f.connect(g); g.connect(mg); o.start(t); o.stop(t + 1.9); } };
+  const sndCash = () => { tone(1318.5, 0.12, 0.06, 'triangle'); tone(1760, 0.32, 0.06, 'triangle', 0.08); };
+  const speaker = () => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/>' + (muted ? '<path d="M17 9l5 6M22 9l-5 6"/>' : '<path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/>') + '</svg>';
+
+  /* --- Bühne: Geometrie, vorgerenderte Bilder --- */
+  let W = 0, H = 0, dpr = 1, G = null, raf = 0, last = t0, alive = true;
+  const SPR = {};
+  const mk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; };
+  function sprites() {
+    // weicher Staub, Rauch, Glanzstern, Stern, Sternschnuppe, Lichtstreifen, Blitz, Flamme
+    const soft = (r, c0, c1) => { const c = mk(r * 2, r * 2), x = c.getContext('2d'), g = x.createRadialGradient(r, r, 0, r, r, r); g.addColorStop(0, c0); g.addColorStop(1, c1); x.fillStyle = g; x.fillRect(0, 0, r * 2, r * 2); return c; };
+    SPR.dust = soft(16, 'rgba(201,184,152,.95)', 'rgba(169,149,121,0)'); SPR.dust2 = soft(16, 'rgba(150,128,98,.9)', 'rgba(120,100,76,0)');
+    SPR.smoke = soft(32, 'rgba(217,220,223,.75)', 'rgba(200,204,210,0)');
+    SPR.star = soft(6, 'rgba(255,255,255,1)', 'rgba(255,255,255,0)'); SPR.starB = soft(10, 'rgba(234,241,248,1)', 'rgba(234,241,248,0)');
+    SPR.flash = soft(64, 'rgba(255,240,210,.95)', 'rgba(255,178,92,0)'); SPR.glow = soft(64, 'rgba(255,178,92,.7)', 'rgba(255,122,47,0)');
+    SPR.brush = soft(16, 'rgba(0,0,0,1)', 'rgba(0,0,0,0)');
+    let c = mk(64, 64), x = c.getContext('2d');
+    x.translate(32, 32); x.fillStyle = '#fff'; for (let k = 0; k < 2; k++) { x.beginPath(); x.moveTo(0, -30); x.quadraticCurveTo(2.5, -2.5, 30, 0); x.quadraticCurveTo(2.5, 2.5, 0, 30); x.quadraticCurveTo(-2.5, 2.5, -30, 0); x.quadraticCurveTo(-2.5, -2.5, 0, -30); x.fill(); x.rotate(Math.PI / 4); x.scale(0.5, 0.5); }
+    SPR.glint = c;
+    c = mk(160, 8); x = c.getContext('2d'); let g = x.createLinearGradient(0, 0, 160, 0); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,.9)'); x.fillStyle = g; x.beginPath(); x.moveTo(0, 4); x.lineTo(156, 1.5); x.arc(156, 4, 2.5, -Math.PI / 2, Math.PI / 2); x.closePath(); x.fill(); SPR.shoot = c;
+    c = mk(120, 600); x = c.getContext('2d'); g = x.createLinearGradient(0, 0, 120, 0); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,.42)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 120, 600); SPR.streak = c;
+    c = mk(40, 90); x = c.getContext('2d'); g = x.createLinearGradient(0, 0, 0, 90); g.addColorStop(0, 'rgba(255,240,200,1)'); g.addColorStop(0.35, 'rgba(255,178,92,.9)'); g.addColorStop(1, 'rgba(255,90,40,0)'); x.fillStyle = g; x.beginPath(); x.moveTo(6, 0); x.quadraticCurveTo(20, 50, 20, 90); x.quadraticCurveTo(20, 50, 34, 0); x.closePath(); x.fill(); SPR.flame = c;
+    // Kapsel (Draufsicht seitlich): Metall, Fenster, orange Finnen
+    c = mk(64, 96); x = c.getContext('2d'); x.translate(32, 4);
+    x.fillStyle = T.alop.orange; x.strokeStyle = '#1A1F29'; x.lineWidth = 2.5; x.lineJoin = 'round';
+    x.beginPath(); x.moveTo(-16, 60); x.lineTo(-27, 84); x.lineTo(-12, 80); x.closePath(); x.fill(); x.stroke(); x.beginPath(); x.moveTo(16, 60); x.lineTo(27, 84); x.lineTo(12, 80); x.closePath(); x.fill(); x.stroke();
+    g = x.createLinearGradient(-18, 0, 18, 0); g.addColorStop(0, '#E5EBEF'); g.addColorStop(0.55, '#B9C3CA'); g.addColorStop(1, '#8C979E'); x.fillStyle = g;
+    x.beginPath(); x.moveTo(0, 0); x.bezierCurveTo(14, 10, 18, 30, 18, 52); x.lineTo(18, 82); x.lineTo(-18, 82); x.lineTo(-18, 52); x.bezierCurveTo(-18, 30, -14, 10, 0, 0); x.closePath(); x.fill(); x.stroke();
+    x.fillStyle = T.alop.petrolLight; x.beginPath(); x.arc(0, 36, 7.5, 0, 6.283); x.fill(); x.stroke(); x.fillStyle = 'rgba(255,255,255,.7)'; x.beginPath(); x.arc(-2.5, 33.5, 2.6, 0, 6.283); x.fill();
+    x.fillStyle = T.metal.dark; x.fillRect(-12, 82, 24, 7); SPR.capsule = c;
+    // Astronaut mit übergroßer Zahnbürste (Blick nach rechts, Füße bei y = 0)
+    c = mk(96, 96); x = c.getContext('2d'); x.translate(40, 88); x.lineJoin = 'round'; x.lineCap = 'round'; x.strokeStyle = '#1A1F29'; x.lineWidth = 2.5;
+    x.fillStyle = '#6B7478'; x.beginPath(); x.roundRect ? x.roundRect(-17, -54, 12, 26, 4) : x.rect(-17, -54, 12, 26); x.fill(); x.stroke();
+    x.fillStyle = T.alop.orange; x.beginPath(); x.moveTo(-9, -2); x.lineTo(-9, -18); x.lineTo(-1, -18); x.lineTo(-2, -2); x.closePath(); x.fill(); x.stroke(); x.beginPath(); x.moveTo(3, -2); x.lineTo(2, -18); x.lineTo(10, -18); x.lineTo(10, -2); x.closePath(); x.fill(); x.stroke();
+    g = x.createLinearGradient(-12, -50, 12, -14); g.addColorStop(0, T.alop.orangeLight); g.addColorStop(0.45, T.alop.orange); g.addColorStop(1, T.alop.orangeDeep); x.fillStyle = g;
+    x.beginPath(); x.ellipse(0, -32, 13, 18, 0, 0, 6.283); x.fill(); x.stroke();
+    x.fillStyle = '#EEF3F4'; x.beginPath(); x.arc(2, -56, 13, 0, 6.283); x.fill(); x.stroke();
+    g = x.createLinearGradient(4, -64, 12, -48); g.addColorStop(0, T.alop.petrol); g.addColorStop(1, '#EAF1F8'); x.fillStyle = g; x.beginPath(); x.ellipse(7, -56, 7, 8, 0.2, 0, 6.283); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,.95)'; x.lineWidth = 2; x.beginPath(); x.arc(6, -58, 4.5, -2.6, -1.4); x.stroke();
+    SPR.astro = c;
+    c = mk(96, 32); x = c.getContext('2d'); x.translate(4, 16); x.lineCap = 'round'; x.strokeStyle = '#1A1F29'; x.lineWidth = 7; x.beginPath(); x.moveTo(0, 0); x.lineTo(66, 0); x.stroke();
+    x.strokeStyle = '#5FD3DC'; x.lineWidth = 4.5; x.beginPath(); x.moveTo(0, 0); x.lineTo(66, 0); x.stroke();
+    x.fillStyle = '#EEF3F4'; x.strokeStyle = '#1A1F29'; x.lineWidth = 2; x.beginPath(); x.rect(62, -6, 26, 9); x.fill(); x.stroke();
+    x.strokeStyle = '#FFFFFF'; x.lineWidth = 2; for (let i = 0; i < 6; i++) { x.beginPath(); x.moveTo(64 + i * 4.2, 3); x.lineTo(64 + i * 4.2, 11); x.stroke(); }
+    SPR.toothbrush = c;
+  }
+  // Sterne: drei Schichten mit Parallaxe
+  const STARS = []; for (let l = 0; l < 3; l++) for (let i = 0; i < L.stars[l]; i++) STARS.push([rnd(), rnd() * 0.72, l, rnd() * 6.283, rr(0.6, 1)]);
+  // Krater in normierten Koordinaten (Einheitskreis, nur obere Kappe sichtbar)
+  const CRATERS = []; for (let i = 0; i < 140; i++) { const a = rr(-Math.PI, 0), d = Math.sqrt(rnd()) * 0.98; CRATERS.push([Math.cos(a) * d, Math.sin(a) * d, i < 34 ? rr(0.025, 0.07) : rr(0.006, 0.022), rnd()]); }
+  function layout() {
+    const vw = document.documentElement.clientWidth || innerWidth, vh = innerHeight;
+    W = vw; H = vh; dpr = Math.min(window.devicePixelRatio || 1, phone ? 1.5 : 2, simple ? 1.25 : 9);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const port = H > W, cap = H * (phone && port ? L.capPhone : phone ? L.capLand : L.cap), R = Math.max(W * L.moonR, cap * 1.08), cx = W / 2, cy = H - cap + R;
+    const er = Math.min(W, H) * (port ? 0.085 : 0.072);
+    G = { cx, cy, R, cap, ex: W * (port ? 0.2 : 0.16), ey: H * 0.3, er, x0: Math.max(0, cx - R), x1: Math.min(W, cx + R), y0: Math.max(0, cy - R), y1: H, aH: Math.max(18, H * 0.03) };
+    G.s = Math.min(1, (dpr * 0.5)); G.ow = Math.ceil((G.x1 - G.x0) * G.s); G.oh = Math.ceil((G.y1 - G.y0) * G.s); G.rhoMax = cap * L.patch;
+    buildMoon(); buildEarth(); buildSky();
+    G.done = 0; G.lastA = null; reErase();
+  }
+  function buildSky() {
+    const c = mk(4, 256), x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, L.sky[0]); g.addColorStop(1, L.sky[1]); x.fillStyle = g; x.fillRect(0, 0, 4, 256); SPR.sky = c;
+    const v = mk(4, 256), y = v.getContext('2d'), h = y.createLinearGradient(0, 0, 0, 256); h.addColorStop(0, 'rgba(11,14,20,0)'); h.addColorStop(0.55, 'rgba(11,14,20,.35)'); h.addColorStop(1, 'rgba(11,14,20,.8)'); y.fillStyle = h; y.fillRect(0, 0, 4, 256); SPR.vig = v;
+  }
+  // Mond: zwei Ebenen (Staub oben, sauberer Fels unten) in halber Auflösung, nur der sichtbare Ausschnitt
+  function paintMoon(c, pal, clean) {
+    const x = c.getContext('2d'), s = G.s, { cx, cy, R } = G;
+    x.setTransform(s, 0, 0, s, -G.x0 * s, -G.y0 * s); x.clearRect(G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0);
+    let g = x.createRadialGradient(cx - R * 0.42, cy - R * 0.6, R * 0.04, cx, cy, R); g.addColorStop(0, pal[0]); g.addColorStop(0.42, pal[1]); g.addColorStop(0.85, pal[2]); g.addColorStop(1, pal[3]);
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, R, 0, 6.283); x.fill();
+    x.save(); x.beginPath(); x.arc(cx, cy, R, 0, 6.283); x.clip();
+    for (const [nx, ny, nr, k] of CRATERS) {
+      const X = cx + nx * R, Y = cy + ny * R, r = nr * R; if (Y + r < G.y0 || X + r < G.x0 || X - r > G.x1) continue;
+      const f = Math.sqrt(Math.max(0.08, 1 - nx * nx - ny * ny));
+      x.save(); x.translate(X, Y); x.scale(1, f);
+      g = x.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.05, 0, 0, r); g.addColorStop(0, clean ? 'rgba(70,82,100,.42)' : 'rgba(40,30,20,.5)'); g.addColorStop(0.75, clean ? 'rgba(90,104,124,.18)' : 'rgba(60,48,34,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.beginPath(); x.arc(0, 0, r, 0, 6.283); x.fill();
+      x.strokeStyle = clean ? 'rgba(255,255,255,.55)' : 'rgba(255,236,206,.32)'; x.lineWidth = Math.max(1, r * 0.12); x.beginPath(); x.arc(0, 0, r * 0.93, -0.25, 1.9); x.stroke();
+      x.restore();
+    }
+    // feine Körnung
+    const n = Math.min(2600, ((G.x1 - G.x0) * (G.y1 - G.y0)) / 260); let sd = 99;
+    for (let i = 0; i < n; i++) { sd = (sd * 1103515245 + 12345) >>> 0; const px = G.x0 + (sd % 10007) / 10007 * (G.x1 - G.x0); sd = (sd * 1103515245 + 12345) >>> 0; const py = G.y0 + (sd % 10009) / 10009 * (G.y1 - G.y0); x.fillStyle = (sd & 1) ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.09)'; x.fillRect(px, py, 1.6, 1.6); }
+    // Terminator unten rechts, Glanz auf sauberem Fels
+    g = x.createRadialGradient(cx - R * 0.45, cy - R * 0.7, R * 0.55, cx - R * 0.2, cy - R * 0.3, R * 1.5); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(6,8,16,.6)'); x.fillStyle = g; x.fillRect(G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0);
+    if (clean) { g = x.createRadialGradient(cx - R * 0.35, cy - R * 0.85, 0, cx - R * 0.35, cy - R * 0.85, R * 0.7); g.addColorStop(0, 'rgba(255,255,255,.32)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(G.x0, G.y0, G.x1 - G.x0, G.y1 - G.y0); }
+    x.restore();
+    x.strokeStyle = clean ? 'rgba(255,255,255,.6)' : 'rgba(255,232,196,.38)'; x.lineWidth = Math.max(1.5, R * 0.004); x.beginPath(); x.arc(cx, cy, R - 1, Math.PI * 1.08, Math.PI * 1.72); x.stroke();
+  }
+  function buildMoon() {
+    SPR.mDust = SPR.mDust || mk(1, 1); SPR.mClean = SPR.mClean || mk(1, 1); SPR.mWork = SPR.mWork || mk(1, 1);
+    for (const c of [SPR.mDust, SPR.mClean, SPR.mWork]) { c.width = G.ow; c.height = G.oh; }
+    paintMoon(SPR.mDust, L.dust, false); paintMoon(SPR.mClean, L.clean, true);
+  }
+  function buildEarth() {
+    const r = G.er, S2 = Math.ceil(r * 2.8), c = mk(S2 * dpr, S2 * dpr), x = c.getContext('2d'); x.scale(dpr, dpr); const m = S2 / 2;
+    let g = x.createRadialGradient(m, m, r * 0.9, m, m, r * 1.4); g.addColorStop(0, L.halo + '.35)'); g.addColorStop(1, L.halo + '0)'); x.fillStyle = g; x.fillRect(0, 0, S2, S2);
+    g = x.createRadialGradient(m - r * 0.4, m - r * 0.45, r * 0.08, m, m, r); g.addColorStop(0, L.earth[0]); g.addColorStop(0.4, L.earth[1]); g.addColorStop(0.8, L.earth[2]); g.addColorStop(1, L.earth[3]);
+    x.fillStyle = g; x.beginPath(); x.arc(m, m, r, 0, 6.283); x.fill();
+    x.save(); x.beginPath(); x.arc(m, m, r, 0, 6.283); x.clip(); x.fillStyle = 'rgba(96,170,110,.75)'; for (const [a, b, w, h] of [[-0.3, 0.1, 0.42, 0.26], [0.35, -0.25, 0.3, 0.2], [0.1, 0.45, 0.35, 0.16]]) { x.beginPath(); x.ellipse(m + a * r, m + b * r, w * r, h * r, 0.5, 0, 6.283); x.fill(); }
+    g = x.createRadialGradient(m - r * 0.5, m - r * 0.5, r * 0.5, m + r * 0.1, m + r * 0.1, r * 1.3); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,4,20,.7)'); x.fillStyle = g; x.fillRect(0, 0, S2, S2); x.restore();
+    SPR.earth = c; SPR.earthS = S2;
+    const cw = Math.ceil(r * 4), cl = mk(cw * dpr, r * 2 * dpr), y = cl.getContext('2d'); y.scale(dpr, dpr);
+    for (let i = 0; i < 7; i++) { const yy = r * (0.35 + (i % 4) * 0.42), xx = (i * 0.37 % 1) * cw, w = r * rr(0.35, 0.65); for (let k = 0; k < 5; k++) { y.fillStyle = 'rgba(255,255,255,' + (0.1 + k * 0.03) + ')'; for (const o of [0, cw, -cw]) { y.beginPath(); y.ellipse(xx + o + k * w * 0.08, yy + (k - 2) * r * 0.012, w * (1 - k * 0.12), r * (0.11 - k * 0.015), -0.12, 0, 6.283); y.fill(); } } }
+    SPR.clouds = cl; SPR.cloudsW = cw;
+  }
+
+  /* --- Putzmaske: wächst nur, rückwärts passiert nie etwas --- */
+  const PATCH = []; for (let i = 0; i < 56; i++) { const a = i / 56 * 6.2832; PATCH.push(a, 1 + 0.09 * Math.sin(5 * a + 1.3) + 0.05 * Math.sin(11 * a + 0.4) + 0.03 * Math.sin(17 * a + 2.1)); }
+  let rhoDone = 0, waveRho = 0;
+  function wctx() { const x = SPR.mWork.getContext('2d'); x.setTransform(G.s, 0, 0, G.s, -G.x0 * G.s, -G.y0 * G.s); x.globalCompositeOperation = 'destination-out'; return x; }
+  function erasePatch(rho, alpha) {
+    const x = wctx(), px = G.cx, py = G.cy - G.R + rho * 0.12;
+    x.fillStyle = 'rgba(0,0,0,' + alpha + ')'; x.beginPath();
+    for (let i = 0; i < PATCH.length; i += 2) { const a = PATCH[i], k = PATCH[i + 1] * rho, X = px + Math.cos(a) * k * 1.25, Y = py + Math.sin(a) * k * 0.78; i ? x.lineTo(X, Y) : x.moveTo(X, Y); }
+    x.closePath(); x.fill(); x.globalCompositeOperation = 'source-over';
+  }
+  function eraseDot(X, Y, r) { const x = wctx(); x.drawImage(SPR.brush, X - r, Y - r, r * 2, r * 2); x.globalCompositeOperation = 'source-over'; }
+  function reErase() {
+    const x = SPR.mWork.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, G.ow, G.oh); x.drawImage(SPR.mDust, 0, 0);
+    const rho = Math.max(rhoDone, waveRho); if (rho > 0) { erasePatch(rho, 1); erasePatch(rho * 1.03, 0.4); }
+    // Putzstreifen entlang des Horizonts im bisherigen Arbeitsbereich
+    const A = astroRange(clean()); for (let a = -A; a <= A; a += 0.004) { const th = -Math.PI / 2 + a, d = G.aH * 0.32; eraseDot(G.cx + Math.cos(th) * (G.R - d), G.cy + Math.sin(th) * (G.R - d), G.aH * 0.42); }
+  }
+  const clean = () => short ? 0.5 + 0.5 * shown : shown;
+  const astroRange = p => Math.min(1.2, ((0.1 + 0.55 * p) * Math.min(W, G.x1 - G.x0) * 0.5) / G.R);
+
+  /* --- Partikel (Pool ohne Objekterzeugung pro Frame) --- */
+  const P = { x: new Float32Array(PMAX), y: new Float32Array(PMAX), vx: new Float32Array(PMAX), vy: new Float32Array(PMAX), l: new Float32Array(PMAX), m: new Float32Array(PMAX), s: new Float32Array(PMAX), k: new Uint8Array(PMAX), n: 0 };
+  let pNext = 0;
+  function emit(k, x, y, vx, vy, life, size) { if (still()) return; for (let t = 0; t < PMAX; t++) { const i = (pNext + t) % PMAX; if (P.l[i] <= 0) { P.x[i] = x; P.y[i] = y; P.vx[i] = vx; P.vy[i] = vy; P.l[i] = P.m[i] = life; P.s[i] = size; P.k[i] = k; pNext = i + 1; return; } } }
+  const GL = { x: new Float32Array(L.glints), y: new Float32Array(L.glints), l: new Float32Array(L.glints) };
+  function glint(x, y) { for (let i = 0; i < L.glints; i++) if (GL.l[i] <= 0) { GL.x[i] = x; GL.y[i] = y; GL.l[i] = 0.7; return; } }
+
+  /* --- Szene zeichnen --- */
+  let astroTh = -Math.PI / 2, astroPh = 0, scrubT = 0, shootT = t0 + rr(L.shootEvery[0], L.shootEvery[1]) * 1000, shoot = null, flashCount = 0;
+  const shootS = { x: 0, y: 0, a: 0, t: 0 };
+  let leave = null;
+  function frame(tn) {
+    if (!alive) return;
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, Math.max(0, (tn - last) / 1000)); last = tn;
+    if (typeof Game !== 'undefined' && Game.state === 'play') { destroy(); return; }
+    const c0 = now();
+    try { update(dt, tn); draw(dt, tn); } catch (err) { console.warn('Ladebildschirm:', err); if (done) { destroy(); return; } simple = true; }
+    perf = perf * 0.95 + (now() - c0) * 0.05;
+  }
+  let perf = 0, initState = 0; // 0 wartet auf den ersten Frame, 1 läuft, -1 nur einfache Szene
+  function update(dt, tn) {
+    // Wert läuft sanft nach (höchstens +25 %/s), nie zurück, nie über dem echten Fortschritt
+    if (phase === 'load') {
+      shown = Math.min(real, shown + (done ? catchRate : L.maxRate) * dt);
+      if (done && shown >= 0.9999) { shown = 1; phase = 'finale'; phaseT = tn; finDur = short ? L.finaleShort : L.finale; sndRumble(); }
+      if (!done && !failed) {
+        const slow = tn - stg.t > L.slowStage; root.classList.toggle('slow', slow); elSlow.hidden = !slow;
+        if (tn - lastProg > L.hangAfter) { hung = true; fail(new Error('Der Start reagiert nicht mehr (keine Rückmeldung seit ' + Math.round(L.hangAfter / 1000) + ' s).')); }
+      }
+    } else if (phase === 'finale' && tn - phaseT >= finDur && tn >= L.minShow) ready();
+    // Texte
+    if (phase === 'load' || phase === 'finale') {
+      if (tn - memoT > L.memoEvery) nextMemo(tn);
+      if (tn - tipT > L.tipEvery) nextTip(tn);
+    }
+    const pct = shown * 100, txt = pct.toFixed(4).replace('.', ',') + ' %';
+    if (elPct.textContent !== txt) { elPct.textContent = txt; elFill.style.width = pct.toFixed(2) + '%'; }
+    const iv = Math.floor(pct); if (+elBar.getAttribute('aria-valuenow') !== iv) elBar.setAttribute('aria-valuenow', iv);
+    if (tn - srT > L.srEvery && phase !== 'ready') { srT = tn; elSr.textContent = 'Ladefortschritt ' + iv + ' Prozent. ' + curMemo; }
+    // Putzfläche wächst mit dem Fortschritt
+    const cp = clean(), rho = Math.sqrt(cp) * G.rhoMax;
+    if (rho > rhoDone + 0.4) { const grow = rho - rhoDone; rhoDone = rho; erasePatch(rho, 0.35); if (rnd() < Math.min(1, grow * 0.08)) { const a = -Math.PI / 2 + rr(-1.2, 1.2), k = rho * 0.95; glint(G.cx + Math.cos(a) * k * 1.25, G.cy - G.R + rho * 0.12 + Math.sin(a) * k * 0.78); } }
+    if (phase === 'finale' || phase === 'ready' || phase === 'leave') {
+      const u = phase === 'finale' ? (tn - phaseT) / finDur : 1, wr = G.rhoMax * (1 + 2.2 * ease(u / 0.4));
+      if (wr > waveRho + 0.5) { waveRho = wr; erasePatch(wr, 0.5); }
+    }
+    // Astronaut: Zickzack-Bögen am Horizont, hüpft in niedriger Schwerkraft
+    if (!still()) {
+      const A = astroRange(cp), v = Math.max(40, W * 0.06) / G.R;
+      astroPh += dt * v / Math.max(0.08, A); astroTh = -Math.PI / 2 + A * Math.sin(astroPh);
+      const dir = Math.cos(astroPh) >= 0 ? 1 : -1, th2 = astroTh + dir * (G.aH * 1.05) / G.R, d = G.aH * 0.32;
+      const bx = G.cx + Math.cos(th2) * (G.R - d), by = G.cy + Math.sin(th2) * (G.R - d);
+      eraseDot(bx, by, G.aH * 0.42);
+      if (phase !== 'leave') {
+        const nx = Math.cos(th2), ny = Math.sin(th2), tx = -ny * dir, ty = nx * dir, k = phone ? 1 : 2;
+        for (let i = 0; i < k; i++) emit(i & 1, bx, by, nx * rr(20, 70) - tx * rr(10, 60) + rr(-15, 15), ny * rr(20, 70) - ty * rr(10, 60) + rr(-15, 15), rr(0.5, 1.1), rr(1.8, 4.2));
+        scrubT += dt; if (scrubT > 0.32 && phase === 'load') { scrubT = 0; sndScrub(); }
+      }
+    } else astroTh = -Math.PI / 2 - 0.08;
+    // Partikel: schwache Schwerkraft zum Mondmittelpunkt
+    for (let i = 0; i < PMAX; i++) if (P.l[i] > 0) {
+      P.l[i] -= dt; const dx = P.x[i] - G.cx, dy = P.y[i] - G.cy, dd = Math.hypot(dx, dy) || 1, g = P.k[i] === 2 ? -8 : 38;
+      P.vx[i] -= dx / dd * g * dt; P.vy[i] -= dy / dd * g * dt; const dr = P.k[i] === 2 ? 0.6 : 0.2; P.vx[i] *= 1 - dr * dt; P.vy[i] *= 1 - dr * dt;
+      P.x[i] += P.vx[i] * dt; P.y[i] += P.vy[i] * dt; if (P.k[i] === 2) P.s[i] += dt * 18;
+    }
+    for (let i = 0; i < L.glints; i++) if (GL.l[i] > 0) GL.l[i] -= dt;
+    // Sternschnuppe (sehr dezent)
+    if (!still() && tn > shootT && !shoot) { shoot = shootS; shoot.x = rr(0.2, 0.9) * W; shoot.y = rr(0.05, 0.3) * H; shoot.a = rr(2.5, 2.9); shoot.t = 0; shootT = tn + rr(L.shootEvery[0], L.shootEvery[1]) * 1000; }
+    if (shoot) { shoot.t += dt; shoot.x += Math.cos(shoot.a) * 520 * dt; shoot.y += Math.sin(shoot.a) * 520 * dt; if (shoot.t > 0.85) shoot = null; }
+  }
+  function draw(dt, tn) {
+    const x = ctx, t = (tn - t0) / 1000, rd = still();
+    x.setTransform(dpr, 0, 0, dpr, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+    x.drawImage(SPR.sky, 0, 0, W, H);
+    // Sterne mit Parallaxe und Funkeln
+    for (let i = 0; i < STARS.length; i++) {
+      const s = STARS[i], l = s[2], sx = rd ? s[0] * W : ((s[0] * W + t * L.starSpeed[l]) % W + W) % W, tw = rd ? 0.8 : 0.55 + 0.45 * Math.sin(t * (1 + l * 0.7) + s[3]);
+      const r = (l === 2 ? 2.2 : l === 1 ? 1.5 : 1.0) * s[4]; x.globalAlpha = tw * (0.45 + l * 0.25); x.drawImage(l === 2 ? SPR.starB : SPR.star, sx - r * 2, s[1] * H - r * 2, r * 4, r * 4);
+    }
+    if (shoot) { x.globalAlpha = Math.min(1, shoot.t * 6, (0.85 - shoot.t) * 4) * 0.7; x.save(); x.translate(shoot.x, shoot.y); x.rotate(shoot.a + Math.PI); x.drawImage(SPR.shoot, 0, -4, 130, 6); x.restore(); }
+    x.globalAlpha = 1;
+    // Kamera: im Finale weich 8 % zurück, beim Übergang zur Menü-Szene
+    let zoom = 1, ox = 0, oy = 0;
+    if (!rd && (phase === 'finale' || phase === 'ready' || phase === 'leave')) { const u = phase === 'finale' ? easeIO((tn - phaseT) / finDur) : 1; zoom = 1 - L.zoomOut * u; }
+    if (leave) { const u = easeIO((tn - leave.t) / L.leave); zoom *= 1 - 0.06 * u; oy = H * 0.08 * u; }
+    const fx = W / 2, fy = H * 0.62;
+    x.setTransform(dpr * zoom, 0, 0, dpr * zoom, dpr * (fx - fx * zoom + ox), dpr * (fy - fy * zoom + oy));
+    // Erde geht links oben auf (40 px, heller werdend), Wolken ziehen langsam
+    const eu = rd ? 1 : ease((tn - t0) / L.earthRise), ex = G.ex + (leave ? (W * 0.82 - G.ex) * easeIO((tn - leave.t) / L.leave) : 0), ey = G.ey + L.earthLift * (1 - eu) + (leave ? (H * 0.2 - G.ey) * easeIO((tn - leave.t) / L.leave) : 0), eS = SPR.earthS;
+    x.globalAlpha = 0.25 + 0.75 * eu; x.drawImage(SPR.earth, ex - eS / 2, ey - eS / 2, eS, eS);
+    x.save(); x.beginPath(); x.arc(ex, ey, G.er, 0, 6.283); x.clip(); const co = rd ? 0 : (t * G.er * 0.06) % SPR.cloudsW; x.globalAlpha *= 0.8; x.drawImage(SPR.clouds, ex - G.er - co, ey - G.er, SPR.cloudsW, G.er * 2); x.drawImage(SPR.clouds, ex - G.er - co + SPR.cloudsW, ey - G.er, SPR.cloudsW, G.er * 2); x.restore();
+    x.globalAlpha = 1;
+    // Mond: sauberer Fels, Lichtstreifen über die saubere Fläche, dann die Staubebene mit Putzmaske
+    const mw = G.x1 - G.x0, mh = G.y1 - G.y0;
+    x.drawImage(SPR.mClean, G.x0, G.y0, mw, mh);
+    const su = ((tn - t0) % L.streakEvery) / 1300;
+    if (su < 1 && !rd) { x.save(); x.beginPath(); x.arc(G.cx, G.cy, G.R, 0, 6.283); x.clip(); x.globalCompositeOperation = 'lighter'; x.globalAlpha = 0.55 * Math.sin(su * Math.PI); x.translate(G.x0 - 200 + (mw + 400) * su, G.y0); x.rotate(0.35); x.drawImage(SPR.streak, -60, -60, 120, mh + 160); x.restore(); x.globalAlpha = 1; }
+    x.drawImage(SPR.mWork, G.x0, G.y0, mw, mh);
+    // Kapselfinale: Luke, Zündblitz, Flammenkegel, Rauchring, Aufstieg mit Rauchspur
+    if (phase === 'finale' || (phase === 'ready' && !rd)) drawCapsule(x, tn);
+    // Astronaut
+    {
+      const hop = rd ? 0 : Math.abs(Math.sin(t * 2.3)) * G.aH * 0.7, th = astroTh, nx = Math.cos(th), ny = Math.sin(th), dir = rd ? 1 : (Math.cos(astroPh) >= 0 ? 1 : -1), s = G.aH / 80;
+      x.save(); x.translate(G.cx + nx * (G.R + hop), G.cy + ny * (G.R + hop)); x.rotate(th + Math.PI / 2); x.scale(dir * s, s);
+      x.save(); x.translate(10, -36); x.rotate(rd ? 0.35 : 0.42 + Math.sin(t * 9) * 0.22); x.drawImage(SPR.toothbrush, -4, -16, 96, 32); x.restore();
+      x.drawImage(SPR.astro, -40, -88, 96, 96); x.restore();
+    }
+    // Staub und Rauch
+    for (let i = 0; i < PMAX; i++) if (P.l[i] > 0) {
+      const a = P.l[i] / P.m[i], k = P.k[i], s = P.s[i];
+      x.globalAlpha = k === 2 ? a * 0.6 : a * 0.85; x.drawImage(k === 2 ? SPR.smoke : k ? SPR.dust2 : SPR.dust, P.x[i] - s, P.y[i] - s, s * 2, s * 2);
+    }
+    // Glanzsterne (höchstens 5)
+    x.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < L.glints; i++) if (GL.l[i] > 0) { const u = GL.l[i] / 0.7, s = G.aH * 0.55 * Math.sin(u * Math.PI); x.globalAlpha = Math.sin(u * Math.PI); x.drawImage(SPR.glint, GL.x[i] - s, GL.y[i] - s, s * 2, s * 2); }
+    x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+    // Lesbarkeit unten (Text liegt auf dem Mond)
+    x.setTransform(dpr, 0, 0, dpr, 0, 0); x.drawImage(SPR.vig, 0, H * 0.55, W, H * 0.45);
+  }
+  function drawCapsule(x, tn) {
+    const rd = still(), u = phase === 'finale' ? Math.min(1, (tn - phaseT) / finDur) : 1, th = -Math.PI / 2 + 0.16, nx = Math.cos(th), ny = Math.sin(th);
+    const bx = G.cx + nx * G.R, by = G.cy + ny * G.R, ch = G.aH * 2.6, cw = ch * 0.66;
+    const open = Math.min(1, u / 0.12), rise = u < 0.15 ? 0 : Math.pow((u - 0.15) / 0.85, 2.1) * H * 1.05, ext = Math.min(1, u / 0.15);
+    // Luke
+    x.fillStyle = 'rgba(14,16,22,' + (0.85 * (1 - Math.max(0, (u - 0.6) / 0.4))) + ')'; x.beginPath(); x.ellipse(bx, by + 2, cw * 0.7 * open, cw * 0.2 * open, th + Math.PI / 2, 0, 6.283); x.fill();
+    if (rd) { const a = u < 0.35 ? u / 0.35 : u > 0.65 ? Math.max(0, 1 - (u - 0.65) / 0.35) : 1; x.globalAlpha = a; x.drawImage(SPR.capsule, bx - cw / 2, by - ch, cw, ch); x.globalAlpha = 1; return; }
+    const cyy = by - ch * ext - rise;
+    // Zündblitz (einmal, additiv, nicht bildschirmfüllend)
+    const fu = (u - 0.15) * finDur / 1000;
+    x.globalCompositeOperation = 'lighter';
+    if (fu > 0 && fu < 0.32 && (typeof Settings === 'undefined' || !Settings.d || Settings.d.flashes !== false)) { const fr = Math.min(W, H) * 0.13 * (1 - fu / 0.32 * 0.4); x.globalAlpha = 0.85 * (1 - fu / 0.32); x.drawImage(SPR.flash, bx - fr, by - fr, fr * 2, fr * 2); if (flashCount === 0) flashCount = 1; }
+    if (u > 0.14 && u < 1) { const fl = 0.85 + 0.15 * Math.sin(tn * 0.09), fh = ch * (0.9 + 0.6 * fl), fw = cw * 0.8; x.globalAlpha = 0.95; x.drawImage(SPR.flame, bx - fw / 2, cyy + ch * 0.9, fw, fh); x.globalAlpha = 0.6; x.drawImage(SPR.glow, bx - fw * 1.4, cyy + ch * 0.9 - fw * 0.6, fw * 2.8, fw * 2.8); }
+    x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
+    if (u < 1) { x.globalAlpha = ext; x.drawImage(SPR.capsule, bx - cw / 2, cyy, cw, ch); x.globalAlpha = 1; }
+    // Rauchring am Boden beim Zünden, Rauchspur beim Aufstieg
+    if (fu > 0 && !leave) {
+      if (!drawCapsule.ring) { drawCapsule.ring = true; for (let i = 0; i < 22; i++) { const a = i / 22 * 6.283, sp = rr(40, 110); emit(2, bx + Math.cos(a) * cw * 0.3, by + Math.sin(a) * cw * 0.1, Math.cos(a) * sp, Math.sin(a) * sp * 0.35 - 10, rr(0.9, 1.6), rr(6, 12)); } }
+      if (u < 0.95) emit(2, bx + rr(-cw * 0.15, cw * 0.15), cyy + ch * 1.05, rr(-14, 14), rr(10, 40), rr(0.8, 1.4), rr(5, 9));
+    }
+  }
+
+  /* --- Texte, Status, Fertig, Übergang --- */
+  function fadeText(el, txt) { if (el.textContent === txt && !el.querySelector('b')) return; el.classList.add('fade'); setTimeout(() => { if (!alive) return; el.innerHTML = txt; el.classList.remove('fade'); }, T.motion.tab); }
+  function nextMemo(tn) { memoT = tn; if (memoI >= memoDeck.length) { memoDeck = deck(MEMOS.length); memoI = 0; } curMemo = MEMOS[memoDeck[memoI++]]; fadeText(elMsg, curMemo.replace(/&/g, '&amp;').replace(/</g, '&lt;')); }
+  function nextTip(tn) { tipT = tn; if (tipI >= tipDeck.length) { tipDeck = deck(TIPS.length); tipI = 0; } fadeText(elTip, '<b>Tipp:</b> ' + TIPS[tipDeck[tipI++]].replace(/</g, '&lt;')); }
+  function onStage() { elSt.textContent = 'Stufe ' + (stg.i + 1) + ' von ' + W8.length + ' · ' + STAGES[stg.i]; sndStage(stg.i); if (now() - memoT > 1200 || memoT === 0) nextMemo(now()); root.classList.remove('slow'); elSlow.hidden = true; }
+  function ready() {
+    if (phase === 'ready' || phase === 'leave') return;
+    phase = 'ready'; root.classList.remove('slow'); elSlow.hidden = true;
+    elSt.textContent = 'Alle ' + W8.length + ' Stufen abgeschlossen';
+    elMsg.textContent = 'Der Mond ist bereit für Ihren Dienstantritt.';
+    elStart.textContent = coarse ? 'Zum Starten tippen' : 'Zum Starten klicken oder Enter drücken';
+    elReady.hidden = false; elSr.textContent = 'Bereit. ' + elStart.textContent + '.';
+    sndCash();
+    try { elStart.focus({ preventScroll: true }); } catch (e) { }
+  }
+  function start(e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (phase !== 'ready' || leave) return;
+    phase = 'leave'; leave = { t: now() };
+    if (ac) { try { mg.gain.setTargetAtTime(0, ac.currentTime, 0.15); } catch (er) { } }
+    try { if (typeof Audio !== 'undefined' && Audio.unlock) { Audio.unlock(); if (!muted && !ac) Audio.sfx('cash'); } } catch (er) { }
+    try { if (typeof Menu !== 'undefined') Menu.openT = Menu.t - 10; const h1 = document.querySelector('#menu h1'); if (h1 && typeof UI !== 'undefined' && UI.logoDust) { h1.classList.remove('dusty'); void h1.offsetWidth; h1.classList.add('dusty'); UI.logoDust(h1); } } catch (er) { }
+    q('.ld-top').style.transition = q('.ld-card').style.transition = 'opacity ' + T.motion.slow + 'ms linear'; q('.ld-top').style.opacity = q('.ld-card').style.opacity = '0';
+    setTimeout(() => root.classList.add('leave'), L.leave * 0.35);
+    setTimeout(destroy, L.leave + 80);
+  }
+  function fail(err) {
+    if (failed) return; failed = true;
+    root.classList.add('error'); elErr.hidden = false;
+    const m = err && (err.stack || err.message) ? (err.message + (err.stack ? '\n' + err.stack : '')) : String(err);
+    q('.ld-errtxt').textContent = m + '\n\n' + navigator.userAgent;
+    try { q('.ld-reload').focus(); } catch (e) { }
+  }
+  function warn(txt) { elWarn.hidden = false; elWarn.innerHTML = '<span aria-hidden="true">⚠</span><span></span>'; elWarn.lastChild.textContent = txt; }
+  function destroy() {
+    if (!alive) return; alive = false;
+    cancelAnimationFrame(raf);
+    removeEventListener('resize', onResize); removeEventListener('orientationchange', onResize); document.removeEventListener('visibilitychange', onVis);
+    removeEventListener('keydown', onKey, true); removeEventListener('error', onErr); removeEventListener('unhandledrejection', onRej);
+    if (ac) { try { ac.close(); } catch (e) { } ac = null; }
+    for (const k in SPR) SPR[k] = null;
+    root.remove(); const css = document.getElementById('ld-css'); if (css) css.remove();
+    try { if (typeof Menu !== 'undefined' && Menu.openT === undefined) Menu.openT = Menu.t - 10; } catch (e) { }
+    window.Loader = undefined;
+  }
+  // Ereignisse
+  let rzT = 0;
+  function onResize() { clearTimeout(rzT); rzT = setTimeout(() => { if (alive) layout(); }, 60); }
+  function onVis() { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; if (ac) ac.suspend(); } else if (alive && !raf) { last = now(); raf = requestAnimationFrame(frame); if (ac) ac.resume(); } }
+  // Tastatur: Enter/Leertaste starten; solange der Ladebildschirm steht, erreichen Tasten das Spiel darunter nicht (Tab bleibt frei)
+  function onKey(e) { if (!alive || phase === 'leave') return; if (e.target === elMute || e.target === elSimple || e.target === q('.ld-reload')) return; if ((e.key === 'Enter' || e.key === ' ') && phase === 'ready') { start(e); return; } if (e.key !== 'Tab') e.stopPropagation(); }
+  function onErr(e) { if (!done) fail(e.error || new Error(e.message + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''))); }
+  function onRej(e) { if (!done) fail(e.reason instanceof Error ? e.reason : new Error(String(e.reason))); }
+
+  /* --- Start --- */
+  // Sofort nur Wächter und Knöpfe; die teure Vorarbeit (Sprites, Mond, Ton) erst nach dem ersten
+  // gezeichneten Frame, damit die HTML/CSS-Szene ohne Verzögerung erscheint
+  addEventListener('keydown', onKey, true); addEventListener('error', onErr); addEventListener('unhandledrejection', onRej);
+  elStart.addEventListener('click', start); q('.ld-reload').addEventListener('click', () => location.reload());
+  function init() {
+    if (initState || !alive) return;
+    try {
+      sprites(); layout(); audioInit();
+      addEventListener('resize', onResize); addEventListener('orientationchange', onResize); document.addEventListener('visibilitychange', onVis);
+      elSimple.hidden = false; elSimple.textContent = simple ? 'Effekte wieder einschalten' : 'Effekte vereinfachen';
+      elSimple.addEventListener('click', () => { simple = !simple; store('loaderSimple', simple); elSimple.textContent = simple ? 'Effekte wieder einschalten' : 'Effekte vereinfachen'; layout(); });
+      elMute.hidden = false; elMute.innerHTML = speaker(); elMute.setAttribute('aria-label', muted ? 'Ton einschalten' : 'Ton ausschalten');
+      elMute.addEventListener('click', () => { muted = !muted; store('loaderMute', muted); if (mg) mg.gain.value = muted ? 0 : 1; elMute.innerHTML = speaker(); elMute.setAttribute('aria-label', muted ? 'Ton einschalten' : 'Ton ausschalten'); });
+      onStage(); nextTip(now());
+      raf = requestAnimationFrame(t => { last = t; frame(t); root.classList.add('live'); });
+      initState = 1;
+    } catch (e) { console.warn('Ladebildschirm vereinfacht:', e); initState = -1; if (done) destroy(); }
+  }
+  if (window.requestAnimationFrame) requestAnimationFrame(() => setTimeout(init, 0));
+  setTimeout(init, 250);
+
+  return {
+    // Fortschritt melden: Stufe i (0–5), Anteil f (0–1) innerhalb der Stufe
+    stage(i, f) { if (done || (failed && !hung)) return; if (hung) { failed = hung = false; root.classList.remove('error'); elErr.hidden = true; } i = Math.max(0, Math.min(W8.length - 1, i | 0)); if (i < stg.i) return; if (i > stg.i) { stg.i = i; stg.f = 0; stg.t = now(); onStage(); } stg.f = Math.max(stg.f, Math.min(1, +f || 0)); calcReal(); },
+    bootDone() { if (initState < 0) { done = true; destroy(); return; } if (done) return; stg.i = W8.length - 1; stg.f = 1; calcReal(); real = 1; done = true; doneAt = now(); short = doneAt < L.shortIf; catchRate = Math.max(L.maxRate, (1 - shown) / (short ? L.catchUpShort : L.catchUp));
+      // Spiel doch fertig geworden: nach reinem Hänger normal weiter, nach einem Fehler bleibt die Meldung, aber man kommt trotzdem ins Menü
+      if (failed && hung) { failed = hung = false; root.classList.remove('error'); elErr.hidden = true; }
+      else if (failed) { const g = q('.ld-go'); g.hidden = false; g.onclick = () => { try { if (typeof Audio !== 'undefined' && Audio.unlock) Audio.unlock(); } catch (e) { } destroy(); }; } },
+    warn, fail,
+    skip() { destroy(); },
+    get state() { return { phase, shown, real, done, short, perf, particles: P.l.reduce((a, l) => a + (l > 0), 0) }; },
+  };
+})();
+</script>
+<script type="text/plain" id="sm-main">
 'use strict';
 /* ============================================================================
    STAUBMOND – eine entspannte Mondputz- und Automatisierungs-Simulation
@@ -921,6 +1516,45 @@ body.reduce-motion .certificate, body.reduce-motion .alop-stamp, body.reduce-mot
      Logik verschieben würden.
    - Effekt-Testmenü im Debug-Overlay: Sektor, Lizenz, Kapsel, Meteorschauer (eigene
      Test-Meteore ohne Meteorstaub), Fundstück, Kauf, Auftrag – nur Optik.
+
+   Ladebildschirm (Vorgabe: LADEBILDSCHIRM_SPEC.md; Logik, CONFIG und Spielstand unverändert)
+   - Sofort-Phase: #loader steht als reines HTML/CSS ganz oben im <body> (Mondscheibe,
+     Erde, Logo, Balken) und ist sichtbar, bevor irgendein Skript läuft.
+   - Damit diese Szene wirklich zuerst gezeichnet wird, steht das Hauptskript als
+     <script type="text/plain" id="sm-main"> in der Datei. Ein kleines Startskript am
+     Ende führt es nach zwei Frames (spätestens nach 300 ms) als normales Skript aus;
+     globale Namen und Reihenfolge bleiben gleich. THEME (mit neuen THEME.loader-Tokens)
+     steht deshalb im Ladeskript vor dem Hauptskript – Spiel und Ladebildschirm nutzen
+     dieselben Tokens.
+   - Start-Stufen nach der echten Reihenfolge in Game.boot (Gewichte in THEME.loader):
+     1 Seite und Skripte 5 % · 2 Einstellungen und Farbtabellen 10 % (Settings, Input,
+     Farb-LUT) · 3 Bodentexturen 30 % (initGround, Ground, Körnung) · 4 Grafik und
+     Effekte 25 % (WebGL-Boden, Qualität, Nachtebene, VFX, Partikel-Atlas vorrendern)
+     · 5 Oberfläche 10 % (UI, Audio) · 6 Spielstände und Hauptmenü 20 % (IndexedDB,
+     Spielstand-Prüfung, Menü). Die Weltgenerierung läuft wie bisher erst beim
+     Spielstart (Game.newGame/loadGame) und gehört deshalb nicht zum Ladebildschirm.
+   - Bestehende Schritte sind nicht umgebaut: Renderer.init/initGround/VFX.prewarm gibt
+     es weiter als Generatoren (initSteps/initGroundSteps/prewarmSteps) mit denselben
+     Schritten in derselben Reihenfolge; sie melden nur Zwischenstände. Game.boot gibt
+     nach höchstens 8 ms Arbeit per setTimeout(0) an den Browser ab.
+   - Angezeigter Wert: läuft mit höchstens +25 %/s nach, nie zurück, nie über dem echten
+     Wert. Ist das Spiel fertig, holt die Anzeige in 0,7 s (Kurzversion 0,45 s) auf,
+     statt künstlich zu warten. Mindestanzeige 1,8 s; ist alles nach unter 600 ms fertig,
+     startet die Kurzversion (Mond halb geputzt, Finale 1,2 s statt 2,2 s).
+   - Spielstand-Prüfung nur lesend (Save.listSlots/bestCore): gelber Hinweis bei
+     fehlender IndexedDB oder beschädigtem Hauptdatensatz; geladen wird wie bisher erst
+     im Menü über die bestehende Backup-Logik.
+   - „Zum Starten tippen“ ist immer nötig (iOS gibt Ton erst nach einer Berührung frei);
+     am Desktop heißt er „Zum Starten klicken oder Enter drücken“. Das Tippen schaltet
+     auch den Spielton frei. Eigener Ton des Ladebildschirms nur, wenn der Browser ihn
+     schon erlaubt; Lautstärke aus den Einstellungen; Stummschalter und „Effekte
+     vereinfachen“ werden als loaderMute/loaderSimple in den Einstellungen gemerkt.
+   - Fehler: Skriptfehler vor dem Start → Meldung mit „Neu laden“ und Details; wird das
+     Spiel trotzdem fertig, erscheint zusätzlich „Trotzdem starten“. Stufe > 6 s →
+     Geduld-Hinweis und Schimmern; 25 s ganz ohne Rückmeldung → Fehlermeldung, die
+     von selbst verschwindet, sobald wieder Fortschritt kommt.
+   - Nach dem Übergang (oder wenn ein Spiel startet) entfernt sich der Ladebildschirm
+     vollständig: DOM, CSS, Canvas, Listener, AudioContext und window.Loader.
    ============================================================================ */
 
 /* ============================================================================
@@ -1265,34 +1899,7 @@ const TXT = {
    1b. THEME und FX_CONFIG – rein optische Werte (Farben, Timings, Partikel)
    Getrennt von CONFIG: Nichts hier beeinflusst Spiellogik, Balancing oder Speicherstand.
    ============================================================================ */
-const THEME = {
-  void: '#0B0E14',
-  clean: { base: '#C7D1DC', light: '#EAF1F8', shade: '#97A4B4' },
-  dust: { base: '#8A775E', light: '#A99579', dark: '#5C4F3E' },
-  regolith: '#4B4D55', ice: '#CFE4F4', glitter: ['#C9AE6E', '#FFE9A8'],
-  alop: { orange: '#FF7A2F', orangeDeep: '#D9560F', orangeLight: '#FFB27A', petrol: '#1F8F8C', petrolDeep: '#105957', petrolLight: '#63CBC6' },
-  money: '#FFC24A', success: '#5BE39A', warn: '#FFB020', danger: '#FF5470',
-  ui: { btnOrange: '#C4500E', btnOrangeDeep: '#A3420B', btnPetrol: '#17706D', surface: 'rgba(18,23,34,.88)', surfaceSolid: '#121722', surface2: 'rgba(27,34,48,.94)', border: 'rgba(255,255,255,.08)', borderStrong: 'rgba(255,255,255,.16)', text: '#F4F6FA', textDim: '#AEB8C7', textFaint: '#8793A5' },
-  paper: { base: '#F3ECDD', ink: '#2B2A26', stamp: '#C4362C', line: '#D9CDB4' },
-  outline: 'rgba(26,31,41,.7)', shadow: 'rgba(8,10,16,.34)',
-  suit: { white: '#EEF3F4', grey: '#D9DEE0', greyDark: '#6B7478', visorTop: '#1F8F8C', visorBottom: '#EAF1F8' },
-  metal: { light: '#C8D0D6', base: '#8C979E', dark: '#4A545A', darker: '#2A3236' },
-  // Staubarten 0–6 (Mondstaub, Regolith, Geröll, Rillen, Glitzer, Eis, Meteor) – hell / dunkel
-  dustTypes: [
-    ['#A99579', '#5C4F3E'], ['#6E6E76', '#34353C'], ['#A08A6C', '#5A4C3B'], ['#9A7C64', '#4F3C30'],
-    ['#AC97C6', '#5F4D7C'], ['#BCD4EA', '#6E8EB0'], ['#B06A4E', '#62301F'],
-  ],
-  goods: ['#B8A283', '#77737A', '#A68E6E', '#9C735C', '#C9A6F2', '#ACD3F2', '#B8583E', '#E6D29E', '#C4643F', '#8FE6E8'],
-  crew: ['#FF7A2F', '#63CBC6', '#C9A6F2', '#FFC24A', '#5BE39A', '#FF6E7F', '#7FB2FF', '#E8EEF0'],
-  // Lichtrichtung: Sonne oben links (315°), Erdschein schwach von unten rechts
-  sun: { x: -0.7071, y: -0.7071 },
-  motion: { instant: 80, fast: 140, base: 240, spring: 260, slow: 420, celebrate: 1200, tab: 180, exit: 200, joyIn: 120, joyOut: 300, ease: 'cubic-bezier(.2,.8,.2,1)', easeSlow: 'cubic-bezier(.16,1,.3,1)', springCurve: 'cubic-bezier(.34,1.56,.64,1)' },
-  // HUD: Minimap (weich, gleiche Farben wie die Welt) und Einnahmen-Kurve
-  hud: {
-    sparkFill: 'rgba(91,227,154,.32)',
-    map: { void: '#0B0E14', voidRGB: [11, 14, 20], grid: 'rgba(255,255,255,.07)', done: 'rgba(99,203,198,.16)', building: '#63CBC6', vehicle: '#FFC24A', robot: '#FFB27A', outline: 'rgba(11,14,20,.8)', cone: 'rgba(255,122,47,.42)', ring: 'rgba(255,255,255,.3)', tick: 'rgba(255,255,255,.55)' },
-  },
-};
+// THEME steht im Ladeskript vor dem Hauptskript (gleiche Tokens für Ladebildschirm und Spiel).
 
 const FX_CONFIG = {
   // HUD und Touch: Kurve alle 10 s (30 Werte = 5 Min.), Joystick-Knopf ≤ 54 % des Radius, Hinweise, Meldungen
@@ -3547,6 +4154,16 @@ const VFX = {
     this.autoTier = O[nx]; return this.pickTier();
   },
   // Sprite-Atlas: Formen werden beim ersten Gebrauch einmal pro Farbe vorgerendert (64×64)
+  *prewarmSteps() {
+    const P = this.PAL, list = [];
+    for (let c = 0; c < 7; c++) list.push(['soft', c], ['puff', c], ['chip', c]);
+    for (const k of ['white', 'gold', 'clean', 'iceSpark', 'glitter']) list.push(['glint', P[k]]);
+    for (const k of ['flame', 'orange', 'plasma', 'white']) list.push(['spark', P[k]]);
+    for (const k of ['smoke', 'foam', 'soot']) list.push(['puff', P[k]]);
+    for (const k of ['flame', 'plasma', 'white', 'warn', 'petrol', 'orange', 'clean', 'success', 'danger']) list.push(['soft', P[k]]);
+    list.push(['ring', P.smoke], ['coin', P.gold], ['bubble', P.foam]);
+    for (let i = 0; i < list.length; i++) { this.spr(list[i][0], list[i][1]); yield (i + 1) / list.length; }
+  },
   spr(shape, col) {
     const key = shape + col; let s = this.slots.get(key);
     if (s) return s;
@@ -3624,19 +4241,24 @@ const Renderer = {
   cache0: new Map(), cacheM: new Map(), cache1: new Map(), cacheS: new Map(), stamp: 0, queue: [], jobs: [], secDirty: new Set(),
   lut: null, grain: null, scratch: {}, flatCol: null, frameMs: 16, dyn: { acc: 0, n: 0, t: 0, good: 0 },
   sparkleBudget: 0, popups: [], marks: [],
-  init(cv) {
+  init(cv) { for (const s of this.initSteps(cv)); },
+  // dieselben Schritte wie bisher als Generator: liefert [Stufe, Anteil] für den Ladebildschirm
+  *initSteps(cv) {
     this.cv = cv; this.ctx = cv.getContext('2d', { alpha: true });
-    this.buildLUT(); this.initGround(); Ground.init();
+    this.buildLUT(); yield [1, 1];
+    yield* this.initGroundSteps(); Ground.init();
     this.grain = new Int8Array(256 * 256);
     for (let i = 0; i < 65536; i++) this.grain[i] = Math.round((U.hash(i & 255, i >> 8, 99) - 0.5) * 2 * 100);
-    GLGround.init();
+    yield [2, 1];
+    GLGround.init(); yield [3, 0.45];
     this.applyQuality();
     this.resize();
     addEventListener('resize', () => this.resize());
     addEventListener('orientationchange', () => setTimeout(() => this.resize(), 120));
     if (window.visualViewport) visualViewport.addEventListener('resize', () => this.resize());
     this.night = document.createElement('canvas'); this.nctx = this.night.getContext('2d');
-    VFX.init();
+    VFX.init(); yield [3, 0.55];
+    for (const f of VFX.prewarmSteps()) yield [3, 0.55 + f * 0.45];
   },
   applyQuality() {
     const q = Settings.d.quality, mob = Input.profile !== 'desktop';
@@ -3705,15 +4327,19 @@ const Renderer = {
     const a = U.hash(x0, y0, s), b = U.hash(x1, y0, s), c = U.hash(x0, y1, s), d = U.hash(x1, y1, s);
     return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
   },
-  initGround() {
+  initGround() { for (const s of this.initGroundSteps()); },
+  *initGroundSteps() {
     const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
     // Felsuntergrund 512×512 (8 Texel pro Zelle, kachelbar): Mikrokrater, Risse, Kiesel, Flecken
     const S = 512, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d', { willReadFrequently: true });
     x.fillStyle = 'rgb(128,128,128)'; x.fillRect(0, 0, S, S);
     const im0 = x.getImageData(0, 0, S, S), d0 = im0.data;
-    for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) {
-      const n = this.tn(px / 64, py / 64, 8, 71) * 0.55 + this.tn(px / 16, py / 16, 32, 72) * 0.3 + this.tn(px / 4, py / 4, 128, 73) * 0.15;
-      const v = 128 + (n - 0.5) * 70 + (U.hash(px, py, 74) - 0.5) * 10, o = (py * S + px) * 4; d0[o] = d0[o + 1] = d0[o + 2] = v;
+    for (let py = 0; py < S; py++) {
+      for (let px = 0; px < S; px++) {
+        const n = this.tn(px / 64, py / 64, 8, 71) * 0.55 + this.tn(px / 16, py / 16, 32, 72) * 0.3 + this.tn(px / 4, py / 4, 128, 73) * 0.15;
+        const v = 128 + (n - 0.5) * 70 + (U.hash(px, py, 74) - 0.5) * 10, o = (py * S + px) * 4; d0[o] = d0[o + 1] = d0[o + 2] = v;
+      }
+      if ((py & 15) === 15) yield [2, py / S * 0.72];
     }
     x.putImageData(im0, 0, 0);
     const r = U.rng(4242), wrap = (fn, px, py, rad) => { for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) if (px + ox > -rad && px + ox < S + rad && py + oy > -rad && py + oy < S + rad) fn(px + ox, py + oy); };
@@ -3727,6 +4353,7 @@ const Renderer = {
         x.strokeStyle = 'rgba(70,70,70,0.35)'; x.lineWidth = Math.max(1, rad * 0.1); x.beginPath(); x.arc(X, Y, rad * 0.96, Math.PI * -0.15, Math.PI * 0.7); x.stroke();
       }, px, py, rad);
     }
+    yield [2, 0.76];
     // feine Risse
     x.lineCap = 'round';
     for (let i = 0; i < 30; i++) {
@@ -3734,6 +4361,7 @@ const Renderer = {
       const pts = [[px, py]]; for (let k = 0; k < n; k++) { a += (r() - 0.5) * 1.1; px += Math.cos(a) * (5 + r() * 9); py += Math.sin(a) * (5 + r() * 9); pts.push([px, py]); }
       wrap((X, Y) => { const ox = X - pts[0][0], oy = Y - pts[0][1]; x.strokeStyle = 'rgba(60,60,60,0.32)'; x.lineWidth = w; x.beginPath(); x.moveTo(pts[0][0] + ox, pts[0][1] + oy); for (const p of pts) x.lineTo(p[0] + ox, p[1] + oy); x.stroke(); x.strokeStyle = 'rgba(200,200,200,0.22)'; x.lineWidth = w * 0.7; x.beginPath(); x.moveTo(pts[0][0] + ox + 1, pts[0][1] + oy + 1); for (const p of pts) x.lineTo(p[0] + ox + 1, p[1] + oy + 1); x.stroke(); }, pts[0][0], pts[0][1], 200);
     }
+    yield [2, 0.8];
     // Kiesel (eigener Kanal für Geröllstaub)
     const peb = document.createElement('canvas'); peb.width = peb.height = S; const pq = peb.getContext('2d', { willReadFrequently: true });
     for (let i = 0; i < 520; i++) {
@@ -3746,6 +4374,7 @@ const Renderer = {
     }
     // helle Flecken
     for (let i = 0; i < 18; i++) { const px = r() * S, py = r() * S, rad = 20 + r() * 60; wrap((X, Y) => { const g = x.createRadialGradient(X, Y, 0, X, Y, rad); g.addColorStop(0, 'rgba(176,176,176,0.12)'); g.addColorStop(1, 'rgba(190,190,190,0)'); x.fillStyle = g; x.beginPath(); x.arc(X, Y, rad, 0, 6.283); x.fill(); }, px, py, rad); }
+    yield [2, 0.86];
     const bd = x.getImageData(0, 0, S, S).data, pd = pq.getImageData(0, 0, S, S).data;
     this.bed = new Uint8Array(S * S); this.peb = new Uint8Array(S * S);
     for (let i = 0; i < S * S; i++) { this.bed[i] = bd[i * 4]; this.peb[i] = pd[i * 4]; }
@@ -3756,6 +4385,7 @@ const Renderer = {
       this.warpX[i] = (this.tn(px / 8, py / 8, 16, 81) - 0.5) * 1.5 + (this.tn(px / 2, py / 2, 64, 82) - 0.5) * 0.7;
       this.warpY[i] = (this.tn(px / 8, py / 8, 16, 83) - 0.5) * 1.5 + (this.tn(px / 2, py / 2, 64, 84) - 0.5) * 0.7;
     }
+    yield [2, 0.94];
     // Rampe sauberer Boden: Schatten → Grundton → Glanz (kühl), Index = Helligkeit × 128
     const cs = hex(THEME.clean.shade), cb = hex(THEME.clean.base), cl = hex(THEME.clean.light);
     this.cleanRamp = new Uint8Array(256 * 3);
@@ -9474,22 +10104,41 @@ const Net = {
    ============================================================================ */
 const Game = {
   state: 'boot', paused: false, acc: 0, last: 0, STEP: 1 / 60, frames: 0, stepAcc: 0, trackAcc: 0,
+  // Start in benannten Stufen (Reihenfolge wie bisher); lange Stufen laufen in Häppchen von höchstens 8 ms
   async boot() {
-    Settings.load();
+    const rep = (i, f) => { if (window.Loader) Loader.stage(i, f); };
+    let sl = performance.now();
+    const slice = async force => { if (force || performance.now() - sl > 8) { await new Promise(r => setTimeout(r, 0)); sl = performance.now(); } };
+    rep(0, 1); await slice(true);                                   // 1 Seite und Skripte bereit
+    Settings.load(); rep(1, 0.3);                                    // 2 Einstellungen, Eingabe, Farbtabellen
     const cv = document.getElementById('game');
-    Input.init(cv);
-    Renderer.init(cv);
-    UI.init();
-    Audio.init();
-    await Save.open();
+    Input.init(cv); rep(1, 0.6);
+    for (const [i, f] of Renderer.initSteps(cv)) { rep(i, f); await slice(); }   // 3 Bodentexturen, 4 Grafik und Effekte
+    await slice(true);
+    UI.init(); rep(4, 0.7); await slice();                           // 5 Oberfläche
+    Audio.init(); rep(4, 1); await slice(true);
+    rep(5, 0); await Save.open(); rep(5, 0.3);                                  // 6 Spielstände prüfen, Hauptmenü
+    await this.checkSaves(); rep(5, 0.6); await slice();
     this.listeners();
     document.addEventListener('visibilitychange', () => { Net.away(document.hidden); if (document.hidden) { if (this.state === 'play') { Save.saveNow(); } if (Audio.ok) Audio.ctx.suspend(); } else { this.last = performance.now(); this.acc = 0; if (Audio.ok && this.state !== 'boot') Audio.ctx.resume(); } });
     addEventListener('pagehide', () => { if (this.state === 'play') Save.saveNow(); if (Net.tr) Net.tr.close(); });
     addEventListener('beforeunload', () => { if (this.state === 'play') Save.saveNow(); });
-    document.getElementById('boot').classList.add('gone');
-    this.toMenu();
+    this.toMenu(); rep(5, 1);
+    if (window.Loader) Loader.bootDone();
     this.last = performance.now();
     requestAnimationFrame(t => this.loop(t));
+  },
+  // Ladebildschirm: Spielstand-Speicher prüfen und nur Hinweise anzeigen (liest, ändert nichts)
+  async checkSaves() {
+    if (!window.Loader) return;
+    if (Save.fallback) { Loader.warn('Der Spielstand-Speicher (IndexedDB) ist nicht verfügbar – es wird der eingeschränkte Notfall-Speicher genutzt.'); return; }
+    try {
+      const list = await Save.listSlots(); let best = -1, t = 0;
+      list.forEach((p, i) => { if (p && p.saved > t) { t = p.saved; best = i; } });
+      if (best < 0) return;
+      const r = await Save.bestCore(best);
+      if (!r || r.restored) Loader.warn('Spielstand konnte nicht geladen werden, letztes Backup wird versucht.');
+    } catch (e) { Loader.warn('Spielstand konnte nicht geladen werden, letztes Backup wird versucht.'); }
   },
   listeners() {
     Bus.on('find', f => Rewards.find(f));
@@ -9812,8 +10461,24 @@ const Debug = {
   setScale(k) { this.timeScale = k; UI.toast('Zeitraffer ×' + k); },
 };
 
-window.addEventListener('load', () => { Game.boot().catch(e => { console.error(e); const b = document.getElementById('boot'); b.classList.remove('gone'); b.textContent = 'Fehler beim Start: ' + e.message; }); });
+// Das Hauptskript wird nach dem ersten Frame des Ladebildschirms ausgeführt – dann ist „load“ meist schon vorbei
+const startGame = () => Game.boot().catch(e => { console.error(e); if (window.Loader) Loader.fail(e); });
+if (document.readyState === 'complete') startGame(); else addEventListener('load', startGame, { once: true });
 
+</script>
+<script>
+// Startet das Hauptskript erst, wenn der Ladebildschirm gezeichnet ist (nie ein weißer Bildschirm).
+(function () {
+  var go = false;
+  function run() {
+    if (go) return; go = true;
+    var src = document.getElementById('sm-main'), s = document.createElement('script');
+    s.textContent = src.textContent + '\n//# sourceURL=staubmond-main.js'; src.parentNode.removeChild(src); document.body.appendChild(s);
+  }
+  if (!window.Loader) addEventListener('error', function (e) { var el = document.querySelector('#loader .ld-err'); if (el) { el.hidden = false; var t = el.querySelector('pre'); if (t) t.textContent = String(e.message); var b = el.querySelector('button'); if (b) b.onclick = function () { location.reload(); }; } });
+  if (window.requestAnimationFrame) requestAnimationFrame(function () { requestAnimationFrame(function () { setTimeout(run, 0); }); });
+  setTimeout(run, 300);
+})();
 </script>
 </body>
 </html>
