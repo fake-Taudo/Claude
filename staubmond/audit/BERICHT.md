@@ -70,7 +70,16 @@ Heap über 20 Std. konstant 14–17 MB; Basis-Cache bleibt unter 900 Einträgen 
 
 **Fuzzing:** Standardlauf 2 Seeds × 1.000 Aktionen, Langlauf 5 Seeds × 10.000 Aktionen, gleichmäßig über 29 Aktionsarten (Ticks, Laufen, Abladen, Kapsel, Ein-/Aussteigen, alle Käufe, Bauen aller 14 Gebäudetypen, Abriss, Verschieben, Drehen, Bänder mit Kurven, Bandabriss, Rückgängig, Roboter kaufen/verkaufen/zuweisen/zurückrufen/aufrüsten, Forschung, Fahrzeug rufen/aufrüsten, Auftragstausch, Meteor, Geld, Speichern/Laden-Rundlauf). Ergebnis im Abschnitt „Fuzzing-Funde“ unten.
 
-FUZZ_PLACEHOLDER
+| Lauf | Aktionen | Rechenzeit | Spielzeit | neue Verletzungsarten |
+|---|---|---|---|---|
+| Standard (2 Seeds) | 2 × 1.000 | ≈ 100 s | je ≈ 3 Min. | 3 (alle bekannt: F-14, F-11) |
+| Langlauf Seed 1000 | 10.000 | 1.842 s | 27,7 Min. | 7 |
+| Langlauf Seed 8919 | 10.000 | 66 s | 25,0 Min. | 0 |
+| Langlauf Seed 16838 | 10.000 | 991 s | 29,5 Min. | 1 |
+| Langlauf Seed 24757 | 10.000 | 114 s | 28,7 Min. | 1 |
+| Langlauf Seed 32676 | 10.000 | 106 s | 26,2 Min. | 1 |
+
+Insgesamt 52.000 Aktionen, je Aktionsart 1.600–1.800 im Langlauf, darunter 1.694 Speichern/Laden-Rundläufe. Keine Abstürze, keine Ausnahmen, keine Verletzung von Geldbilanz, Nicht-negativ, Paketerhaltung oder Belegung.
 
 ## 4. Funde
 
@@ -184,7 +193,16 @@ Format: Beschreibung · Fundstelle · Reproduktion (Testdatei, Prüf-ID; ausfüh
 
 ### Fuzzing-Funde
 
-FUZZFINDINGS_PLACEHOLDER
+Jede neue Verletzungsart wurde durch Wiederabspielen auf eine minimale Folge reduziert (`t_fuzz_long.json`, Feld `minimal`). Keine neue Fehlerart: Alle Funde sind schon oben beschrieben oder gehen auf gewolltes Verhalten bzw. Rundung zurück.
+
+| Fuzz-Fund | Minimale Folge | Zuordnung |
+|---|---|---|
+| Rundlauf: Spielerposition springt (Seed 1000, 16838) | 3 Aktionen: Schubkarre kaufen, schieben, Rundlauf | F-14 |
+| Staubbilanz −0,7 g bzw. −2 g (Seed 1000, Standard 8919) | 3 Aktionen: Meteor, Sauglanze, Ticks | F-11 |
+| Roboter verweist auf fehlenden Hangar (Seed 1000) | 8 Aktionen: Hangar, Roboter, Rückgängig | F-10 |
+| Fahrzeug verweist auf fehlende Garage (Seed 32676) | 9 Aktionen: Garage, Fahrzeug einparken, Rückgängig | F-10 |
+| Rundlauf: Mondglanz weicht um 10⁻⁹ ab (Seed 1000, 16838) | > 2.000 Aktionen | Hinweis: `World.glanzSum` wird inkrementell aufsummiert, beim Laden neu berechnet; Gleitkomma-Rest ohne Wirkung |
+| Rundlauf: Roboterzustand „toDrop“ → „work“ (Seed 1000, 24757) | 120–180 Aktionen | Hinweis: gewollt – `Robots.fromSave` setzt Abliefer-Zustände zurück, die Ladung bleibt erhalten, der Roboter entscheidet neu |
 
 ## 5. Abweichungen von der Spielbeschreibung
 
