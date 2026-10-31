@@ -1,0 +1,104 @@
+[
+ {
+  "id": "G-01",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Sektor M-13 vollständig geputzt: fertig true, Prämie 900 ₥ (Soll 900), +1 FP, Zähler 1. Nach Speichern/Laden und Meteorstaub im Sektor: weiterhin fertig, Zähler 1, keine zweite Prämie; Neuzählung stimmt. Rundlauf-Diff: keine"
+ },
+ {
+  "id": "G-02",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Zwei Sektoren (M-13, N-13) vorher 97.3 %/97.3 %, ein Putzdurchgang entlang der Grenze schließt beide: Zähler 2, Prämien zusammen 1800 ₥ (je einmal)"
+ },
+ {
+  "id": "G-03",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Nach 60 s Putzen: Sektor N-13 0,0 %, Mondglanz-Index 0,0009 %; Neuzählung aller Zellen stimmt exakt. Hinweis: Solange nicht alle 16 Chunks eines Sektors vermessen sind, schätzt das Spiel den Nenner (4.000 putzbare Zellen je unbekanntem Chunk, World.sectorEstCleanable)."
+ },
+ {
+  "id": "G-04",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Lizenz 1: ohne Sektoren {\"ok\":false,\"why\":\"Noch 2 Sektor(en) abschließen\"}; 1 ₥ zu wenig {\"ok\":false,\"why\":\"Es fehlen 1 ₥\"}; mit 2 Sektoren und genau 2000 ₥ gekauft, Geld erst beim Kauf abgezogen; zweiter Kauf im selben Moment {\"ok\":false,\"why\":\"Noch 6 Sektor(en) abschließen\"}; Region Mare Mopp frei, Kraterhügel gesperrt, Gebäude der Stufe 1 baubar"
+ },
+ {
+  "id": "G-05",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Alle 36 Forschungsknoten einzeln zugeschaltet und die betroffene Größe vorher/nachher gemessen: Wirkung entspricht jeweils der Beschreibung. Mehrere Knoten derselben Größe wirken multiplikativ (z. B. Werkzeugleistung t1 × t6 × t10 × t12 = ×6.6), additiv nur vehWidth, hangarSlots, fleet, turbo, selfEmpty, findSensor, offlineEff, swaps."
+ },
+ {
+  "id": "G-06",
+  "area": "3.9",
+  "status": "ABWEICHUNG",
+  "detail": "Nebenwirkungen über die Beschreibung hinaus: a9→vehP ×0.850. „Steuervorteil“ (a9, „Upgrades und Werkzeuge 15 % günstiger“) verbilligt auch Fahrzeuge, Fahrzeug- und Roboter-Upgrades (Economy.fx('upgradePrice') an allen diesen Stellen)."
+ },
+ {
+  "id": "G-07",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Fundstück „Leicht verstaubter Kugelschreiber“: zweimal freigeputzt, Speichern/Laden, erneut geputzt → genau 1 Fund, +1 FP; Album-Zähler 1"
+ },
+ {
+  "id": "G-08",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "150 Fundstücke: 0 liegen auf nicht putzbarem Gelände (Fels/Geröll/Schlucht). Platzierung meidet Schluchten und Felsen werden um Fundstücke herum ausgelassen (World.rocksOf)."
+ },
+ {
+  "id": "G-09",
+  "area": "4.4",
+  "status": "FEHLER",
+  "detail": "Aufträge „Funkausbau (2 Antennen)“, „Haushaltsziel 15.000 ₥“ und „Personalaufstockung“ erfüllt allein durch Bauen + Abreißen bzw. Kaufen + Verkaufen (je 100 % Erstattung): 3 Aufträge erledigt, +3 FP, Netto-Geld +300 ₥. Ursache: builtBy-Zähler zählen nur hoch, und Economy.grant(…, 'refund') erhöht stats.moneyEarned. Wiederholbar für jeden neuen Auftrag dieser Arten (Forschungspunkte ohne Gegenleistung)."
+ },
+ {
+  "id": "G-10",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Lieferauftrag „60 kg Mondstaub“ misst verkaufte kg seit Auftragsbeginn (stats.kgByType − Basis): nach Abladen von 2,2 kg 0.0 %, nach dem Kapselstart 3.7 %. Ein fast voller Balken nach 2,2 kg (Video) ist mit diesem Code nicht reproduzierbar."
+ },
+ {
+  "id": "G-11",
+  "area": "3.9",
+  "status": "ABWEICHUNG",
+  "detail": "Auftrag „Sektor M-13 auf 50 %“ und HUD-Sektorsymbol lesen dieselbe Quelle (World.secProgress). Unterschiedliche Zahlen entstehen, weil das Ziel-Kärtchen „Auftrag · X %“ den Anteil am Auftragsziel zeigt (2.5 % = 1,3 % ÷ 50 %), das Sektorsymbol den Sektorfortschritt."
+ },
+ {
+  "id": "G-12",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Erledigter Auftrag wird genau einmal belohnt (1×) und ersetzt; Tausch: 1. true, 2. in derselben Spielstunde false, nach einer Spielstunde true (Zeitbasis Spielzeit G.t, Systemuhr ohne Einfluss)"
+ },
+ {
+  "id": "G-13",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Sonnenwind zweimal hintereinander: Tempo 8.00 → 8.00 (kein Stapeln, ×2 bleibt), Ende verlängert 0.03 s. Ende nach Laden: windUntil ist Spielzeit und wird gespeichert."
+ },
+ {
+  "id": "G-14",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Inspektion in Sektor M-13: bei 95 % genau eine Prämie (1350 ₥ = 1350 ₥), danach neuer Termin in 1990 s Spielzeit"
+ },
+ {
+  "id": "G-15",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Alle Event-Zeitgeber (Meteor, Sonnenwind, Inspektion, Erdnachfrage, Tag/Nacht) laufen auf Spielzeit G.t; im Pausenmenü ruht die Logik (Game.loop ruft tick nur ohne Pause). Offene Menüs/Terminals pausieren nicht – gewollt, Kaufprüfungen nutzen den aktuellen Kontostand."
+ },
+ {
+  "id": "G-16",
+  "area": "3.9",
+  "status": "HINWEIS",
+  "detail": "Sonnenwind beschleunigt nur das Tempo (Robots.speed); da die Saugleistung Robots.power = Radius × Tempo ist, steigt auch die Leistung ×2 – passend zum Radiotext „doppeltes Tempo“. Tag/Nacht hat keine Logikwirkung außer der Polaren Dunkelheit/Lampen (rein optisch, Buildings.lit wird nur im Renderer genutzt)."
+ },
+ {
+  "id": "G-17",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Teppichkrater (16 Sektoren) fertig → Ende true. Neue Mission: Mission 1, neuer Seed true, Zustand vollständig zurückgesetzt true. Missionsbonus wirkt multiplikativ auf Einnahmen (Economy.incomeMul ×1.25) und Sektorprämien (Progression.sectorBonus, gleiche Formel) und wird nur aus G.mission berechnet, also nie doppelt vergeben."
+ }
+]

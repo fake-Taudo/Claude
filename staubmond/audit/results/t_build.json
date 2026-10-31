@@ -1,0 +1,186 @@
+[
+ {
+  "id": "B-01",
+  "area": "3.6",
+  "status": "OK",
+  "detail": "Silo 3×3: nur die Ecke (2,2) staubig → {\"ok\":false,\"why\":\"Boden zu staubig – erst putzen\"}; nur Meteorstaub in der Ecke → {\"ok\":false,\"why\":\"Boden zu staubig – erst putzen\"} (Buildings.validate prüft jede Zelle, cellIssue)"
+ },
+ {
+  "id": "B-02",
+  "area": "3.6",
+  "status": "OK",
+  "detail": "Überlappung abgelehnt: Trichter auf Silo {\"ok\":false,\"why\":\"Platz belegt\"}, Band auf Silo {\"ok\":false,\"why\":\"Kein gültiges Feld (Boden zu staubig?)\"}, Trichter auf Band {\"ok\":false,\"why\":\"Förderband im Weg\"}"
+ },
+ {
+  "id": "B-03",
+  "area": "3.6",
+  "status": "OK",
+  "detail": "Belegungskarte nach Bauen konsistent (Invarianten): ok"
+ },
+ {
+  "id": "B-04",
+  "area": "3.6",
+  "status": "FEHLER",
+  "detail": "Bauen auf der eigenen Position: Prüfung {\"ok\":true}, Bau erfolgreich. Danach 4 s laufen: Spielfigur bewegt sich 0.000 Zellen (steckt im Gebäude fest; Buildings.validate prüft weder Spielfigur noch Fahrzeuge oder Roboter). Ausweg nur über Teleport/Abriss."
+ },
+ {
+  "id": "B-05",
+  "area": "3.1",
+  "status": "OK",
+  "detail": "Silo über die Ost-West-Naht (x = 6143 → 1): belegt beide Seiten true, Zelle x=0 blockiert Bewegung true, Invarianten ok"
+ },
+ {
+  "id": "B-06",
+  "area": "3.1",
+  "status": "OK",
+  "detail": "Putzen direkt an der Naht trifft Zellen auf beiden Seiten (x=6143: 0, x=0: 0)"
+ },
+ {
+  "id": "B-07",
+  "area": "3.1",
+  "status": "OK",
+  "detail": "Kartenrand oben/unten: Bauen bei y=1 {\"ok\":false,\"why\":\"Kartenrand\"}, y=6142 {\"ok\":false,\"why\":\"Kartenrand\"}; Laufen blockiert true; dustAt(y=-1)=0, terrAt(y=6144)=Fels; Putzen über den Rand ohne Ausnahme"
+ },
+ {
+  "id": "B-08",
+  "area": "3.6",
+  "status": "ABWEICHUNG",
+  "detail": "Abriss erstattet den aktuellen Preis (Buildings.remove → this.price), nicht den bezahlten: gebaut für 2000 ₥, nach Forschung „Großeinkauf“ (−15 %) abgerissen → 1700 ₥ zurück. Rückgängig nach dem Bauen erstattet dagegen den bezahlten Preis. Spieler verliert dadurch Geld; ein Gewinn ist nicht möglich, weil Rabatte nur sinken können."
+ },
+ {
+  "id": "B-09",
+  "area": "4.4",
+  "status": "OK",
+  "detail": "30 Zyklen Bauen/Abreißen/Rückgängig (in allen Kombinationen): größter Geldzuwachs gegenüber Start 0.0000 ₥ (kein Geld aus dem Nichts)"
+ },
+ {
+  "id": "B-10",
+  "area": "3.6",
+  "status": "OK",
+  "detail": "Abriss mit Inhalt erstattet alle Lager, Puffer und gehaltene Pakete zum Grundwert (ohne Nachfrage/Multiplikator), einheitlich für alle Gebäude; Rückgängig stellt das Gebäude leer wieder her (Ware bleibt bezahlt, keine Duplikation). silo: 100 kg → 120.00 ₥ (Grundwert 120.00); nach Rückgängig leer: true | hopper: 100 kg → 120.00 ₥ (Grundwert 120.00); nach Rückgängig leer: true | compressor: 13 kg → 20.50 ₥ (Grundwert 20.50), Fortschritt 1,5 kg ohne Erstattung; nach Rückgängig leer: true | splitter: 2.5 kg → 3.75 ₥ (Grundwert 3.75); nach Rückgängig leer: true"
+ },
+ {
+  "id": "B-11",
+  "area": "3.7",
+  "status": "FEHLER",
+  "detail": "Maschinen verlieren beim Abriss den angefangenen Verarbeitungsfortschritt b.prog (bis knapp 2 kg Eingangsware je Verdichter/Ziegelpresse) – er wird weder erstattet noch gespeichert (siehe P-06). Fundstelle Buildings.remove/refundGoods, Buildings.save."
+ },
+ {
+  "id": "B-12",
+  "area": "3.6",
+  "status": "FEHLER",
+  "detail": "Hangar bauen, 2 Roboter kaufen: Abriss wird korrekt verweigert ({\"ok\":false,\"why\":\"Abriss nicht möglich\"}), aber „Rückgängig“ (Strg+Z) entfernt den Hangar trotzdem und erstattet den vollen Preis. Danach: stale: Roboter 3 verweist auf fehlenden Hangar 2 | stale: Roboter 4 verweist auf fehlenden Hangar 2; 2 Roboter ohne Hangar."
+ },
+ {
+  "id": "B-13",
+  "area": "3.8",
+  "status": "HINWEIS",
+  "detail": "Roboter ohne Hangar bleiben im Zustand home@3221.5,3204.0, home@3222.2,3204.0 stehen (Robots.step: kein Hangar → return), sind weiter verkaufbar über das Roboter-Menü und zählen zum Stellenplan."
+ },
+ {
+  "id": "B-14",
+  "area": "3.5",
+  "status": "FEHLER",
+  "detail": "Garage bauen, Fahrzeug einparken, „Rückgängig“: stale: Fahrzeug 5 verweist auf fehlende Garage 6 (Buildings.unregisterRefund räumt Fahrzeuge nicht um – im Gegensatz zu Buildings.remove)."
+ },
+ {
+  "id": "B-15",
+  "area": "3.5",
+  "status": "OK",
+  "detail": "Garagen-Abriss mit geparktem Fahrzeug: Fahrzeug bleibt erhalten (1/1), wird vor das Depot gestellt (3207.0,3207.0)"
+ },
+ {
+  "id": "B-16",
+  "area": "3.6",
+  "status": "OK",
+  "detail": "Vorschau „gültig/ungültig“ gegen tatsächliches Platzieren an 400 Positionen (6 Gebäudetypen, 4 Drehungen, teils zu wenig Geld): 0 Abweichungen"
+ },
+ {
+  "id": "B-17",
+  "area": "3.6",
+  "status": "OK",
+  "detail": "Gesperrte Gebäude/Bänder/Roboter direkt über Shop (Tastenkürzel, Koop): Lizenz 1 nötig | Lizenz 1 nötig | Lizenz 1 nötig"
+ },
+ {
+  "id": "B-18",
+  "area": "3.6",
+  "status": "OK",
+  "detail": "Antennenkette Depot → +280 → +560 Zellen: Punkt bei +520 vorher abgedeckt false, mit Kette true, nach Abriss der mittleren Antenne false (äußere Antenne fällt korrekt aus dem Netz)"
+ },
+ {
+  "id": "B-19",
+  "area": "3.9",
+  "status": "HINWEIS",
+  "detail": "Meteorstaub wird auch unter Gebäuden abgelegt (World.addMeteor prüft nur das Terrain): 9 von 9 Silo-Zellen. Ohne Logikfolge (Gebäude bleibt), Staub ist putzbar, wenn man an den Rand reicht. Der Einschlagsort selbst meidet Gebäude (Progression.meteorShower)."
+ },
+ {
+  "id": "B-20",
+  "area": "3.3",
+  "status": "ABWEICHUNG",
+  "detail": "Sammeltrichter mit 1.995/2.000 kg, Spieler lädt 10 kg ab: Trichter 2005.0 kg. Player.unloadTo prüft die Puffergrenze nicht (Roboter prüfen sie über dropAccepts); kein Verlust, nur Überfüllung."
+ },
+ {
+  "id": "P-01",
+  "area": "3.7",
+  "status": "OK",
+  "detail": "Trichter (460 kg) → Band → Verteiler → Schleife (Rechts-/Linkskurven, Zusammenführung), Sackgasse, Kurzband: 60 s, Paket- und Massenerhaltung nach jedem halben Sekundenschritt: keine Verletzung. Verteilung: Trichter 330.0 kg, Bänder 127.8 kg, Verteiler 2.5 kg"
+ },
+ {
+  "id": "P-02",
+  "area": "3.7",
+  "status": "OK",
+  "detail": "Rückstau: In der Sackgasse stauen sich 2 Pakete, der Verteiler gibt reihum an den freien Ausgang weiter, der Trichter pausiert ohne Verlust (Massenbilanz geprüft)."
+ },
+ {
+  "id": "P-03",
+  "area": "3.7",
+  "status": "OK",
+  "detail": "Bandzelle mit 2 Paketen (5.0 kg) abgerissen: Erstattung Ware 17.50 ₥ = Grundwert 17.50 ₥; Umbau einer belegten Zelle (Richtung/Stufe) behält die Pakete. Invarianten: ok"
+ },
+ {
+  "id": "P-04",
+  "area": "3.7",
+  "status": "ABWEICHUNG",
+  "detail": "Durchsatz Silo → 10 Bandzellen → Kapselrampe, 20 s gemessen: Stufe 1: 8.75 kg/s (Anzeige 10), Stufe 2: 25 kg/s (Anzeige 30), Stufe 3: 50 kg/s (Anzeige 90), Stufe 1l1: 10.63 kg/s (Anzeige 12), Stufe 3l11: 75 kg/s (Anzeige 216). Der Durchsatz ist an den 60-Hz-Logiktakt gebunden (Pakete springen erst bei p ≥ 1 und starten auf der nächsten Zelle bei 0, der Überschuss geht verloren), deshalb bildraten- und zeitrafferunabhängig, aber teils unter dem Nennwert.",
+  "data": {
+   "1": 8.75,
+   "2": 25,
+   "3": 50,
+   "1l1": 10.63,
+   "3l11": 75
+  }
+ },
+ {
+  "id": "P-05",
+  "area": "3.7",
+  "status": "OK",
+  "detail": "Verteiler mit 3 Ausgängen (alle Sackgassen): nach 3 s 3/3/3 Pakete (Round-Robin). Wenn alle Ausgänge voll sind, hält der Verteiler ein Paket und der Zulauf staut sich (kein Verlust, keine Verklemmung bei freiem Ausgang). Hält Paket: true"
+ },
+ {
+  "id": "P-06",
+  "area": "3.7",
+  "status": "OK",
+  "detail": "Verdichter 5 kg Mondstaub (2 kg → 1 kg Sand): 2 kg Sand, 0.9999999999999977 kg angefangen (wartet auf mehr Eingang, kein Verlust im laufenden Spiel)"
+ },
+ {
+  "id": "P-07",
+  "area": "3.7",
+  "status": "FEHLER",
+  "detail": "Speichern/Laden mit angefangenem Verdichter-Durchlauf: Fortschritt vorher 1 kg, danach 0 kg – b.prog wird nicht gespeichert (Buildings.save), die bereits verbrauchte Eingangsware geht verloren. Rundlauf-Diff: .prog.0: [2,0.9999999999999977] ≠ undefined",
+  "data": [
+   ".prog.0: [2,0.9999999999999977] ≠ undefined"
+  ]
+ },
+ {
+  "id": "P-08",
+  "area": "3.7",
+  "status": "OK",
+  "detail": "Glasofen nur mit Sand: wartet (Sand 2.5 kg, Glas 0); falsches Material (Regolith) wird angenommen und unverarbeitet in den Ausgang durchgereicht (2.5 kg). Bei 60 kg Sand im Eingang nimmt der Ofen keinen Sand mehr an; liegt dahinter Glitzerstaub auf demselben Band, verklemmt sich die Zufuhr (Design: getrennte Zuführungen nötig)."
+ },
+ {
+  "id": "P-09",
+  "area": "3.7",
+  "status": "OK",
+  "detail": "Kapselrampe: 10 kg Mondstaub → 18.000 ₥ (Referenz Depotpreis × Rampenbonus 1,2 = 18.000)"
+ }
+]

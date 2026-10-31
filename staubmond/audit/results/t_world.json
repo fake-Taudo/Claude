@@ -1,0 +1,38 @@
+[
+ {
+  "id": "W-01",
+  "area": "3.1",
+  "status": "OK",
+  "detail": "Unberührter Chunk 5142: nach Cache-Leerung 0, nach Speichern/Laden 0 abweichende Zellen; bleibt nicht materialisiert (Chunks werden erst bei der ersten Änderung angelegt, World.mat)"
+ },
+ {
+  "id": "W-02",
+  "area": "3.1",
+  "status": "OK",
+  "detail": "Sektorzuordnung: 0 Abweichungen zwischen U.sectorAt (Zelle) und World.secOfChunk (Chunk) an allen Chunk-Ecken; Namen Start M-13, (0,0) A-1, (6143,6143) X-24, x = −1 → X-1 (Umlauf)"
+ },
+ {
+  "id": "W-03",
+  "area": "3.1",
+  "status": "OK",
+  "detail": "Staubart je Zelle gegen Region (70320 Stichproben in 120 Chunks): 0 Abweichungen; Rückseite mischt bewusst alle Arten (World.dustTypeFor). Preis je kg kommt ausschließlich aus CONFIG.goods[Art].value (Meteorstaub: 3 × beste freigeschaltete Art)."
+ },
+ {
+  "id": "W-04",
+  "area": "3.1",
+  "status": "OK",
+  "detail": "Depot liegt auf 0 Hinderniszellen; Startposition begehbar true. Felsen werden im Umkreis von 34 Zellen um den Start und 6 Zellen um Fundstücke nicht platziert (World.rocksOf); Bewegung prüft jede Teilstrecke (Move.slide, ≤ 0,45 Zellen) – Durchtunneln oder Festklemmen in Felsen ist so nicht möglich; Aussteigen/Lieferung/Teleport suchen freie Stellen (Move.findFree)."
+ },
+ {
+  "id": "W-05",
+  "area": "3.1",
+  "status": "OK",
+  "detail": "Umlauf: U.dx(6143 → 1) = 2, U.dx(1 → 6143) = -2, Abstand über die Naht 1. Kamera, Roboterziele (U.dx), Funkabdeckung (Raster mit Modulo) und Putzen (B-06) nutzen dieselben Umlauf-Funktionen."
+ },
+ {
+  "id": "W-06",
+  "area": "3.1",
+  "status": "OK",
+  "detail": "Basisdaten von 60 verteilten Chunks (Staub, Art, Terrain, Region) in zwei getrennten Seiten mit unterschiedlichem Math.random erzeugt: bitgleich (Weltgenerierung nutzt nur Seed-Hashes)."
+ }
+]

@@ -1,0 +1,128 @@
+[
+ {
+  "id": "R-01",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Gleichwertigkeit Nah-/Fernmodus, gleiche Ausgangslage, 4 Spielminuten im Sektor M-13: mk1: nah 358.41 kg/2996 Zellen, fern 353.67 kg/2864 Zellen (-1.3 %) | mk2: nah 1373.84 kg/10752 Zellen, fern 1345.06 kg/10445 Zellen (-2.1 %) | mk3: nah 2459.98 kg/18803 Zellen, fern 2405.01 kg/18427 Zellen (-2.2 %). Toleranz laut Vorgabe 5 %.",
+  "data": {
+   "mk1-near": {
+    "cells": 2996,
+    "kg": 358.4117647058344
+   },
+   "mk1-far": {
+    "cells": 2864,
+    "kg": 353.6686274509843
+   },
+   "mk2-near": {
+    "cells": 10752,
+    "kg": 1373.8431372544712
+   },
+   "mk2-far": {
+    "cells": 10445,
+    "kg": 1345.0647058823447
+   },
+   "mk3-near": {
+    "cells": 18803,
+    "kg": 2459.9803921562884
+   },
+   "mk3-far": {
+    "cells": 18427,
+    "kg": 2405.009803921531
+   }
+  }
+ },
+ {
+  "id": "R-02",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "120 Wechsel zwischen Nah- und Fernmodus (je 0,5 s): Positionssprünge über Höchsttempo 0, Invarianten (Masse, Neuzählung) ok"
+ },
+ {
+  "id": "R-03",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "12 Roboter im selben Sektor, 7 Min. gemischt nah/fern: Neuzählung aller Zellen, Sektorsummen, stats.cells und Massenbilanz stimmen überein"
+ },
+ {
+  "id": "R-04",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Zuweisung an bereits fertigen Sektor: {\"ok\":true,\"msg\":\"2 Roboter → Sektor M-13\"} → Roboter ziehen sofort weiter (work:5,work:5). Außerhalb des Funknetzes: {\"ok\":false,\"why\":\"Bereich liegt außerhalb des Funknetzes. Antennen-Kette bauen!\"}"
+ },
+ {
+  "id": "R-05",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Zuweisung an Sektor – in gesperrter Region (Lizenz 0): {\"ok\":false,\"why\":\"kein gesperrter Sektor im Funknetz\"}. Shop.assign prüft keine Sperre; die Roboter putzen dort nichts (World.stroke überspringt gesperrte Zellen), fahren aber hin, drehen 3 Runden und melden „Bereich gereinigt“ ()."
+ },
+ {
+  "id": "R-06",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Volle Roboter (0 auf dem Weg zum Trichter), Trichter wird abgerissen: neue Ziele werden gewählt, Ladung kommt an (work 55.0, work 53.6, work 51.1); Invarianten ok"
+ },
+ {
+  "id": "R-07",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Voller Trichter (2.000/2.000 kg) wird von Robotern nicht weiter befüllt (dropAccepts), sie fahren ins Depot: Trichter 2000.0 kg"
+ },
+ {
+  "id": "R-08",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Roboter außerhalb des Funknetzes bleibt mit Warnung stehen (warn true); nach Bau einer Antenne in Reichweite arbeitet er weiter (warn false, bewegt 40.0 Zellen)"
+ },
+ {
+  "id": "R-09",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Roboter-Upgrade „Tempo“ gilt global (G.robotUp): alter Roboter 4.160, neu gekaufter 4.160 Zellen/s"
+ },
+ {
+  "id": "R-10",
+  "area": "3.8",
+  "status": "HINWEIS",
+  "detail": "Offline 2 h (Effizienz 50 % → 1 h simuliert in 1-s-Schritten, Leistung ×1,15): 61413 Zellen, +8652 ₥. (Vergleich mit gleicher Ausgangslage siehe R-10b). Erlös offline = kg × gleitender Durchschnittswert (G.avgVal) statt echter Verkauf: Aufträge „Lieferauftrag“ und Statistik „Verkauft“ zählen Offline-Ware nicht."
+ },
+ {
+  "id": "R-10b",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Gleiche Ausgangslage (4 Mk2, Sektor M-13), 15 simulierte Minuten: Fernmodus live 5671.6 kg/45152 Zellen, Offline-Schritte (1 s, Leistung ×1,15) 5159.4 kg/40916 Zellen (91 %). Erwartet ≈ 100–115 % (die Effizienz 50 %/80 % wird separat über die simulierte Dauer angewendet). Effektive Offline-Ausbeute damit ≈ 45 % statt 50 % der Live-Leistung.",
+  "data": {
+   "far": {
+    "cells": 45152,
+    "kg": 5671.6
+   },
+   "offline": {
+    "cells": 40916,
+    "kg": 5159.4
+   }
+  }
+ },
+ {
+  "id": "R-11",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Zweimal laden ohne Speichern dazwischen (Neuladen kurz nach der Offline-Zusammenfassung): Offline wird zwar erneut berechnet (1. Laden +8224 ₥, 2. Laden +9233 ₥), aber jeweils auf den unveränderten gespeicherten Stand (99915000 ₥) – Endstand 99924303 ₥ = Stand + nur ein Offline-Gewinn (Rest 70.00 ₥ = Sektor-/Fundprämien während der Offline-Simulation). Keine Doppelgutschrift."
+ },
+ {
+  "id": "R-12",
+  "area": "3.8",
+  "status": "OK",
+  "detail": "Uhr 1 Tag zurückgestellt: +0 ₥ (keine Gutschrift); 30 Tage vorgestellt: +0 ₥ (auf 8 h gedeckelt, Berechnung 0.2 s); 45 s Abwesenheit: +0 ₥ (unter 1 Min. keine Gutschrift)"
+ },
+ {
+  "id": "R-13",
+  "area": "4.4",
+  "status": "HINWEIS",
+  "detail": "Uhr-Manipulation: Offline-Zeit beruht auf Date.now() − G.lastReal; wer die Systemuhr vorstellt, erhält bis zu 8 h Offline-Ertrag (gedeckelt, Effizienz 50/80 %). Einmal pro Laden, Wiederholung nur über Speichern + Uhr erneut verstellen. Alle anderen Zeitgeber (Erdnachfrage, Events, Auftragstausch) laufen auf Spielzeit G.t und sind gegen Uhrverstellen immun."
+ },
+ {
+  "id": "R-14",
+  "area": "3.8",
+  "status": "HINWEIS",
+  "detail": "Tab im Hintergrund/Sperrbildschirm: Die Hauptschleife steht (requestAnimationFrame), beim Zurückkehren wird acc auf 0 gesetzt – die Hintergrundzeit wird weder live noch als Offline-Zeit gutgeschrieben (nur ein Neuladen der Seite zählt sie). Keine Doppelzählung, aber uneinheitlich."
+ }
+]

@@ -1,0 +1,797 @@
+[
+ {
+  "id": "SIM-101-20h",
+  "area": "2.4",
+  "status": "FEHLER",
+  "detail": "Seed 101, 20 Std. Spielzeit in 61 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":1519,\"earned\":9917,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":7,\"glanz\":0.0383,\"chunks\":25,\"decalChunks\":9,\"baseCache\":97,\"heapMB\":14} | 1 h: {\"money\":22660,\"earned\":152651,\"licence\":0,\"sectors\":1,\"robots\":0,\"buildings\":1,\"research\":12,\"glanz\":0.9187,\"chunks\":135,\"decalChunks\":45,\"baseCache\":225,\"heapMB\":14} | 5 h: {\"money\":5785244,\"earned\":12125332,\"licence\":2,\"sectors\":11,\"robots\":12,\"buildings\":8,\"research\":21,\"glanz\":4.1697,\"chunks\":523,\"decalChunks\":225,\"baseCache\":755,\"heapMB\":14} | 20 h: {\"money\":6723127,\"earned\":13064595,\"licence\":2,\"sectors\":13,\"robots\":12,\"buildings\":8,\"research\":21,\"glanz\":6.4722,\"chunks\":738,\"decalChunks\":281,\"baseCache\":814,\"heapMB\":14}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 5 Min. (Ziel 5), Kehrwagen 7 Min. (Ziel 15), Erster Sektor 53 Min. (Ziel 25), Lizenz 1 + Roboter 98 Min. (Ziel 30), Mare Mopp, 3–5 Roboter 98 Min. (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): t=247min cap: Fahrzeug 3 7000.1569 > 7000.0000 | t=246min cap: Fahrzeug 3 7000.1569 > 7000.0000 | t=122min cap: Fahrzeug 3 7000.0431 > 7000.0000 | t=710min cap: Fahrzeug 21 35000.0098 > 35000.0000 | t=709min cap: Fahrzeug 21 35000.0098 > 35000.0000 | t=708min cap: Fahrzeug 21 35000.0098 > 35000.0000. Bot-Stillstände: 7728",
+  "data": [
+   {
+    "at": 600,
+    "state": {
+     "money": 1519,
+     "earned": 9917,
+     "licence": 0,
+     "sectors": 0,
+     "robots": 0,
+     "buildings": 1,
+     "research": 7,
+     "glanz": 0.0383,
+     "chunks": 25,
+     "decalChunks": 9,
+     "baseCache": 97,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 288.5000000000663,
+     "kehrwagen": 421.99999999994486
+    },
+    "bad": [],
+    "stuck": 0
+   },
+   {
+    "at": 3600,
+    "state": {
+     "money": 22660,
+     "earned": 152651,
+     "licence": 0,
+     "sectors": 1,
+     "robots": 0,
+     "buildings": 1,
+     "research": 12,
+     "glanz": 0.9187,
+     "chunks": 135,
+     "decalChunks": 45,
+     "baseCache": 225,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 288.5000000000663,
+     "kehrwagen": 421.99999999994486,
+     "sector": 3171.000000012765
+    },
+    "bad": [],
+    "stuck": 29
+   },
+   {
+    "at": 18000,
+    "state": {
+     "money": 5785244,
+     "earned": 12125332,
+     "licence": 2,
+     "sectors": 11,
+     "robots": 12,
+     "buildings": 8,
+     "research": 21,
+     "glanz": 4.1697,
+     "chunks": 523,
+     "decalChunks": 225,
+     "baseCache": 755,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 288.5000000000663,
+     "kehrwagen": 421.99999999994486,
+     "sector": 3171.000000012765,
+     "lic1robot": 5866.499999998779,
+     "L1": 5866.499999998779,
+     "lic1r3": 5867.499999998764,
+     "L2": 15678.999999855989
+    },
+    "bad": [
+     "t=247min cap: Fahrzeug 3 7000.1569 > 7000.0000",
+     "t=246min cap: Fahrzeug 3 7000.1569 > 7000.0000",
+     "t=122min cap: Fahrzeug 3 7000.0431 > 7000.0000"
+    ],
+    "stuck": 921
+   },
+   {
+    "at": 72000,
+    "state": {
+     "money": 6723127,
+     "earned": 13064595,
+     "licence": 2,
+     "sectors": 13,
+     "robots": 12,
+     "buildings": 8,
+     "research": 21,
+     "glanz": 6.4722,
+     "chunks": 738,
+     "decalChunks": 281,
+     "baseCache": 814,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 288.5000000000663,
+     "kehrwagen": 421.99999999994486,
+     "sector": 3171.000000012765,
+     "lic1robot": 5866.499999998779,
+     "L1": 5866.499999998779,
+     "lic1r3": 5867.499999998764,
+     "L2": 15678.999999855989
+    },
+    "bad": [
+     "t=710min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=709min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=708min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=707min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=706min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=705min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=704min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=703min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=702min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=701min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=700min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=699min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=698min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=697min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=696min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=695min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=694min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=693min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=692min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=691min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=690min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=689min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=688min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=687min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=686min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=685min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=684min cap: Fahrzeug 21 35000.0098 > 35000.0000",
+     "t=492min Stillstand: 10 Min. keine neue Zelle (Geld 6175353, Lizenz 2, Roboter 12)"
+    ],
+    "stuck": 7728
+   }
+  ]
+ },
+ {
+  "id": "SIM-102-20h",
+  "area": "2.4",
+  "status": "FEHLER",
+  "detail": "Seed 102, 20 Std. Spielzeit in 48 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":4504,\"earned\":38225,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":10,\"glanz\":0.1175,\"chunks\":66,\"decalChunks\":24,\"baseCache\":179,\"heapMB\":14} | 1 h: {\"money\":58346,\"earned\":380788,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":13,\"glanz\":1.0416,\"chunks\":153,\"decalChunks\":71,\"baseCache\":257,\"heapMB\":14} | 5 h: {\"money\":414009,\"earned\":2141598,\"licence\":1,\"sectors\":5,\"robots\":6,\"buildings\":5,\"research\":17,\"glanz\":2.5773,\"chunks\":348,\"decalChunks\":196,\"baseCache\":512,\"heapMB\":14} | 20 h: {\"money\":3916190,\"earned\":10113337,\"licence\":2,\"sectors\":17,\"robots\":12,\"buildings\":11,\"research\":24,\"glanz\":5.706,\"chunks\":745,\"decalChunks\":343,\"baseCache\":872,\"heapMB\":14}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 2 Min. (Ziel 5), Kehrwagen 3 Min. (Ziel 15), Erster Sektor 71 Min. (Ziel 25), Lizenz 1 + Roboter 104 Min. (Ziel 30), Mare Mopp, 3–5 Roboter 104 Min. (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): t=234min cap: Fahrzeug 2 2100.0373 > 2100.0000 | t=233min cap: Fahrzeug 2 2100.0373 > 2100.0000 | t=232min cap: Fahrzeug 2 2100.0373 > 2100.0000 | t=231min cap: Fahrzeug 2 2100.0373 > 2100.0000 | t=230min cap: Fahrzeug 2 2100.0373 > 2100.0000 | t=229min cap: Fahrzeug 2 2100.0373 > 2100.0000. Bot-Stillstände: 7973",
+  "data": [
+   {
+    "at": 600,
+    "state": {
+     "money": 4504,
+     "earned": 38225,
+     "licence": 0,
+     "sectors": 0,
+     "robots": 0,
+     "buildings": 1,
+     "research": 10,
+     "glanz": 0.1175,
+     "chunks": 66,
+     "decalChunks": 24,
+     "baseCache": 179,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 148.00000000000992,
+     "kehrwagen": 191.00000000004414
+    },
+    "bad": [],
+    "stuck": 2
+   },
+   {
+    "at": 3600,
+    "state": {
+     "money": 58346,
+     "earned": 380788,
+     "licence": 0,
+     "sectors": 0,
+     "robots": 0,
+     "buildings": 1,
+     "research": 13,
+     "glanz": 1.0416,
+     "chunks": 153,
+     "decalChunks": 71,
+     "baseCache": 257,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 148.00000000000992,
+     "kehrwagen": 191.00000000004414
+    },
+    "bad": [],
+    "stuck": 38
+   },
+   {
+    "at": 18000,
+    "state": {
+     "money": 414009,
+     "earned": 2141598,
+     "licence": 1,
+     "sectors": 5,
+     "robots": 6,
+     "buildings": 5,
+     "research": 17,
+     "glanz": 2.5773,
+     "chunks": 348,
+     "decalChunks": 196,
+     "baseCache": 512,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 148.00000000000992,
+     "kehrwagen": 191.00000000004414,
+     "sector": 4230.000000022593,
+     "lic1robot": 6247.999999993227,
+     "L1": 6247.999999993227,
+     "lic1r3": 6248.999999993212
+    },
+    "bad": [
+     "t=234min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=233min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=232min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=231min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=230min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=229min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=228min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=227min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=226min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=225min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=224min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=223min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=222min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=221min Stillstand: 10 Min. keine neue Zelle (Geld 391014, Lizenz 1, Roboter 6)",
+     "t=221min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=220min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=219min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=218min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=217min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=216min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=215min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=214min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=213min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=212min cap: Fahrzeug 2 2100.0373 > 2100.0000",
+     "t=122min cap: Fahrzeug 2 2100.0059 > 2100.0000",
+     "t=121min cap: Fahrzeug 2 2100.0059 > 2100.0000",
+     "t=112min cap: Fahrzeug 2 2100.0157 > 2100.0000",
+     "t=109min cap: Fahrzeug 2 2100.0020 > 2100.0000"
+    ],
+    "stuck": 1217
+   },
+   {
+    "at": 72000,
+    "state": {
+     "money": 3916190,
+     "earned": 10113337,
+     "licence": 2,
+     "sectors": 17,
+     "robots": 12,
+     "buildings": 11,
+     "research": 24,
+     "glanz": 5.706,
+     "chunks": 745,
+     "decalChunks": 343,
+     "baseCache": 872,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 148.00000000000992,
+     "kehrwagen": 191.00000000004414,
+     "sector": 4230.000000022593,
+     "lic1robot": 6247.999999993227,
+     "L1": 6247.999999993227,
+     "lic1r3": 6248.999999993212,
+     "L2": 24182.99999973224
+    },
+    "bad": [
+     "t=696min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=695min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=694min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=693min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=692min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=691min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=690min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=689min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=688min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=687min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=686min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=685min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=684min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=683min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=682min cap: Roboter 9 157.5451 > 157.5000",
+     "t=682min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=681min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=680min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=672min cap: Roboter 11 157.5020 > 157.5000",
+     "t=596min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=595min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=594min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=593min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=592min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=591min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=590min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=589min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=446min cap: Fahrzeug 2 2100.0137 > 2100.0000",
+     "t=413min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=412min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "cap: Fahrzeug 2 2100.0078 > 2100.0000"
+    ],
+    "stuck": 7973
+   }
+  ]
+ },
+ {
+  "id": "SIM-103-20h",
+  "area": "2.4",
+  "status": "FEHLER",
+  "detail": "Seed 103, 20 Std. Spielzeit in 45 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":583,\"earned\":2703,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":6,\"glanz\":0.0156,\"chunks\":7,\"decalChunks\":0,\"baseCache\":16,\"heapMB\":14} | 1 h: {\"money\":24568,\"earned\":154579,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":10,\"glanz\":0.9373,\"chunks\":172,\"decalChunks\":56,\"baseCache\":290,\"heapMB\":14} | 5 h: {\"money\":147373,\"earned\":1466064,\"licence\":1,\"sectors\":6,\"robots\":6,\"buildings\":5,\"research\":16,\"glanz\":2.6767,\"chunks\":348,\"decalChunks\":125,\"baseCache\":513,\"heapMB\":14} | 20 h: {\"money\":865670,\"earned\":5096619,\"licence\":2,\"sectors\":23,\"robots\":12,\"buildings\":9,\"research\":22,\"glanz\":6.8714,\"chunks\":782,\"decalChunks\":329,\"baseCache\":893,\"heapMB\":14}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 4 Min. (Ziel 5), Kehrwagen 13 Min. (Ziel 15), Erster Sektor 95 Min. (Ziel 25), Lizenz 1 + Roboter 134 Min. (Ziel 30), Mare Mopp, 3–5 Roboter 134 Min. (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): t=299min cap: Fahrzeug 3 7000.0020 > 7000.0000 | t=298min cap: Fahrzeug 3 7000.0020 > 7000.0000 | t=297min cap: Fahrzeug 3 7000.0020 > 7000.0000 | t=296min cap: Fahrzeug 3 7000.0020 > 7000.0000 | t=295min cap: Fahrzeug 3 7000.0020 > 7000.0000 | t=231min Stillstand: 10 Min. keine neue Zelle (Geld 147373, Lizenz 1, Roboter 6). Bot-Stillstände: 6141",
+  "data": [
+   {
+    "at": 600,
+    "state": {
+     "money": 583,
+     "earned": 2703,
+     "licence": 0,
+     "sectors": 0,
+     "robots": 0,
+     "buildings": 1,
+     "research": 6,
+     "glanz": 0.0156,
+     "chunks": 7,
+     "decalChunks": 0,
+     "baseCache": 16,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 258.000000000094
+    },
+    "bad": [],
+    "stuck": 2
+   },
+   {
+    "at": 3600,
+    "state": {
+     "money": 24568,
+     "earned": 154579,
+     "licence": 0,
+     "sectors": 0,
+     "robots": 0,
+     "buildings": 1,
+     "research": 10,
+     "glanz": 0.9373,
+     "chunks": 172,
+     "decalChunks": 56,
+     "baseCache": 290,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 258.000000000094,
+     "kehrwagen": 780.4999999996188
+    },
+    "bad": [],
+    "stuck": 43
+   },
+   {
+    "at": 18000,
+    "state": {
+     "money": 147373,
+     "earned": 1466064,
+     "licence": 1,
+     "sectors": 6,
+     "robots": 6,
+     "buildings": 5,
+     "research": 16,
+     "glanz": 2.6767,
+     "chunks": 348,
+     "decalChunks": 125,
+     "baseCache": 513,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 258.000000000094,
+     "kehrwagen": 780.4999999996188,
+     "sector": 5695.000000001274,
+     "lic1robot": 8030.999999967281,
+     "L1": 8030.999999967281,
+     "lic1r3": 8031.999999967266
+    },
+    "bad": [
+     "t=299min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=298min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=297min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=296min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=295min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=231min Stillstand: 10 Min. keine neue Zelle (Geld 147373, Lizenz 1, Roboter 6)",
+     "t=171min cap: Fahrzeug 3 6000.0020 > 6000.0000",
+     "t=170min cap: Fahrzeug 3 6000.0020 > 6000.0000",
+     "cap: Fahrzeug 3 7000.0020 > 7000.0000"
+    ],
+    "stuck": 1459
+   },
+   {
+    "at": 72000,
+    "state": {
+     "money": 865670,
+     "earned": 5096619,
+     "licence": 2,
+     "sectors": 23,
+     "robots": 12,
+     "buildings": 9,
+     "research": 22,
+     "glanz": 6.8714,
+     "chunks": 782,
+     "decalChunks": 329,
+     "baseCache": 893,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 31.499999999999492,
+     "brushes": 258.000000000094,
+     "kehrwagen": 780.4999999996188,
+     "sector": 5695.000000001274,
+     "lic1robot": 8030.999999967281,
+     "L1": 8030.999999967281,
+     "lic1r3": 8031.999999967266,
+     "L2": 36939.500000457156
+    },
+    "bad": [
+     "t=329min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=328min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=327min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=326min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=325min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=324min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=323min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=322min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=321min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=320min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=319min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=318min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=317min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=316min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=315min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=314min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=313min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=312min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=311min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=310min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=309min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=308min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=307min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=306min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=305min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=304min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=303min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=302min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=301min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "t=300min cap: Fahrzeug 3 7000.0020 > 7000.0000",
+     "cap: Fahrzeug 3 7000.0039 > 7000.0000"
+    ],
+    "stuck": 6141
+   }
+  ]
+ },
+ {
+  "id": "SIM-104-20h",
+  "area": "2.4",
+  "status": "FEHLER",
+  "detail": "Seed 104, 20 Std. Spielzeit in 50 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":676,\"earned\":3096,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":5,\"glanz\":0.0199,\"chunks\":8,\"decalChunks\":0,\"baseCache\":16,\"heapMB\":14} | 1 h: {\"money\":39022,\"earned\":193910,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":10,\"glanz\":0.5141,\"chunks\":130,\"decalChunks\":41,\"baseCache\":209,\"heapMB\":14} | 5 h: {\"money\":1390606,\"earned\":5364479,\"licence\":1,\"sectors\":5,\"robots\":6,\"buildings\":3,\"research\":18,\"glanz\":2.7633,\"chunks\":384,\"decalChunks\":202,\"baseCache\":592,\"heapMB\":14} | 20 h: {\"money\":2332539,\"earned\":8228217,\"licence\":2,\"sectors\":17,\"robots\":12,\"buildings\":9,\"research\":22,\"glanz\":5.8732,\"chunks\":745,\"decalChunks\":370,\"baseCache\":878,\"heapMB\":14}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 2 Min. (Ziel 5), Kehrwagen 30 Min. (Ziel 15), Erster Sektor 100 Min. (Ziel 25), Lizenz 1 + Roboter 135 Min. (Ziel 30), Mare Mopp, 3–5 Roboter 135 Min. (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): t=297min cap: Fahrzeug 2 2100.0137 > 2100.0000 | t=255min cap: Fahrzeug 2 2100.0020 > 2100.0000 | t=254min cap: Fahrzeug 2 2100.0020 > 2100.0000 | t=253min cap: Fahrzeug 2 2100.0020 > 2100.0000 | t=242min cap: Fahrzeug 2 2100.0235 > 2100.0000 | t=231min cap: Fahrzeug 2 2100.0196 > 2100.0000. Bot-Stillstände: 3698",
+  "data": [
+   {
+    "at": 600,
+    "state": {
+     "money": 676,
+     "earned": 3096,
+     "licence": 0,
+     "sectors": 0,
+     "robots": 0,
+     "buildings": 1,
+     "research": 5,
+     "glanz": 0.0199,
+     "chunks": 8,
+     "decalChunks": 0,
+     "baseCache": 16,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 30.49999999999955,
+     "brushes": 129.9999999999956
+    },
+    "bad": [],
+    "stuck": 1
+   },
+   {
+    "at": 3600,
+    "state": {
+     "money": 39022,
+     "earned": 193910,
+     "licence": 0,
+     "sectors": 0,
+     "robots": 0,
+     "buildings": 1,
+     "research": 10,
+     "glanz": 0.5141,
+     "chunks": 130,
+     "decalChunks": 41,
+     "baseCache": 209,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 30.49999999999955,
+     "brushes": 129.9999999999956,
+     "kehrwagen": 1802.4999999986894
+    },
+    "bad": [],
+    "stuck": 20
+   },
+   {
+    "at": 18000,
+    "state": {
+     "money": 1390606,
+     "earned": 5364479,
+     "licence": 1,
+     "sectors": 5,
+     "robots": 6,
+     "buildings": 3,
+     "research": 18,
+     "glanz": 2.7633,
+     "chunks": 384,
+     "decalChunks": 202,
+     "baseCache": 592,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 30.49999999999955,
+     "brushes": 129.9999999999956,
+     "kehrwagen": 1802.4999999986894,
+     "sector": 5981.499999997105,
+     "lic1robot": 8108.499999966153,
+     "L1": 8108.499999966153,
+     "lic1r3": 8109.499999966139
+    },
+    "bad": [
+     "t=297min cap: Fahrzeug 2 2100.0137 > 2100.0000",
+     "t=255min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=254min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=253min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=242min cap: Fahrzeug 2 2100.0235 > 2100.0000",
+     "t=231min cap: Fahrzeug 2 2100.0196 > 2100.0000",
+     "t=220min Stillstand: 10 Min. keine neue Zelle (Geld 1346490, Lizenz 1, Roboter 6)",
+     "t=158min cap: Fahrzeug 2 2100.0216 > 2100.0000",
+     "t=154min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=143min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=140min cap: Fahrzeug 2 2100.0451 > 2100.0000"
+    ],
+    "stuck": 512
+   },
+   {
+    "at": 72000,
+    "state": {
+     "money": 2332539,
+     "earned": 8228217,
+     "licence": 2,
+     "sectors": 17,
+     "robots": 12,
+     "buildings": 9,
+     "research": 22,
+     "glanz": 5.8732,
+     "chunks": 745,
+     "decalChunks": 370,
+     "baseCache": 878,
+     "heapMB": 14
+    },
+    "milestones": {
+     "capsule": 30.49999999999955,
+     "brushes": 129.9999999999956,
+     "kehrwagen": 1802.4999999986894,
+     "sector": 5981.499999997105,
+     "lic1robot": 8108.499999966153,
+     "L1": 8108.499999966153,
+     "lic1r3": 8109.499999966139,
+     "L2": 28039.999999676114
+    },
+    "bad": [
+     "t=682min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=681min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=680min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=679min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=678min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=677min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=676min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=675min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=674min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=673min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=672min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=671min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=670min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=669min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=668min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=667min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=666min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=665min cap: Fahrzeug 2 2100.0039 > 2100.0000",
+     "t=615min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=614min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=613min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=612min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=567min cap: Fahrzeug 2 2100.0255 > 2100.0000",
+     "t=548min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=547min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=546min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=545min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=537min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=533min cap: Fahrzeug 2 2100.0196 > 2100.0000",
+     "t=519min cap: Fahrzeug 2 2100.0157 > 2100.0000"
+    ],
+    "stuck": 3698
+   }
+  ]
+ },
+ {
+  "id": "SIM-105-20h",
+  "area": "2.4",
+  "status": "FEHLER",
+  "detail": "Seed 105, 20 Std. Spielzeit in 44 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":1627,\"earned\":7425,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":6,\"glanz\":0.0629,\"chunks\":26,\"decalChunks\":17,\"baseCache\":80,\"heapMB\":16} | 1 h: {\"money\":35468,\"earned\":205313,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":10,\"glanz\":0.8177,\"chunks\":141,\"decalChunks\":71,\"baseCache\":225,\"heapMB\":16} | 5 h: {\"money\":219931,\"earned\":1284956,\"licence\":1,\"sectors\":6,\"robots\":6,\"buildings\":3,\"research\":17,\"glanz\":2.816,\"chunks\":372,\"decalChunks\":209,\"baseCache\":576,\"heapMB\":16} | 20 h: {\"money\":516161,\"earned\":3394841,\"licence\":2,\"sectors\":15,\"robots\":12,\"buildings\":6,\"research\":21,\"glanz\":5.3329,\"chunks\":664,\"decalChunks\":409,\"baseCache\":848,\"heapMB\":16}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 2 Min. (Ziel 5), Kehrwagen 3 Min. (Ziel 15), Erster Sektor 117 Min. (Ziel 25), Lizenz 1 + Roboter 121 Min. (Ziel 30), Mare Mopp, 3–5 Roboter 121 Min. (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): t=19min cap: Fahrzeug 2 900.0255 > 900.0000 | t=297min cap: Fahrzeug 2 2100.0118 > 2100.0000 | t=296min cap: Fahrzeug 2 2100.0118 > 2100.0000 | t=295min cap: Fahrzeug 2 2100.0118 > 2100.0000 | t=237min cap: Fahrzeug 2 2100.0020 > 2100.0000 | t=201min cap: Fahrzeug 2 2100.0176 > 2100.0000. Bot-Stillstände: 2316",
+  "data": [
+   {
+    "at": 600,
+    "state": {
+     "money": 1627,
+     "earned": 7425,
+     "licence": 0,
+     "sectors": 0,
+     "robots": 0,
+     "buildings": 1,
+     "research": 6,
+     "glanz": 0.0629,
+     "chunks": 26,
+     "decalChunks": 17,
+     "baseCache": 80,
+     "heapMB": 16
+    },
+    "milestones": {
+     "capsule": 30.49999999999955,
+     "brushes": 113.49999999999484,
+     "kehrwagen": 191.00000000004414
+    },
+    "bad": [],
+    "stuck": 2
+   },
+   {
+    "at": 3600,
+    "state": {
+     "money": 35468,
+     "earned": 205313,
+     "licence": 0,
+     "sectors": 0,
+     "robots": 0,
+     "buildings": 1,
+     "research": 10,
+     "glanz": 0.8177,
+     "chunks": 141,
+     "decalChunks": 71,
+     "baseCache": 225,
+     "heapMB": 16
+    },
+    "milestones": {
+     "capsule": 30.49999999999955,
+     "brushes": 113.49999999999484,
+     "kehrwagen": 191.00000000004414
+    },
+    "bad": [
+     "t=19min cap: Fahrzeug 2 900.0255 > 900.0000"
+    ],
+    "stuck": 65
+   },
+   {
+    "at": 18000,
+    "state": {
+     "money": 219931,
+     "earned": 1284956,
+     "licence": 1,
+     "sectors": 6,
+     "robots": 6,
+     "buildings": 3,
+     "research": 17,
+     "glanz": 2.816,
+     "chunks": 372,
+     "decalChunks": 209,
+     "baseCache": 576,
+     "heapMB": 16
+    },
+    "milestones": {
+     "capsule": 30.49999999999955,
+     "brushes": 113.49999999999484,
+     "kehrwagen": 191.00000000004414,
+     "sector": 7006.499999982189,
+     "lic1robot": 7267.499999978391,
+     "L1": 7267.499999978391,
+     "lic1r3": 7268.499999978377
+    },
+    "bad": [
+     "t=297min cap: Fahrzeug 2 2100.0118 > 2100.0000",
+     "t=296min cap: Fahrzeug 2 2100.0118 > 2100.0000",
+     "t=295min cap: Fahrzeug 2 2100.0118 > 2100.0000",
+     "t=237min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=201min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=198min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=197min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=196min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=195min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=194min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=193min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=192min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=192min Stillstand: 10 Min. keine neue Zelle (Geld 176917, Lizenz 1, Roboter 6)",
+     "t=191min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=190min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=189min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=188min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=187min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=186min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=185min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=184min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=183min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=182min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=166min cap: Fahrzeug 2 2100.0255 > 2100.0000",
+     "t=159min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=143min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=131min cap: Fahrzeug 2 2100.0235 > 2100.0000",
+     "t=127min cap: Fahrzeug 2 2100.0098 > 2100.0000"
+    ],
+    "stuck": 589
+   },
+   {
+    "at": 72000,
+    "state": {
+     "money": 516161,
+     "earned": 3394841,
+     "licence": 2,
+     "sectors": 15,
+     "robots": 12,
+     "buildings": 6,
+     "research": 21,
+     "glanz": 5.3329,
+     "chunks": 664,
+     "decalChunks": 409,
+     "baseCache": 848,
+     "heapMB": 16
+    },
+    "milestones": {
+     "capsule": 30.49999999999955,
+     "brushes": 113.49999999999484,
+     "kehrwagen": 191.00000000004414,
+     "sector": 7006.499999982189,
+     "lic1robot": 7267.499999978391,
+     "L1": 7267.499999978391,
+     "lic1r3": 7268.499999978377,
+     "L2": 21650.999999769087
+    },
+    "bad": [
+     "t=1076min cap: Fahrzeug 2 2100.0314 > 2100.0000",
+     "t=709min cap: Fahrzeug 2 2100.0157 > 2100.0000",
+     "t=652min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=453min cap: Fahrzeug 2 2100.0020 > 2100.0000",
+     "t=323min cap: Fahrzeug 2 2100.0157 > 2100.0000",
+     "t=322min cap: Fahrzeug 2 2100.0157 > 2100.0000",
+     "t=321min cap: Fahrzeug 2 2100.0157 > 2100.0000",
+     "t=320min cap: Fahrzeug 2 2100.0157 > 2100.0000",
+     "t=319min cap: Fahrzeug 2 2100.0157 > 2100.0000",
+     "t=318min cap: Fahrzeug 2 2100.0157 > 2100.0000",
+     "t=312min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=311min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=310min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=309min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=308min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=307min cap: Fahrzeug 2 2100.0078 > 2100.0000",
+     "t=304min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=303min cap: Fahrzeug 2 2100.0176 > 2100.0000",
+     "t=302min cap: Fahrzeug 2 2100.0176 > 2100.0000"
+    ],
+    "stuck": 2316
+   }
+  ]
+ }
+]

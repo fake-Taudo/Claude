@@ -1,0 +1,164 @@
+[
+ {
+  "id": "V-01",
+  "area": "3.5",
+  "status": "OK",
+  "detail": "Einsteigen mit 3 kg im eigenen Behälter, 5 s putzend fahren: Fahrzeug 65.91 kg, Spieler weiter 3 kg (getrennte Behälter; Abladen leert beide). Aussteigen ohne Verlust/Duplikat: Bilanz ok"
+ },
+ {
+  "id": "V-02",
+  "area": "3.5",
+  "status": "OK",
+  "detail": "Aussteigen: Spielfigur landet auf freier Stelle (3271.7, 3206.3); Fallback auf die Fahrzeugposition nur, wenn im Umkreis von 10 Zellen nichts frei ist"
+ },
+ {
+  "id": "V-03",
+  "area": "3.5",
+  "status": "OK",
+  "detail": "Herbeirufen: Gebühr 20 ₥ einmal abgebucht, zweiter Ruf während der Lieferung abgelehnt ({\"ok\":false,\"why\":\"Zu wenig Geld oder Fahrzeug unterwegs.\"}), Ankunft nach 10 s in 4.0 Zellen Abstand. Rufen eines danebenstehenden Fahrzeugs kostet ebenfalls die volle Gebühr."
+ },
+ {
+  "id": "V-04",
+  "area": "3.5",
+  "status": "OK",
+  "detail": "Fahrzeug-Upgrade gilt nur für dieses Fahrzeug (Kapazität 600 → 900 kg, zweiter Kehrwagen 600 kg), sofort wirksam und nach Speichern/Laden erhalten"
+ },
+ {
+  "id": "V-06",
+  "area": "3.5",
+  "status": "FEHLER",
+  "detail": "Mit Schubkarre speichern und laden: Spielfigur springt um 1.10 Zellen auf die Position der Karre (Player.init setzt bei jedem Fahrzeug x/y = Fahrzeug, die Karre steht aber 1,1 Zellen vor der Figur). Kann die Figur in ein Hindernis setzen. Rundlauf-Diff: .g.player.x: 3213.504039665272 ≠ 3214.604039665272"
+ },
+ {
+  "id": "V-05",
+  "area": "3.5",
+  "status": "HINWEIS",
+  "detail": "Fahrzeugshop zeigt die Grundwerte aus CONFIG (Tempo, Breite, Kapazität) ohne Forschung und Upgrades; Kehrwagen 15 Z/s, 7 Zellen, 600 kg (Abweichung zur ersten Spielbeschreibung, im Kopfkommentar als „Bürstenbreiten verbreitert“ dokumentiert)."
+ },
+ {
+  "id": "I-01",
+  "area": "3.11",
+  "status": "OK",
+  "detail": "60-s-Lauf (Putzen + 2 Roboter) mit 6 verschiedenen Einstellungen gegen Standard: abweichend keine. Hinweis: Roboter im Sichtbereich laufen im Nahmodus; Zoom, Bildschirmgröße und Kamerabewegung beeinflussen also, welche Roboter nah/fern simuliert werden (Abweichung zwischen den Modi siehe R-01)."
+ },
+ {
+  "id": "I-02",
+  "area": "3.11",
+  "status": "OK",
+  "detail": "Taste gedrückt halten und Fenster verlassen (blur): Tastenzustand wird geleert (gehalten true, danach 0 Tasten). Putzen-Button: pointercancel/lostpointercapture setzen ihn zurück."
+ },
+ {
+  "id": "I-03",
+  "area": "3.11",
+  "status": "OK",
+  "detail": "Aktionsschicht: Tastatur (Input.onKey → Actions.key), Touch-Kontextknöpfe und Klicks (UI → Actions.interact / UI.act → Shop.do) und Koop (Net.forward → Shop.do) laufen über dieselben Funktionen; jede zustandsändernde Aktion ist ein Shop-Befehl (Code-Review Shop, Actions, Build). Geräteabhängig sind nur Eingabewege (Rechtsklick öffnet Gebäude am Desktop, Tippen am Touch), keine Logik."
+ },
+ {
+  "id": "I-04",
+  "area": "3.11",
+  "status": "OK",
+  "detail": "Terminal offen, Kontostand sinkt danach unter den angezeigten Preis: Kauf wird gegen den aktuellen Stand geprüft und abgelehnt ({\"ok\":false,\"why\":\"Es fehlen 1 ₥\"}); Preise werden beim Kauf neu berechnet, ein veralteter Preis ist nicht kaufbar"
+ },
+ {
+  "id": "I-05",
+  "area": "3.11",
+  "status": "OK",
+  "detail": "Baumodus im Fahrzeug abgelehnt (true); Menü öffnen/schließen im Baumodus behält die Auswahl (true), die Platzierung prüft beim Bestätigen neu"
+ },
+ {
+  "id": "K-01",
+  "area": "3.12",
+  "status": "ABWEICHUNG",
+  "detail": "Host übernimmt gemeldete Client-Positionen ohne Plausibilitätsprüfung: Sprung um 2.000 Zellen akzeptiert (x 5201), nicht-numerische Werte führen zu Position NaN. Ein manipulierter Client kann sich damit an jedes Depot „teleportieren“ und dort abladen (true) oder an beliebiger Stelle putzen (Leistung bleibt durch Werkzeug × dt begrenzt, gesperrte Regionen bleiben gesperrt)."
+ },
+ {
+  "id": "K-02",
+  "area": "3.12",
+  "status": "OK",
+  "detail": "Wirtschaft bleibt host-autoritativ: Kauf ohne Geld abgelehnt (Konto 100 → 100), Bauen mit Koordinaten „NaN“/„x“ erzeugt 0 Gebäude mit ungültiger Position, leere Kapsel startet nicht, Aufruf interner Namen (constructor) läuft ins Leere; Name wird auf 16 Zeichen gekürzt und beim Anzeigen escaped. Invarianten: mass: Staubbilanz weicht um -5.000000 kg ab (entfernt 0.000, verkauft 0.000, Inventar 5.000, Überlauf 0.000000)"
+ },
+ {
+  "id": "K-03",
+  "area": "3.12",
+  "status": "NICHT PRÜFBAR",
+  "detail": "Echte Verbindungen (WebRTC über PeerJS-Server), Verbindungsabbrüche, Reihenfolge von Zellenänderungen über das Netz und gleichzeitige Käufe zweier echter Clients wurden nicht mit zwei Geräten geprüft. Code-Review: Der Host verarbeitet Nachrichten nacheinander (keine Doppelabbuchung), Chunks werden mit Revisionsnummer vollständig übertragen (keine Reihenfolgeprobleme), Ladung eines getrennten Mitspielers geht ins Hauptdepot (Net.dropPeer). Clients behalten ihren eigenen Spielstand."
+ },
+ {
+  "id": "N-01",
+  "area": "4.1",
+  "status": "ABWEICHUNG",
+  "detail": "U.big (Geldanzeige) an Grenzen: 0 → „0“, -0.5 → „-1“, -1234 → „-1,3 Tsd.“, 999.999 → „999“, 1000 → „1,0 Tsd.“, 999999 → „999 Tsd.“, 999999.9 → „999 Tsd.“, 1000000 → „1,0 Mio.“, 99999999 → „99,9 Mio.“, 999999999 → „999 Mio.“, 1000000000000 → „1,0 Bio.“, 999000000000000 → „999 Bio.“, 1000000000000000 → „1,0 Brd.“, 9007199254740992 → „9,0 Brd.“, 1000000000000000000 → „1.000 Brd.“, 1e+21 → „1.000.000 Brd.“, NaN → „NaN“, Infinity → „∞ Brd.“. Abgerundet (nie „1000,0 Tsd.“); ab 100 Einheiten ohne Nachkommastelle („999 Tsd.“ statt „999,9 Tsd.“); negative Kleinbeträge runden weg von 0 (−0,5 → „-1“); NaN/Infinity werden roh angezeigt; ab 10^18 sehr lange Zahlen mit „Brd.“"
+ },
+ {
+  "id": "N-02",
+  "area": "4.1",
+  "status": "HINWEIS",
+  "detail": "U.kg rundet statt abzurunden: 9.96 → „10,0 kg“, 9.999 → „10,0 kg“, 999.6 → „1.000 kg“, 999999.9 → „1.000,0 t“ – „10,0 kg“ bei 9,96 kg kann einen vollen 10-kg-Behälter vortäuschen (Füllanzeige selbst nutzt Player.full mit Schwelle 0,005 kg)."
+ },
+ {
+  "id": "N-03",
+  "area": "4.1",
+  "status": "HINWEIS",
+  "detail": "Große Beträge: ab 2^53 ≈ 9·10^15 ₥ gehen Nachkommastellen und kleine Verkäufe verloren (2^53 + 0,7 = 2^53 + 0). Erreichbar nur theoretisch (Lizenz 6 kostet 8·10^7 ₥, Einnahmen im Endspiel ~10^7 ₥/Std.); kein Obergrenzen-Konzept nötig, aber auch keines vorhanden."
+ },
+ {
+  "id": "Z-01",
+  "area": "4.2",
+  "status": "OK",
+  "detail": "1 × 3600 Ticks gegen 60 × 60 Ticks: Zustand identisch. Zeitraffer (Debug ×4/×16) führt nur mehr feste 1/60-s-Ticks pro Bild aus."
+ },
+ {
+  "id": "Z-01b",
+  "area": "4.1",
+  "status": "HINWEIS",
+  "detail": "Der Logik-Zufall für die Putz-Rundung (World.rnd, Xorshift) wird weder bei World.init zurückgesetzt noch gespeichert: Zwei Spiele mit gleichem Seed und gleichen Eingaben in derselben Sitzung oder nach Laden runden unterschiedlich (in diesem Test 29 statt 33 Zellen ohne Rücksetzen). Ohne Spielfolgen, verhindert aber exakte Wiederholbarkeit."
+ },
+ {
+  "id": "Z-02",
+  "area": "4.2",
+  "status": "ABWEICHUNG",
+  "detail": "10 s Echtzeit mit 4 Bildern/s ergeben 5.33 s Spielzeit, mit 60 Bildern/s 10.00 s. Game.loop kappt Bildzeiten bei 250 ms und holt höchstens 8 Ticks pro Bild nach; der Rest wird verworfen (acc = 0) und nirgends gutgeschrieben. Auf sehr langsamen Geräten (< 7,5 Bilder/s) läuft das Spiel daher langsamer statt in Zeitlupe nachzuholen – Schutz gegen die „Spirale des Todes“, aber mit Zeitverlust."
+ },
+ {
+  "id": "Z-03",
+  "area": "4.2",
+  "status": "ABWEICHUNG",
+  "detail": "Reihenfolge der Roboter (Liste umgedreht), 3 Min.: 2697 gegen 2503 Zellen. Bahnen werden in Listenreihenfolge vergeben; das Ergebnis hängt leicht von der Reihenfolge ab, nicht systematisch. Reihenfolge im Tick: Spieler → Fahrzeuge → Gebäude/Bänder → Roboter → Progression (Events, Aufträge) → Speichern; ein Kapselverkauf im selben Tick nutzt die Nachfrage vor einem eventuellen Wechsel im selben Tick (Wechsel erst in Progression.update)."
+ },
+ {
+  "id": "X-01",
+  "area": "4.3",
+  "status": "HINWEIS",
+  "detail": "Doppelter Zustand (geprüft durch Invarianten nach jedem Schritt): Sektor fertig in World.secDone (Uint8Array) und G.secDone (Liste) sowie G.stats.sectors; Fundstücke in G.finds und G.stats.findsFound; Chunk-Statistik in World.cleanable/chunkClean und G.chunkStats (beim Speichern); Geld nur in G.money. Alle Schreibstellen aktualisieren beide Seiten (Progression.sectorDone, World.cellCleaned); Abweichungen entstehen nur über die Speicherfunde S-02/S-03/S-04/S-07/S-11."
+ },
+ {
+  "id": "X-02",
+  "area": "4.3",
+  "status": "HINWEIS",
+  "detail": "Still geschluckte Fehler mit Logikbezug: Save.loadSlot verwirft defekte Chunks ohne Meldung (Welt dort wieder staubig, Statistik behauptet sauber); Shop.do fängt Ausnahmen und meldet „Fehler: …“ – ein Befehl, der nach Geldabzug scheitert, bliebe halb ausgeführt (kein solcher Pfad gefunden); Save.gz fällt bei Fehlern auf unkomprimiert zurück (unkritisch); Settings.load/save ignorieren Fehler (unkritisch)."
+ },
+ {
+  "id": "X-03",
+  "area": "4.3",
+  "status": "OK",
+  "detail": "Listenänderung während Iteration: Buildings.update (Index-Schleife, Gebäude werden in update nicht entfernt), Bänder (Set mit Tick-Marke p.tick gegen Doppelbewegung), Robots.update (Liste wird nur durch Shop-Befehle zwischen Ticks geändert), Progression.checkOrders (Ersetzen am gleichen Index) – kein Überspringen oder Doppeln gefunden (Fuzzing und Paketprüfung P-01)."
+ },
+ {
+  "id": "L-01",
+  "area": "4.6",
+  "status": "OK",
+  "detail": "Worst-Case 200 Roboter (70 regulär + 130 am Stellenplan vorbei), 4958 Bandzellen voller Pakete, 2511 berührte Chunks: Logik 2.256 ms/Tick (Roboter fern), 2.724 ms/Tick (alle Roboter im Nahmodus) – bei einem Tick pro Bild 16 % des 16,7-ms-Budgets (Headless-Chromium, Desktop-CPU; Mobilgeräte etwa 3–5× langsamer, nicht gemessen). Speichern (voll): 7851 ms gesamt, längste Blockade des Hauptthreads 44 ms, Kern 434 KB, Chunks 7460 KB. Heap 86 MB. Rendern nicht gemessen (Headless, Software-Rendering).",
+  "data": {
+   "robots": 200,
+   "belts": 4958,
+   "chunks": 2511,
+   "msTick": 2.256,
+   "msNear": 2.724,
+   "msSave": 7851,
+   "maxGap": 44,
+   "coreKB": 434,
+   "chunkKB": 7460,
+   "heap": 86
+  }
+ }
+]

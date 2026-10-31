@@ -1,0 +1,122 @@
+[
+ {
+  "id": "S-01",
+  "area": "3.10",
+  "status": "OK",
+  "detail": "Speichern → Laden → tiefer Vergleich (G inkl. Zeitgeber, Aufträge, Statistik; Gebäude mit Lagern; Bänder mit Paketen; Roboter mit Position, Zustand, Ladung; Fahrzeug mit Upgrades und Ladung; Chunk-Daten als Prüfsumme; Chunk-Statistik; Sektorfortschritt; Mondglanz): identisch. Nicht gespeichert und daher nicht verglichen: Zufallszustand (Math.random/World.rnd), fliegende Meteore, Rückgängig-Liste, angefangener Maschinen-Fortschritt (siehe P-07).",
+  "data": []
+ },
+ {
+  "id": "S-02",
+  "area": "3.10",
+  "status": "FEHLER",
+  "detail": "Spiel A putzt 467 Zellen inkl. Fundstück „Leicht verstaubter Kugelschreiber“ (gefunden true) und speichert. „Neu“ auf demselben Platz → Spiel B (0 Zellen) speichert und wird geladen: Die Chunk-Datensätze von A bleiben in IndexedDB liegen (Game.newGame löscht den Platz nicht, Save.saveNow schreibt nur Chunks von B) und werden in B geladen. Ergebnis: Fundstückzelle in B sauber true, in B gefunden false (Fundstück ist damit für immer verloren), stats.cells 0; Neuzählung: Mondglanz 0.00003769679097847365 ≠ Neuzählung 0.000020784597036833173 | stats.cells 0 ≠ Neuzählung 467"
+ },
+ {
+  "id": "S-03",
+  "area": "3.10",
+  "status": "FEHLER",
+  "detail": "Während Save.saveNow einen Chunk komprimiert (await gz), wird im selben Chunk geputzt (4.15 kg). Danach ist der Chunk nicht mehr als „geändert“ markiert (dirtySave false), weil saveNow ihn erst nach dem await aus der Liste nimmt. Nach dem Laden fehlen 36 Zellenänderungen (wieder staubig), obwohl Kern-Statistik und Spielerbehälter sie enthalten – Staub doppelt erntbar, Sektorzählung inkonsistent. Tritt auf, wenn ein Autosave (alle 30 s) einen Chunk erwischt, in dem gerade geputzt wird und der danach nicht mehr verändert wird."
+ },
+ {
+  "id": "S-03b",
+  "area": "3.10",
+  "status": "FEHLER",
+  "detail": "Speicherauftrag während eines laufenden Speicherns (Autosave läuft, Spieler schließt den Tab → pagehide → Save.saveNow): wird wegen „if (this.saving) return“ stillschweigend verworfen, nicht nachgeholt. Gespeichertes Geld 35 statt 777777 – alle Änderungen seit Beginn des laufenden Speicherns gehen beim Schließen verloren."
+ },
+ {
+  "id": "S-04",
+  "area": "3.10",
+  "status": "FEHLER",
+  "detail": "Speichern bricht nach dem Kerndatensatz ab (Chunk-Schreiben schlägt fehl): Kern ist neu, Chunks alt. Nach dem Laden: 1 Chunk(s) mit falscher Statistik – Chunk 4849 sauber 580≠335 putzbar 4082≠4082 | 2 Sektor-Abweichung(en) – Sektor 300 sauber 580≠335 | Mondglanz 0.000015713374183771485 ≠ Neuzählung 0.000009075828192350773 | stats.cells 501 ≠ Neuzählung 256. Kern und Chunks werden in getrennten Transaktionen geschrieben (Save.saveNow); es gibt keine Versionsmarke, die beide verbindet."
+ },
+ {
+  "id": "S-05",
+  "area": "3.10",
+  "status": "OK",
+  "detail": "Backup-Rotation (12 Speichervorgänge): s0, s0, s0+s0b0, s0, s0, s0, s0+s0b4, s0, s0, s0, s0+s0b3, s0. Jeder 4. Autosave schreibt zusätzlich ein Backup (5 Plätze, älteste werden überschrieben); Backups sind Kopien des gültigen Speicherstands und können ein gutes Backup nicht durch einen beschädigten Stand verdrängen (beschädigte Daten entstehen nur außerhalb)."
+ },
+ {
+  "id": "S-06",
+  "area": "3.10",
+  "status": "FEHLER",
+  "detail": "Beschädigter Hauptdatensatz (Backup vorhanden): Prüfsumme falsch: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | Pflichtfeld fehlt: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | abgeschnitten: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | leeres Objekt: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | falscher Typ (Geld als Text): Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | riesige Zahl (1e999): Geld Infinity | Lizenz 99: Geld 11. Save.validate prüft nur Prüfsumme, Typ von money/t und das Vorhandensein von player/stats/seed.",
+  "data": [
+   "Prüfsumme falsch: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "Pflichtfeld fehlt: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "abgeschnitten: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "leeres Objekt: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "falscher Typ (Geld als Text): Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "riesige Zahl (1e999): Geld Infinity",
+   "Lizenz 99: Geld 11"
+  ]
+ },
+ {
+  "id": "S-07",
+  "area": "3.10",
+  "status": "FEHLER",
+  "detail": "Hauptdatensatz beschädigt → jüngstes Backup wird geladen. Backups enthalten nur den Kern, die Chunks gibt es pro Platz nur einmal (neuester Stand): Geld/Statistik vom Backup, Welt vom neuesten Stand. Neuzählung nach dem Laden: 1 Chunk(s) mit falscher Statistik – Chunk 4849 sauber 271≠452 putzbar 4082≠4082 | 2 Sektor-Abweichung(en) – Sektor 300 sauber 271≠452 | Mondglanz 0.000007341938627244953 ≠ Neuzählung 0.000012245595053559848 | stats.cells 192 ≠ Neuzählung 373"
+ },
+ {
+  "id": "S-08",
+  "area": "3.10",
+  "status": "OK",
+  "detail": "Platz 1 und 2 mit verschiedenen Seeds, Platz 2 gelöscht: Platz 1 unverändert (Geld 111, Seed 20261026, Neuzählung ok), Platz 2 leer true"
+ },
+ {
+  "id": "S-09",
+  "area": "3.10",
+  "status": "OK",
+  "detail": "Export Platz 1 → Import in belegten Platz 2 → Laden: identisch (alte Chunks von Platz 2 werden vorher gelöscht)"
+ },
+ {
+  "id": "S-10",
+  "area": "4.5",
+  "status": "FEHLER",
+  "detail": "Import manipulierter Dateien (gültige Prüfsumme, sonst beliebig): Prototype Pollution (__proto__/constructor im Kern) → {\"state\":\"play\",\"money\":4321,\"lic\":0,\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]} || XSS im Gebäudenamen (Teleport) → {\"state\":\"play\",\"money\":4321,\"lic\":0,\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]} || Zahlen als Text (Lizenz, FP, Upgrade) → {\"state\":\"play\",\"money\":4321,\"lic\":\"3\",\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]} || null an Pflichtstellen (orders, robots, stats.kgByType) → {\"err\":\"Cannot read properties of null (reading 'length')\",\"importiert\":true,\"xss\":null,\"neueSeitenfehler\":[]} || riesiges Array (secDone 200.000 Einträge) → {\"state\":\"play\",\"money\":4321,\"lic\":0,\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]} || überlanges Feld (player.load 1 MB Text) → {\"state\":\"play\",\"money\":4321,\"lic\":0,\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]}",
+  "data": [
+   [
+    "Prototype Pollution (__proto__/constructor im Kern)",
+    "{\"state\":\"play\",\"money\":4321,\"lic\":0,\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]}"
+   ],
+   [
+    "XSS im Gebäudenamen (Teleport)",
+    "{\"state\":\"play\",\"money\":4321,\"lic\":0,\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]}"
+   ],
+   [
+    "Zahlen als Text (Lizenz, FP, Upgrade)",
+    "{\"state\":\"play\",\"money\":4321,\"lic\":\"3\",\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]}"
+   ],
+   [
+    "null an Pflichtstellen (orders, robots, stats.kgByType)",
+    "{\"err\":\"Cannot read properties of null (reading 'length')\",\"importiert\":true,\"xss\":null,\"neueSeitenfehler\":[]}"
+   ],
+   [
+    "riesiges Array (secDone 200.000 Einträge)",
+    "{\"state\":\"play\",\"money\":4321,\"lic\":0,\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]}"
+   ],
+   [
+    "überlanges Feld (player.load 1 MB Text)",
+    "{\"state\":\"play\",\"money\":4321,\"lic\":0,\"polluted\":null,\"xss\":null,\"importiert\":true,\"neueSeitenfehler\":[]}"
+   ]
+  ]
+ },
+ {
+  "id": "S-11",
+  "area": "3.10",
+  "status": "FEHLER",
+  "detail": "Zwei Tabs mit demselben Platz: Tab A putzt im Westen, Tab B im Osten, beide speichern abwechselnd. Neu geladen: Geld 1000 (Stand von A, B-Fortschritt verloren), Ostfläche von B trotzdem sauber true (Chunks von B), stats.cells 498; Neuzählung Mondglanz 0.00005307777784683141 ≠ Neuzählung 0.00002840296146795849 | stats.cells 498 ≠ Neuzählung 754. Es gibt keine Sperre gegen ein zweites Fenster (kein BroadcastChannel-/Web-Lock-Schutz)."
+ },
+ {
+  "id": "S-12",
+  "area": "3.10",
+  "status": "OK",
+  "detail": "Migration: alte Spielstände erzeugt und in der geprüften Fassung geladen: Phase 2 (30fe96a): vorher {\"money\":500035,\"cells\":2604,\"tools\":2,\"veh\":0} → nachher {\"money\":500095,\"cells\":2604,\"tools\":2,\"veh\":0,\"v\":2,\"builtBy\":true,\"bad\":[]} || index_audit_original.html: vorher {\"money\":498795,\"cells\":2604,\"tools\":2,\"veh\":1} → nachher {\"money\":498795,\"cells\":2604,\"tools\":2,\"veh\":1,\"v\":2,\"builtBy\":true,\"bad\":[]}. Fehlende Felder werden aus einem frischen Zustand ergänzt (Save.migrate)."
+ },
+ {
+  "id": "S-13",
+  "area": "3.10",
+  "status": "OK",
+  "detail": "Notfall-Speicher (localStorage) voll: kein Absturz, Meldungen [\"Speicher voll! Bitte Spielstand exportieren.\",\"Speichern fehlgeschlagen – bitte exportieren.\"], Spiel läuft weiter (play). Der Kern wird zuerst geschrieben; scheitert er, bleibt der alte Stand unverändert."
+ }
+]

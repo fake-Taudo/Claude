@@ -1,0 +1,223 @@
+[
+ {
+  "id": "C-01",
+  "area": "3.2",
+  "status": "OK",
+  "detail": "Spielfigur und Fahrzeuge putzen in festen Logikschritten (Game.STEP = 1/60 s, unabhängig von der Bildrate) – die Menge pro Spielzeit ist daher bildratenunabhängig. World.stroke selbst ist schrittweitenabhängig (große Schritte entfernen weniger, weil das Budget pro Schritt auf wenige Zellen verteilt wird); relevant nur für Roboter im Fernmodus (×6) und offline (1 s), siehe R-Funde. Gleiche Strecke (6 s, 2 Zellen/s, Besen 2,5 kg/s) mit Schrittweite 16 ms/100 ms/0,5 s/1 s: entfernte kg {\"0.017\":6.1471,\"0.100\":6.0667,\"0.500\":5.8765,\"1.000\":5.3902}, Streuung 12.31 %",
+  "data": {
+   "0.017": 6.1471,
+   "0.100": 6.0667,
+   "0.500": 5.8765,
+   "1.000": 5.3902
+  }
+ },
+ {
+  "id": "C-02",
+  "area": "3.2",
+  "status": "OK",
+  "detail": "400 überlappende Striche: entfernt 10.186275 kg, Abnahme der Zellwerte 10.186275 kg (Zellwert-Einheiten 5195)"
+ },
+ {
+  "id": "C-03",
+  "area": "3.2",
+  "status": "OK",
+  "detail": "Zellen mit Rest-Staub 1–8 nach dem Putzen: 0 (Code: Zelle ≤ 8 wird auf 0 gesetzt und der Rest als kg verbucht, World.stroke)"
+ },
+ {
+  "id": "C-04",
+  "area": "3.2",
+  "status": "FEHLER",
+  "detail": "Behälter knapp unter Kapazität (6 bis 50 g frei), Putzen am Fundstück-Hügel (Staubwert 255), 36 Versuche à 20 Ticks: World.stroke liefert mehr als das Budget (Rundung je Zelle, Rest ≤ 8 wird mitgenommen); Player.takeCol schreibt ohne Schubkarre nur den freien Platz gut, der Rest verschwindet. Verlust: 0.00988 kg bei 7 Ereignissen (Staub ist von der Karte entfernt, aber nirgends gutgeschrieben).",
+  "data": {
+   "ovSum": 0.009882352941178,
+   "ovN": 7
+  }
+ },
+ {
+  "id": "C-05",
+  "area": "3.2",
+  "status": "ABWEICHUNG",
+  "detail": "World.stroke hält das kg-Budget (Leistung × dt) nicht exakt ein: 839 von 2000 kleinen Strichen liefern mehr als das Budget, höchstens ×7.84 (stochastische Rundung je Zelle + Rest ≤ 8). Im Mittel ausgeglichen, aber Ursache für C-04 und Überfüllung von Fahrzeug- und Roboterbehältern."
+ },
+ {
+  "id": "C-06",
+  "area": "3.5",
+  "status": "OK",
+  "detail": "Kehrwagen 0,002 kg unter Kapazität, 4 s putzend fahren: Ladung 600.0000 / 600 kg (Überfüllung 0.0000 kg, nichts geht verloren, Anzeige kann „600,0 / 600“ übersteigen)"
+ },
+ {
+  "id": "C-07",
+  "area": "3.2",
+  "status": "OK",
+  "detail": "Einzelzelle mit Wert 255 vollständig geputzt: 0.500000 kg (Soll 0.500000 kg, kgPerFullCell 0,5)"
+ },
+ {
+  "id": "C-08",
+  "area": "3.2",
+  "status": "OK",
+  "detail": "Werkzeugwechsel mit 7,5 kg im Behälter: danach 7.5 kg; Kapazität hängt nur am Behälter-Upgrade, nicht am Werkzeug"
+ },
+ {
+  "id": "C-09",
+  "area": "3.5",
+  "status": "OK",
+  "detail": "Schubkarre fast voll: Karre 79.9994 / 80 kg (Player.takeCol schreibt den Rest ohne Kapazitätsprüfung in die Karre)"
+ },
+ {
+  "id": "D-01",
+  "area": "3.3",
+  "status": "OK",
+  "detail": "Abladen mit leerem Behälter ändert nichts"
+ },
+ {
+  "id": "D-02",
+  "area": "3.3",
+  "status": "OK",
+  "detail": "Abladen 2,2 kg (Doppeltipp): im Depot 2.2 kg, Behälter 0"
+ },
+ {
+  "id": "D-03",
+  "area": "3.3",
+  "status": "OK",
+  "detail": "Nach dem Abladen liegen 2.20 kg in der Kapsel (Puffer 0.00 kg) – kein Sofortverkauf. Manueller Start (ab 0,5 kg erlaubt: true): +3.3000 ₥ = Referenz 2,2 kg × 1 × Nachfrage 1.5 × Multiplikator 1 = 3.3000 ₥. Zähler „Kapseln gestartet“ 0 → 1"
+ },
+ {
+  "id": "D-04",
+  "area": "3.3",
+  "status": "HINWEIS",
+  "detail": "Rundung: Der Kontostand wird nie gerundet (G.money = 3.3000000000000003). Die Anzeige „+3 ₥“ für 3,3 ₥ entsteht nur durch U.big (Math.floor ohne Nachkommastellen); kein Verlust, der Rest bleibt im Konto."
+ },
+ {
+  "id": "D-05",
+  "area": "3.3",
+  "status": "OK",
+  "detail": "Manueller Start mit 0,3 kg wird abgelehnt (minManualKg 0,5): {\"ok\":false,\"why\":\"Kapsel nicht bereit oder leer.\"}; die 0,3 kg bleiben im Depot (Kapsel 0.30 kg, Puffer 0.00 kg)"
+ },
+ {
+  "id": "D-06",
+  "area": "3.3",
+  "status": "OK",
+  "detail": "Automatischer Start: 0.30 + 250 kg geliefert → 1 Start mit 200 kg (+300.00 ₥, Soll 300.00), Rest 50.30 kg bleibt (Kapsel 0.00, Puffer 50.30)",
+  "data": {
+   "cap": 0,
+   "store": 50.30000000000012,
+   "launched": 1,
+   "money": 300
+  }
+ },
+ {
+  "id": "D-07",
+  "area": "3.3",
+  "status": "OK",
+  "detail": "Abladen während der Abklingzeit (cool 4.80 s): Ware landet im Puffer und wird nach der Abklingzeit in die Kapsel umgefüllt"
+ },
+ {
+  "id": "D-08",
+  "area": "3.3",
+  "status": "OK",
+  "detail": "Preisliste zeigt Mondstaub 1.50 ₥/kg (= Wert 1,00 × Nachfrage 1,5 × Multiplikator 1,00). Verkauf 10 kg Mondstaub + 4 kg Regolith + 1 kg Meteorstaub: +24.0000 ₥, unabhängige Referenz 24.0000 ₥. Der Nachfragebonus ist in der Preisliste schon eingerechnet und wird beim Verkauf genau einmal angewendet; „Einnahmen-Multiplikator ×1,00“ enthält ihn nicht."
+ },
+ {
+  "id": "D-09",
+  "area": "4.1",
+  "status": "OK",
+  "detail": "100.000 Verkäufe à 0,0123 kg: Abweichung zur Referenz 1.837e-9 ₥ (Gleitkomma, kein systematischer Verlust)"
+ },
+ {
+  "id": "D-10",
+  "area": "3.3",
+  "status": "OK",
+  "detail": "Erdnachfrage-Restzeit läuft bei offenem Terminal weiter (10 s Spielzeit vergangen, Restzeit 1190.00 s) und ist nach Speichern/Laden identisch (1190.00 s). Rundlauf-Abweichungen: keine",
+  "data": []
+ },
+ {
+  "id": "D-11",
+  "area": "4.1",
+  "status": "ABWEICHUNG",
+  "detail": "Die Wahl der nächsten Nachfrage-Staubart nutzt Math.random() (Economy.updateDemand, Zeile 2848). Ebenso Meteor-, Sonnenwind- und Inspektionszeitpunkte, Meteorpositionen, Auftragswahl und die Startposition gekaufter Roboter. Math.random wird außerdem von Musik und Klängen verbraucht – Spielverläufe sind dadurch nicht reproduzierbar (für die Tests ersetzt das Harness Math.random durch einen festen Seed)."
+ },
+ {
+  "id": "D-12",
+  "area": "3.3",
+  "status": "OK",
+  "detail": "Außenposten führt eigenen Puffer und eigene Kapsel (Hauptdepot bleibt leer: true). Abriss mit 50 kg in der Kapsel erstattet Baupreis + Ware zum Grundwert ohne Nachfrage/Multiplikator: +10050.00 ₥ (Referenz 10050.00)"
+ },
+ {
+  "id": "E-01",
+  "area": "3.4",
+  "status": "OK",
+  "detail": "Upgrade-Kosten Stufe 0–15 aller 6 Linien gegen Referenz round(base × 1,65^Stufe): Abweichungen keine, nicht steigend keine"
+ },
+ {
+  "id": "E-02",
+  "area": "3.4",
+  "status": "OK",
+  "detail": "Kauf über Stufe 15: {\"ok\":false,\"why\":\"Maximum erreicht\"}"
+ },
+ {
+  "id": "E-03",
+  "area": "3.4",
+  "status": "OK",
+  "detail": "Genau passender Betrag (60 ₥) kauft, zweiter Klick im selben Frame scheitert (Stufe 1, Konto 0)"
+ },
+ {
+  "id": "E-04",
+  "area": "3.4",
+  "status": "OK",
+  "detail": "Ein Cent zu wenig (98.99 von 99): {\"ok\":false,\"why\":\"Es fehlen 0 ₥\"}"
+ },
+ {
+  "id": "E-05",
+  "area": "4.1",
+  "status": "ABWEICHUNG",
+  "detail": "Economy.spend erlaubt Käufe bis 1e-6 ₥ unter dem Preis (Toleranz gegen Gleitkomma). Folge: Konto kann minimal negativ werden: -4.999999987376214e-7"
+ },
+ {
+  "id": "E-06",
+  "area": "3.4",
+  "status": "ABWEICHUNG",
+  "detail": "Konto 16,7 ₥, Preis 250 ₥: Text „Es fehlen 233 ₥“. Tatsächlich fehlen 233,3 ₥; U.big rundet ab, der Text nennt also bei Nachkommastellen 1 ₥ zu wenig (bei ganzzahligem Konto wie im Video, 250 − 17 = 233, stimmt er)."
+ },
+ {
+  "id": "E-07",
+  "area": "3.4",
+  "status": "OK",
+  "detail": "Werkzeug zweimal „kaufen“ bucht nur einmal ab (zweiter Aufruf rüstet nur aus); Mopp ohne Lizenz 1: {\"ok\":false,\"why\":\"Lizenz 1 nötig\"}"
+ },
+ {
+  "id": "E-08",
+  "area": "3.4",
+  "status": "OK",
+  "detail": "„Im Besitz“/„Ausgerüstet“ nach Speichern/Laden: ausgerüstet handbuerste, Besitz zahnbuerste,besen,handbuerste; Abweichungen keine"
+ },
+ {
+  "id": "E-09",
+  "area": "3.4",
+  "status": "HINWEIS",
+  "detail": "Einnahmen/Min. = Summe der letzten 60 s × 60 / min(60, max(10, Spielzeit)). 15 ₥ Verkauf bei t≈0: Anzeige 90.0 ₥/Min (hochgerechnet auf 10 s), nach 30 s 30.0, nach 61 s 0.0. Sprünge wie „30 → 20 → 23 → 25“ entstehen, weil Kapselverkäufe einzelne große Beträge sind, die nach 60 s aus dem Fenster fallen."
+ },
+ {
+  "id": "E-10",
+  "area": "3.4",
+  "status": "HINWEIS",
+  "detail": "Nach Speichern/Laden beginnt das Einnahmen-Fenster leer (vorher 15.0, danach 0.0 ₥/Min.); kein Fehler, aber die Anzeige fällt beim Laden auf 0."
+ },
+ {
+  "id": "E-11",
+  "area": "3.4",
+  "status": "FEHLER",
+  "detail": "Antenne bauen (1.500 ₥) und sofort abreißen: Statistik „Verdient“ steigt um 1500 ₥, Einnahmen/Min. von 0 auf 1500 ₥. Erstattungen laufen über Economy.grant und zählen als Einnahmen (Grundlage für Aufträge „Haushaltsziel“, Auftragsbelohnungen und Inspektionsprämien)."
+ },
+ {
+  "id": "E-12",
+  "area": "3.4",
+  "status": "OK",
+  "detail": "HUD-Ziel nutzt dieselben Preisfunktionen wie der Kauf (Economy.toolPrice/upPrice): „Behälter 1“ 14 / 40 ₥, Balken 35.0 %; nächstes Ziel Behälter 1 40 ₥"
+ },
+ {
+  "id": "E-13",
+  "area": "3.9",
+  "status": "OK",
+  "detail": "Lizenz-Ziel kombiniert beide Bedingungen: Text „0 / 2 Sektoren · 2,0 Tsd. ₥“, Balken = 50 % Sektoren + 50 % Geld (0.4 %), „kaufbar“ nur wenn beide erfüllt (ok=false); Geld wird erst beim Kauf abgezogen (Economy.buyLicence → spend)."
+ }
+]
