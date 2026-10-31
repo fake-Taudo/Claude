@@ -51,7 +51,7 @@
   "id": "G-09",
   "area": "4.4",
   "status": "FEHLER",
-  "detail": "Aufträge „Funkausbau (2 Antennen)“, „Haushaltsziel 15.000 ₥“ und „Personalaufstockung“ erfüllt allein durch Bauen + Abreißen bzw. Kaufen + Verkaufen (je 100 % Erstattung): 3 Aufträge erledigt, +3 FP, Netto-Geld +300 ₥. Ursache: builtBy-Zähler zählen nur hoch, und Economy.grant(…, 'refund') erhöht stats.moneyEarned. Wiederholbar für jeden neuen Auftrag dieser Arten (Forschungspunkte ohne Gegenleistung)."
+  "detail": "Aufträge „Funkausbau (2 Antennen)“, „Haushaltsziel 15.000 ₥“ und „Personalaufstockung“ erfüllt allein durch Bauen + Abreißen bzw. Kaufen + Verkaufen (je 100 % Erstattung): 2 Aufträge erledigt, +2 FP, Netto-Geld +200 ₥. Ursache: builtBy-Zähler zählen nur hoch, und Economy.grant(…, 'refund') erhöht stats.moneyEarned. Wiederholbar für jeden neuen Auftrag dieser Arten (Forschungspunkte ohne Gegenleistung)."
  },
  {
   "id": "G-10",

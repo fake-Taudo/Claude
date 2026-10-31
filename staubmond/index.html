@@ -2825,7 +2825,8 @@ const Economy = {
   },
   grant(amount, reason) {
     if (amount <= 0) return;
-    G.money += amount; G.stats.moneyEarned += amount; this.track(amount);
+    G.money += amount;
+    if (reason !== 'refund') { G.stats.moneyEarned += amount; this.track(amount); }   // Erstattungen sind keine Einnahmen
     Bus.emit('grant', amount, reason);
   },
   spend(n) { if (G.money + 1e-6 < n) return false; G.money -= n; Bus.emit('spend', n); return true; },
@@ -3333,7 +3334,7 @@ const Buildings = {
       const s = a.snap;
       if (!Economy.spend(a.refund)) { UI.toast('Zu wenig Geld für Rückgängig.', 'warn'); this.undo.push(a); return; }
       const v = this.validate(s.type, s.x, s.y, s.rot);
-      if (!v.ok) { Economy.grant(a.refund); UI.toast('Rückgängig nicht möglich: ' + v.why, 'warn'); return; }
+      if (!v.ok) { Economy.grant(a.refund, 'refund'); UI.toast('Rückgängig nicht möglich: ' + v.why, 'warn'); return; }
       const b = this.newB(s.type, s.x, s.y, s.rot, s.id); b.name = s.name;
       if (s.type === 'bridge') b.cells = this.bridgeCellsFor(s.x, s.y, s.rot, this.bridgeSpan(s.x, s.y, s.rot));
       this.register(b); this.relink();
@@ -9466,9 +9467,19 @@ const Save = {
     if (this.soonT > 0) { this.soonT -= dt; if (this.soonT <= 0) { this.soonT = -1; this.saveNow(); } }
     if (this.timer >= CONFIG.save.autosave) { this.timer = 0; this.saveNow(); }
   },
-  async saveNow(full) {
-    if (!G || this.saving || Game.state !== 'play' || Net.isClient()) return;
+  // Speicherauftrag; läuft schon einer, wird dieser nach dessen Ende nachgeholt (z. B. pagehide während eines Autosaves)
+  saveNow(full) {
+    if (!G || Game.state !== 'play' || Net.isClient()) return Promise.resolve();
+    if (this.saving) { this.again = Math.max(this.again || 0, full ? 2 : 1); return this.cur; }
     this.saving = true;
+    this.cur = (async () => {
+      do { const f = full || this.again === 2; this.again = 0; full = false; await this.saveOnce(f); } while (this.again && G);
+      this.saving = false;
+    })();
+    return this.cur;
+  },
+  idle() { return this.saving ? this.cur : Promise.resolve(); },
+  async saveOnce(full) {
     try {
       const json = this.coreJSON(), slot = G.slot;
       const rec = { json, sum: U.fnv(json), v: CONFIG.saveSchema, t: Date.now(), preview: this.preview() };
@@ -9479,13 +9490,12 @@ const Save = {
       const list = full ? World.chunks.filter(Boolean).map(c => c.ci) : [...World.dirtySave];
       for (let i = 0; i < list.length; i += 64) {
         const part = list.slice(i, i + 64), ents = [];
-        for (const ci of part) { const ch = World.chunks[ci]; if (ch) ents.push(['s' + slot + ':' + ci, await this.encodeChunk(ch)]); World.dirtySave.delete(ci); }
+        for (const ci of part) { const ch = World.chunks[ci]; World.dirtySave.delete(ci); if (ch) ents.push(['s' + slot + ':' + ci, await this.encodeChunk(ch)]); }   // vor dem await: spätere Änderungen markieren den Chunk erneut
         if (ents.length) await this.putMany('chunks', ents);
         await new Promise(r => setTimeout(r, 0));
       }
       this.lastSlot = slot;
     } catch (e) { console.warn('Speichern fehlgeschlagen', e); UI.toast('Speichern fehlgeschlagen – bitte exportieren.', 'warn'); }
-    this.saving = false;
   },
   validate(rec) {
     if (!rec || typeof rec.json !== 'string' || U.fnv(rec.json) !== rec.sum) return null;
@@ -9525,6 +9535,7 @@ const Save = {
     return out;
   },
   async deleteSlot(slot) {
+    await this.idle();   // ein laufendes Speichern würde sonst nach dem Löschen wieder Chunks schreiben
     const keys = ['s' + slot]; for (let i = 0; i < CONFIG.save.backups; i++) keys.push('s' + slot + 'b' + i);
     await this.delKeys('core', keys);
     const ch = await this.allChunks(slot); await this.delKeys('chunks', ch.map(c => c[0]));
@@ -10160,6 +10171,8 @@ const Game = {
   showWait(text, frac) { const w = document.getElementById('hud-wait'); if (text === null) { w.classList.add('hidden'); return; } w.classList.remove('hidden'); document.getElementById('hud').classList.remove('hidden'); w.innerHTML = '<div>' + U.esc(text) + '</div><div class="bar"><i style="width:' + Math.round((frac || 0) * 100) + '%"></i></div>'; },
   async newGame(slot, seed, mission) {
     this.showWait('Der Mond wird vermessen …', 0.2);
+    // Platz vollständig leeren: Chunk-Datensätze eines alten Spiels würden sonst beim nächsten Laden übernommen
+    try { await Save.deleteSlot(slot); } catch (e) { console.warn('Platz leeren fehlgeschlagen', e); }
     await new Promise(r => setTimeout(r, 30));
     G = newState(seed || CONFIG.world.seed, mission || 0, slot);
     this.startWorld([]);
@@ -10168,6 +10181,7 @@ const Game = {
   },
   async loadGame(slot) {
     this.showWait('Spielstand wird geladen …', 0.2);
+    await Save.idle();   // nicht lesen, während noch geschrieben wird
     let data;
     try { data = await Save.loadSlot(slot); } catch (e) { data = null; }
     if (!data) { this.showWait(null); UI.toast('Spielstand konnte nicht geladen werden.', 'warn'); return; }

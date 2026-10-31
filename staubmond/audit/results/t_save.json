@@ -9,20 +9,20 @@
  {
   "id": "S-02",
   "area": "3.10",
-  "status": "FEHLER",
-  "detail": "Spiel A putzt 467 Zellen inkl. Fundstück „Leicht verstaubter Kugelschreiber“ (gefunden true) und speichert. „Neu“ auf demselben Platz → Spiel B (0 Zellen) speichert und wird geladen: Die Chunk-Datensätze von A bleiben in IndexedDB liegen (Game.newGame löscht den Platz nicht, Save.saveNow schreibt nur Chunks von B) und werden in B geladen. Ergebnis: Fundstückzelle in B sauber true, in B gefunden false (Fundstück ist damit für immer verloren), stats.cells 0; Neuzählung: Mondglanz 0.00003769679097847365 ≠ Neuzählung 0.000020784597036833173 | stats.cells 0 ≠ Neuzählung 467"
+  "status": "OK",
+  "detail": "Spiel A putzt 467 Zellen inkl. Fundstück „Leicht verstaubter Kugelschreiber“ (gefunden true) und speichert. „Neu“ auf demselben Platz → Spiel B (0 Zellen) speichert und wird geladen: Die Chunk-Datensätze von A bleiben in IndexedDB liegen (Game.newGame löscht den Platz nicht, Save.saveNow schreibt nur Chunks von B) und werden in B geladen. Ergebnis: Fundstückzelle in B sauber false, in B gefunden false (Fundstück ist damit für immer verloren), stats.cells 0; Neuzählung: ok"
  },
  {
   "id": "S-03",
   "area": "3.10",
-  "status": "FEHLER",
-  "detail": "Während Save.saveNow einen Chunk komprimiert (await gz), wird im selben Chunk geputzt (4.15 kg). Danach ist der Chunk nicht mehr als „geändert“ markiert (dirtySave false), weil saveNow ihn erst nach dem await aus der Liste nimmt. Nach dem Laden fehlen 36 Zellenänderungen (wieder staubig), obwohl Kern-Statistik und Spielerbehälter sie enthalten – Staub doppelt erntbar, Sektorzählung inkonsistent. Tritt auf, wenn ein Autosave (alle 30 s) einen Chunk erwischt, in dem gerade geputzt wird und der danach nicht mehr verändert wird."
+  "status": "OK",
+  "detail": "Während Save.saveNow einen Chunk komprimiert (await gz), wird im selben Chunk geputzt (4.15 kg). Danach ist der Chunk nicht mehr als „geändert“ markiert (dirtySave true), weil saveNow ihn erst nach dem await aus der Liste nimmt. Nach dem Laden fehlen 36 Zellenänderungen (wieder staubig), obwohl Kern-Statistik und Spielerbehälter sie enthalten – Staub doppelt erntbar, Sektorzählung inkonsistent. Tritt auf, wenn ein Autosave (alle 30 s) einen Chunk erwischt, in dem gerade geputzt wird und der danach nicht mehr verändert wird."
  },
  {
   "id": "S-03b",
   "area": "3.10",
-  "status": "FEHLER",
-  "detail": "Speicherauftrag während eines laufenden Speicherns (Autosave läuft, Spieler schließt den Tab → pagehide → Save.saveNow): wird wegen „if (this.saving) return“ stillschweigend verworfen, nicht nachgeholt. Gespeichertes Geld 35 statt 777777 – alle Änderungen seit Beginn des laufenden Speicherns gehen beim Schließen verloren."
+  "status": "OK",
+  "detail": "Speicherauftrag während eines laufenden Speicherns (Autosave läuft, Spieler schließt den Tab → pagehide → Save.saveNow): wird wegen „if (this.saving) return“ stillschweigend verworfen, nicht nachgeholt. Gespeichertes Geld 777777 statt 777777 – alle Änderungen seit Beginn des laufenden Speicherns gehen beim Schließen verloren."
  },
  {
   "id": "S-04",
@@ -34,19 +34,19 @@
   "id": "S-05",
   "area": "3.10",
   "status": "OK",
-  "detail": "Backup-Rotation (12 Speichervorgänge): s0, s0, s0+s0b0, s0, s0, s0, s0+s0b4, s0, s0, s0, s0+s0b3, s0. Jeder 4. Autosave schreibt zusätzlich ein Backup (5 Plätze, älteste werden überschrieben); Backups sind Kopien des gültigen Speicherstands und können ein gutes Backup nicht durch einen beschädigten Stand verdrängen (beschädigte Daten entstehen nur außerhalb)."
+  "detail": "Backup-Rotation (12 Speichervorgänge): s0, s0+s0b0, s0, s0, s0, s0+s0b4, s0, s0, s0, s0+s0b3, s0, s0. Jeder 4. Autosave schreibt zusätzlich ein Backup (5 Plätze, älteste werden überschrieben); Backups sind Kopien des gültigen Speicherstands und können ein gutes Backup nicht durch einen beschädigten Stand verdrängen (beschädigte Daten entstehen nur außerhalb)."
  },
  {
   "id": "S-06",
   "area": "3.10",
   "status": "FEHLER",
-  "detail": "Beschädigter Hauptdatensatz (Backup vorhanden): Prüfsumme falsch: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | Pflichtfeld fehlt: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | abgeschnitten: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | leeres Objekt: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | falscher Typ (Geld als Text): Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | riesige Zahl (1e999): Geld Infinity | Lizenz 99: Geld 11. Save.validate prüft nur Prüfsumme, Typ von money/t und das Vorhandensein von player/stats/seed.",
+  "detail": "Beschädigter Hauptdatensatz (Backup vorhanden): Prüfsumme falsch: Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | Pflichtfeld fehlt: Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | abgeschnitten: Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | leeres Objekt: Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | falscher Typ (Geld als Text): Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “ | riesige Zahl (1e999): Geld Infinity | Lizenz 99: Geld 11. Save.validate prüft nur Prüfsumme, Typ von money/t und das Vorhandensein von player/stats/seed.",
   "data": [
-   "Prüfsumme falsch: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
-   "Pflichtfeld fehlt: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
-   "abgeschnitten: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
-   "leeres Objekt: Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
-   "falscher Typ (Geld als Text): Geld 10, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "Prüfsumme falsch: Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "Pflichtfeld fehlt: Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "abgeschnitten: Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "leeres Objekt: Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
+   "falscher Typ (Geld als Text): Geld 9, Meldung „Hinweis: Der letzte Spielstand war beschädigt – das jüngste “",
    "riesige Zahl (1e999): Geld Infinity",
    "Lizenz 99: Geld 11"
   ]
@@ -111,7 +111,7 @@
   "id": "S-12",
   "area": "3.10",
   "status": "OK",
-  "detail": "Migration: alte Spielstände erzeugt und in der geprüften Fassung geladen: Phase 2 (30fe96a): vorher {\"money\":500035,\"cells\":2604,\"tools\":2,\"veh\":0} → nachher {\"money\":500095,\"cells\":2604,\"tools\":2,\"veh\":0,\"v\":2,\"builtBy\":true,\"bad\":[]} || index_audit_original.html: vorher {\"money\":498795,\"cells\":2604,\"tools\":2,\"veh\":1} → nachher {\"money\":498795,\"cells\":2604,\"tools\":2,\"veh\":1,\"v\":2,\"builtBy\":true,\"bad\":[]}. Fehlende Felder werden aus einem frischen Zustand ergänzt (Save.migrate)."
+  "detail": "Migration: alte Spielstände erzeugt und in der geprüften Fassung geladen: Phase 2 (30fe96a): vorher {\"money\":500035,\"cells\":2604,\"tools\":2,\"veh\":0} → nachher {\"money\":500035,\"cells\":2604,\"tools\":2,\"veh\":0,\"v\":2,\"builtBy\":true,\"bad\":[]} || index_audit_original.html: vorher {\"money\":498820,\"cells\":2604,\"tools\":2,\"veh\":1} → nachher {\"money\":498820,\"cells\":2604,\"tools\":2,\"veh\":1,\"v\":2,\"builtBy\":true,\"bad\":[]}. Fehlende Felder werden aus einem frischen Zustand ergänzt (Save.migrate)."
  },
  {
   "id": "S-13",

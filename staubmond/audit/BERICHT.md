@@ -4,7 +4,7 @@ Geprüfte Fassung: `index_audit_original.html` (= `index.html` vor Phase B, Comm
 
 ## 1. Zusammenfassung
 
-**Funde:** 1 Kritisch · 7 Hoch · 9 Mittel · 13 Niedrig · dazu Abweichungen und Hinweise (Abschnitte 5–7).
+**Funde:** 1 Kritisch · 7 Hoch · 9 Mittel · 13 Niedrig · dazu Abweichungen und Hinweise (Abschnitte 5–7). **Phase B:** F-01 bis F-04 behoben (je mit Regressionstest, `audit/AENDERUNGEN.md`); F-05 bis F-08 brauchen eine Entscheidung.
 
 **Die fünf wichtigsten Probleme**
 1. **F-01 (Kritisch):** „Neues Spiel“ auf einem belegten Platz übernimmt nach dem nächsten Laden die geputzte Welt des alten Spiels; Fundstücke dort sind für immer verloren, Statistik und Sektoren stimmen nicht.
@@ -93,7 +93,7 @@ Format: Beschreibung · Fundstelle · Reproduktion (Testdatei, Prüf-ID; ausfüh
 - Reproduktion: `t_save.js` S-02. Erwartet: neues Spiel mit unberührter Welt. Tatsächlich: 467 Zellen des alten Spiels sind sauber, das Fundstück dort ist sauber, aber nie gefunden (für immer verloren), `stats.cells 0 ≠ Neuzählung 467`, Mondglanz falsch.
 - Auswirkung: Wer einen Platz überschreibt, bekommt nach dem ersten Neuladen eine teilweise geputzte Welt mit verlorenen Fundstücken und falschen Sektorzahlen (gleicher Seed, also passt die alte Welt genau).
 - Vorschlag: In `Game.newGame` vor dem Anlegen `await Save.deleteSlot(slot)` aufrufen. Risiko gering (dasselbe tut `newMission` schon).
-- Status: STATUS_F01
+- Status: **behoben** in Phase B (Test RB-01; Details `audit/AENDERUNGEN.md`)
 
 ### Hoch
 
@@ -103,7 +103,7 @@ Format: Beschreibung · Fundstelle · Reproduktion (Testdatei, Prüf-ID; ausfüh
 - Reproduktion: `t_save.js` S-03 (Komprimierung künstlich verzögert, währenddessen Putzen im selben Chunk). Erwartet: Chunk bleibt „geändert“. Tatsächlich: `dirtySave false`, nach dem Laden 36 Zellen wieder staubig.
 - Auswirkung: Wenn ein Autosave (alle 30 s) einen Chunk erwischt, in dem gerade geputzt wird, und der Chunk danach nicht mehr berührt wird (häufig bei Robotern), fehlen diese Zellen nach dem Neuladen. Staub ist doppelt erntbar, Sektorzählung passt nicht mehr zur Welt.
 - Vorschlag: `World.dirtySave.delete(ci)` vor `encodeChunk` ziehen (der Schnappschuss `rle(dust)` passiert synchron vor dem ersten `await`). Eine Zeile, Risiko gering.
-- Status: STATUS_F02
+- Status: **behoben** in Phase B (Test RB-02)
 
 **F-03 · Hoch · Speichern (3.10, 4.3)**
 - Beschreibung: Läuft bereits ein Speichervorgang, kehrt `saveNow` sofort zurück (`if (this.saving) return`), der Auftrag wird nicht nachgeholt. `Game.loadGame` liest außerdem, auch wenn noch geschrieben wird. Richtig: Auftrag nachholen; Laden wartet auf laufendes Speichern.
@@ -111,7 +111,7 @@ Format: Beschreibung · Fundstelle · Reproduktion (Testdatei, Prüf-ID; ausfüh
 - Reproduktion: `t_save.js` S-03b (gespeichert 35 ₥ statt 777.777 ₥). Fuzzing (Probelauf ohne Warten auf laufende Speicherungen): Neuzählungsfehler „Sektor 300 sauber 4581 ≠ 4356“ (minimal 10 Aktionen); `t_regress.js` RB-03: Laden während eines Speicherns → „Chunk 4849 sauber 464 ≠ 211“.
 - Auswirkung: Schließt man den Tab oder geht ins Hauptmenü, während ein Autosave läuft, gehen die Änderungen seit dessen Beginn verloren. „Weiterspielen“ direkt danach kann einen Stand mit neuem Kern und teils alten Chunks laden.
 - Vorschlag: In `saveNow` bei laufendem Speichern ein Nachhol-Flag setzen und nach Abschluss erneut speichern; in `loadGame` vor dem Lesen auf `!Save.saving` warten. Risiko gering.
-- Status: STATUS_F03
+- Status: **behoben** in Phase B (Test RB-03; Laden und Löschen warten zusätzlich auf laufendes Speichern)
 
 **F-04 · Hoch · Ökonomie/Aufträge (3.4, 3.9, 4.4)**
 - Beschreibung: Erstattungen (Abriss, Rückgängig, Bandabriss, Roboterverkauf) laufen über `Economy.grant` und erhöhen `stats.moneyEarned` und das Einnahmen-Fenster. Richtig: Erstattungen sind keine Einnahmen (die Geld-Animation im HUD schließt sie bereits aus, Zeile 7547).
@@ -119,7 +119,7 @@ Format: Beschreibung · Fundstelle · Reproduktion (Testdatei, Prüf-ID; ausfüh
 - Reproduktion: `t_core.js` E-11 (Antenne bauen + abreißen: „Verdient“ +1.500 ₥, Einnahmen/Min. 0 → 1.500); `t_progress.js` G-09.
 - Auswirkung: Aufträge „Haushaltsziel“ lassen sich durch Bauen und Abreißen eines teuren Gebäudes sofort erfüllen (Geld + 1–2 FP je Auftrag). Außerdem blähen Erstattungen die Einnahmen/Min. auf, aus der neue Auftragsbelohnungen und Inspektionsprämien berechnet werden.
 - Vorschlag: In `Economy.grant` für den Grund `refund` weder `moneyEarned` noch `track` erhöhen. Risiko gering; Wirkung nur auf Statistik, Auftragsgrößen und HUD-Rate.
-- Status: STATUS_F04
+- Status: **behoben** in Phase B (Test RB-04)
 
 **F-05 · Hoch · Aufträge (3.9, 4.4)**
 - Beschreibung: `G.stats.builtBy` (Grundlage der Aufträge „Funkausbau“, „Kurze Wege“, „Förderband-Offensive“, „Personalaufstockung“) zählt nur Bauten/Käufe und nie Abrisse/Verkäufe; alles wird zu 100 % erstattet.
@@ -266,7 +266,8 @@ Jede neue Verletzungsart wurde durch Wiederabspielen auf eine minimale Folge red
 - Systemkarte: `audit/SYSTEMKARTE.md`
 - Harness: `audit/test-api.js` (Test-Interface, nur in der Testkopie), `audit/lib.js`, `audit/run.js`; Testkopie wird bei jedem Lauf als `audit/index_audit_instrumented.html` erzeugt; Referenz unverändert: `index_audit_original.html`.
 - Testmodule: `audit/tests/t_world.js` (3.1), `t_core.js` (3.2–3.4), `t_build.js` (3.6–3.7), `t_robots.js` (3.8), `t_progress.js` (3.9), `t_save.js` (3.10, 4.5), `t_misc.js` (3.5, 3.11, 3.12, 4.1–4.3, 4.6), `t_fuzz.js` (2.5), `t_sim.js` (2.4).
-- Alle Tests (Standard, ≈ 4 Min.): `node audit/run.js`
+- Alle Tests inklusive Regressionstests (Standard, ≈ 2–4 Min.): `node audit/run.js`
+- Phase-B-Regressionstests allein: `node audit/run.js t_regress`
 - Langlauf (5 × 10.000 Fuzz-Aktionen, 5 × 20 Spielstunden): `LONG=1 SUFFIX=_long node audit/run.js t_fuzz t_sim`
 - Einzelmodul: `node audit/run.js t_save`
 - Determinismus: Math.random wird je Seite mit festem Seed ersetzt, `World.rnd` je Test zurückgesetzt; die Hauptschleife ist eingefroren, Logikticks laufen nur über `__test.ticks`.

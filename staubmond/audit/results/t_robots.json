@@ -83,7 +83,7 @@
   "id": "R-10",
   "area": "3.8",
   "status": "HINWEIS",
-  "detail": "Offline 2 h (Effizienz 50 % → 1 h simuliert in 1-s-Schritten, Leistung ×1,15): 61413 Zellen, +8652 ₥. (Vergleich mit gleicher Ausgangslage siehe R-10b). Erlös offline = kg × gleitender Durchschnittswert (G.avgVal) statt echter Verkauf: Aufträge „Lieferauftrag“ und Statistik „Verkauft“ zählen Offline-Ware nicht."
+  "detail": "Offline 2 h (Effizienz 50 % → 1 h simuliert in 1-s-Schritten, Leistung ×1,15): 59760 Zellen, +8225 ₥. (Vergleich mit gleicher Ausgangslage siehe R-10b). Erlös offline = kg × gleitender Durchschnittswert (G.avgVal) statt echter Verkauf: Aufträge „Lieferauftrag“ und Statistik „Verkauft“ zählen Offline-Ware nicht."
  },
  {
   "id": "R-10b",
@@ -105,7 +105,7 @@
   "id": "R-11",
   "area": "3.8",
   "status": "OK",
-  "detail": "Zweimal laden ohne Speichern dazwischen (Neuladen kurz nach der Offline-Zusammenfassung): Offline wird zwar erneut berechnet (1. Laden +8224 ₥, 2. Laden +9233 ₥), aber jeweils auf den unveränderten gespeicherten Stand (99915000 ₥) – Endstand 99924303 ₥ = Stand + nur ein Offline-Gewinn (Rest 70.00 ₥ = Sektor-/Fundprämien während der Offline-Simulation). Keine Doppelgutschrift."
+  "detail": "Zweimal laden ohne Speichern dazwischen (Neuladen kurz nach der Offline-Zusammenfassung): Offline wird zwar erneut berechnet (1. Laden +8399 ₥, 2. Laden +8402 ₥), aber jeweils auf den unveränderten gespeicherten Stand (99915000 ₥) – Endstand 99924372 ₥ = Stand + nur ein Offline-Gewinn (Rest 970.00 ₥ = Sektor-/Fundprämien während der Offline-Simulation). Keine Doppelgutschrift."
  },
  {
   "id": "R-12",

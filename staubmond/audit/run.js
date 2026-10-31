@@ -3,7 +3,7 @@
 //                                   LONG=1 SUFFIX=_long node audit/run.js t_fuzz t_sim  (Langlauf: 5 × 10.000 Aktionen, 5 × 20 Std.)
 const L = require('./lib');
 const fs = require('fs'), path = require('path');
-const DEFAULT = ['t_world', 't_core', 't_build', 't_robots', 't_progress', 't_save', 't_misc', 't_fuzz', 't_sim'];
+const DEFAULT = ['t_world', 't_core', 't_build', 't_robots', 't_progress', 't_save', 't_misc', 't_fuzz', 't_sim', 't_regress'];
 
 (async () => {
   const mods = process.argv.slice(2).length ? process.argv.slice(2) : DEFAULT;

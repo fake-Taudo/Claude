@@ -205,8 +205,8 @@
  {
   "id": "E-11",
   "area": "3.4",
-  "status": "FEHLER",
-  "detail": "Antenne bauen (1.500 ₥) und sofort abreißen: Statistik „Verdient“ steigt um 1500 ₥, Einnahmen/Min. von 0 auf 1500 ₥. Erstattungen laufen über Economy.grant und zählen als Einnahmen (Grundlage für Aufträge „Haushaltsziel“, Auftragsbelohnungen und Inspektionsprämien)."
+  "status": "OK",
+  "detail": "Antenne bauen (1.500 ₥) und sofort abreißen: Statistik „Verdient“ steigt um 0 ₥, Einnahmen/Min. von 0 auf 0 ₥. Erstattungen laufen über Economy.grant und zählen als Einnahmen (Grundlage für Aufträge „Haushaltsziel“, Auftragsbelohnungen und Inspektionsprämien)."
  },
  {
   "id": "E-12",

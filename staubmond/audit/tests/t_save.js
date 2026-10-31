@@ -120,6 +120,7 @@ module.exports = async function (env) {
     await fresh();
     {
       T.cleanRect(st.x - 40, st.y + 20, 30, 4); await Save.saveNow(true);   // Backup mit Stand 1
+      Save.count = 1;                                                       // die nächsten beiden Speicherungen schreiben kein Backup
       T.cleanRect(st.x - 40, st.y + 30, 30, 4); await Save.saveNow(false); await Save.saveNow(false);   // neuer Stand, kein neues Backup
       const r = await Save.get('core', 's0'); await Save.putMany('core', [['s0', Object.assign({}, r, { sum: 'x' })]]);   // Hauptdatensatz kaputt
       await Game.loadGame(0); Game.loop = function () { }; Game.paused = true;
@@ -232,8 +233,8 @@ module.exports = async function (env) {
         Loader && Loader.skip && Loader.skip(); __test.install();
         await Game.loadGame(0); for (let i = 0; i < 200 && Game.state !== 'play'; i++) await new Promise(r => setTimeout(r, 20)); Game.loop = function () { }; Game.paused = true;
         for (let i = 0; i < 300; i++) World.processPending(50);
-        const bad = []; __test.checkRecount((k, m) => bad.push(m)); __test.ticks(120, 0);
-        return { money: G.money, cells: G.stats.cells, tools: Object.keys(G.tools).length, veh: Vehicles.list.length, v: G.v, builtBy: !!G.stats.builtBy, bad };
+        const bad = []; __test.checkRecount((k, m) => bad.push(m)); const money = G.money; __test.ticks(120, 0);
+        return { money, cells: G.stats.cells, tools: Object.keys(G.tools).length, veh: Vehicles.list.length, v: G.v, builtBy: !!G.stats.builtBy, bad };
       });
       res.push(label + ': vorher ' + JSON.stringify(a) + ' → nachher ' + JSON.stringify(b) + (errs.length ? ' Fehler: ' + errs.slice(0, 2).join(' | ') : ''));
       await ctx.close();

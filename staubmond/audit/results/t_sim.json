@@ -3,7 +3,7 @@
   "id": "SIM-101-1h",
   "area": "2.4",
   "status": "OK",
-  "detail": "Seed 101, 1 Std. Spielzeit in 3 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":1519,\"earned\":9917,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":7,\"glanz\":0.0383,\"chunks\":25,\"decalChunks\":9,\"baseCache\":97,\"heapMB\":14} | 1 h: {\"money\":22660,\"earned\":152651,\"licence\":0,\"sectors\":1,\"robots\":0,\"buildings\":1,\"research\":12,\"glanz\":0.9187,\"chunks\":135,\"decalChunks\":45,\"baseCache\":225,\"heapMB\":14}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 5 Min. (Ziel 5), Kehrwagen 7 Min. (Ziel 15), Erster Sektor 53 Min. (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 29",
+  "detail": "Seed 101, 1 Std. Spielzeit in 2 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":1519,\"earned\":9917,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":7,\"glanz\":0.0383,\"chunks\":25,\"decalChunks\":9,\"baseCache\":97,\"heapMB\":14} | 1 h: {\"money\":22660,\"earned\":152651,\"licence\":0,\"sectors\":1,\"robots\":0,\"buildings\":1,\"research\":12,\"glanz\":0.9187,\"chunks\":135,\"decalChunks\":45,\"baseCache\":225,\"heapMB\":14}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 5 Min. (Ziel 5), Kehrwagen 7 Min. (Ziel 15), Erster Sektor 53 Min. (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 29",
   "data": [
    {
     "at": 600,
@@ -60,7 +60,7 @@
   "id": "SIM-102-10m",
   "area": "2.4",
   "status": "OK",
-  "detail": "Seed 102, 10 Min. Spielzeit in 1 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":4504,\"earned\":38225,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":10,\"glanz\":0.1175,\"chunks\":66,\"decalChunks\":24,\"baseCache\":179,\"heapMB\":14}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 2 Min. (Ziel 5), Kehrwagen 3 Min. (Ziel 15), Erster Sektor – (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 2",
+  "detail": "Seed 102, 10 Min. Spielzeit in 1 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":4504,\"earned\":38225,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":10,\"glanz\":0.1175,\"chunks\":66,\"decalChunks\":24,\"baseCache\":179,\"heapMB\":16}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 2 Min. (Ziel 5), Kehrwagen 3 Min. (Ziel 15), Erster Sektor – (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 2",
   "data": [
    {
     "at": 600,
@@ -76,7 +76,7 @@
      "chunks": 66,
      "decalChunks": 24,
      "baseCache": 179,
-     "heapMB": 14
+     "heapMB": 16
     },
     "milestones": {
      "capsule": 31.499999999999492,
@@ -92,7 +92,7 @@
   "id": "SIM-103-10m",
   "area": "2.4",
   "status": "OK",
-  "detail": "Seed 103, 10 Min. Spielzeit in 1 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":583,\"earned\":2703,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":6,\"glanz\":0.0156,\"chunks\":7,\"decalChunks\":0,\"baseCache\":16,\"heapMB\":17}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 4 Min. (Ziel 5), Kehrwagen – (Ziel 15), Erster Sektor – (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 2",
+  "detail": "Seed 103, 10 Min. Spielzeit in 0 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":583,\"earned\":2703,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":6,\"glanz\":0.0156,\"chunks\":7,\"decalChunks\":0,\"baseCache\":16,\"heapMB\":17}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 4 Min. (Ziel 5), Kehrwagen – (Ziel 15), Erster Sektor – (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 2",
   "data": [
    {
     "at": 600,
@@ -123,7 +123,7 @@
   "id": "SIM-104-10m",
   "area": "2.4",
   "status": "OK",
-  "detail": "Seed 104, 10 Min. Spielzeit in 1 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":676,\"earned\":3096,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":5,\"glanz\":0.0199,\"chunks\":8,\"decalChunks\":0,\"baseCache\":16,\"heapMB\":17}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 2 Min. (Ziel 5), Kehrwagen – (Ziel 15), Erster Sektor – (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 1",
+  "detail": "Seed 104, 10 Min. Spielzeit in 0 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":676,\"earned\":3096,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":5,\"glanz\":0.0199,\"chunks\":8,\"decalChunks\":0,\"baseCache\":16,\"heapMB\":14}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 2 Min. (Ziel 5), Kehrwagen – (Ziel 15), Erster Sektor – (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 1",
   "data": [
    {
     "at": 600,
@@ -139,7 +139,7 @@
      "chunks": 8,
      "decalChunks": 0,
      "baseCache": 16,
-     "heapMB": 17
+     "heapMB": 14
     },
     "milestones": {
      "capsule": 30.49999999999955,
@@ -154,7 +154,7 @@
   "id": "SIM-105-10m",
   "area": "2.4",
   "status": "OK",
-  "detail": "Seed 105, 10 Min. Spielzeit in 1 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":1627,\"earned\":7425,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":6,\"glanz\":0.0629,\"chunks\":26,\"decalChunks\":17,\"baseCache\":80,\"heapMB\":14}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 2 Min. (Ziel 5), Kehrwagen 3 Min. (Ziel 15), Erster Sektor – (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 2",
+  "detail": "Seed 105, 10 Min. Spielzeit in 1 s Rechenzeit. Kontrollpunkte: 10 min: {\"money\":1627,\"earned\":7425,\"licence\":0,\"sectors\":0,\"robots\":0,\"buildings\":1,\"research\":6,\"glanz\":0.0629,\"chunks\":26,\"decalChunks\":17,\"baseCache\":80,\"heapMB\":17}. Meilensteine: Erste Kapsel 1 Min. (Ziel 1), Handbürste + Besen 2 Min. (Ziel 5), Kehrwagen 3 Min. (Ziel 15), Erster Sektor – (Ziel 25), Lizenz 1 + Roboter – (Ziel 30), Mare Mopp, 3–5 Roboter – (Ziel 60), Lizenz 3, 20+ Roboter – (Ziel 180), Rückseite (Lizenz 6) – (Ziel 480). Invarianten (Neuzählung an jedem Kontrollpunkt, Bilanz alle 60 s): eingehalten. Bot-Stillstände: 2",
   "data": [
    {
     "at": 600,
@@ -170,7 +170,7 @@
      "chunks": 26,
      "decalChunks": 17,
      "baseCache": 80,
-     "heapMB": 14
+     "heapMB": 17
     },
     "milestones": {
      "capsule": 30.49999999999955,

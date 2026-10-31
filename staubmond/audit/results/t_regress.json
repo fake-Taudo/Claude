@@ -2,26 +2,26 @@
  {
   "id": "RB-01",
   "area": "Phase B",
-  "status": "FEHLER",
-  "detail": "F-01: Spiel A putzt und speichert, „Neu“ auf demselben Platz, speichern, laden: Fundstückzelle wieder staubig false, Neuzählung Mondglanz 0.00003769679097847365 ≠ Neuzählung 0.000020784597036833173 | stats.cells 0 ≠ Neuzählung 467"
+  "status": "OK",
+  "detail": "F-01: Spiel A putzt und speichert, „Neu“ auf demselben Platz, speichern, laden: Fundstückzelle wieder staubig true, Neuzählung stimmt"
  },
  {
   "id": "RB-02",
   "area": "Phase B",
-  "status": "FEHLER",
-  "detail": "F-02: Putzen im Chunk, während er komprimiert wird: danach noch als geändert markiert false; nach dem nächsten Speichern und Laden 36 abweichende Zellen"
+  "status": "OK",
+  "detail": "F-02: Putzen im Chunk, während er komprimiert wird: danach noch als geändert markiert true; nach dem nächsten Speichern und Laden 0 abweichende Zellen"
  },
  {
   "id": "RB-03",
   "area": "Phase B",
-  "status": "FEHLER",
-  "detail": "F-03: zweiter Speicherauftrag während eines laufenden: gespeichertes Geld 35 (Soll 777777); Laden während eines Speicherns: Geld 888888 (Soll 888888), Neuzählung 1 Chunk(s) mit falscher Statistik – Chunk 4849 sauber 464≠211 putzbar 4082≠4082 | 2 Sektor-Abweichung(en) – Sektor 300 sauber 701≠448 | Mondglanz 0.000018607921756943844 ≠ Neuzählung 0.00001189208106322 | stats.cells 385 ≠ Neuzählung 132"
+  "status": "OK",
+  "detail": "F-03: zweiter Speicherauftrag während eines laufenden: gespeichertes Geld 777777 (Soll 777777); Laden während eines Speicherns: Geld 888888 (Soll 888888), Neuzählung stimmt"
  },
  {
   "id": "RB-04",
   "area": "Phase B",
-  "status": "FEHLER",
-  "detail": "F-04: Bauen + Abreißen: „Verdient“ 0 → 7510, Einnahmen/Min. 0.0 → 7510.0, Auftrag „Haushaltsziel 1.000 ₥“ durch Erstattungen erledigt: 1"
+  "status": "OK",
+  "detail": "F-04: Bauen + Abreißen: „Verdient“ 0 → 0, Einnahmen/Min. 0.0 → 0.0, Auftrag „Haushaltsziel 1.000 ₥“ durch Erstattungen erledigt: 0"
  },
  {
   "id": "RB-05",
