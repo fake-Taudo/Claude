@@ -15,7 +15,6 @@ grep -rn "\[\[INHALT:" --include=*.html --include=*.xml --include=*.txt .
 ## Preise und Leistungen (`index.html`, Abschnitt „Preise“)
 
 - [ ] `[[INHALT: Preis]]`: Preis „ab“ in Euro für Damen, Herren, Kinder, Färben, Styling und jede weitere Leistung (6 Stellen).
-- [ ] `[[INHALT: Dauer]]`: Dauer je Leistung (6 Stellen).
 - [ ] `[[INHALT: weitere Leistungen]]`: weitere Leistungen. Pro Leistung eine Tabellenzeile kopieren. Gibt es keine, die Zeile löschen.
 - [ ] `[[INHALT: Altersgrenze Kinder]]`: z. B. „bis … Jahre“.
 - [ ] `[[INHALT: Hinweis zur Umsatzsteuer]]`: „inkl. MwSt.“ oder Hinweis nach § 19 UStG (Kleinunternehmer). Wenn keiner nötig ist, Zeile löschen.

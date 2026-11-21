@@ -253,6 +253,8 @@ a:hover {
   font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.6;
+  hyphens: manual;
+  -webkit-hyphens: manual;
   overflow-wrap: anywhere;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
@@ -656,6 +658,11 @@ a:hover {
   .table .todo {
     white-space: nowrap;
   }
+}
+
+/* Nur noch zwei Spalten: Preis bleibt einzeilig */
+.price-table td {
+  white-space: nowrap;
 }
 
 .price-table .price-table__sub {
