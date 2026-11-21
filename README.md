@@ -1,5 +1,8 @@
 # Studio Kern – Website
 
+> Kundenprojekt **Friseur HairMind** (Korschenbroich-Pesch): eigenständige Seite im Ordner
+> [`hairmind/`](hairmind/README.md).
+
 Minimalistische One-Page-Website im Apple-Stil für ein Webdesign-Business.
 Reines **HTML, CSS und JavaScript**: kein Framework, kein Build-Schritt, kein npm.
 
