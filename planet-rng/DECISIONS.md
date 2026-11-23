@@ -462,3 +462,12 @@ Kurz festgehalten, wo die Vorgabe offen war. Alle Zahlen stehen in `src/config/`
 - Gegebene Auren zählen als gefunden (Sammlung, Erfolge mit ihren Belohnungen). Alles wird sofort
   gespeichert. Das Wetter gilt nur bis zum Neuladen, weil es sonst die Offline-Berechnung
   verfälschen würde.
+
+## Impressum und Datenschutz
+
+- Beide Texte stehen im Spiel (Einstellungen → Rechtliches) statt auf eigenen Seiten, damit
+  die Einzeldatei weiter offline funktioniert und die Texte immer zur ausgelieferten Version
+  passen. Die Angaben zum Betreiber stehen in `src/config/legal.ts`.
+- Datenschutz beschreibt den tatsächlichen Stand: kein Konto, keine Cookies, kein Tracking,
+  keine Anfragen an fremde Server (geprüft mit `scripts/dev/legal-shot.mjs`), Spielstand nur im
+  localStorage (§ 25 Abs. 2 Nr. 2 TDDDG), Server-Protokolle beim Hoster Render (USA).

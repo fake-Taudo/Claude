@@ -12,7 +12,7 @@ const items = files.map((f) => {
   const [path, label] = f.split('=');
   return { b64: readFileSync(path).toString('base64'), label: label ?? basename(path, '.png') };
 });
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined });
 const page = await browser.newPage({ viewport: { width: cols * tileW, height: 100 } });
 await page.setContent(`<!doctype html><style>body{margin:0;background:#05060d;font:12px system-ui;color:#dfe6ff}
 .g{display:grid;grid-template-columns:repeat(${cols},${tileW}px)}figure{margin:0;border:1px solid #1a1d2e}

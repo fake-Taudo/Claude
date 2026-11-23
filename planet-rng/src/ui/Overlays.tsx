@@ -11,6 +11,7 @@ import { AuraOrb, Btn, css, GoldAmount, Stepper, TierTag, Toggle } from './commo
 import { useGame, useUi } from './hooks';
 import { Icon } from './icons';
 import { sfx } from './sound';
+import { Datenschutz, Impressum } from './Legal';
 import { AuraPreview } from './AuraPreview';
 
 export function Overlays() {
@@ -22,6 +23,11 @@ export function Overlays() {
       {u.modal?.kind === 'bulkSell' && <BulkSellModal />}
       {u.modal?.kind === 'export' && <ExportModal />}
       {u.modal?.kind === 'import' && <ImportModal />}
+      {u.modal?.kind === 'legal' && (
+        <Modal title={u.modal.page === 'impressum' ? 'Impressum' : 'Datenschutzerklärung'} onClose={() => ui.closeModal()} testid="legal-modal" wide>
+          {u.modal.page === 'impressum' ? <Impressum /> : <Datenschutz />}
+        </Modal>
+      )}
       {u.dialog && <ConfirmDialog />}
       {u.offline && <OfflineModal />}
       <Toasts />

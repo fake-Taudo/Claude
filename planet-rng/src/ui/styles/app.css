@@ -3459,3 +3459,39 @@ body.lab-clean .toasts {
   opacity: 0.8;
   font-size: 12px;
 }
+
+/* Impressum / Datenschutz */
+.legal-text {
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  padding-right: 4px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.legal-text h4 {
+  margin: 16px 0 6px;
+  font-size: 15px;
+}
+
+.legal-text h4:first-child {
+  margin-top: 0;
+}
+
+.legal-text p,
+.legal-text address {
+  margin: 0 0 8px;
+  font-style: normal;
+  opacity: 0.9;
+}
+
+.legal-text a {
+  color: var(--accent, #9fb4ff);
+  word-break: break-word;
+}
+
+.legal-text__updated {
+  margin-top: 14px;
+  opacity: 0.6;
+  font-size: 12px;
+}

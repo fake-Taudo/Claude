@@ -20,7 +20,8 @@ export type ModalSpec =
   | { kind: 'sell'; aura: string }
   | { kind: 'bulkSell' }
   | { kind: 'export' }
-  | { kind: 'import' };
+  | { kind: 'import' }
+  | { kind: 'legal'; page: 'impressum' | 'datenschutz' };
 
 export interface Toast extends ToastSpec {
   id: number;

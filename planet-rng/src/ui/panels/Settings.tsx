@@ -229,6 +229,17 @@ export function SettingsPanel() {
           </Btn>
         </div>
       </section>
+      <section class="settings-group">
+        <h3>Rechtliches</h3>
+        <div class="btn-row">
+          <Btn size="sm" variant="ghost" icon="info" data-testid="open-impressum" onClick={() => ui.openModal({ kind: 'legal', page: 'impressum' })}>
+            Impressum
+          </Btn>
+          <Btn size="sm" variant="ghost" icon="info" data-testid="open-datenschutz" onClick={() => ui.openModal({ kind: 'legal', page: 'datenschutz' })}>
+            Datenschutz
+          </Btn>
+        </div>
+      </section>
       <p class="about">
         {GAME.title} · Version {GAME.version} · Einzelspieler, offline. Der globale Feed ist simuliert.
       </p>
