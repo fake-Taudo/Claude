@@ -1,0 +1,41 @@
+// Registry of all cutscene building blocks.
+
+import type { BlockParams } from '../../../config/cutscenes';
+import type { AnyBlock } from '../core';
+import { FadeVeil, Flash, WhiteOut } from './basic';
+import { ScreenShake } from './camera';
+import { EdgeGlow } from './edge';
+import { FogLayers } from './fog';
+import { Lens } from './lens';
+import { CoreMotif } from './motif';
+import { ThemeParticles } from './particles';
+import { DoublePulse } from './pulse';
+import { Rays, Ticker } from './rays';
+import { BeatInvert, Letterbox, SceneCut } from './scene';
+import { Shatter, SplitSlash, TimeFreeze } from './snapshot';
+import { Counter, TextCard } from './text';
+import { GravityRings } from './rings';
+
+export const BLOCKS: Record<keyof BlockParams, AnyBlock> = {
+  FadeVeil,
+  FogLayers,
+  CoreMotif,
+  ThemeParticles,
+  DoublePulse,
+  EdgeGlow,
+  WhiteOut,
+  Flash,
+  Shatter,
+  SplitSlash,
+  TimeFreeze,
+  GravityRings,
+  TextCard,
+  Counter,
+  BeatInvert,
+  Letterbox,
+  SceneCut,
+  ScreenShake,
+  Lens,
+  Rays,
+  Ticker,
+} as Record<keyof BlockParams, AnyBlock>;

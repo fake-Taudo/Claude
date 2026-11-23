@@ -1,0 +1,49 @@
+// Dev helper: deterministic lab screenshots of single auras.
+// Usage: [CLOCK=s] [IDLE=1] [CROP=1] node scripts/dev/lab-shot.mjs <outDir> <ids comma separated> [WxH] [quality] [extra: accent|intro]
+import { chromium } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const out = process.argv[2] ?? 'shots';
+const ids = (process.argv[3] ?? 'urlicht').split(',');
+const [vw, vh] = (process.argv[4] ?? '390x844').split('x').map(Number);
+const quality = process.argv[5] ?? 'high';
+const extra = process.argv[6] ?? '';
+mkdirSync(out, { recursive: true });
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: vw < 600 ? 2 : 1 });
+const errors = [];
+page.on('pageerror', (e) => errors.push(String(e)));
+page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+await page.goto('file://' + resolve('dist/planet-rng.html') + '?debug&lab=1');
+await page.waitForTimeout(500);
+await page.evaluate(() => {
+  const s = document.createElement('style');
+  s.textContent = '.lab,.hud,.sidebar,.roll-area,.feed,.toasts,.tutorial{visibility:hidden!important}';
+  document.head.appendChild(s);
+  window.__prng.game.setSettings({ feed: false });
+});
+for (const id of ids) {
+  const t0 = Date.now();
+  await page.evaluate(([id, q, c, idle]) => window.__lab.show(id, { quality: q, settle: 5, clock: c, idle }), [id, quality, Number(process.env.CLOCK ?? 1000), !!process.env.IDLE]);
+  const ms = Date.now() - t0;
+  let suffix = '';
+  if (extra.startsWith('accent')) {
+    const after = Number(extra.split(':')[1] ?? 0.4);
+    const lead = Number(extra.split(':')[2] ?? 0);
+    await page.evaluate(([a, l]) => window.__lab.accent(a, l), [after, lead]);
+    suffix = '-accent';
+  } else if (extra.startsWith('intro')) {
+    const after = Number(extra.split(':')[1] ?? 0.6);
+    await page.evaluate((a) => window.__lab.intro(a), after);
+    suffix = '-intro';
+  }
+  // Let the nameplate fade-in (420 ms) finish.
+  await page.waitForTimeout(900);
+  const stats = await page.evaluate(() => window.__lab.stats());
+  const crop = process.env.CROP ? { x: 0, y: Math.max(0, Math.round(vh * 0.43 - vw * 0.75)), width: vw, height: Math.round(vw * 1.35) } : undefined;
+  await page.screenshot({ path: `${out}/${id}${suffix}-${vw}x${vh}.png`, clip: crop });
+  console.log(id, `${ms}ms`, JSON.stringify(stats));
+}
+console.log(errors.length ? errors.slice(0, 8) : 'no errors');
+await browser.close();
