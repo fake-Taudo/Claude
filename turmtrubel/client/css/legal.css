@@ -1,0 +1,27 @@
+/* Rechtliche Seiten (Impressum, Datenschutz): schlichte Leseseite im Turmtrubel-Look, ohne Spiel-JavaScript. */
+@font-face { font-family: 'Lilita One'; src: url('/fonts/lilita/lilita-one-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Nunito'; src: url('/fonts/nunito/nunito-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Nunito'; src: url('/fonts/nunito/nunito-latin-900-normal.woff2') format('woff2'); font-weight: 900; font-display: swap; }
+
+:root { --bg: #221a56; --bg2: #1a1433; --panel: #fdf6e3; --ink: #2b2340; --muted: #5f5873; --accent: #3a2f8f; --gold: #f5b82e; }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--bg2); }
+body { margin: 0; min-height: 100vh; background: linear-gradient(180deg, var(--bg), var(--bg2)) fixed; color: var(--ink); font: 700 16px/1.6 Nunito, system-ui, sans-serif; padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+.legal { max-width: 760px; margin: 0 auto; }
+.legal-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.logo { font-family: 'Lilita One', system-ui, sans-serif; font-size: 28px; color: #fff; text-decoration: none; letter-spacing: 0.5px; text-shadow: 0 3px 0 rgb(0 0 0 / 0.35); }
+.logo span { color: var(--gold); }
+.back { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 12px; background: var(--gold); color: var(--ink); font-weight: 900; text-decoration: none; box-shadow: 0 4px 0 rgb(0 0 0 / 0.3); }
+.back:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.card { background: var(--panel); border-radius: 18px; padding: 24px clamp(16px, 4vw, 36px); box-shadow: 0 6px 0 rgb(0 0 0 / 0.3); }
+h1 { font-family: 'Lilita One', system-ui, sans-serif; font-weight: 400; font-size: clamp(30px, 6vw, 40px); line-height: 1.15; margin: 0 0 4px; color: var(--accent); }
+h2 { font-weight: 900; font-size: 19px; margin: 28px 0 6px; color: var(--accent); }
+h3 { font-weight: 900; font-size: 16px; margin: 18px 0 4px; }
+p, ul, address { margin: 0 0 10px; }
+address { font-style: normal; }
+ul { padding-left: 22px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent); overflow-wrap: anywhere; }
+.updated { color: var(--muted); margin-bottom: 18px; }
+.legal-foot { text-align: center; margin-top: 18px; color: rgb(255 255 255 / 0.8); }
+.legal-foot a { color: #fff; display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; }

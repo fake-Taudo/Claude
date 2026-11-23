@@ -203,6 +203,10 @@ button { cursor: pointer; }
 @keyframes logo-in { from { transform: scale(0.6); opacity: 0; } }
 .logo.small { font-size: 30px; }
 @keyframes logo-bob { 50% { transform: translateY(-6px) rotate(-1deg); } }
+/* Impressum/Datenschutz-Links unter Start- und Hauptmenü */
+.legal-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 8px; margin: 14px auto 0; }
+.legal-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; color: var(--on-dark-muted); font-weight: 800; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+.legal-links a:hover, .legal-links a:focus-visible { color: #fff; }
 .tagline { color: var(--on-dark-muted); font-weight: 800; margin: -6px 0 0; text-shadow: 0 2px 0 rgb(0 0 0 / 0.3); }
 
 /* ───────────── 4. Bausteine ───────────── */

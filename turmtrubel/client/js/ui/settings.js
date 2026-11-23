@@ -138,6 +138,17 @@ export function openSettings(app, { allowRename = true } = {}) {
       h('p', { class: 'hint small set-hint' }, inMatch ? 'Achtung: Im laufenden Kampf zählt Verlassen als Aufgabe.' : app.inRoom() ? 'Du bist gerade in einem Raum.' : 'Hilft auch, wenn du in einem alten Raum festhängst.'),
     ),
   );
+  body.append(
+    group(
+      'Rechtliches',
+      h(
+        'div',
+        { class: 'row wrap set-actions' },
+        h('a', { class: 'btn btn-small btn-secondary', href: '/impressum.html', target: '_blank', rel: 'noopener' }, 'Impressum'),
+        h('a', { class: 'btn btn-small btn-secondary', href: '/datenschutz.html', target: '_blank', rel: 'noopener' }, 'Datenschutz'),
+      ),
+    ),
+  );
   const m = modal('Einstellungen', body);
   return m;
 }

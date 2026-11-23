@@ -8,6 +8,15 @@
 
 export const UPDATES = [
   {
+    id: '2026-11-23.1',
+    version: '1.10',
+    date: '23.11.2026',
+    title: 'Impressum und Datenschutz',
+    items: [
+      { icon: 'shield', title: 'Impressum und Datenschutz', text: 'Impressum und Datenschutzerklärung findest du jetzt unter dem Start- und Hauptmenü sowie in den Einstellungen unter „Rechtliches“. Kurz gesagt: kein Konto, keine Cookies, kein Tracking – deine Decks bleiben auf deinem Gerät.' },
+    ],
+  },
+  {
     id: '2026-10-15.1',
     version: '1.9',
     date: '15.10.2026',
