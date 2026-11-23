@@ -426,6 +426,20 @@ html.ui-hold .lobby-grid *,html.ui-hold .lobby-grid *::before,html.ui-hold .lobb
 .btn.danger-solid:disabled{background:rgba(244,63,94,.25);box-shadow:none;color:rgba(255,255,255,.6)}
 .btn.danger-solid svg{width:17px;height:17px}
 .set-foot{display:flex;flex-direction:column;gap:10px;padding-top:20px}
+/* Rechtliches: Links in der Lobby und im Einstellungs-Panel, Texte als Menü */
+.lobby-legal{position:absolute;left:50%;bottom:5px;transform:translateX(-50%);z-index:2;display:flex;gap:14px;font-size:12px;line-height:1;white-space:nowrap}
+.lobby-legal a,.set-legal a{color:var(--muted);text-decoration:none;padding:3px 2px;border-radius:4px}
+.lobby-legal a:hover,.lobby-legal a:focus-visible,.set-legal a:hover,.set-legal a:focus-visible{color:#fff;text-decoration:underline;outline:none}
+.set-legal{display:flex;justify-content:center;gap:16px;font-size:13px}
+.legal{max-width:760px;margin:0 auto;font-size:14.5px;line-height:1.65;color:#c3cae6}
+.legal h3{margin:22px 0 6px;font-size:15.5px;color:#fff;font-family:var(--display);letter-spacing:.02em}
+.legal h3:first-child{margin-top:0}
+.legal h4{margin:14px 0 4px;font-size:14px;color:#e3e7fb}
+.legal p,.legal ul{margin:0 0 8px}
+.legal ul{padding-left:20px}
+.legal address{font-style:normal}
+.legal a{color:#9fb0ff}
+.legal .stand{color:var(--muted);font-size:13px}
 .set-foot .btn{min-height:46px}
 .set-foot small{font-size:12.5px;color:var(--muted);line-height:1.45;text-align:center}
 .reset-dlg{display:flex;flex-direction:column;gap:14px}
@@ -517,6 +531,7 @@ html[data-q="low"] .sc.win::before,html[data-q="low"] .sc-rb i,html[data-q="low"
 .modal-back{position:fixed;inset:0;z-index:50;background:rgba(3,5,12,.66);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:18px;animation:fadein .22s ease}
 .modal{position:relative;width:min(1100px,100%);max-height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(18,24,48,.97),rgba(11,15,32,.97));border:1px solid var(--line2);border-radius:20px;box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 60px rgba(124,140,255,.12);animation:pop .25s cubic-bezier(.2,.9,.3,1.2)}
 .modal.narrow{width:min(560px,100%)}
+.modal.legal-modal{width:min(820px,100%)}
 .modal.mid{width:min(780px,100%)}
 .modal-h{display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line)}
 .modal-h h2{font-size:18px;letter-spacing:.06em;font-weight:800}
@@ -769,6 +784,7 @@ html[data-q="low"] .sc.win::before,html[data-q="low"] .sc-rb i,html[data-q="low"
 
 /* ---------- Responsiv ---------- */
 @media (max-width:1100px){
+  .lobby-legal{position:static;transform:none;justify-content:center;padding:4px 0 20px}
   html,body{overflow:auto}
   #app{position:relative;min-height:100%}
   #lobby.active{position:relative;display:block}
@@ -917,6 +933,7 @@ html[data-q="low"] .sc.win::before,html[data-q="low"] .sc-rb i,html[data-q="low"
           </div>
         </section>
       </main>
+      <nav class="lobby-legal" aria-label="Rechtliches"><a href="#impressum">Impressum</a><a href="#datenschutz">Datenschutz</a></nav>
     </div>
   </div>
 
@@ -5578,7 +5595,7 @@ function openSettings() {
         <div class="set-field"><label for="sName"><b>Spielername</b></label><div class="name-row"><input id="sName" maxlength="16" autocomplete="off" spellcheck="false"><span class="name-cnt" id="sNameCnt"></span></div><small>Wird sofort oben angezeigt und im Multiplayer verwendet.</small></div>
         <div class="danger-zone"><div class="dz-t"><b>Fortschritt zurücksetzen</b><small>Löscht Auren, Sternenstaub, Tränke und Statistik. Name und Einstellungen bleiben.</small></div><button class="btn danger-solid" id="sReset">${SVG.skull}Fortschritt zurücksetzen</button></div>
       </section>
-      <footer class="set-foot"><button class="btn" id="sDefaults">${SVG.history}Auf Standard zurücksetzen</button><small>Alle Einstellungen werden automatisch gespeichert. „Auf Standard zurücksetzen“ betrifft nur die Einstellungen – niemals deinen Spielfortschritt.</small></footer>
+      <footer class="set-foot"><button class="btn" id="sDefaults">${SVG.history}Auf Standard zurücksetzen</button><small>Alle Einstellungen werden automatisch gespeichert. „Auf Standard zurücksetzen“ betrifft nur die Einstellungen – niemals deinen Spielfortschritt.</small><nav class="set-legal" aria-label="Rechtliches"><a href="#impressum">Impressum</a><a href="#datenschutz">Datenschutz</a></nav></footer>
     </div>`;
   back.appendChild(dr); $('#modalRoot').appendChild(back); MODALS.push(back);
   const close = () => closeModal(back);
@@ -5835,6 +5852,51 @@ const ICON_IO = window.IntersectionObserver ? new IntersectionObserver(es => { f
 function lazyIcons(root) {
   for (const im of root.querySelectorAll('img[data-ai]')) { const u = URL_CACHE[im.dataset.ai + ':96']; if (u) im.src = u; else if (ICON_IO) ICON_IO.observe(im); else im.src = auraIconURL(+im.dataset.ai, 96); }
 }
+/* ---------- Impressum & Datenschutz ----------
+   Als Menü im Spiel, damit die Angaben überall verfügbar sind, wo die Datei gehostet wird.
+   Direkt verlinkbar über #impressum bzw. #datenschutz. */
+const LEGAL_OWNER = `<address>Paul Matuszek<br>Sonnenweg 2<br>40667 Meerbusch<br>Deutschland</address>`;
+const LEGAL_MAIL = `<a href="mailto:Paulmatuszek@icloud.com">Paulmatuszek@icloud.com</a>`;
+const LEGAL = {
+  impressum: ['Impressum', `<div class="legal">
+    <h3>Angaben gemäß § 5 DDG</h3>${LEGAL_OWNER}
+    <h3>Kontakt</h3><p>E-Mail: ${LEGAL_MAIL}</p>
+    <h3>Über dieses Angebot</h3><p>„Aura RNG Arena“ ist ein privates, nicht-kommerzielles Browserspiel. Es gibt keine Käufe, keine Werbung und kein Benutzerkonto.</p>
+    <h3>Haftung für Inhalte</h3><p>Die Inhalte dieses Spiels wurden mit Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität kann ich jedoch keine Gewähr übernehmen. Als Diensteanbieter bin ich für eigene Inhalte nach den allgemeinen Gesetzen verantwortlich; zur Überwachung übermittelter oder gespeicherter fremder Informationen bin ich nicht verpflichtet. Sobald mir Rechtsverletzungen bekannt werden, entferne ich die betreffenden Inhalte umgehend.</p>
+    <h3>Haftung für Links</h3><p>Für Inhalte externer Websites, auf die verlinkt wird, sind ausschließlich deren Betreiber verantwortlich. Zum Zeitpunkt der Verlinkung waren keine Rechtsverstöße erkennbar; bei Bekanntwerden entferne ich solche Links umgehend.</p>
+    <h3>Urheberrecht</h3><p>Spielidee, Grafiken, Texte und Programmcode unterliegen dem deutschen Urheberrecht. Ausgenommen sind Bestandteile Dritter unter eigener Lizenz: die Schriftarten „Inter“ und „Exo 2“ (SIL Open Font License 1.1) sowie die Bibliothek PeerJS (MIT-Lizenz), die nur für den Online-Multiplayer geladen wird.</p>
+    <h3>Verbraucherstreitbeilegung</h3><p>Ich bin nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+  </div>`],
+  datenschutz: ['Datenschutzerklärung', `<div class="legal">
+    <p class="stand">Stand: November 2026</p>
+    <h3>1. Verantwortlicher</h3>${LEGAL_OWNER}<p>E-Mail: ${LEGAL_MAIL}</p>
+    <h3>2. Das Wichtigste in Kürze</h3><p>Das Spiel kommt ohne Benutzerkonto aus und setzt keine Cookies. Es gibt keine Werbung, keine Analyse- oder Tracking-Dienste und keine Weitergabe zu Werbezwecken. Dein Spielstand bleibt in deinem Browser. Daten an Dritte gehen nur beim Aufruf der Seite (Hosting) und, wenn du ihn nutzt, beim Online-Multiplayer.</p>
+    <h3>3. Hosting und Server-Logfiles</h3><p>Das Spiel wird bei Netlify, Inc., 512 2nd Street, Suite 200, San Francisco, CA 94107, USA, gehostet. Beim Aufruf verarbeitet der Hoster automatisch technische Zugriffsdaten (IP-Adresse, Datum und Uhrzeit, aufgerufene Datei, Referrer, Browser und Betriebssystem), um die Seite auszuliefern und den Betrieb abzusichern. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; mein berechtigtes Interesse liegt in einer sicheren und stabilen Bereitstellung.</p><p>Dabei können Daten in die USA übermittelt werden. Die Übermittlung erfolgt auf Grundlage des Angemessenheitsbeschlusses der EU-Kommission zum EU-U.S. Data Privacy Framework (Art. 45 DSGVO), soweit der Anbieter danach zertifiziert ist, und im Übrigen auf Grundlage der EU-Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO) aus dem Auftragsverarbeitungsvertrag mit dem Anbieter.</p>
+    <h3>4. Speicherung im Browser (Spielstand)</h3><p>Dein Spielstand – gesammelte Auren, Sternenstaub, Tränke, Statistik, dein selbst gewählter Spielername und deine Einstellungen – wird ausschließlich im lokalen Speicher (localStorage) deines Browsers abgelegt. Er wird nicht an mich übertragen. Die Speicherung ist für das von dir gewünschte Spiel unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG; Art. 6 Abs. 1 lit. b DSGVO). Löschen kannst du ihn jederzeit über „Spielstand zurücksetzen“ in den Einstellungen oder indem du die Websitedaten in deinem Browser löschst.</p>
+    <h3>5. Schriftarten, Grafik und Sound</h3><p>Die Schriftarten werden von derselben Adresse wie das Spiel geladen; es findet keine Verbindung zu Servern Dritter (z. B. Google Fonts) statt. Grafiken, Effekte, Soundeffekte und Musik werden direkt in deinem Browser erzeugt.</p>
+    <h3>6. Multiplayer</h3>
+    <h4>Lokaler Modus</h4><p>Im lokalen Modus (mehrere Tabs im selben Browser) laufen alle Daten nur innerhalb deines Browsers; es wird nichts über das Internet übertragen.</p>
+    <h4>Online-Modus</h4><p>Erst wenn du einen Online-Raum erstellst oder einem Raum beitrittst, werden folgende Dienste genutzt:</p>
+    <ul>
+      <li><b>Laden der Bibliothek PeerJS</b> von unpkg.com (Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA) bzw. ersatzweise von cdn.jsdelivr.net (ProspectOne Sp. z o.o., Królewska 65A/1, 30-081 Kraków, Polen). Dabei wird deine IP-Adresse an den jeweiligen Anbieter übermittelt.</li>
+      <li><b>Verbindungsaufbau</b> über den öffentlichen Vermittlungsserver des Open-Source-Projekts PeerJS (0.peerjs.com). Übertragen werden deine IP-Adresse, der zufällige Raumcode bzw. eine zufällige Verbindungskennung und technische Verbindungsdaten.</li>
+      <li><b>Netzwerk-Hilfsserver (STUN/TURN):</b> Um eine direkte Verbindung zu ermöglichen, fragt dein Browser einen STUN-Server von Google (stun.l.google.com; Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA) nach deiner öffentlichen IP-Adresse. Ist keine direkte Verbindung möglich, können die Spieldaten über TURN-Server des PeerJS-Projekts (eu-0.turn.peerjs.com, us-0.turn.peerjs.com) weitergeleitet werden.</li>
+      <li><b>Direkte Verbindung zu den Mitspielern (WebRTC):</b> Die anderen Spieler im Raum erhalten technisch bedingt deine IP-Adresse sowie deinen Spielernamen, deine ausgerüstete Aura und deine Spieleingaben bzw. den Spielverlauf.</li>
+    </ul>
+    <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Bereitstellung des von dir gewählten Mehrspieler-Modus) und Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem funktionierenden Verbindungsaufbau). Einige dieser Anbieter sitzen in den USA; eine Übermittlung dorthin ist möglich. Ich selbst speichere keine Multiplayer-Daten. Wenn du den Online-Modus nicht nutzt, findet keine dieser Übertragungen statt.</p>
+    <h3>7. Ausführung innerhalb von Claude</h3><p>Wird das Spiel als Artefakt in Claude (claude.ai) geöffnet, kann der Spielstand zusätzlich im Speicher deines Claude-Kontos abgelegt werden, damit er geräteübergreifend erhalten bleibt. Anbieter ist dann Anthropic; es gelten deren Datenschutzbestimmungen. Beim Aufruf über die normale Website findet das nicht statt.</p>
+    <h3>8. Kontakt per E-Mail</h3><p>Wenn du mir eine E-Mail schreibst, verarbeite ich deine Angaben (E-Mail-Adresse, Inhalt der Nachricht) nur, um deine Anfrage zu beantworten (Art. 6 Abs. 1 lit. f DSGVO). Die Daten werden gelöscht, sobald sie dafür nicht mehr benötigt werden und keine gesetzlichen Aufbewahrungspflichten bestehen.</p>
+    <h3>9. Deine Rechte</h3><p>Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen Verarbeitungen auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (Art. 21). Wende dich dafür einfach per E-Mail an mich.</p><p>Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel bei der Landesbeauftragten für Datenschutz und Informationsfreiheit Nordrhein-Westfalen, Kavalleriestraße 2–4, 40213 Düsseldorf.</p>
+    <h3>10. Verschlüsselung</h3><p>Die Seite wird über eine verschlüsselte Verbindung (HTTPS/TLS) ausgeliefert. Die Verbindungen des Online-Multiplayers sind ebenfalls verschlüsselt (WebRTC/DTLS).</p>
+  </div>`],
+};
+function openLegal(kind) {
+  const L = LEGAL[kind]; if (!L) return;
+  const open = MODALS.find(m => m.legal); if (open) closeModal(open);
+  const back = openModal(L[0], L[1], 'legal-modal'); back.legal = kind;
+  back.onClose = () => { if (location.hash === '#' + kind) history.replaceState(null, '', location.pathname + location.search); };
+}
+function legalFromHash() { const k = location.hash.slice(1); if (LEGAL[k]) openLegal(k); }
 /* ---------- Detailansicht ---------- */
 function openDetail(i, onChange) {
   const a = AURAS[i], owned = S.owned[a.id] || 0, eq = S.equipped === a.id;
@@ -6912,6 +6974,8 @@ function init() {
   ni.addEventListener('change', () => { commitName(ni.value); ni.value = S.name; });
   syncSoundUI(); $('#soundBtn').onclick = () => setSound(!S.sound);
   $('#setBtn').onclick = () => openSettings();
+  addEventListener('hashchange', legalFromHash);
+  document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="#impressum"],a[href="#datenschutz"]'); if (a && location.hash === a.getAttribute('href')) { e.preventDefault(); legalFromHash(); } }); // erneuter Klick bei gleichem Hash
   FS.init();
   const qt = $('#quickT'); qt.checked = !!S.quick; qt.onchange = () => { S.quick = qt.checked; save(); };
   $('#autoT').onchange = e => { if (e.target.checked && !ROLLST.busy && !REVEAL.open) doRoll(); };
@@ -6939,6 +7003,7 @@ function init() {
   document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); CLOUD.flush(); if (CS.on) CS.end(.2); } });
   const jc = new URLSearchParams(location.search).get('join');
   if (jc) setTimeout(() => { if (S.equipped) openMP(jc.toUpperCase()); else toast('Rolle zuerst eine Aura, dann kannst du dem Spiel ' + jc.toUpperCase() + ' beitreten.'); }, 400);
+  legalFromHash(); // direkter Aufruf über …#impressum bzw. …#datenschutz
   requestAnimationFrame(frame);
 }
 init();
