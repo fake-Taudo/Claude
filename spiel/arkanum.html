@@ -45,12 +45,133 @@
   #bar{width:240px;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
   #bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#6a4fd0,#a98cff);border-radius:3px;transition:width .18s}
   #boot.done{opacity:0;pointer-events:none}
+  /* Rechtliches: echter Text ueber dem Spielfeld, lesbar und kopierbar */
+  #legal{
+    position:fixed;inset:0;z-index:60;display:none;
+    background:rgba(8,11,22,.88);
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    touch-action:pan-y;overscroll-behavior:contain;cursor:auto;
+    padding:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-right,0px) + 14px)
+            calc(env(safe-area-inset-bottom,0px) + 28px) calc(env(safe-area-inset-left,0px) + 14px);
+  }
+  #legal.on{display:block}
+  #legal .sheet{
+    max-width:720px;margin:0 auto;background:#161e36;border:1px solid #2c3a63;
+    border-radius:12px;padding:20px 22px 26px;
+    -webkit-user-select:text;user-select:text;
+  }
+  #legal h2{font-size:19px;color:#f0f5ff;font-weight:600;letter-spacing:.3px}
+  #legal h3{font-size:15px;color:#e3c178;font-weight:600;margin:20px 0 6px}
+  #legal h4{font-size:13.5px;color:#b9c6e6;font-weight:600;margin:14px 0 4px}
+  #legal p,#legal li{font-size:13.5px;line-height:1.62;color:#c3cde6;margin:6px 0}
+  #legal ul{margin:6px 0 6px 18px}
+  #legal li{margin:3px 0}
+  #legal b{color:#dfe8ff;font-weight:600}
+  #legal .addr{margin:6px 0;padding:10px 12px;border-left:2px solid #4a5c94;
+    background:rgba(255,255,255,.03);border-radius:0 6px 6px 0;white-space:pre-line}
+  #legal .note{font-size:12.5px;color:#8b9ac0;margin-top:18px}
+  #legal .top{display:flex;align-items:center;gap:12px;justify-content:space-between;
+    position:sticky;top:-20px;background:#161e36;padding:4px 0 10px;margin:-4px 0 0}
+  #legal .tabs{display:flex;gap:8px;margin:14px 0 4px}
+  #legal button{
+    font:inherit;font-size:13.5px;color:#dbe4f7;background:#263357;border:1px solid #3d4e81;
+    border-radius:8px;padding:9px 14px;min-height:44px;cursor:pointer;
+  }
+  #legal button:hover{background:#30406c}
+  #legal button.sel{background:#4a5c94;border-color:#7d93d4;color:#fff}
+  #legal button.warn{border-color:#7a4a52;color:#f0c7b4;background:#38233a}
+  #legal button.warn:hover{background:#4d2c3f}
+  #legal .x{min-width:44px;padding:9px 12px}
+  #legal .msg{font-size:12.5px;color:#9fd6a8;margin-top:8px;min-height:16px}
+  @media (max-width:520px){ #legal .sheet{padding:16px 15px 22px} #legal h2{font-size:17px} }
 </style>
 </head>
 <body>
 <div id="wrap"><canvas id="cv" width="960" height="540"></canvas></div>
 <div id="safe"></div>
 <div id="boot"><h1>ARKANUM</h1><p>DER LETZTE FUNKE</p><div id="bar"><i id="barfill"></i></div><p id="bootmsg" style="letter-spacing:1px">Welt wird erschaffen ...</p></div>
+<div id="legal" aria-hidden="true"><div class="sheet">
+<div class="top"><h2 id="lgTitle">Rechtliches</h2><button class="x" id="lgClose" title="Schließen">Schließen</button></div>
+<div class="tabs"><button id="lgTabI" class="sel">Impressum</button><button id="lgTabD">Datenschutz</button></div>
+
+<div id="lgImpressum">
+<h3>Impressum</h3>
+<p>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)</p>
+<p class="addr"><b>Paulmatuszek</b>
+Sonnenweg 2
+40667 Meerbusch
+Deutschland</p>
+<h4>Kontakt</h4>
+<p>E-Mail: Paulmatuszek@icloud.com</p>
+<h4>Verantwortlich für den Inhalt</h4>
+<p>Paulmatuszek, Anschrift wie oben</p>
+<h4>Art des Angebots</h4>
+<p>„ARKANUM &ndash; Der letzte Funke“ ist ein privates Freizeitprojekt und wird nicht gewerblich angeboten. Das Spiel ist kostenlos, enthält keine Werbung, keine Käufe im Spiel, keine Registrierung und keine Verbindung zu einem Server. Eine Umsatzsteuer-Identifikationsnummer besteht daher nicht.</p>
+<h4>Verbraucherstreitbeilegung</h4>
+<p>Ich bin nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+<h4>Haftung für Inhalte</h4>
+<p>Als Anbieter bin ich für eigene Inhalte nach den allgemeinen Gesetzen verantwortlich. Ich bin jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen. Eine Haftung ist erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich; bei Bekanntwerden entferne ich entsprechende Inhalte umgehend.</p>
+<h4>Links</h4>
+<p>Das Spiel enthält keine Verweise auf fremde Internetseiten und lädt keine Inhalte von fremden Servern nach.</p>
+<h4>Urheberrecht</h4>
+<p>Das Spiel einschließlich Quelltext, Grafik, Klang und Texten ist eigens für dieses Projekt erstellt worden und unterliegt dem deutschen Urheberrecht. Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen meiner schriftlichen Zustimmung. Kopien für den privaten, nicht kommerziellen Gebrauch sind gestattet.</p>
+<p class="note">Stand: November 2026</p>
+</div>
+
+<div id="lgDatenschutz" style="display:none">
+<h3>Datenschutzerklärung</h3>
+<h4>Das Wichtigste zuerst</h4>
+<p>ARKANUM ist eine einzelne HTML-Datei, die vollständig in deinem Browser läuft. Das Spiel hat keinen eigenen Server, keine Konten, keine Werbung und keine Messwerkzeuge. Während des Spielens werden <b>keine Daten an mich oder an Dritte gesendet</b>. Gespeichert wird allein dein Spielstand &ndash; und der bleibt auf deinem Gerät.</p>
+<h4>1. Verantwortlicher</h4>
+<p class="addr">Paulmatuszek
+Sonnenweg 2
+40667 Meerbusch
+Deutschland
+E-Mail: Paulmatuszek@icloud.com</p>
+<p>Ein Datenschutzbeauftragter ist nicht bestellt; die Voraussetzungen des Art. 37 DSGVO und des § 38 BDSG liegen nicht vor.</p>
+<h4>2. Spielstand auf deinem Gerät</h4>
+<p>Das Spiel legt genau einen Eintrag im lokalen Speicher (<b>localStorage</b>) deines Browsers an.</p>
+<ul>
+<li><b>Name:</b> arkanum_save_v1</li>
+<li><b>Inhalt:</b> Position, Stufe, Erfahrung, Gold und Fertigkeitspunkte der Spielfigur, Leben und Mana, Ausrüstung und Gepäck, erweckte Zauber und Talente, Belegung der Schnellleiste, Questfortschritt, besiegte Bosse, entdeckte Orte, geöffnete Truhen, die aufgedeckte Karte, die Spielzeit, die Ausgangszahl der Weltgenerierung und der Zeitpunkt der Speicherung.</li>
+<li><b>Wann:</b> beim Speichern über das Menü oder die Taste F5 und automatisch etwa alle 60 Sekunden.</li>
+<li><b>Wo:</b> ausschließlich in deinem Browser auf deinem Gerät. Die Daten werden nicht übertragen, und ich habe keinen Zugriff darauf.</li>
+<li><b>Personenbezug:</b> keiner &ndash; kein Name, keine Kennung, keine Standortdaten, keine Gerätekennung.</li>
+<li><b>Löschen:</b> mit der Schaltfläche unten, über „Neues Spiel“ oder über die Einstellungen deines Browsers. Im privaten Fenster endet die Speicherung ohnehin mit dem Schließen des Fensters.</li>
+</ul>
+<p><b>Rechtlicher Rahmen:</b> Das Speichern auf deinem Endgerät ist nach § 25 Abs. 2 Nr. 2 TDDDG einwilligungsfrei, weil es unbedingt erforderlich ist, um dir das ausdrücklich gewünschte Spiel mitsamt Spielstand bereitzustellen. Eine Einwilligungsabfrage („Cookie-Banner“) ist deshalb nicht nötig. Eine Verarbeitung personenbezogener Daten durch mich findet dabei nicht statt, weil die Daten mein Gerät nie erreichen.</p>
+<h4>3. Was das Spiel nicht tut</h4>
+<ul>
+<li>keine Cookies</li>
+<li>keine Analyse-, Statistik- oder Werbewerkzeuge, keine Bestenlisten</li>
+<li>keine Schriftarten, Karten, Videos oder sonstigen Inhalte von fremden Servern &ndash; Grafik, Musik und Klang entstehen zur Laufzeit im Browser</li>
+<li>keine Verbindungen ins Internet während des Spielens</li>
+<li>keine Konten, keine Registrierung, keine Anmeldung</li>
+<li>kein Zugriff auf Kamera, Mikrofon, Standort, Adressbuch oder Dateien</li>
+<li>keine Weitergabe an Dritte, keine Übermittlung in Drittländer</li>
+<li>keine automatisierte Entscheidungsfindung und kein Profiling (Art. 22 DSGVO)</li>
+</ul>
+<h4>4. Aufruf über eine Internetadresse (Hosting)</h4>
+<p>Rufst du das Spiel über eine Internetadresse auf, statt die Datei auf deinem Gerät zu öffnen, verarbeitet der Anbieter des Webspeicherplatzes beim Abruf technisch notwendige Verbindungsdaten in Server-Protokollen: IP-Adresse, Datum und Uhrzeit, Name der abgerufenen Datei, übertragene Datenmenge, Browser- und Betriebssystemkennung und gegebenenfalls die zuvor besuchte Seite. Das ist für Auslieferung und Sicherheit erforderlich; Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Umfang und Speicherdauer richten sich nach dem Anbieter. Öffnest du die heruntergeladene Datei direkt, entsteht auch dieser Protokolleintrag nicht.</p>
+<h4>5. Kontakt per E-Mail</h4>
+<p>Schreibst du mir, verarbeite ich deine E-Mail-Adresse und den Inhalt deiner Nachricht, um sie zu beantworten (Art. 6 Abs. 1 lit. f DSGVO, bei vertraglichen Anliegen lit. b). Ich lösche die Nachricht, sobald sie nicht mehr benötigt wird und keine Aufbewahrungspflichten entgegenstehen.</p>
+<h4>6. Deine Rechte</h4>
+<p>Soweit ich Daten von dir verarbeite, hast du das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung (Art. 18), Datenübertragbarkeit (Art. 20), Widerspruch (Art. 21) sowie auf Widerruf einer Einwilligung mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO).</p>
+<p>Zu deinem Spielstand kann ich dir keine Auskunft geben und ihn nicht löschen: Er liegt ausschließlich auf deinem Gerät. Wie du ihn selbst löschst, steht unter Punkt 2.</p>
+<p><b>Beschwerderecht (Art. 77 DSGVO):</b> Du kannst dich bei einer Aufsichtsbehörde beschweren, insbesondere bei der für mich zuständigen:</p>
+<p class="addr">Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen
+Postfach 20 04 44, 40102 Düsseldorf
+www.ldi.nrw.de</p>
+<p>Du kannst dich ebenso an die Aufsichtsbehörde deines Aufenthaltsorts wenden.</p>
+<h4>7. Änderungen dieser Erklärung</h4>
+<p>Ändert sich das Spiel so, dass sich auch der Umgang mit Daten ändert, passe ich diese Erklärung an. Es gilt die Fassung, die beim Aufruf des Spiels hinterlegt ist.</p>
+<h4>Spielstand auf diesem Gerät</h4>
+<p id="lgSaveState">&nbsp;</p>
+<p><button class="warn" id="lgWipe">Spielstand löschen</button></p>
+<p class="msg" id="lgMsg"></p>
+<p class="note">Stand: November 2026</p>
+</div>
+</div></div>
 <noscript><p style="padding:40px">Dieses Spiel benötigt JavaScript.</p></noscript>
 <script>
 'use strict';
@@ -7157,6 +7278,7 @@ const MENUITEMS = [
   { t: 'Spiel speichern', a: function () { saveGame(); } },
   { t: 'Ton: ', a: function () { AU.enabled = !AU.enabled; if (AU.enabled) audioResume(); sfx('uiSel'); } },
   { t: 'Musik: ', a: function () { AU.musicOn = !AU.musicOn; sfx('uiSel'); } },
+  { t: 'Rechtliches', a: function () { openLegal('i'); } },
   { t: 'Neues Spiel', a: function () { UI.confirm = { t: 'Neu beginnen?', s: 'Der aktuelle Spielstand geht verloren.', yes: function () { newGame(); }, no: function () { UI.modal = 'menu'; } }; UI.modal = 'confirm'; } }
 ];
 function drawMenu(ctx, t) {
@@ -7327,6 +7449,7 @@ function drawTitle(ctx, t) {
   opts.push({ t: 'Neues Spiel', a: function () { newGame(); } });
   if (hasSave()) opts.unshift({ t: 'Weiterspielen', a: function () { if (loadGame()) { GAME.title = 0; } } });
   opts.push({ t: 'Steuerung', a: function () { UI.modal = 'help'; GAME.titleHelp = 1; } });
+  opts.push({ t: 'Rechtliches', a: function () { openLegal('i'); } });
   opts.push({ t: (AU.enabled ? 'Ton: an' : 'Ton: aus'), a: function () { AU.enabled = !AU.enabled; audioInit(); audioResume(); } });
   GAME.titleOpts = opts;
   opts.forEach(function (o, i) {
@@ -7488,6 +7611,7 @@ window.addEventListener('wheel', function (e) {
 /* Tastatur */
 window.addEventListener('blur', function () { for (const k in KEYS) KEYS[k] = 0; MOUSE.down = 0; });
 window.addEventListener('keydown', function (e) {
+  if (LEGAL.on) { if (e.code === 'Escape') { e.preventDefault(); closeLegal(); } return; }
   audioInit(); audioResume();
   if (KEYS[e.code] && (e.code === 'Space')) { e.preventDefault(); return; }
   KEYS[e.code] = 1;
@@ -7880,6 +8004,93 @@ function tcApply() {
   }
 }
 /* --------------------------------------------------------------------------
+   25d. RECHTLICHES  (Impressum und Datenschutz als echter Text ueber dem Bild)
+   -------------------------------------------------------------------------- */
+const LEGAL = { on: 0, back: null };
+function legalEl(id) { return document.getElementById(id); }
+function openLegal(tab) {
+  const box = legalEl('legal');
+  if (!box) return;
+  LEGAL.back = UI.modal === 'legal' ? LEGAL.back : UI.modal;   // Rueckweg merken
+  LEGAL.on = 1;
+  UI.modal = 'legal';                                          // haelt das Spiel an
+  box.classList.add('on');
+  box.setAttribute('aria-hidden', 'false');
+  box.scrollTop = 0;
+  legalTab(tab || 'i');
+  legalSaveState();
+  MOUSE.down = 0; MOUSE.click = 0;
+  for (const k in KEYS) KEYS[k] = 0;
+  sfx('ui');
+}
+function closeLegal() {
+  const box = legalEl('legal');
+  if (box) { box.classList.remove('on'); box.setAttribute('aria-hidden', 'true'); }
+  LEGAL.on = 0;
+  UI.modal = LEGAL.back || null;
+  LEGAL.back = null;
+  MOUSE.click = 0;
+  sfx('uiBack');
+}
+function legalTab(which) {
+  const imp = legalEl('lgImpressum'), dat = legalEl('lgDatenschutz');
+  const ti = legalEl('lgTabI'), td = legalEl('lgTabD');
+  if (!imp || !dat) return;
+  const d = which === 'd';
+  imp.style.display = d ? 'none' : '';
+  dat.style.display = d ? '' : 'none';
+  if (ti) ti.className = d ? '' : 'sel';
+  if (td) td.className = d ? 'sel' : '';
+  legalEl('legal').scrollTop = 0;
+}
+function legalSaveState() {
+  const el = legalEl('lgSaveState');
+  if (!el) return;
+  let txt = 'Auf diesem Gerät ist derzeit kein Spielstand gespeichert.';
+  try {
+    const raw = localStorage.getItem(SAVEKEY);
+    if (raw) {
+      const kb = Math.max(1, Math.round(raw.length / 1024));
+      let wann = '';
+      try { const d = JSON.parse(raw); if (d && d.t) wann = ' vom ' + new Date(d.t).toLocaleString('de-DE'); } catch (e) { }
+      txt = 'Gespeichert ist ein Spielstand' + wann + ' (rund ' + kb + ' kB) unter dem Namen arkanum_save_v1.';
+    }
+  } catch (e) { txt = 'Der lokale Speicher ist in diesem Browser nicht verfügbar; es wird nichts gespeichert.'; }
+  el.textContent = txt;
+}
+function legalWipe() {
+  const btn = legalEl('lgWipe'), msg = legalEl('lgMsg');
+  if (!btn) return;
+  if (!btn.dataset.armed) {
+    btn.dataset.armed = '1';
+    btn.textContent = 'Wirklich löschen?';
+    if (msg) msg.textContent = 'Noch einmal tippen zum Bestätigen.';
+    setTimeout(function () { if (btn.dataset.armed) { delete btn.dataset.armed; btn.textContent = 'Spielstand löschen'; if (msg) msg.textContent = ''; } }, 6000);
+    return;
+  }
+  delete btn.dataset.armed;
+  btn.textContent = 'Spielstand löschen';
+  let ok = 1;
+  try { localStorage.removeItem(SAVEKEY); } catch (e) { ok = 0; }
+  GAME.saveOff = 1;                       // kein automatisches Speichern mehr bis zum naechsten Mal
+  legalSaveState();
+  if (msg) msg.textContent = ok
+    ? 'Gelöscht. Automatisches Speichern ist ausgesetzt, bis du von Hand speicherst oder ein neues Spiel beginnst.'
+    : 'Löschen nicht möglich - der Browser erlaubt keinen Zugriff auf den lokalen Speicher.';
+  sfx(ok ? 'rune' : 'err');
+}
+(function () {
+  const box = legalEl('legal');
+  if (!box) return;
+  const bind = function (id, fn) { const e = legalEl(id); if (e) e.addEventListener('click', fn); };
+  bind('lgClose', closeLegal);
+  bind('lgTabI', function () { legalTab('i'); });
+  bind('lgTabD', function () { legalTab('d'); });
+  bind('lgWipe', legalWipe);
+  box.addEventListener('click', function (e) { if (e.target === box) closeLegal(); });
+})();
+
+/* --------------------------------------------------------------------------
    26. SPEICHERN UND LADEN
    -------------------------------------------------------------------------- */
 const SAVEKEY = 'arkanum_save_v1';
@@ -7895,6 +8106,7 @@ function b64dec(str, out) {
 }
 function hasSave() { try { return !!localStorage.getItem(SAVEKEY); } catch (e) { return false; } }
 function saveGame(silent) {
+  if (!silent) GAME.saveOff = 0;              // von Hand speichern hebt die Sperre auf
   try {
     const d = {
       v: 1, t: Date.now(), seed: GAME.seed, time: GAME.time,
@@ -8012,6 +8224,7 @@ function newGame() {
   GAME.hintT = 26;
   toast('Sprich mit Meisterin Sylva.', P.gold2, TC.on ? 'Handtaste in ihrer Nähe.' : 'Taste E in ihrer Nähe.');
   try { localStorage.removeItem(SAVEKEY); } catch (e) { }
+  GAME.saveOff = 0;
 }
 function updateMood(force) {
   let m;
@@ -8111,7 +8324,7 @@ function update(dt, t) {
   GAME.autoT = (GAME.autoT || 0) - dt;
   if (GAME.autoT <= 0) { GAME.autoT = 60; if (!PL.dead) saveGameSilent(); }
 }
-function saveGameSilent() { saveGame(1); }
+function saveGameSilent() { if (GAME.saveOff) return; saveGame(1); }
 function drawMargins(ctx) {
   G(ctx);
   const ml = VIEW.ml, mt = VIEW.mt, mr = VIEW.mr, mb = VIEW.mb, bg = '#0e1424';

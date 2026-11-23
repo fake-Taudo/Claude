@@ -151,6 +151,21 @@ die beiden Sticks unten in Daumenhöhe. Nichts verdeckt das Spielgeschehen.
 **Querformat:** Die Sticks liegen halbtransparent in den unteren Ecken, die
 Systemtasten als kleiner Block am linken Rand.
 
+## Rechtliches
+
+Impressum und Datenschutzerklärung stecken im Spiel selbst: im Titelbild und
+im Menü (`Esc`) unter **Rechtliches**. Die Seite liegt als echter HTML-Text
+über dem Spielfeld, lässt sich also lesen, markieren und kopieren – und hält
+das Spiel an, solange sie offen ist. Unter „Datenschutz" steht außerdem, was
+gerade auf dem Gerät gespeichert ist, mit einer Schaltfläche zum Löschen des
+Spielstands.
+
+Dieselben Texte liegen als [`IMPRESSUM.md`](IMPRESSUM.md) und
+[`DATENSCHUTZ.md`](DATENSCHUTZ.md) bei, falls das Spiel auf einer Website
+eingebunden wird und dort eigene Rechtsseiten braucht. In der
+Datenschutzerklärung ist dann noch der genutzte Hosting-Anbieter einzutragen
+(Punkt 4); wird die Datei nur lokal geöffnet, entfällt dieser Punkt.
+
 ## Technisches
 
 * **Canvas 2D, rein vektoriell.** Logischer Weltausschnitt 480 × 270 Einheiten; die
