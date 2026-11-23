@@ -66,10 +66,12 @@ module.exports = async function (env) {
   out.push(...r);
 
   // CONFIG byte-identisch
-  const cfg = f => { const s = fs.readFileSync(f, 'utf8'); const i = s.indexOf('const CONFIG = {'); return s.slice(i, s.indexOf('\n};', i) + 3); };
+  // CONFIG ohne den Roboter-Block (ROBOTER_SPEC: eigener Block CONFIG.robots) und ohne saveSchema (Migration auf 3)
+  const cfg = f => { const s = fs.readFileSync(f, 'utf8'); const i = s.indexOf('const CONFIG = {'); let c = s.slice(i, s.indexOf('\n};', i) + 3);
+    c = c.replace(/  saveSchema: \d+,/, ''); const a = c.search(/\n(  \/\/ Roboter-Automatisierung[^\n]*\n)?  robots: [\[{]/); if (a >= 0) { const e = c.indexOf('\n  robotPowerPerCell', a); c = c.slice(0, a) + c.slice(e); } return c; };
   const h = f => crypto.createHash('sha1').update(cfg(f)).digest('hex');
   const ho = h(path.join(env.L.ROOT, 'index_audit_original.html')), hn = h(path.join(env.L.ROOT, 'index.html'));
-  rec('RB-05', 'Phase B', ho === hn ? 'OK' : 'FEHLER', 'CONFIG byte-identisch mit index_audit_original.html: ' + (ho === hn) + ' (' + hn.slice(0, 10) + ')');
+  rec('RB-05', 'Phase B', ho === hn ? 'OK' : 'FEHLER', 'CONFIG außerhalb des Roboter-Blocks und saveSchema byte-identisch mit index_audit_original.html: ' + (ho === hn) + ' (' + hn.slice(0, 10) + ')');
 
   // 60-s-Logiklauf: gleicher Seed, gleiche Eingaben, Original gegen aktuelle Fassung
   env.L.buildInstrumented(path.join(env.L.ROOT, 'index_audit_original.html'), 'index_audit_original_instrumented.html');

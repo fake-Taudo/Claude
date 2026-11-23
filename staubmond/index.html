@@ -1565,7 +1565,7 @@ window.Loader = (function () {
    ============================================================================ */
 const CONFIG = {
   version: '1.0.0',
-  saveSchema: 2,
+  saveSchema: 3,
   world: {
     size: 6144, chunk: 64, sectorChunks: 4, cellPx: 16,
     seed: 20261026,
@@ -1686,12 +1686,21 @@ const CONFIG = {
   },
   antennaRadius: 300, depotRadioRadius: 320, lampRadius: 40, hangarSlots: 6,
   bridgeMaxLen: 12,
-  robots: [
-    { id: 'mk1', name: 'K.E.H.R. Mk1', price: 2500, speed: 4, radius: 1.2, cap: 30, licence: 1 },
-    { id: 'mk2', name: 'K.E.H.R. Mk2', price: 20000, speed: 6, radius: 2.0, cap: 150, licence: 2 },
-    { id: 'mk3', name: 'K.E.H.R. Mk3', price: 150000, speed: 8, radius: 3.5, cap: 800, licence: 4, smallRims: true },
-    { id: 'drone', name: 'Schwarm-Drohne', price: 1000000, speed: 14, radius: 2.5, cap: 400, licence: 6, fly: true },
-  ],
+  // Roboter-Automatisierung (K.E.H.R.-Bots): Modelle und Verhalten. Weitere, ältere Roboterwerte stehen unten (robotPowerPerCell, robotUpgrades, …)
+  robots: {
+    models: [
+      { id: 'mk1', name: 'K.E.H.R. Mk1', price: 2500, speed: 4, radius: 1.2, cap: 30, licence: 1 },
+      { id: 'mk2', name: 'K.E.H.R. Mk2', price: 20000, speed: 6, radius: 2.0, cap: 150, licence: 2 },
+      { id: 'mk3', name: 'K.E.H.R. Mk3', price: 150000, speed: 8, radius: 3.5, cap: 800, licence: 4, smallRims: true },
+      { id: 'drone', name: 'Schwarm-Drohne', price: 1000000, speed: 14, radius: 2.5, cap: 400, licence: 6, fly: true },
+    ],
+    unloadBase: 0.5, unloadKgPerSec: 200,   // Abladen dauert 0,5 s + Menge / 200 kg/s
+    retry: 2,                              // Ziel voll / kein Ziel: erneut versuchen nach 2 s
+    stall: 60,                             // ohne Fortschritt: Bahn freigeben nach 60 s, nach 3 Versuchen heim („Gefangen“)
+    stallTries: 3,
+    hangarRadio: 60,                       // Hangar zählt als schwache Antenne (Zellen)
+    nearScreens: 1.5,                      // Detail-Modus: sichtbarer Bereich + 1,5 Bildschirme Rand
+  },
   robotPowerPerCell: 0.5,
   robotUpgrades: [
     { id: 'speed', name: 'Tempo', step: 0.04 },
@@ -2762,6 +2771,7 @@ function newState(seed, mission, slot) {
     ev: { meteor: CONFIG.events.meteor.firstAfter, wind: CONFIG.events.solarWind.firstAfter, windUntil: 0, inspect: CONFIG.events.inspection.firstAfter, insp: null, night: false },
     stats: { cells: 0, kgSold: 0, moneyEarned: 0, capsules: 0, robotCells: 0, robotKg: 0, sectors: 0, ups: 0, builds: 0, findsFound: 0, ordersDone: 0, sandMade: 0, kgByType: new Array(NGOODS).fill(0) },
     avgVal: 1, waypoint: null, ended: false, endSeen: false, lastReal: Date.now(),
+    robotTut: { seen: false, skip: false },   // Einführungs-Memo „Automatisierung genehmigt“ (ab Schema 3)
   };
 }
 
@@ -6707,7 +6717,7 @@ const Draw = {
    ============================================================================ */
 const Robots = {
   list: [], assigns: [], tick: 0, offlineMode: false, offlineKg: 0, warnT: 0,
-  def(m) { return CONFIG.robots.find(r => r.id === m); },
+  def(m) { return CONFIG.robots.models.find(r => r.id === m); },
   init() {
     if (!G.robotUp) G.robotUp = { speed: 0, radius: 0, cap: 0 };
     this.assigns = (G.assigns || []).map(a => Object.assign({}, a));
@@ -8403,7 +8413,7 @@ Object.assign(UI, {
         if (def.kind === 'cart') Draw.cart(v, 1); else Draw.vehicle(v, 0, 0, v.a, false, 1);
         Actors.veh.delete(-900);
       } else if (kind === 'robot') {
-        const def = CONFIG.robots.find(r => r.id === id), r = { id: -901, model: id, def, x: 0, y: 0, px: 0, py: 0, a: -0.5, near: true, state: 'work', warn: false, cleanFx: 0, load: new Float32Array(NGOODS), assign: 0 };
+        const def = CONFIG.robots.models.find(r => r.id === id), r = { id: -901, model: id, def, x: 0, y: 0, px: 0, py: 0, a: -0.5, near: true, state: 'work', warn: false, cleanFx: 0, load: new Float32Array(NGOODS), assign: 0 };
         sc = def.fly ? 80 : 100; oy = def.fly ? -0.4 : 0;
         Draw.robotList(1, 0, [r]); Actors.rob.delete(-901);
       } else if (kind === 'tool') {
@@ -8498,7 +8508,7 @@ Object.assign(UI, {
         render: (body, tab, p) => this.renderDepot(body, tab, b, p) });
     }
     if (b.type === 'hangar') return this.panel({ id: 'hangar', title: 'Roboter-Hangar', sub: Robots.inHangar(b) + ' / ' + Buildings.hangarSlots() + ' Roboter · Stellenplan ' + Robots.list.length + ' / ' + Robots.fleetCap(), icon: 'robot', side: true, live: true,
-      tabs: [{ id: 'buy', label: 'Roboter', icon: 'robot', dot: () => CONFIG.robots.some(d => d.licence <= G.licence && Economy.robotPrice(d) <= G.money && !Robots.list.some(r => r.model === d.id)) }, { id: 'list', label: 'Einsatz', icon: 'map' }, { id: 'up', label: 'Upgrades', icon: 'up', dot: () => CONFIG.robotUpgrades.some(u => G.robotUp[u.id] < CONFIG.robotUpgradeLevels && Robots.upPrice(u.id) <= G.money) }],
+      tabs: [{ id: 'buy', label: 'Roboter', icon: 'robot', dot: () => CONFIG.robots.models.some(d => d.licence <= G.licence && Economy.robotPrice(d) <= G.money && !Robots.list.some(r => r.model === d.id)) }, { id: 'list', label: 'Einsatz', icon: 'map' }, { id: 'up', label: 'Upgrades', icon: 'up', dot: () => CONFIG.robotUpgrades.some(u => G.robotUp[u.id] < CONFIG.robotUpgradeLevels && Robots.upPrice(u.id) <= G.money) }],
       render: (body, tab) => this.renderHangar(body, tab, b) });
     if (b.type === 'garage') return this.panel({ id: 'garage', title: 'Garage', sub: 'Fahrzeuge parken und herbeirufen', icon: 'garage', side: true, live: true, render: body => this.renderVehicles(body, b) });
     if (b.type === 'teleport') return this.panel({ id: 'tele', title: b.name || 'Teleport-Plattform', sub: 'Schnellreise', icon: 'teleport', side: true, render: body => this.renderTeleport(body, b) });
@@ -8643,8 +8653,8 @@ Object.assign(UI, {
       body.appendChild(U.h('div', { class: 'note', style: { marginBottom: '10px' }, html: 'K.E.H.R. = <i>Kleine Emsige Haushalts-Reinigungs-Bots</i>. Laut Memo 4711/B „ausdrücklich keine Haushaltsgeräte“. Roboter arbeiten überall im Funknetz – auch wenn Sie weit weg sind.' }));
       body.appendChild(U.h('div', { class: 'note', style: { marginBottom: '12px' }, html: 'Stellenplan des ALOP: <b style="color:#fff">' + Robots.list.length + ' / ' + Robots.fleetCap() + '</b> Roboter (steigt mit jeder Lizenz). Verkaufen erstattet 100 %.' }));
       const g = U.h('div', { class: 'cards' }), full = Robots.inHangar(h) >= Buildings.hangarSlots() || Robots.list.length >= Robots.fleetCap();
-      const mS = Math.max(...CONFIG.robots.map(r => r.speed)), mR = Math.max(...CONFIG.robots.map(r => r.radius)), mC = Math.sqrt(Math.max(...CONFIG.robots.map(r => r.cap)));
-      for (const d of CONFIG.robots) {
+      const RM = CONFIG.robots.models, mS = Math.max(...RM.map(r => r.speed)), mR = Math.max(...RM.map(r => r.radius)), mC = Math.sqrt(Math.max(...RM.map(r => r.cap)));
+      for (const d of CONFIG.robots.models) {
         const price = Economy.robotPrice(d), locked = d.licence > G.licence, n = Robots.list.filter(r => r.model === d.id).length, fleet = Robots.list.length >= Robots.fleetCap();
         g.appendChild(this.card({ key: 'r' + d.id, art: this.thumb('robot', d.id), title: d.name, meta: d.fly ? 'Fliegt über alle Hindernisse.' : d.smallRims ? 'Fährt über kleine Kraterränder.' : '', chip: n ? n + ' im Dienst' : null,
           bars: [['Tempo', d.speed / mS, d.speed + ' Z/s'], ['Radius', d.radius / mR, U.f1(d.radius) + ' Z'], ['Kapazität', Math.sqrt(d.cap) / mC, U.kg(d.cap)]],
@@ -9511,6 +9521,8 @@ const Save = {
     const fill = (dst, src) => { for (const k in src) { if (dst[k] === undefined) dst[k] = src[k]; else if (src[k] && typeof src[k] === 'object' && !Array.isArray(src[k]) && typeof dst[k] === 'object') fill(dst[k], src[k]); } };
     fill(g, fresh);
     if ((g.v || 1) < 2) { g.stats.builtBy = g.stats.builtBy || {}; }
+    // Schema 3: Einführungs-Memo für Roboter – wer schon Lizenz 1 hat, sieht es nicht mehr ungefragt; wer schon Roboter hat, braucht die Ziele nicht
+    if ((g.v || 1) < 3) g.robotTut = { seen: g.licence >= 1, skip: (g.robots || []).length > 0 };
     g.v = CONFIG.saveSchema;
     return g;
   },
@@ -10395,7 +10407,7 @@ const Debug = {
     const upP = (id, l) => C.upgrades.find(u => u.id === id).base * Math.pow(C.upgradeGrowth, l);
     const fx = k => { let v = ADDITIVE_FX.has(k) ? 0 : 1; for (const br of C.research) for (const n of br.nodes) if (S.res[n.id] && n.fx[k] !== undefined) v = ADDITIVE_FX.has(k) ? v + n.fx[k] : v * n.fx[k]; return v; };
     const RU = C.robotUpgrades, VU = C.vehicleUpgrades;
-    const robotRate = m => { const d = C.robots[m]; return 2 * d.radius * (1 + RU[1].step * S.ru.radius) * fx('robotRadius') * 0.86 * d.speed * (1 + RU[0].step * S.ru.speed) * fx('robotSpeed'); };
+    const robotRate = m => { const d = C.robots.models[m]; return 2 * d.radius * (1 + RU[1].step * S.ru.radius) * fx('robotRadius') * 0.86 * d.speed * (1 + RU[0].step * S.ru.speed) * fx('robotSpeed'); };
     const nRob = () => S.rob.reduce((a, b) => a + b, 0);
     const buy = p => { if (S.money < p) return false; S.money -= p; return true; };
     let income = 20, carpetStart = -1;
@@ -10410,7 +10422,7 @@ const Debug = {
       const playerKg = mapDone ? 0 : kgps * eff * 0.9;
       let robotKg = 0;
       for (let m = 0; m < 4; m++) if (S.rob[m] && !mapDone) {
-        const d = C.robots[m], rate = robotRate(m), capR = d.cap * (1 + RU[2].step * S.ru.cap) * fx('robotCap'), sp = d.speed * (1 + RU[0].step * S.ru.speed) * fx('robotSpeed');
+        const d = C.robots.models[m], rate = robotRate(m), capR = d.cap * (1 + RU[2].step * S.ru.cap) * fx('robotCap'), sp = d.speed * (1 + RU[0].step * S.ru.speed) * fx('robotSpeed');
         const fill = capR / (rate * kc), tripR = 2 * (S.belts ? 45 : 110) / sp;
         const e = (fx('selfEmpty') && m > 0 ? 0.95 : fill / (fill + tripR)) * 0.85;
         robotKg += S.rob[m] * rate * kc * e;
@@ -10446,11 +10458,11 @@ const Debug = {
         if (S.hangars * (6 + fx('hangarSlots')) <= nRob() && buy(5000 + 1500)) { S.hangars++; if (S.hangars === 1) mark('Erster Hangar'); }
         if (!S.belts && S.hangars && buy(300 + 300 + 60 * 5)) { S.belts = true; mark('Erstes Förderband'); }
         const fleet = C.robotFleet[S.lic] + fx('fleet');
-        let top = -1; for (let m = 3; m >= 0; m--) if (C.robots[m].licence <= S.lic) { top = m; break; }
+        let top = -1; for (let m = 3; m >= 0; m--) if (C.robots.models[m].licence <= S.lic) { top = m; break; }
         if (top >= 0) {
-          const p = C.robots[top].price * fx('robotPrice');
+          const p = C.robots.models[top].price * fx('robotPrice');
           if (nRob() < fleet) { if (nRob() < S.hangars * (6 + fx('hangarSlots')) && p < income * 6 && buy(p)) { S.rob[top]++; const n = nRob(); if (n === 1) mark('Erster Roboter'); if (n === 5) mark('5 Roboter'); if (n === 20) mark('20 Roboter'); if (n === 50) mark('50 Roboter'); } }
-          else { let w = -1; for (let m = 0; m < top; m++) if (S.rob[m]) { w = m; break; } if (w >= 0 && p - C.robots[w].price < income * 6) { S.money += C.robots[w].price * fx('robotPrice'); S.rob[w]--; if (buy(p)) S.rob[top]++; else S.rob[w]++; } }
+          else { let w = -1; for (let m = 0; m < top; m++) if (S.rob[m]) { w = m; break; } if (w >= 0 && p - C.robots.models[w].price < income * 6) { S.money += C.robots.models[w].price * fx('robotPrice'); S.rob[w]--; if (buy(p)) S.rob[top]++; else S.rob[w]++; } }
         }
       }
       if (S.lic >= 2 && S.proc < 1 && buy(4000 * 2)) { S.proc = 1; mark('Verdichter läuft'); }
