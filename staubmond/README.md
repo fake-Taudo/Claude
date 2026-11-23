@@ -54,3 +54,7 @@ Die Vorgabe steht in `LADEBILDSCHIRM_SPEC.md`.
 F3 oder fünfmal auf den Geldbetrag tippen öffnet das Debug-Overlay. Dort gibt es FPS und Profiling (inkl. Effektkosten pro Frame), die Pacing-Simulation, den Zeitraffer (×1/×4/×16) und ein Effekt-Testmenü (Sektor, Lizenz, Kapsel, Meteorschauer, Fundstück, Kauf, Auftrag), das die Effekte rein optisch abspielt, ohne Spielwerte zu ändern.
 
 Alle Balancing-Werte stehen zentral im `CONFIG`-Objekt, alle optischen Werte in `THEME` (Farben, Bewegung, HUD) und `FX_CONFIG` (Qualitätsstufen, Partikel, Effekte). Die Design-Entscheidungen sind im Kommentarblock am Anfang des Skripts dokumentiert; die Vorgaben für die VFX- und UI-Überarbeitung und den Ladebildschirm stehen in `VFX_UI_SPEC.md` und `LADEBILDSCHIRM_SPEC.md`.
+
+## Impressum und Datenschutz
+
+`impressum.html` und `datenschutz.html` liegen neben `index.html` und werden mit ausgeliefert. Verlinkt sind sie im Hauptmenü (Fußzeile), unter „Steuerung & Hilfe“ und im Koop-Fenster (Hinweis zu PeerJS/WebRTC).

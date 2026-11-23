@@ -670,6 +670,9 @@ body.prof-phone #map .legend { font-size: 11px; padding: 6px 9px; }
 #menu .mbtns .btn.primary { background: var(--btn-orange); }
 #menu .mbtns .btn.disabled { background: rgba(18,23,34,.6); }
 #menu .foot { margin-top: 20px; font-size: 12px; color: var(--muted-2); }
+#menu .foot a, .legal a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; display: inline-block; padding: 6px 0; }
+#menu .foot a { color: var(--white); font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 0 10px rgba(0,0,0,.8); }
+.legal { margin-top: 14px; font-size: 12.5px; line-height: 1.5; color: var(--muted-2); }
 @media (max-width: 600px) { #menu { align-items: flex-end; } #menu .mbox { margin: 0 auto; } }
 .slots { display: flex; flex-direction: column; gap: 10px; }
 .slot { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; padding: 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 16px; }
@@ -8855,6 +8858,7 @@ Object.assign(UI, {
     body.appendChild(U.h('div', { class: 'help-grid', html: [['Bewegen / Fahren', k('up') + k('left') + k('down') + k('right')], ['Putzen (halten)', k('clean') + ' oder linke Maustaste'], ['Interagieren', k('interact')], ['Terminal', k('terminal')], ['Baumodus', k('build')], ['Drehen / Verschieben / Abreißen', k('rotate') + ' ' + k('move') + ' ' + k('demolish')], ['Rückgängig', '<span class="kbd">Strg</span><span class="kbd">Z</span>'], ['Karte', k('move') + ' oder ' + k('map')], ['Forschung / Aufträge / Album', k('research') + ' ' + k('orders') + ' ' + k('album')], ['Zoom', 'Mausrad, ' + k('zoomIn') + k('zoomOut')], ['Pause', k('pause')], ['Debug', k('debug') + ' oder 5× aufs Geld tippen']].map(r => '<span>' + r[0] + '</span><span>' + r[1] + '</span>').join('') }));
     body.appendChild(U.h('div', { class: 'sect-title', text: 'Touch (Handy & iPad)' }));
     body.appendChild(U.h('div', { class: 'note', html: 'Linke Hälfte: schwebender Joystick (leicht schieben = langsam). Rechts: Putz-Button halten, darüber der Aktions-Button. Zwei Finger: zoomen. Im Baumodus: ein Finger platziert bzw. zieht Bänder, zwei Finger verschieben die Kamera. Optionen: Auto-Putzen, Linkshänder-Modus, Joystick fest/schwebend.' }));
+    body.appendChild(U.h('div', { class: 'legal', html: 'Spielstände und Einstellungen bleiben auf diesem Gerät. ' + '<a href="impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz</a>' }));
     if (/iPhone|iPod/.test(navigator.userAgent)) body.appendChild(U.h('div', { class: 'note', style: { marginTop: '8px' }, html: '<b>Tipp fürs iPhone:</b> Teilen → „Zum Home-Bildschirm“ – dann läuft Staubmond im Vollbild.' }));
   },
   /* --- Einstellungen: Gruppen, Grafik und Effekte mit Live-Vorschau --- */
@@ -9010,7 +9014,7 @@ Object.assign(UI, {
     b('people', 'Koop beitreten', () => Net.panel());
     if (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen) b('full', 'Vollbild', () => Game.fullscreen());
     box.appendChild(btns);
-    box.appendChild(U.h('div', { class: 'foot', html: 'Version ' + CONFIG.version + ' · Alle Grafiken und Klänge werden live erzeugt.' + (Save.fallback ? '<br>IndexedDB nicht verfügbar – eingeschränkter Speicher.' : '') }));
+    box.appendChild(U.h('div', { class: 'foot', html: 'Version ' + CONFIG.version + ' · Alle Grafiken und Klänge werden live erzeugt.' + (Save.fallback ? '<br>IndexedDB nicht verfügbar – eingeschränkter Speicher.' : '') + '<br>' + '<a href="impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz</a>' }));
     m.appendChild(box);
     Menu.open();
     requestAnimationFrame(() => this.logoDust(h1));
@@ -10067,6 +10071,7 @@ const Net = {
   panel() {
     UI.panel({ id: 'coop', title: 'Koop', sub: 'Bis zu 8 Personen · gemeinsame Kasse · +5 % Crew-Bonus je Mitspieler', icon: 'people', small: true, render: b => {
       const note = (t) => b.appendChild(U.h('div', { class: 'note', style: { marginBottom: '10px' }, html: t }));
+      if (!this.role) b.appendChild(U.h('div', { class: 'legal', style: { margin: '0 0 10px' }, html: 'Hinweis: Koop über das Internet lädt PeerJS (jsDelivr) und nutzt den PeerJS-Vermittlungsserver; Mitspielende sehen gegenseitig ihre IP-Adresse. „Dieses Gerät“ bleibt lokal. <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz</a>' }));
       const seg = (v, fn) => { const s = U.h('div', { class: 'seg', style: { marginBottom: '10px' } }); for (const [k, l] of [['peer', 'Internet (Einladungscode)'], ['local', 'Dieses Gerät (Tabs)']]) s.appendChild(U.h('button', { class: this.kind === k ? 'on' : '', text: l, onclick: () => { this.kind = k; this.refresh(); } })); return s; };
       if (this.role === 'host') {
         b.appendChild(U.h('div', { style: { fontSize: '13px', color: 'var(--muted)' }, text: 'Einladungscode' }));
@@ -10100,7 +10105,7 @@ const Net = {
       b.appendChild(codeIn);
       b.appendChild(U.h('button', { class: 'btn petrol', text: 'Beitreten', onclick: () => this.join(codeIn.value, nameIn.value.trim() || 'Crew', this.kind) }));
       if (this.status) note('<br>' + this.status);
-      note('<br>Alle müssen dieselbe Spielversion haben (' + CONFIG.version + '). „Internet“ nutzt WebRTC über PeerJS (direkte Verbindung, kein eigener Server).');
+      note('<br>Alle müssen dieselbe Spielversion haben (' + CONFIG.version + '). „Internet“ nutzt WebRTC über PeerJS (direkte Verbindung, kein eigener Spielserver).');
     } });
   },
   emoteRow(b) {
