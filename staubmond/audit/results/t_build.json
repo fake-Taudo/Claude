@@ -69,7 +69,7 @@
   "id": "B-12",
   "area": "3.6",
   "status": "OK",
-  "detail": "Hangar bauen, 2 Roboter kaufen: Abriss wird korrekt verweigert ({\"ok\":true}), aber „Rückgängig“ (Strg+Z) entfernt den Hangar trotzdem und erstattet den vollen Preis. Danach: keine veralteten Verweise; 2 Roboter ohne Hangar."
+  "detail": "Hangar bauen, 2 Roboter kaufen: Abriss erlaubt (seit ROBOTER_SPEC: Roboter ziehen um oder stehen ohne Hangar, im Spiel mit Rückfrage) ({\"ok\":true}); „Rückgängig“ (Strg+Z) entfernt den Hangar und erstattet den vollen Preis. Danach: keine veralteten Verweise; 2 Roboter ohne Hangar."
  },
  {
   "id": "B-13",

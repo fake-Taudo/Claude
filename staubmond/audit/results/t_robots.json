@@ -47,7 +47,7 @@
   "id": "R-04",
   "area": "3.8",
   "status": "OK",
-  "detail": "Zuweisung an bereits fertigen Sektor: {\"ok\":true,\"msg\":\"2 Roboter → Sektor M-13\"} → Roboter ziehen sofort weiter (work:5,work:5). Außerhalb des Funknetzes: {\"ok\":false,\"why\":\"Bereich liegt außerhalb des Funknetzes. Antennen-Kette bauen!\"}"
+  "detail": "Zuweisung an bereits fertigen Sektor: {\"ok\":false,\"why\":\"Zuweisung nicht möglich: Sektor ist bereits gereinigt.\"} (abgelehnt mit Grund, Roboter bleiben, wo sie sind: work:5,work:5). Außerhalb des Funknetzes: {\"ok\":false,\"why\":\"Zuweisung nicht möglich: außerhalb des Funknetzes – Antenne bauen.\"}"
  },
  {
   "id": "R-05",
@@ -111,7 +111,7 @@
   "id": "R-12",
   "area": "3.8",
   "status": "OK",
-  "detail": "Uhr 1 Tag zurückgestellt: +0 ₥ (keine Gutschrift); 30 Tage vorgestellt: +4947 ₥ (auf 8 h gedeckelt, Berechnung 0.3 s); 45 s Abwesenheit: +0 ₥ (unter 1 Min. keine Gutschrift)"
+  "detail": "Uhr 1 Tag zurückgestellt: +0 ₥ (keine Gutschrift); 30 Tage vorgestellt: +4947 ₥ (auf 8 h gedeckelt, Berechnung 0.2 s); 45 s Abwesenheit: +0 ₥ (unter 1 Min. keine Gutschrift)"
  },
  {
   "id": "R-13",

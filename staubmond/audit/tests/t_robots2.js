@@ -1,7 +1,7 @@
-// ROBOTER_SPEC.md Abschnitt 6: Tests 1–10 der Roboter-Automatisierung (Test 11 = übrige Module und RB-06)
+// ROBOTER_SPEC.md Abschnitt 6: Tests 1–10 der Roboter-Automatisierung, RT-11 alter Spielstand (Test 11 = übrige Module und RB-05/RB-06)
 module.exports = async function (env) {
   const { page } = await env.open();
-  return page.evaluate(async () => {
+  const res = await page.evaluate(async () => {
     const T = __test, out = [], st = CONFIG.world.start;
     const rec = (id, status, detail, data) => out.push({ id, area: 'Roboter', status, detail, data });
     const inView0 = Renderer.inView;
@@ -180,6 +180,88 @@ module.exports = async function (env) {
       const ms = tot / N;
       rec('RT-10', ms <= 2 ? 'OK' : 'FEHLER', '100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus ' + belts + ' Bandzellen: Robotersimulation ' + ms.toFixed(3) + ' ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund ' + (ms * 3.5).toFixed(2) + ' ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.', { ms });
     }
+    // 12) Bedienung: Memo mit Häkchen, Hangar-Liste, Gesamtliste, Zuweisen über die Karte (Sektor gültig/gesperrt, Rechteck), HUD-Karte, Abriss-Rückfrage
+    {
+      const { h } = await setup(3, 'mk1', { assign: false, lic: 1 }); const bad = [];
+      const wait = ms => new Promise(r => setTimeout(r, ms));
+      G.robotTut = { seen: false, skip: false }; UI.tutorial();
+      const memo = document.querySelector('#tutorial .memo');
+      if (!memo || !/Automatisierung genehmigt/.test(memo.textContent)) bad.push('Memo fehlt');
+      const okN = document.querySelectorAll('#tutorial .rsteps li.ok').length; if (okN !== 2) bad.push('Häkchen ' + okN + ' statt 2');
+      [...document.querySelectorAll('#tutorial button')].find(b => /Los/.test(b.textContent)).click();
+      if (!document.getElementById('tutorial').classList.contains('hidden') || !G.robotTut.memo) bad.push('Memo nicht weggelegt');
+      const g0 = UI.goalList()[0]; if (!g0 || g0.id !== 'rt2') bad.push('Ziel „zuweisen“ fehlt (' + (g0 && g0.id) + ')');
+      UI.openBuilding(h, 'list'); await wait(20);
+      const rowsOf = id => { const p = UI.stack.find(x => x.o.id === id); return p ? p.body.querySelectorAll('.rrow').length : -1; }, rows = rowsOf('hangar'); if (rows !== 3) bad.push('Hangar-Liste ' + rows + ' Zeilen');
+      for (const k in UI.RST) if (!Icons.P[UI.RST[k][2]]) bad.push('Symbol fehlt: ' + k);
+      UI.closeAll(); UI.open('robots'); await wait(20); if (rowsOf('robots') !== 3) bad.push('Gesamtliste ' + rowsOf('robots'));
+      UI.robotCard(); const lb = UI.iconBtns.robots.querySelector('.lb').textContent; if (!/^\d+ \/ 3$/.test(lb) || UI.iconBtns.robots.style.display === 'none') bad.push('HUD-Karte „' + lb + '“');
+      // Karte: Sektor antippen
+      const ids = Robots.list.map(r => r.id);
+      UI.assignPick([ids[0]]); const M = UI.map; M.cv.setPointerCapture = () => { };
+      const tap = (wx, wy) => { const q = UI.mapToScreen(wx, wy); const o = { pointerId: 7, clientX: q.x, clientY: q.y, bubbles: true }; M.cv.dispatchEvent(new PointerEvent('pointerdown', o)); M.cv.dispatchEvent(new PointerEvent('pointerup', o)); };
+      let lockS = -1; for (let s = 0; s < NSEC * NSEC && lockS < 0; s++) if (World.locked(World.secRegion[s])) lockS = s;
+      const la = Robots.areaFor(lockS); tap(la.x0 + 128, la.y0 + 128);
+      if (Robots.list[0].assign || !M.assign) bad.push('gesperrter Sektor angenommen');
+      const ss = U.sectorAt(st.x, st.y); tap(st.x, st.y);
+      const a1 = Robots.list[0].assign ? Robots.assignById(Robots.list[0].assign) : null; if (!a1 || a1.sector !== ss || M.assign) bad.push('Sektor-Tipp nicht zugewiesen');
+      // Rechteck
+      UI.assignPick([ids[1], ids[2]]); const M2 = UI.map; M2.cv.setPointerCapture = () => { };
+      [...M2.ab.querySelectorAll('button')].find(b => /Rechteck/.test(b.textContent)).click();
+      const p1 = UI.mapToScreen(st.x - 40, st.y - 30), p2 = UI.mapToScreen(st.x + 40, st.y + 30);
+      M2.cv.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 8, clientX: p1.x, clientY: p1.y })); M2.cv.dispatchEvent(new PointerEvent('pointermove', { pointerId: 8, clientX: p2.x, clientY: p2.y })); M2.cv.dispatchEvent(new PointerEvent('pointerup', { pointerId: 8, clientX: p2.x, clientY: p2.y }));
+      const a2 = Robots.list[1].assign ? Robots.assignById(Robots.list[1].assign) : null; if (!a2 || a2.sector !== -1 || Robots.list[2].assign !== Robots.list[1].assign) bad.push('Rechteck nicht zugewiesen');
+      UI.drawMap(); UI.closeMap();
+      if (!G.robotTut.a) bad.push('Schritt 3 nicht erkannt');
+      // Abriss mit Rückfrage
+      const m0 = G.money; UI.demolishHangar(h); await wait(20);
+      const ask = UI.stack.find(p => p.o.id === 'ask'); if (!ask || !Buildings.byId(h.id)) bad.push('keine Rückfrage');
+      if (ask) [...ask.el.querySelectorAll('button')].find(b => b.textContent === 'Abreißen').click();
+      if (Buildings.byId(h.id) || Robots.list.length !== 3 || Robots.list.some(r => r.hangar)) bad.push('Abriss/Umzug');
+      UI.closeAll(); T.ticks(60, 0); const chk = T.check({ full: true });
+      rec('RT-12', !bad.length && !chk.length ? 'OK' : 'FEHLER', 'Bedienung: Memo „Automatisierung genehmigt“ mit Häkchen, Hangar-Liste, Gesamtliste, HUD-Karte „' + lb + '“, Zuweisen per Karten-Tipp (gesperrter Sektor abgelehnt, Startsektor angenommen), Rechteck, Abriss nach Rückfrage (Roboter ohne Hangar, nichts verloren, Erstattung ' + U.money(G.money - m0) + '): ' + (bad.concat(chk).join(', ') || 'alles wie erwartet'));
+    }
     return out;
   });
+  res.push(await oldSave(env));
+  return res;
 };
+
+// 11) Alter Spielstand (Originalfassung vor den Roboter-Änderungen, Schema 2, ohne Roboter):
+// in der Originalfassung speichern, dann dort und in der neuen Fassung laden und 50 s identisch weiterspielen
+async function oldSave(env) {
+  const path = require('path');
+  env.L.buildInstrumented(path.join(env.L.ROOT, 'index_audit_original.html'), 'index_audit_original_instrumented.html');
+  // frischer Kontext (leerer Speicher); nur Zufalls-Seed, kein Löschen der Datenbank beim Öffnen der zweiten Seite
+  const ctx = await env.browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await ctx.addInitScript(`(() => { let s = 4711; Math.random = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; })();`);
+  try {
+  const cont = async (page) => page.evaluate(async () => {
+    const T = __test, settle = async () => { for (let i = 0; i < 300 && Save.saving; i++) await new Promise(r => setTimeout(r, 10)); };
+    await settle(); await Game.loadGame(0); Game.loop = function () { }; Game.paused = true; await settle();
+    const v = G.v, tut = JSON.stringify(G.robotTut || null);
+    Save.saveNow = async function () { }; Save.soon = function () { };   // Vergleichslauf darf den gemeinsamen Spielstand nicht überschreiben
+    T.seedRandom(99); World.rnd = 99;
+    const route = t => { const ph = Math.floor(t / 300) % 4; return { mx: [0, 1, 0, -1][ph], my: [1, 0, -1, 0][ph], clean: true }; };
+    const trace = [];
+    for (let tick = 0; tick < 3000; tick++) {
+      T.setIntent(route(tick)); Game.tick(1 / 60);
+      if (tick % 600 === 599) { const d = Buildings.mainDepot(); Player.x = Buildings.center(d).x; Player.y = d.y + d.h + 1.5; Actions.interact('unload'); Shop.do('launch', d.id); trace.push([tick, +G.money.toFixed(4), G.stats.cells, +G.stats.moneyEarned.toFixed(4)]); }
+    }
+    return { v, tut, run: JSON.stringify({ trace, money: +G.money.toFixed(6), cells: G.stats.cells, glanz: World.glanz().toFixed(10), x: +Player.x.toFixed(6), y: +Player.y.toFixed(6) }) };
+  });
+  const { page: po } = await env.open({ ctx, file: 'audit/index_audit_original_instrumented.html' });
+  await po.evaluate(async () => {
+    const T = __test; T.seedRandom(4711); await T.startNew(20261026); T.seedRandom(4711); World.rnd = 4711; G.tutSkip = true;
+    for (let tick = 0; tick < 1200; tick++) { T.setIntent({ mx: tick < 600 ? 1 : 0, my: tick < 600 ? 0 : 1, clean: true }); Game.tick(1 / 60); }
+    for (let i = 0; i < 300 && Save.saving; i++) await new Promise(r => setTimeout(r, 10));
+    await Save.saveNow(true);
+  });
+  const a = await cont(po);
+  const { page: pn } = await env.open({ ctx, file: 'audit/index_audit_instrumented.html' });
+  const b = await cont(pn);
+  await ctx.close();
+  const same = a.run === b.run;
+  return { id: 'RT-11', area: 'Roboter', status: same && a.v === 2 && b.v === 3 ? 'OK' : 'FEHLER', detail: 'Alter Spielstand ohne Roboter (mit der Fassung vor den Roboter-Änderungen gespeichert, Schema ' + a.v + '): in der neuen Fassung geladen (Schema ' + b.v + ', ergänzt robotTut ' + b.tut + ') und 50 s mit fester Route, Abladen und Kapselstart weitergespielt – ' + (same ? 'identisch mit der alten Fassung ' + b.run.slice(0, 160) : 'ABWEICHUNG alt ' + a.run.slice(0, 220) + ' | neu ' + b.run.slice(0, 220)) };
+  } catch (e) { await ctx.close().catch(() => { }); return { id: 'RT-11', area: 'Roboter', status: 'FEHLER', detail: 'Alter Spielstand: Test abgebrochen: ' + (e.stack || e.message).slice(0, 400) }; }
+}

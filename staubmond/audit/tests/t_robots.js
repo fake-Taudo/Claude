@@ -72,7 +72,9 @@ module.exports = async function (env) {
       if (lockedSec >= 0) { a2 = T.act('assign', Robots.list.map(r => r.id), Robots.areaFor(lockedSec), true); T.ticks(60 * 60, 0); st2 = Robots.list.map(r => r.state + ':' + r.assign).join(','); }
       G.licence = 4; World.updateLocks();
       const farS = U.sectorAt(st.x + 1500, st.y); const a3 = T.act('assign', Robots.list.map(r => r.id), Robots.areaFor(farS), true);
-      rec('R-04', '3.8', a1.ok && !a3.ok ? 'OK' : 'FEHLER', 'Zuweisung an bereits fertigen Sektor: ' + JSON.stringify(a1) + ' → Roboter ziehen sofort weiter (' + st1 + '). Außerhalb des Funknetzes: ' + JSON.stringify(a3));
+      // seit ROBOTER_SPEC: fertige Sektoren werden mit Grund abgelehnt (vorher angenommen, Roboter zogen sofort weiter)
+      const a1ok = a1.ok || /gereinigt/.test(a1.why || '');
+      rec('R-04', '3.8', a1ok && !a3.ok ? 'OK' : 'FEHLER', 'Zuweisung an bereits fertigen Sektor: ' + JSON.stringify(a1) + (a1.ok ? ' → Roboter ziehen sofort weiter (' + st1 + ')' : ' (abgelehnt mit Grund, Roboter bleiben, wo sie sind: ' + st1 + ')') + '. Außerhalb des Funknetzes: ' + JSON.stringify(a3));
       rec('R-05', '3.8', a2.ok ? 'ABWEICHUNG' : 'OK', 'Zuweisung an Sektor ' + (lockedSec >= 0 ? U.sectorLabel(lockedSec) : '–') + ' in gesperrter Region (Lizenz 0): ' + JSON.stringify(a2) + '. Shop.assign prüft keine Sperre; die Roboter putzen dort nichts (World.stroke überspringt gesperrte Zellen), fahren aber hin, drehen 3 Runden und melden „Bereich gereinigt“ (' + st2 + ').');
     }
 

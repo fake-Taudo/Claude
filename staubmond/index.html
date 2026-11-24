@@ -277,9 +277,9 @@ body.prof-phone #hud-sector svg.ring { width: 42px; height: 42px; }
 body.prof-phone #hud-sector .tx { display: none; }
 body.prof-phone #hud-sector .name { display: block; position: absolute; top: 54px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; animation: secnamep 2.6s var(--ease) both; pointer-events: none; }
 @keyframes secnamep { 0% { opacity: 0; } 10%, 75% { opacity: 1; } 100% { opacity: 0; } }
-body.prof-phone #hud-icons { top: calc(130px + var(--sat)); max-width: none; gap: 5px; flex-wrap: nowrap; }
-body.prof-phone .icon-btn { min-width: 48px; min-height: 56px; padding: 5px 4px 4px; }
-body.prof-phone .icon-btn .lb { font-size: 11px; }
+body.prof-phone #hud-icons { top: calc(130px + var(--sat)); max-width: none; gap: 4px; flex-wrap: nowrap; left: calc(8px + var(--sal)); right: calc(8px + var(--sar)); justify-content: space-between; }
+body.prof-phone .icon-btn { min-width: 40px; min-height: 56px; padding: 5px 3px 4px; flex: 1 1 auto; }
+body.prof-phone .icon-btn .lb { font-size: 10px; }
 body.prof-phone #tutorial { top: calc(200px + var(--sat)); left: calc(10px + var(--sal)); transform: none; width: calc(100vw - 20px - var(--sal) - var(--sar)); }
 body.prof-phone #tutorial .memo { font-size: 13px; padding: 10px 12px 8px; }
 body.prof-phone #tutorial .memo .mt { font-size: 14px; }
@@ -296,8 +296,9 @@ body.prof-phone #fs-hint { bottom: calc(130px + var(--sab)); }
 @media (orientation: landscape) and (max-height: 520px) {
   body.prof-phone #hud-sector { right: auto; left: calc(min(186px, 47vw) + 22px + var(--sal)); }
   body.prof-phone #hud-sector .name { left: 0; transform: none; }
-  body.prof-phone #hud-icons { top: calc(8px + var(--sat)); right: calc(132px + var(--sar)); }
-  body.prof-phone .icon-btn { min-width: 46px; min-height: 52px; }
+  body.prof-phone #hud-icons { top: calc(8px + var(--sat)); right: calc(132px + var(--sar)); left: auto; justify-content: flex-end; gap: 5px; }
+  body.prof-phone .icon-btn { min-width: 46px; min-height: 52px; flex: none; padding: 5px 4px 4px; }
+  body.prof-phone .icon-btn .lb { font-size: 11px; }
   body.prof-phone #tutorial { top: calc(150px + var(--sat)); width: min(330px, 39vw); }
   body.prof-phone #toasts, body.prof-phone.tut #toasts { top: calc(70px + var(--sat)); left: auto; right: calc(132px + var(--sar)); width: min(340px, 40vw); }
   body.prof-phone #ctx { bottom: calc(var(--clean-size) + 34px + var(--sab)); }
@@ -556,6 +557,57 @@ input[type=range] { width: 150px; accent-color: var(--orange); min-height: 44px;
 .memo-fly .stamp.done { font-size: 22px; padding: 4px 12px; right: 18px; top: 34%; bottom: auto; animation: stampin var(--t-spring) cubic-bezier(.2,1.6,.4,1) both; }
 @keyframes memofly { 0%, 32% { transform: none; opacity: 1; } 100% { transform: translate(60vw, -30px) rotate(18deg); opacity: 0; } }
 @keyframes stampin { from { transform: rotate(-12deg) scale(2.4); opacity: 0; } to { transform: rotate(-12deg) scale(1); opacity: .9; } }
+/* Roboter-Übersicht (Hangar-Einsatz, Gesamtliste), Zuweisung auf der Karte, Memo-Schritte */
+.pill svg { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
+.rsum { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.rsum b { color: var(--white); font-size: 15px; margin-right: 3px; }
+.rsum .bad, .rsum .bad b { color: #FFB3C0; }
+.rsum svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 3px; }
+.ract { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.ract .btn svg, .rr-a .btn svg { width: 18px; height: 18px; }
+.rrow { display: grid; grid-template-columns: 40px 1fr; gap: 6px 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.rrow.prob { background: linear-gradient(90deg, rgba(255,84,112,.10), transparent 60%); border-left: 3px solid var(--bad); padding-left: 8px; }
+.rr-ic { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.06); display: grid; place-items: center; }
+.rr-ic svg { width: 26px; height: 26px; }
+.rr-m { min-width: 0; }
+.rr-t { font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.rr-s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.rr-f { position: relative; height: 14px; border-radius: 7px; background: rgba(255,255,255,.08); overflow: hidden; margin-top: 6px; max-width: 260px; }
+.rr-f i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; background: linear-gradient(90deg, #9C7A3C, #D9B867); }
+.rr-f span { position: relative; display: block; font-size: 10.5px; line-height: 14px; padding-left: 7px; color: #fff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
+.rr-a { grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; }
+.rr-a .btn.sm { min-width: 44px; }
+body.prof-phone .rrow { grid-template-columns: 34px 1fr; }
+body.prof-phone .rr-ic { width: 34px; height: 34px; }
+.rgrp { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 4px; }
+.rgrp h4 { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.rgrp h4 svg { width: 18px; height: 18px; }
+.rgrp h4 small { color: var(--muted); font-weight: 700; margin-left: 4px; }
+.upseg { margin-top: 14px; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.04); display: grid; gap: 6px; }
+.upseg .us { display: grid; grid-template-columns: 110px 1fr 40px; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.upseg .us b { display: grid; grid-auto-flow: column; gap: 3px; }
+.upseg .us i { height: 8px; border-radius: 2px; background: rgba(255,255,255,.1); }
+.upseg .us i.on { background: var(--petrol-l); }
+.upseg .us em { font-style: normal; text-align: right; color: var(--white); }
+.askb { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.icon-btn .wdot { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--bad); color: #fff; font: 900 12px/18px system-ui, sans-serif; text-align: center; box-shadow: 0 0 0 2px rgba(18,23,34,.95); animation: badgepop var(--t-spring) var(--ease-spring); }
+#map .massign { position: absolute; top: calc(70px + var(--sat)); left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 20px)); background: rgba(16,21,31,.96); border: 1px solid var(--petrol-l); border-radius: 16px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; box-shadow: 0 12px 36px rgba(0,0,0,.45); animation: popin2 var(--t-base) var(--ease-spring); pointer-events: auto; }
+#map .massign .mt { display: flex; gap: 8px; align-items: center; }
+#map .massign .mt svg { width: 26px; height: 26px; flex: none; }
+#map .massign .mt small { display: block; color: var(--muted); font-size: 12px; }
+#map .massign .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+#map .massign .btn svg { width: 16px; height: 16px; }
+#map.assigning canvas { cursor: crosshair; }
+body.prof-phone #map .massign { top: auto; bottom: calc(14px + var(--sab)); }
+body.prof-phone #map.assigning .legend { display: none; }
+.memo .rsteps { list-style: none; margin: 10px 0 2px; padding: 0; display: grid; gap: 6px; }
+.memo .rsteps li { display: flex; gap: 8px; align-items: center; }
+.memo .rsteps .cb { width: 20px; height: 20px; border: 2px solid var(--paper-ink); border-radius: 4px; display: grid; place-items: center; flex: none; background: rgba(255,255,255,.5); }
+.memo .rsteps .cb svg { width: 15px; height: 15px; color: #1C6B3E; }
+.memo .rsteps li.ok span { text-decoration: line-through; text-decoration-thickness: 1.5px; opacity: .75; }
+.memo .rsteps li em { font-style: normal; font-size: 11.5px; color: #1C6B3E; font-weight: 700; text-decoration: none; display: inline-block; }
+#tutorial .tb .tbb { display: flex; gap: 6px; }
+#tutorial .tb button.go { background: var(--petrol-d); color: #fff; border-color: var(--petrol-d); font-weight: 700; }
 #tutorial { position: absolute; left: 50%; transform: translateX(-50%); top: calc(100px + var(--sat)); width: min(420px, calc(100vw - 24px)); pointer-events: none !important; }
 #tutorial button { pointer-events: auto; }
 #tutorial .memo { font-size: 14px; padding-left: 16px; background-image: none; }
@@ -6313,7 +6365,7 @@ const Draw = {
     for (const r of list || Robots.list) {
       if (!R.inView(r.x, r.y, 3)) continue;
       const x = r.near ? U.wrapX(r.px + U.dx(r.px, r.x) * alpha) : r.x, y = r.near ? r.py + (r.y - r.py) * alpha : r.y;
-      const st = r.warn ? 'bad' : r.state === 'radio' ? 'radio' : r.state === 'work' ? 'work' : 'wait';
+      const k = Robots.status(r), st = Robots.PROB[k] ? 'bad' : Robots.WORK[k] ? 'work' : 'wait';
       const sc = st === 'work' ? T.success : st === 'wait' ? T.warn : T.danger;
       if (lod > 0 || R.s < 4) { R.at(x, y); ctx.fillStyle = st === 'work' ? T.alop.orange : sc; ctx.beginPath(); ctx.arc(0, 0, Math.max(1.2, 3 / R.s), 0, 6.283); ctx.fill(); continue; }
       const rad = Robots.radius(r), s = r.def.fly ? 0.9 : r.model === 'mk1' ? 0.62 : r.model === 'mk2' ? 0.8 : 1.15, A = Actors.rs(r);
@@ -6352,16 +6404,23 @@ const Draw = {
         if (f > 0.02) { ctx.fillStyle = 'rgba(40,30,20,0.7)'; ctx.fillRect(-s * 0.45, s * 0.36, s * 0.6, 0.1); ctx.fillStyle = GOOD_COL[0]; ctx.fillRect(-s * 0.45, s * 0.36, s * 0.6 * Math.min(1, f), 0.1); }
       }
       // Status ohne Antippen lesbar: runde Badges mit Symbol (nicht nur Farbe)
-      if (st !== 'work') {
+      if (k !== 'cleaning' && k !== 'toWork') {
         R.at(x, y - 1.35);
         ctx.fillStyle = 'rgba(18,23,34,0.9)'; ctx.beginPath(); ctx.arc(0, 0, 0.42, 0, 6.283); ctx.fill();
         ctx.strokeStyle = sc; ctx.lineWidth = 0.08; ctx.stroke();
-        ctx.strokeStyle = sc; ctx.fillStyle = sc; ctx.lineWidth = 0.07; ctx.lineCap = 'round';
-        if (st === 'radio') { ctx.beginPath(); ctx.arc(0, 0.12, 0.1, 0, 6.283); ctx.fill(); ctx.beginPath(); ctx.arc(0, 0.12, 0.25, -2.4, -0.7); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-0.22, -0.22); ctx.lineTo(0.22, 0.22); ctx.stroke(); }
-        else if (st === 'bad') { ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.lineTo(0, 0.06); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0.19, 0.04, 0, 6.283); ctx.fill(); }
-        else if (r.state === 'toDrop') { ctx.beginPath(); ctx.moveTo(0, -0.2); ctx.lineTo(0, 0.16); ctx.moveTo(-0.13, 0.04); ctx.lineTo(0, 0.18); ctx.lineTo(0.13, 0.04); ctx.stroke(); }
-        else { ctx.beginPath(); ctx.moveTo(-0.09, -0.15); ctx.lineTo(-0.09, 0.15); ctx.moveTo(0.09, -0.15); ctx.lineTo(0.09, 0.15); ctx.stroke(); }
-        ctx.lineCap = 'butt';
+        ctx.strokeStyle = sc; ctx.fillStyle = sc; ctx.lineWidth = 0.07; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        const L = (...p) => { ctx.beginPath(); ctx.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i], p[i + 1]); ctx.stroke(); }, dot = (px, py, rr) => { ctx.beginPath(); ctx.arc(px, py, rr, 0, 6.283); ctx.fill(); };
+        if (k === 'noSignal') { dot(0, 0.14, 0.07); ctx.beginPath(); ctx.arc(0, 0.14, 0.22, -2.5, -0.64); ctx.stroke(); L(-0.24, -0.22, 0.24, 0.24); }                 // Funk durchgestrichen
+        else if (k === 'stuck') { L(0, -0.22, 0, 0.06); dot(0, 0.19, 0.045); }                                                                                      // Ausrufezeichen
+        else if (k === 'noTarget') { ctx.beginPath(); ctx.arc(0, -0.09, 0.12, -2.8, 0.9); ctx.stroke(); L(0.07, 0.0, 0, 0.07, 0, 0.09); dot(0, 0.21, 0.045); }   // Fragezeichen
+        else if (k === 'blockedFull') { ctx.strokeRect(-0.17, -0.2, 0.34, 0.38); for (let i = 0; i < 3; i++) L(-0.1, 0.1 - i * 0.1, 0.1, 0.1 - i * 0.1); }       // voller Behälter
+        else if (k === 'homeless') { L(-0.2, 0.0, 0, -0.2, 0.2, 0.0); L(-0.14, -0.05, -0.14, 0.2, 0.14, 0.2, 0.14, -0.05); L(-0.25, 0.25, 0.25, -0.25); }           // Haus durchgestrichen
+        else if (k === 'unloading' && r.state === 'radio') { dot(0, 0.14, 0.07); ctx.beginPath(); ctx.arc(0, 0.14, 0.2, -2.5, -0.64); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0.14, 0.32, -2.4, -0.74); ctx.stroke(); }   // Funkwellen
+        else if (k === 'unloading') { L(0, -0.22, 0, 0.06); L(-0.1, -0.04, 0, 0.07, 0.1, -0.04); L(-0.2, 0.06, -0.2, 0.18, 0.2, 0.18, 0.2, 0.06); }                  // in die Mulde
+        else if (k === 'toDeliver') { L(0, -0.2, 0, 0.16); L(-0.13, 0.04, 0, 0.18, 0.13, 0.04); }                                                                  // Pfeil nach unten
+        else if (k === 'done') { L(-0.2, 0.0, 0, -0.2, 0.2, 0.0); L(-0.14, -0.05, -0.14, 0.2, 0.14, 0.2, 0.14, -0.05); }                                             // Haus
+        else { L(-0.09, -0.15, -0.09, 0.15); L(0.09, -0.15, 0.09, 0.15); }                                                                                          // Pause
+        ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
       }
     }
   },
@@ -6774,6 +6833,26 @@ const Robots = {
       default: return r.hangar ? 'idle' : 'homeless';
     }
   },
+  // Statusgruppen für Anzeige: arbeitet / Problem (Rest: wartet)
+  WORK: { cleaning: 1, toWork: 1, toDeliver: 1, unloading: 1 },
+  PROB: { blockedFull: 1, noTarget: 1, noSignal: 1, stuck: 1, homeless: 1 },
+  // Kann dieses Gebiet bearbeitet werden? (Kartenvorschau und Zuweisung; Stichproben im 16er-Raster des Funknetzes)
+  areaCheck(a) {
+    if (a.sector >= 0 && World.secDone[a.sector]) return { ok: false, why: 'Sektor ist bereits gereinigt' };
+    if (a.w < 8 || a.h < 8) return { ok: false, why: 'Bereich zu klein' };
+    const st = Math.max(16, Math.sqrt(a.w * a.h / 1024));
+    let n = 0, open = 0, cov = 0;
+    for (let y = a.y0 + Math.min(8, a.h / 2); y < a.y0 + a.h; y += st) for (let x = a.x0 + Math.min(8, a.w / 2); x < a.x0 + a.w; x += st) {
+      if (y < 2 || y >= WSIZE - 2) continue;
+      const xi = U.wrapI(Math.floor(x)), yi = Math.floor(y); n++;
+      if (World.locked(World.regionAt(xi, yi))) continue;
+      open++; if (Buildings.covered(xi, yi)) cov++;
+    }
+    if (!n) return { ok: false, why: 'außerhalb der Karte' };
+    if (!open) return { ok: false, why: 'gesperrt – höhere Lizenz nötig' };
+    if (!cov) return { ok: false, why: 'außerhalb des Funknetzes – Antenne bauen' };
+    return { ok: true, cov: cov / n };
+  },
   // freier Platz an einem Abgabepunkt (Depots nehmen alles)
   room(b) { if (b.type === 'depot' || b.type === 'outpost') return Infinity; return b.def.buffer ? Math.max(0, b.def.buffer - Buildings.total(b.store)) : 0; },
   // nächster Hangar mit freiem Platz (ohne den Hangar „not“)
@@ -7185,6 +7264,7 @@ const Progression = {
     if (G.t - this.rates.t >= 20) { const r = (G.stats.cells - this.rates.c0) / ((G.t - this.rates.t) / 60); this.rates.cells = this.rates.cells * 0.6 + r * 0.4; this.rates.c0 = G.stats.cells; this.rates.t = G.t; }
     this.checkOrders();
     this.tutorial();
+    this.robotTut();
     if (G.licence >= 6 && !G.ended) this.checkEnding();
   },
   events(dt) {
@@ -7317,6 +7397,11 @@ const Progression = {
     }
   },
   tutFlags: { unload: false },
+  robotTut() {
+    if (!UI.robotTutOn()) return;
+    if (UI.robotSteps().every(x => x.ok)) { G.robotTut.seen = true; UI.toast('Memo 4711/C erledigt: Ihre K.E.H.R.-Bots putzen jetzt selbstständig.', 'good'); Audio.sfx('stamp'); UI.tutorial(); UI.goalSig = ''; return; }
+    if (UI.robotTutVis()) UI.tutorial();   // Häkchen im Memo nachführen
+  },
   /* --- Ende: Großer Teppichkrater --- */
   carpetProgress() { let p = 0; for (const s of this.carpetSecs) p += Math.min(1, World.secProgress[s] / CONFIG.world.sectorDoneFrac); return this.carpetSecs.length ? p / this.carpetSecs.length : 0; },
   checkEnding() {
@@ -7418,6 +7503,7 @@ const Build = {
     this.lastMs = { x: sx, y: sy };
     if (this.mode === 'demolish') {
       const b = Buildings.at(cx, cy);
+      if (b && b.type === 'hangar' && Robots.inHangar(b)) { UI.demolishHangar(b); return; }
       if (b) { if (UI.act('remove', b.id).ok) Audio.sfx('demolish'); return; }
       this.drag = { id, kind, del: true }; this.delCells = [[cx, cy]]; return;
     }
@@ -7666,13 +7752,15 @@ const UI = {
     this.iconBtns = {
       map: btn('map', 'move', 'Karte', 'Karte', () => this.toggleMap()),
       build: btn('build', 'build', 'Bauen', 'Bauen', () => Actions.push('build')),
+      robots: btn('robot', 'robots', '0 / 0', 'Roboter-Übersicht', () => this.open('robots')),
       research: btn('research', 'research', 'Forschung', 'Forschung', () => this.open('research')),
       orders: btn('orders', 'orders', 'Aufträge', 'Aufträge', () => this.open('orders')),
       album: btn('album', 'album', 'Album', 'Album', () => this.open('album')),
       coop: btn('people', 'coop', 'Crew', 'Crew & Emotes', () => Net.panel()),
       menu: btn('menu', 'pause', 'Menü', 'Menü', () => this.open('pause')),
     };
-    this.iconBtns.coop.style.display = 'none';
+    this.iconBtns.coop.style.display = 'none'; this.iconBtns.robots.style.display = 'none';
+    Bus.on('assigned', () => { if (G && G.robotTut) G.robotTut.a = true; });
     this.refreshKeys();
     this.hudInit();
     this.el('hud-mapwrap').addEventListener('click', () => { Audio.unlock(); this.toggleMap(); });
@@ -7797,6 +7885,7 @@ const UI = {
     this.depotArrow();
     this.hints();
     this.badges();
+    this.robotCard();
     this.joyHint();
     this.fsHint(hdt);
     if ((this.layT = (this.layT || 0) + hdt) > 0.5) { this.layT = 0; this.layoutHud(); }
@@ -7893,6 +7982,7 @@ const UI = {
   },
   goalList() {
     const out = [], ng = this.nextGoal();
+    if (this.robotTutOn() && G.robotTut.memo) { const S = this.robotSteps(), i = S.findIndex(x => !x.ok); if (i >= 0) out.push({ id: 'rt' + i, ic: S[i].ic, t: S[i].t, n: 'Automatisierung · Schritt ' + (i + 1) + ' von 3', p: i / 3, act: S[i].act }); }
     if (ng) { const ok = G.money >= ng.price; out.push({ id: 'buy', ic: ng.icon || 'coin', t: (ok ? 'Kaufbar: ' : '') + ng.name, n: U.money(Math.min(G.money, ng.price)).replace(' ₥', '') + ' / ' + U.money(ng.price), p: Math.min(1, G.money / ng.price), ok, act: 'terminal' }); }
     if (G.licence < 6) {
       const d = Economy.licenceDef(G.licence + 1), lp = Economy.licencePrice(d.lvl), ps = Math.min(1, G.stats.sectors / d.sectors), pm = Math.min(1, G.money / lp);
@@ -7923,6 +8013,9 @@ const UI = {
     const g = (this.goalRows || [])[+row.dataset.i]; if (!g) return;
     if (g.act === 'orders') { this.open('orders'); return; }
     if (g.act === 'map') { this.toggleMap(); return; }
+    if (g.act === 'buildHangar') { if (!Build.active) Build.toggle(true); if (Build.active) Build.select('hangar'); return; }
+    if (g.act === 'hangar') { const h = Buildings.nearest(Player.x, Player.y, b => b.type === 'hangar'); if (h) this.openBuilding(h, 'buy'); return; }
+    if (g.act === 'assign') { const ids = (Robots.idle().length ? Robots.idle() : Robots.list).map(r => r.id); if (ids.length) this.assignPick(ids); return; }
     const P = Player, dep = Buildings.nearest(P.x, P.y, b => b.type === 'depot' || b.type === 'outpost'); if (!dep) return;
     if (Buildings.distTo(dep, P.x, P.y) < CONFIG.player.interactRange + 4) { this.openBuilding(dep); return; }
     const c = Buildings.center(dep); G.waypoint = { x: c.x, y: c.y };
@@ -7989,6 +8082,19 @@ const UI = {
     this.show('hud-hint', true); this.setHTML('hud-hint', h);
   },
   keyName(code) { return ({ Space: 'Leertaste', Escape: 'Esc', Tab: 'Tab', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Equal: '+', Minus: '−', NumpadAdd: '+', NumpadSubtract: '−', BracketRight: '+', Slash: '−', ShiftLeft: 'Shift', ControlLeft: 'Strg' }[code]) || code.replace(/^Key|^Digit/, ''); },
+  // HUD-Roboterkarte „arbeiten / gesamt“, Warnpunkt bei Problemen; öffnet die Gesamtliste
+  robotCard() {
+    const b = this.iconBtns && this.iconBtns.robots; if (!b) return;
+    const n = Robots.list.length;
+    if (!n) { if (b.style.display !== 'none') { b.style.display = 'none'; this.layT = 1; } this.cache.rob = ''; return; }
+    if (b.style.display === 'none') { b.style.display = ''; this.layT = 1; }
+    let w = 0, pr = 0; for (const r of Robots.list) { const k = Robots.status(r); if (Robots.WORK[k]) w++; else if (Robots.PROB[k]) pr++; }
+    const sig = w + '/' + n + '/' + pr; if (this.cache.rob === sig) return; this.cache.rob = sig;
+    b.querySelector('.lb').textContent = w + ' / ' + n;
+    const d = b.querySelector('.wdot'); if (pr && !d) b.insertAdjacentHTML('beforeend', '<b class="wdot" aria-hidden="true">!</b>'); else if (!pr && d) d.remove();
+    b.dataset.title = 'Roboter: ' + w + ' von ' + n + ' arbeiten' + (pr ? ', ' + pr + ' mit Problem' : '');
+    b.setAttribute('aria-label', b.dataset.title + ' – Übersicht öffnen'); b.title = b.dataset.title;
+  },
   badges() {
     const n = CONFIG.research.reduce((a, br) => a + br.nodes.filter((nd, i) => !G.research[nd.id] && (i === 0 || G.research[br.nodes[i - 1].id]) && nd.cost <= G.fp).length, 0);
     const html = n ? '<span class="badge">' + n + '</span>' : '';
@@ -8161,8 +8267,10 @@ const UI = {
   /* --- Tutorial-Memos --- */
   tutorial() {
     const box = this.el('tutorial');
-    const vis = !(!G || G.tutSkip || G.tut >= TXT.tutorial.length || !Settings.d.tutorial);
-    document.body.classList.toggle('tut', vis); this.layT = 1;
+    const vis = !(!G || G.tutSkip || G.tut >= TXT.tutorial.length || !Settings.d.tutorial), rv = !vis && this.robotTutVis();
+    document.body.classList.toggle('tut', vis || rv); this.layT = 1;
+    if (rv) { this.robotMemo(box); return; }
+    this.rmSig = null;
     if (!vis) { box.classList.add('hidden'); return; }
     const st = TXT.tutorial[G.tut], last = G.tut === TXT.tutorial.length - 1;
     box.classList.remove('hidden');
@@ -8175,6 +8283,34 @@ const UI = {
         U.h('span', { class: 'ms', text: 'gez. ' + TXT.signers[0] }),
         last ? U.h('button', { text: 'Verstanden', onclick: () => { G.tut++; this.tutorial(); Progression.fillOrders(); } }) : U.h('button', { text: 'Überspringen', onclick: () => { G.tutSkip = true; this.tutorial(); this.toast('Einarbeitung übersprungen. Viel Erfolg!'); } })));
     box.appendChild(memo);
+  },
+
+  // Memo „Automatisierung genehmigt“ (ab Lizenz 1, nach der Einarbeitung): drei Schritte als Ziele mit Häkchen
+  robotTutOn() { const T = G && G.robotTut; return !!T && !T.seen && !T.skip && G.licence >= 1 && Settings.d.tutorial && (G.tutSkip || G.tut >= TXT.tutorial.length); },
+  robotTutVis() { return this.robotTutOn() && !G.robotTut.memo; },
+  robotSteps() {
+    const T = G.robotTut, nR = Robots.list.length;
+    return [
+      { t: 'Roboter-Hangar bauen', ok: nR > 0 || Buildings.list.some(b => b.type === 'hangar'), ic: 'build', act: 'buildHangar' },
+      { t: 'Einen K.E.H.R.-Bot in Dienst nehmen', ok: nR > 0 || !!T.a, ic: 'robot', act: 'hangar' },
+      { t: 'Roboter einem Sektor zuweisen', ok: !!T.a, ic: 'map', act: 'assign' },
+    ];
+  },
+  robotMemo(box) {
+    const S = this.robotSteps(), sig = S.map(x => x.ok ? 1 : 0).join('');
+    if (this.rmSig === sig && !box.classList.contains('hidden')) return;
+    this.rmSig = sig; box.classList.remove('hidden'); box.innerHTML = '';
+    const list = U.h('ol', { class: 'rsteps' });
+    for (const x of S) list.appendChild(U.h('li', { class: x.ok ? 'ok' : '', html: '<i class="cb">' + (x.ok ? Icons.svg('check', 'currentColor', 3.2) : '') + '</i><span>' + U.esc(x.t) + (x.ok ? ' <em>erledigt</em>' : '') + '</span>' }));
+    box.appendChild(U.h('div', { class: 'memo' },
+      U.h('div', { class: 'mh' }, U.h('span', { text: TXT.amtShort + ' · Memo 4711/C' }), U.h('span', { text: 'Lizenz 1' })),
+      U.h('div', { class: 'mt', text: 'Automatisierung genehmigt' }),
+      U.h('div', { text: 'Sie dürfen ab sofort K.E.H.R.-Bots einsetzen. Sie putzen im Funknetz selbstständig – auch wenn Sie weit weg sind – und liefern am nächsten Trichter, Hangar oder Depot ab.' }),
+      list,
+      U.h('div', { class: 'tb' }, U.h('span', { class: 'ms', text: 'gez. ' + TXT.signers[1 % TXT.signers.length] }),
+        U.h('span', { class: 'tbb' },
+          U.h('button', { text: 'Überspringen', onclick: () => { G.robotTut.skip = true; this.tutorial(); this.toast('Roboter-Einführung übersprungen. Hangar und Roboter finden Sie im Baumenü.'); } }),
+          U.h('button', { class: 'go', text: 'Los geht’s', onclick: () => { G.robotTut.memo = true; this.tutorial(); this.goalSig = ''; } })))));
   },
 
   /* --- Sektor-Stempel, Fundstück, Urkunde, Ende --- */
@@ -8617,13 +8753,14 @@ Object.assign(UI, {
       case 'album': return this.panel({ id, title: 'Fundstück-Album', sub: G.stats.findsFound + ' von ' + World.finds.length + ' gefunden', icon: 'album', side: true, toggle: true, render: b => this.renderAlbum(b) });
       case 'pause': return this.panel({ id, title: 'Pause', sub: 'Das Spiel ist angehalten', icon: 'menu', toggle: true, render: b => this.renderPause(b), onClose: () => Game.setPaused(false) }) && Game.setPaused(true);
       case 'settings': return this.panel({ id, title: 'Einstellungen', icon: 'gear', bal: false, tabs: [{ id: 'gfx', label: 'Grafik', icon: 'light' }, { id: 'fx', label: 'Effekte', icon: 'star' }, { id: 'ctrl', label: 'Steuerung', icon: 'move' }, { id: 'audio', label: 'Ton', icon: 'radio' }, { id: 'save', label: 'Speicher', icon: 'save' }], render: (b, t, p) => this.renderSettings(b, t, p), onClose: () => { this.prevStop = true; } });
+      case 'robots': return this.panel({ id, title: 'K.E.H.R.-Bots', sub: '', icon: 'robot', side: true, toggle: true, live: true, render: (b, t, p) => { p.setSub(Robots.list.length + ' im Dienst · Stellenplan ' + Robots.list.length + ' / ' + Robots.fleetCap()); this.renderRobots(b); } });
       case 'stats': return this.panel({ id, title: 'Statistik', sub: 'Ihre Bilanz beim ALOP', icon: 'chart', live: true, render: b => this.renderStats(b) });
       case 'help': return this.panel({ id, title: 'Steuerung & Hilfe', icon: 'help', bal: false, render: b => this.renderHelp(b) });
       case 'vehicles': return this.panel({ id, title: 'Fuhrpark', sub: Vehicles.list.length + ' Fahrzeuge', icon: 'car', side: true, live: true, render: b => this.renderVehicles(b, null) });
       case 'slots': return this.panel({ id, title: arg === 'new' ? 'Neues Spiel' : 'Spielstände', sub: arg === 'new' ? 'Platz für die neue Mission wählen' : 'Drei Plätze mit automatischen Backups', icon: 'save', bal: false, render: b => this.renderSlots(b, arg) });
     }
   },
-  openBuilding(b) {
+  openBuilding(b, tab) {
     Audio.sfx('click');
     const T = { depot: 'Hauptdepot', outpost: 'Außenposten-Depot' };
     if (b.type === 'depot' || b.type === 'outpost') {
@@ -8632,9 +8769,9 @@ Object.assign(UI, {
         tabs: [tab('tools', 'Werkzeuge', 'broom'), tab('up', 'Upgrades', 'up'), tab('veh', 'Fahrzeuge', 'car'), tab('lic', 'Lizenz', 'licence'), { id: 'cap', label: 'Kapsel', icon: 'capsule', dot: () => Buildings.canLaunch(b) && Buildings.total(b.capsule) >= CONFIG.depot.capsuleKg * 0.5 }],
         render: (body, tab, p) => this.renderDepot(body, tab, b, p) });
     }
-    if (b.type === 'hangar') return this.panel({ id: 'hangar', title: 'Roboter-Hangar', sub: Robots.inHangar(b) + ' / ' + Buildings.hangarSlots() + ' Roboter · Stellenplan ' + Robots.list.length + ' / ' + Robots.fleetCap(), icon: 'robot', side: true, live: true,
+    if (b.type === 'hangar') return this.panel({ id: 'hangar', hid: b.id, tab, title: 'Roboter-Hangar', sub: Robots.inHangar(b) + ' / ' + Buildings.hangarSlots() + ' Roboter · Stellenplan ' + Robots.list.length + ' / ' + Robots.fleetCap(), icon: 'robot', side: true, live: true,
       tabs: [{ id: 'buy', label: 'Roboter', icon: 'robot', dot: () => CONFIG.robots.models.some(d => d.licence <= G.licence && Economy.robotPrice(d) <= G.money && !Robots.list.some(r => r.model === d.id)) }, { id: 'list', label: 'Einsatz', icon: 'map' }, { id: 'up', label: 'Upgrades', icon: 'up', dot: () => CONFIG.robotUpgrades.some(u => G.robotUp[u.id] < CONFIG.robotUpgradeLevels && Robots.upPrice(u.id) <= G.money) }],
-      render: (body, tab) => this.renderHangar(body, tab, b) });
+      render: (body, tab, p) => { p.setSub(Robots.inHangar(b) + ' / ' + Buildings.hangarSlots() + ' Plätze belegt · Stellenplan ' + Robots.list.length + ' / ' + Robots.fleetCap()); this.renderHangar(body, tab, b); } });
     if (b.type === 'garage') return this.panel({ id: 'garage', title: 'Garage', sub: 'Fahrzeuge parken und herbeirufen', icon: 'garage', side: true, live: true, render: body => this.renderVehicles(body, b) });
     if (b.type === 'teleport') return this.panel({ id: 'tele', title: b.name || 'Teleport-Plattform', sub: 'Schnellreise', icon: 'teleport', side: true, render: body => this.renderTeleport(body, b) });
     return this.panel({ id: 'binfo', title: b.def.name, sub: 'Gebäude-Terminal', icon: Icons.forBuilding(b.type), side: true, live: true, render: body => this.renderInfo(body, b) });
@@ -8790,22 +8927,14 @@ Object.assign(UI, {
       body.appendChild(g);
     } else if (tab === 'list') {
       const mine = Robots.list.filter(r => r.hangar === h.id);
-      const s = U.sectorAt(Player.x, Player.y), idle = mine.filter(r => !r.assign);
-      const acts = U.h('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' } });
-      acts.appendChild(U.h('button', { class: 'btn ' + (idle.length ? 'primary' : 'disabled'), html: Icons.svg('robot', 'currentColor') + 'Freie Roboter → Sektor ' + U.sectorLabel(s), onclick: () => { if (!idle.length) { Audio.sfx('error'); return; } this.act('assign', idle.map(r => r.id), Robots.areaFor(s), true); } }));
-      acts.appendChild(U.h('button', { class: 'btn petrol', html: Icons.svg('map', '#fff') + 'Auf der Karte zuweisen', onclick: () => { this.closeAll(); this.toggleMap(); } }));
-      acts.appendChild(U.h('button', { class: 'btn', text: 'Alle zurückrufen', onclick: () => this.act('recallRobots', mine.map(r => r.id)) }));
-      body.appendChild(acts);
-      if (!mine.length) body.appendChild(U.h('div', { class: 'note', text: 'Dieser Hangar ist noch leer.' }));
-      const St = { home: ['auf dem Heimweg', 'warn'], idle: ['wartet im Hangar', 'warn'], work: ['putzt', 'good'], toDrop: ['liefert ab', 'warn'], radio: ['entleert per Funk', 'good'] };
-      for (const r of mine) {
-        const a = r.assign ? Robots.assignById(r.assign) : null, st = r.warn ? ['kein Funksignal', 'bad'] : St[r.state] || [r.state, ''];
-        const row = U.h('div', { class: 'setting' }, U.h('div', { class: 'lbl', html: '<b>' + r.def.name + ' #' + r.id + '</b> <span class="pill ' + st[1] + '">' + st[0] + '</span><small>' + (a ? (a.sector >= 0 ? 'Sektor ' + U.sectorLabel(a.sector) : 'Rechteck') + ' · ' : '') + 'Ladung ' + U.kg(Robots.loadKg(r)) + '</small>' }),
-          U.h('div', { style: { display: 'flex', gap: '6px' } },
-            U.h('button', { class: 'btn sm', text: 'Abziehen', onclick: () => this.act('recallRobots', [r.id]) }),
-            U.h('button', { class: 'btn sm danger', text: 'Verkaufen', onclick: () => this.act('robotSell', r.id) })));
-        body.appendChild(row);
-      }
+      this.robotActs(body, mine);
+      if (!mine.length) body.appendChild(U.h('div', { class: 'note', text: 'Dieser Hangar ist noch leer. Roboter kaufen Sie im Tab „Roboter“.' }));
+      for (const r of mine) body.appendChild(this.robotRow(r));
+      body.appendChild(this.upSeg());
+      const foot = U.h('div', { class: 'ract', style: { marginTop: '14px' } });
+      if (Robots.list.length > mine.length) foot.appendChild(U.h('button', { class: 'btn', html: Icons.svg('robot', 'currentColor') + 'Alle Roboter (' + Robots.list.length + ')', onclick: () => this.open('robots') }));
+      foot.appendChild(U.h('button', { class: 'btn danger', html: Icons.svg('trash', 'currentColor') + 'Hangar abreißen', onclick: () => this.demolishHangar(h, () => this.closeAll()) }));
+      body.appendChild(foot);
     } else {
       const g = U.h('div', { class: 'cards' });
       for (const u of CONFIG.robotUpgrades) {
@@ -8816,6 +8945,97 @@ Object.assign(UI, {
       body.appendChild(g);
       body.appendChild(U.h('div', { class: 'note', style: { marginTop: '12px' }, text: 'Einen Akku gibt es bewusst nicht. K.E.H.R.-Bots arbeiten, solange sie Funk haben.' }));
     }
+  },
+  /* --- Roboter: Status, Zeilen, Gesamtliste, Abriss --- */
+  // Status = Symbol + Text (nie nur Farbe); Klasse good/warn/bad
+  RST: {
+    cleaning: ['putzt', 'good', 'broom'], toWork: ['fährt zum Einsatz', 'good', 'arrowr'], toDeliver: ['bringt Fracht weg', 'good', 'down'], unloading: ['lädt ab', 'good', 'drop'],
+    blockedFull: ['Ziel voll – wartet', 'bad', 'tank'], noTarget: ['kein Abgabeziel', 'bad', 'help'], noSignal: ['kein Funksignal', 'bad', 'radio'], stuck: ['gefangen', 'bad', 'alert'],
+    done: ['fährt heim', 'warn', 'arrowr'], idle: ['wartet im Hangar', 'warn', 'robot'], homeless: ['ohne Hangar', 'bad', 'alert'],
+  },
+  RCOL: { mk1: THEME.alop.orangeLight, mk2: THEME.alop.petrolLight, mk3: THEME.money, drone: '#C9A6F2' },
+  robotPill(r) { const k = Robots.status(r), st = this.RST[k] || [k, '', 'robot']; return '<span class="pill ' + st[1] + '">' + Icons.svg(st[2], 'currentColor', 2.4) + U.esc(st[0]) + '</span>'; },
+  robotRow(r) {
+    const k = Robots.status(r), a = r.assign ? Robots.assignById(r.assign) : null, kg = Robots.loadKg(r), cap = Robots.cap(r), f = Math.min(1, kg / cap);
+    const where = a ? (a.sector >= 0 ? 'Sektor ' + U.sectorLabel(a.sector) + (a.auto ? ' · automatisch weiter' : '') : 'Rechteck ' + a.w + ' × ' + a.h) : 'kein Gebiet';
+    const name = r.def.name + ' #' + r.id;
+    return U.h('div', { class: 'rrow' + (Robots.PROB[k] ? ' prob' : '') },
+      U.h('div', { class: 'rr-ic', html: Icons.svg('robot', this.RCOL[r.model] || '#fff') }),
+      U.h('div', { class: 'rr-m' },
+        U.h('div', { class: 'rr-t', html: '<b>' + U.esc(name) + '</b> ' + this.robotPill(r) }),
+        U.h('div', { class: 'rr-s', text: where }),
+        U.h('div', { class: 'rr-f', role: 'img', 'aria-label': 'Ladung ' + U.kg(kg) + ' von ' + U.kg(cap) }, U.h('i', { style: { width: (f * 100).toFixed(0) + '%' } }), U.h('span', { class: 'num', text: U.kg(kg) + ' / ' + U.kg(cap) }))),
+      U.h('div', { class: 'rr-a' },
+        U.h('button', { class: 'btn sm petrol', html: Icons.svg('map', '#fff') + '<span>Zuweisen</span>', 'aria-label': name + ' zuweisen', onclick: () => this.assignPick([r.id]) }),
+        U.h('button', { class: 'btn sm', html: Icons.svg('arrowr', 'currentColor') + '<span>Heim</span>', 'aria-label': name + ' heimschicken', onclick: () => this.act('recallRobots', [r.id]) }),
+        U.h('button', { class: 'btn sm', html: Icons.svg('up', 'currentColor'), title: 'Upgrades', 'aria-label': 'Upgrades für alle Roboter', onclick: () => this.robotUpgrades(r) }),
+        U.h('button', { class: 'btn sm danger', html: Icons.svg('coin', 'currentColor'), title: 'Verkaufen (100 % zurück)', 'aria-label': name + ' verkaufen, 100 % zurück', onclick: () => this.act('robotSell', r.id) })));
+  },
+  // Stufen der (für alle Modelle geltenden) Roboter-Upgrades als Segmentbalken
+  upSeg() {
+    const L = CONFIG.robotUpgradeLevels, box = U.h('div', { class: 'upseg' });
+    for (const u of CONFIG.robotUpgrades) {
+      const lv = G.robotUp[u.id]; let seg = ''; for (let i = 0; i < L; i++) seg += '<i' + (i < lv ? ' class="on"' : '') + '></i>';
+      box.appendChild(U.h('div', { class: 'us', role: 'img', 'aria-label': u.name + ' Stufe ' + lv + ' von ' + L, html: '<span>' + U.esc(u.name) + '</span><b>' + seg + '</b><em class="num">' + lv + '/' + L + '</em>' }));
+    }
+    return box;
+  },
+  robotUpgrades(r) {
+    const h = (r && r.hangar ? Buildings.byId(r.hangar) : null) || Buildings.list.find(b => b.type === 'hangar');
+    if (!h) { this.toast('Upgrades gibt es im Roboter-Hangar.', 'warn'); return; }
+    const p = this.stack.find(x => x.o.id === 'hangar' && x.o.hid === h.id);
+    if (p) { p.setTab('up'); return; }
+    this.openBuilding(h, 'up');
+  },
+  // Kopf einer Roboterliste: Zahlen + „Alle zuweisen“, „Automatisch“, „Alle heimschicken“
+  robotActs(body, list) {
+    const ids = list.map(r => r.id), n = list.length;
+    let w = 0, pr = 0; for (const r of list) { const k = Robots.status(r); if (Robots.WORK[k]) w++; else if (Robots.PROB[k]) pr++; }
+    body.appendChild(U.h('div', { class: 'rsum', html: '<span><b class="num">' + w + '</b> arbeiten</span><span><b class="num">' + (n - w - pr) + '</b> warten</span><span class="' + (pr ? 'bad' : '') + '">' + (pr ? Icons.svg('alert', 'currentColor', 2.4) : '') + '<b class="num">' + pr + '</b> mit Problem</span>' }));
+    const acts = U.h('div', { class: 'ract' }), dis = n ? '' : ' disabled';
+    acts.appendChild(U.h('button', { class: 'btn primary' + dis, html: Icons.svg('map', '#fff') + 'Alle zuweisen', onclick: () => { if (n) this.assignPick(ids); } }));
+    acts.appendChild(U.h('button', { class: 'btn petrol' + dis, html: Icons.svg('target', '#fff') + 'Automatisch', title: 'Nächster Sektor mit Staub im Funknetz, danach selbstständig weiter', onclick: () => { if (n) this.act('assignAuto', ids); } }));
+    acts.appendChild(U.h('button', { class: 'btn' + dis, html: Icons.svg('arrowr', 'currentColor') + 'Alle heimschicken', onclick: () => { if (n) this.act('recallRobots', ids); } }));
+    body.appendChild(acts);
+  },
+  renderRobots(body) {
+    if (!Robots.list.length) { body.appendChild(U.h('div', { class: 'note', text: 'Noch keine K.E.H.R.-Bots im Dienst. Roboter kaufen Sie im Roboter-Hangar (Bauen → Roboter-Hangar, ab Lizenz 1).' })); return; }
+    this.robotActs(body, Robots.list);
+    const hs = Buildings.list.filter(b => b.type === 'hangar');
+    hs.forEach((h, i) => {
+      const mine = Robots.list.filter(r => r.hangar === h.id);
+      body.appendChild(U.h('div', { class: 'rgrp' }, U.h('h4', { html: Icons.svg('robot', THEME.alop.petrolLight) + 'Hangar ' + (i + 1) + ' · Sektor ' + U.sectorLabel(U.sectorAt(h.x, h.y)) + ' <small class="num">' + mine.length + ' / ' + Buildings.hangarSlots() + '</small>' }),
+        U.h('button', { class: 'btn sm', text: 'Öffnen', onclick: () => this.openBuilding(h, 'list') })));
+      if (!mine.length) body.appendChild(U.h('div', { class: 'note', text: 'leer' }));
+      for (const r of mine) body.appendChild(this.robotRow(r));
+    });
+    const lost = Robots.list.filter(r => !r.hangar);
+    if (lost.length) {
+      body.appendChild(U.h('div', { class: 'rgrp' }, U.h('h4', { html: Icons.svg('alert', '#FFB3C0') + 'Ohne Hangar <small class="num">' + lost.length + '</small>' })));
+      body.appendChild(U.h('div', { class: 'note', text: 'Diese Roboter haben keinen Stellplatz. Sie arbeiten weiter, ziehen aber erst in einen Hangar, sobald dort ein Platz frei ist.' }));
+      for (const r of lost) body.appendChild(this.robotRow(r));
+    }
+    body.appendChild(this.upSeg());
+  },
+  // Bestätigungsdialog im Spielstil
+  ask(o) {
+    const p = this.panel({ id: 'ask', title: o.title, icon: o.icon || 'alert', small: true, bal: false, render: body => {
+      body.appendChild(U.h('div', { class: 'note', style: { marginBottom: '14px' }, html: o.text }));
+      body.appendChild(U.h('div', { class: 'askb' },
+        U.h('button', { class: 'btn', text: o.cancel || 'Abbrechen', onclick: () => this.close(p) }),
+        U.h('button', { class: 'btn ' + (o.danger ? 'danger' : 'primary'), text: o.ok, onclick: () => { this.close(p); o.onOk(); } })));
+    } });
+    return p;
+  },
+  // Hangar abreißen: mit Robotern erst nachfragen, wohin sie ziehen
+  demolishHangar(b, after) {
+    const go = () => { if (this.act('remove', b.id).ok) { Audio.sfx('demolish'); if (after) after(); } };
+    const n = Robots.inHangar(b); if (!n) { go(); return; }
+    let free = 0; for (const h of Buildings.list) if (h.type === 'hangar' && h !== b) free += Math.max(0, Buildings.hangarSlots() - Robots.inHangar(h));
+    const mv = Math.min(n, free), hl = n - mv;
+    this.ask({ title: 'Hangar abreißen?', ok: 'Abreißen', danger: true,
+      text: 'In diesem Hangar stehen <b>' + n + ' Roboter</b>. ' + (mv ? '<b>' + mv + '</b> ziehen in einen anderen Hangar um. ' : '') + (hl ? '<b>' + hl + '</b> stehen danach ohne Hangar – sie arbeiten weiter und ziehen ein, sobald ein Platz frei wird. ' : '') + 'Kein Roboter und keine Fracht gehen verloren. Sie erhalten ' + U.money(Buildings.price(b.type)) + ' zurück; Fracht im Hangar-Puffer wird gutgeschrieben.',
+      onOk: go });
   },
   renderTeleport(body, b) {
     const others = Buildings.teleports.filter(t => t !== b);
@@ -9192,6 +9412,33 @@ Object.assign(UI, {
   /* --- Vollkarte --- */
   mapOpen: false,
   toggleMap() { if (this.mapOpen) this.closeMap(); else this.openMap(); },
+  // Karte im Zuweisungsmodus öffnen: Sektor antippen oder Rechteck ziehen, Vorschau zeigt, ob es geht
+  assignPick(ids) {
+    ids = ids.filter(id => Robots.list.some(r => r.id === id)); if (!ids.length) { this.toast('Keine Roboter gewählt.', 'warn'); return; }
+    this.closeAll(); if (!this.mapOpen) this.openMap();
+    this.mapAssign(ids);
+  },
+  mapAssign(ids) {
+    const M = this.map; if (!M) return;
+    if (M.ab) { M.ab.remove(); M.ab = null; }
+    M.assign = ids; M.rect = false; M.rectA = null; M.root.classList.toggle('assigning', !!ids);
+    if (!ids) return;
+    const rb = U.h('button', { class: 'btn sm', 'aria-pressed': 'false', html: Icons.svg('sector', 'currentColor') + 'Rechteck ziehen', onclick: () => { M.rect = !M.rect; rb.classList.toggle('primary', M.rect); rb.setAttribute('aria-pressed', M.rect ? 'true' : 'false'); } });
+    M.ab = U.h('div', { class: 'massign', role: 'status' },
+      U.h('div', { class: 'mt', html: Icons.svg('robot', THEME.alop.petrolLight) + '<div><b>' + ids.length + (ids.length === 1 ? ' Roboter' : ' Roboter') + ' zuweisen</b><small>Sektor antippen oder Rechteck ziehen</small></div>' }),
+      U.h('div', { class: 'acts' }, rb,
+        U.h('button', { class: 'btn sm petrol', html: Icons.svg('target', '#fff') + 'Automatisch', onclick: () => { if (this.act('assignAuto', M.assign).ok) this.mapAssign(null); } }),
+        U.h('button', { class: 'btn sm', text: 'Abbrechen', onclick: () => this.mapAssign(null) })));
+    M.root.appendChild(M.ab);
+    M.info.classList.add('hidden'); M.root.classList.remove('sel');
+  },
+  // Prüfergebnis je Gebiet zwischenspeichern (Vorschau wird jedes Bild gezeichnet)
+  mapCheck(a) {
+    const M = this.map, key = a.x0 + ',' + a.y0 + ',' + a.w + ',' + a.h + ',' + Buildings.covStamp;
+    if (M.chkKey !== key) { M.chkKey = key; M.chk = Robots.areaCheck(a); }
+    return M.chk;
+  },
+  rectArea(a, b) { const x0 = Math.min(a.x, a.x + U.dx(a.x, b.x)), w = Math.abs(U.dx(a.x, b.x)), y0 = Math.min(a.y, b.y), h = Math.abs(b.y - a.y); return { x0: U.wrapI(Math.floor(x0)), y0: Math.floor(y0), w: Math.ceil(w), h: Math.ceil(h), sector: -1 }; },
   openMap() {
     if (!G) return;
     this.mapOpen = true; this.closeAll();
@@ -9208,7 +9455,7 @@ Object.assign(UI, {
     top.appendChild(U.h('button', { class: 'panel-close', html: Icons.svg('close', THEME.ui.text, 2.4), 'aria-label': 'Karte schließen', onclick: () => this.closeMap() }));
     root.appendChild(top);
     M.info = U.h('div', { class: 'minfo hidden' }); root.appendChild(M.info);
-    root.appendChild(U.h('div', { class: 'legend', html: '<span><i style="background:' + THEME.alop.orange + '"></i>Depot</span><span><i style="background:' + THEME.alop.petrolLight + '"></i>Gebäude</span><span><i class="c" style="background:#C9A6F2"></i>Teleport</span><span><i class="c" style="background:' + THEME.money + '"></i>Roboter</span><span><i style="background:rgba(99,203,198,.5)"></i>gereinigt</span><span>' + (Input.touchMode ? 'Ziehen · Zwei Finger: Zoom' : 'Ziehen · Mausrad: Zoom') + '</span>' }));
+    root.appendChild(U.h('div', { class: 'legend', html: '<span><i style="background:' + THEME.alop.orange + '"></i>Depot</span><span><i style="background:' + THEME.alop.petrolLight + '"></i>Gebäude</span><span><i class="c" style="background:#C9A6F2"></i>Teleport</span><span><i class="c" style="background:' + THEME.money + '"></i>Roboter arbeitet</span><span><i class="c" style="background:#c9d3dc"></i>wartet</span><span><i class="c" style="background:#ff6464"></i>Problem (!)</span><span><i style="background:rgba(99,203,198,.5)"></i>gereinigt</span><span>' + (Input.touchMode ? 'Ziehen · Zwei Finger: Zoom' : 'Ziehen · Mausrad: Zoom') + '</span>' }));
     this.el('ui').appendChild(root);
     this.mapHeat(true);
     cv.addEventListener('pointerdown', e => this.mapDown(e)); cv.addEventListener('pointermove', e => this.mapMove(e));
@@ -9235,7 +9482,8 @@ Object.assign(UI, {
     if (M.ptr.size === 2) { const [a, b] = [...M.ptr.values()]; M.pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: M.s }; }
   },
   mapMove(e) {
-    const M = this.map; const p = M.ptr.get(e.pointerId); if (!p) return;
+    const M = this.map; const p = M.ptr.get(e.pointerId);
+    if (!p) { if (M.assign || M.rect) M.hov = this.mapToWorld(e.clientX, e.clientY); return; }
     const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
     if (M.ptr.size === 2 && M.pinch) { const [a, b] = [...M.ptr.values()]; M.s = U.clamp(M.pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / M.pinch.d, 0.03, 4); return; }
     if (M.rect && M.rectA) { M.rectB = this.mapToWorld(e.clientX, e.clientY); return; }
@@ -9250,15 +9498,22 @@ Object.assign(UI, {
       const tp = M.layers.buildings && Buildings.teleports.find(t => { const q = this.mapToScreen(t.x + t.w / 2, t.y + t.h / 2); return Math.hypot(q.x - p.x, q.y - p.y) < 22; });
       if (tp) { this.mapTele(tp); return; }
       const w = this.mapToWorld(p.x, p.y); if (w.y < 0 || w.y >= WSIZE) return;
+      M.hov = w;
+      if (M.assign) {
+        const s = U.sectorAt(w.x, w.y), area = Robots.areaFor(s), chk = Robots.areaCheck(area);
+        if (!chk.ok) { M.bad = { s, why: chk.why, t: performance.now() }; this.toast('Sektor ' + U.sectorLabel(s) + ': ' + chk.why + '.', 'warn'); Audio.sfx('error'); return; }
+        if (this.act('assign', M.assign, area, true).ok) { this.mapAssign(null); M.sel = s; M.selW = w; this.mapInfo(); }
+        return;
+      }
       M.sel = U.sectorAt(w.x, w.y); M.selW = w; this.mapInfo();
     }
   },
   mapRectDone() {
-    const M = this.map, a = M.rectA, b = M.rectB; M.rectA = null; M.rect = false;
-    const x0 = Math.min(a.x, a.x + U.dx(a.x, b.x)), w = Math.abs(U.dx(a.x, b.x)), y0 = Math.min(a.y, b.y), h = Math.abs(b.y - a.y);
-    if (w < 8 || h < 8) { this.toast('Rechteck zu klein.'); return; }
-    const idle = Robots.idle(); if (!idle.length) { this.toast('Keine freien Roboter.', 'warn'); return; }
-    this.act('assign', idle.map(r => r.id), { x0: Math.floor(x0), y0: Math.floor(y0), w: Math.ceil(w), h: Math.ceil(h), sector: -1 }, false);
+    const M = this.map, area = this.rectArea(M.rectA, M.rectB); M.rectA = null;
+    const chk = Robots.areaCheck(area);
+    if (!chk.ok) { this.toast('Rechteck: ' + chk.why + '.', 'warn'); Audio.sfx('error'); return; }
+    const ids = M.assign || Robots.idle().map(r => r.id); if (!ids.length) { M.rect = false; this.toast('Keine freien Roboter – im Hangar heimschicken oder neue kaufen.', 'warn'); return; }
+    if (this.act('assign', ids, area, false).ok) { if (M.assign) this.mapAssign(null); M.rect = false; }
   },
   mapInfo() {
     const M = this.map, s = M.sel, box = M.info; box.classList.remove('hidden'); box.innerHTML = ''; M.root.classList.add('sel');
@@ -9285,6 +9540,7 @@ Object.assign(UI, {
     }
     if (a) acts.appendChild(U.h('button', { class: 'btn sm', text: 'Roboter abziehen', onclick: () => { this.act('recallRobots', Robots.robotsOf(a).map(r => r.id)); this.mapInfo(); } }));
     if (Robots.list.length) acts.appendChild(U.h('button', { class: 'btn sm', text: 'Rechteck ziehen', onclick: () => { M.rect = true; this.toast('Ziehen Sie auf der Karte ein Rechteck für alle freien Roboter.'); } }));
+    if (Robots.list.length) acts.appendChild(U.h('button', { class: 'btn sm petrol', html: Icons.svg('robot', '#fff') + 'Roboter auswählen …', onclick: () => this.open('robots') }));
     for (const t of Buildings.teleports) if (U.sectorAt(t.x, t.y) === s) acts.appendChild(U.h('button', { class: 'btn sm primary', text: 'Teleport: ' + t.name, onclick: () => { this.closeMap(); Game.teleport(t); } }));
     box.appendChild(acts);
   },
@@ -9350,8 +9606,35 @@ Object.assign(UI, {
     if (SEC * s <= 64) { ctx.fillStyle = 'rgba(255,255,255,0.7)'; for (let k = k0; k <= k1; k++) for (let i = 0; i < NSEC; i++) { const x = ox + k * WSIZE * s + (i + 0.5) * SEC * s; if (x > 0 && x < W) ctx.fillText(String.fromCharCode(65 + i), x - 3, Math.max(14, wy(0) - 4)); } for (let i = 0; i < NSEC; i++) ctx.fillText(String(i + 1), 4, wy((i + 0.5) * SEC) + 4); }
     const pt = (x, y) => this.mapToScreen(x, y);
     if (M.layers.robots) {
-      for (const a of Robots.assigns) { const p0 = pt(a.x0, a.y0); ctx.strokeStyle = 'rgba(255,194,61,0.7)'; ctx.lineWidth = 1.5; ctx.strokeRect(p0.x, p0.y, a.w * s, a.h * s); }
-      for (const r of Robots.list) { const p = pt(r.x, r.y); ctx.fillStyle = r.warn ? '#ff6464' : '#ffc23d'; ctx.beginPath(); ctx.arc(p.x, p.y, 2.6, 0, Math.PI * 2); ctx.fill(); }
+      ctx.font = '800 11px system-ui, sans-serif'; ctx.textAlign = 'left';
+      for (const a of Robots.assigns) {
+        const p0 = pt(a.x0, a.y0), n = Robots.robotsOf(a).length; ctx.strokeStyle = 'rgba(255,194,61,0.75)'; ctx.lineWidth = 1.5; ctx.strokeRect(p0.x, p0.y, a.w * s, a.h * s);
+        // Robotersymbol + Anzahl
+        const lx = p0.x + 3, ly = p0.y + 3, tw = ctx.measureText(String(n)).width;
+        ctx.fillStyle = 'rgba(18,23,34,0.9)'; Draw.rr(ctx, lx, ly, 22 + tw, 16, 5); ctx.fill(); ctx.strokeStyle = 'rgba(255,194,61,0.9)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = '#ffc23d'; Draw.rr(ctx, lx + 4, ly + 4, 11, 9, 2.5); ctx.fill(); ctx.fillStyle = '#121722'; ctx.fillRect(lx + 6.5, ly + 7, 2, 2); ctx.fillRect(lx + 10.5, ly + 7, 2, 2);
+        ctx.fillStyle = '#fff'; ctx.fillText(String(n), lx + 18, ly + 12);
+      }
+      for (const r of Robots.list) {
+        const p = pt(r.x, r.y), k = Robots.status(r), bad = Robots.PROB[k];
+        ctx.fillStyle = bad ? '#ff6464' : Robots.WORK[k] ? '#ffc23d' : '#c9d3dc'; ctx.beginPath(); ctx.arc(p.x, p.y, bad ? 3.4 : 2.6, 0, Math.PI * 2); ctx.fill();
+        if (bad) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); if (s > 0.08) { ctx.fillStyle = '#ff6464'; ctx.fillText('!', p.x + 5, p.y + 4); } }
+      }
+    }
+    // Zuweisungsvorschau: Petrol = möglich, Rot = nicht möglich (mit Grund)
+    if (M.assign || M.rect || (M.bad && performance.now() - M.bad.t < 1600)) {
+      let area = null, flash = false;
+      if (M.rect && M.rectA) area = this.rectArea(M.rectA, M.rectB);
+      else if (M.bad && performance.now() - M.bad.t < 1600) { area = Robots.areaFor(M.bad.s); flash = true; }
+      else if (M.assign && !M.rect && M.hov && M.hov.y >= 0 && M.hov.y < WSIZE) area = Robots.areaFor(U.sectorAt(M.hov.x, M.hov.y));
+      if (area) {
+        const chk = flash ? { ok: false, why: M.bad.why } : this.mapCheck(area), p0 = pt(area.x0, area.y0), w = area.w * s, h = area.h * s;
+        ctx.fillStyle = chk.ok ? 'rgba(31,143,140,0.28)' : 'rgba(255,84,112,0.24)'; ctx.fillRect(p0.x, p0.y, w, h);
+        ctx.strokeStyle = chk.ok ? '#5FC4C4' : '#FF5470'; ctx.lineWidth = 2; ctx.setLineDash(M.rect ? [6, 4] : []); ctx.strokeRect(p0.x, p0.y, w, h); ctx.setLineDash([]);
+        const label = chk.ok ? (chk.cov < 0.98 ? 'möglich · ' + Math.round(chk.cov * 100) + ' % im Funknetz' : 'möglich') : '✕ ' + chk.why;
+        ctx.font = '700 12px system-ui, sans-serif'; const tw = ctx.measureText(label).width, lx = U.clamp(p0.x + 6, 6, W - tw - 18), ly = U.clamp(p0.y + h + 6, 70, H - 30);
+        ctx.fillStyle = 'rgba(12,16,24,0.92)'; Draw.rr(ctx, lx - 6, ly, tw + 12, 22, 7); ctx.fill(); ctx.fillStyle = chk.ok ? '#9FE3E0' : '#FFB3C0'; ctx.fillText(label, lx, ly + 15);
+      }
     }
     if (M.layers.buildings) for (const b of Buildings.list) {
       const p = pt(b.x + b.w / 2, b.y + b.h / 2), big = b.type === 'depot' || b.type === 'outpost';
@@ -9362,7 +9645,6 @@ Object.assign(UI, {
     if (M.layers.finds) for (const f of World.finds) if (G.finds[f.id]) { const p = pt(f.x, f.y); ctx.fillStyle = f.gold ? '#ffc23d' : '#ffe9c9'; ctx.font = '12px system-ui'; ctx.fillText('★', p.x - 5, p.y + 4); }
     for (const v of Vehicles.list) if (v !== Player.veh && !v.incoming) { const p = pt(v.x, v.y); ctx.fillStyle = '#fff'; ctx.fillRect(p.x - 2, p.y - 2, 4, 4); }
     if (G.waypoint) this.mapPin(ctx, pt(G.waypoint.x, G.waypoint.y));
-    if (M.rect && M.rectA) { const a = pt(M.rectA.x, M.rectA.y), b = pt(M.rectB.x, M.rectB.y); ctx.strokeStyle = '#ffc23d'; ctx.setLineDash([6, 4]); ctx.lineWidth = 2; ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); ctx.setLineDash([]); }
     ctx.font = '800 12px system-ui, sans-serif'; ctx.textAlign = 'center';
     for (const o of Net.list()) { const p = pt(o.x, o.y); ctx.fillStyle = o.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.strokeText(o.name, p.x, p.y - 10); ctx.fillStyle = '#fff'; ctx.fillText(o.name, p.x, p.y - 10); }
     ctx.textAlign = 'left';
@@ -9784,7 +10066,7 @@ const Shop = {
   robotsById(ids) { return ids.map(id => Robots.list.find(r => r.id === id)).filter(Boolean); },
   assign(ids, area, auto) {
     const rs = this.robotsById(ids); if (!rs.length) return this.fail('Keine freien Roboter');
-    if (!Buildings.covered(area.x0 + area.w / 2, area.y0 + area.h / 2)) return this.fail('Bereich liegt außerhalb des Funknetzes. Antennen-Kette bauen!');
+    const chk = Robots.areaCheck(area); if (!chk.ok) return this.fail('Zuweisung nicht möglich: ' + chk.why + '.');
     const ex = area.sector >= 0 ? Robots.assignedSector(area.sector) : null;
     if (ex) { for (const r of rs) { Robots.release(r); r.assign = ex.id; if (!Robots.BUSY[r.state]) r.state = 'work'; r.stuck = false; r.progT = G.t; } ex.done = false; }
     else Robots.assignArea(rs, area, auto);

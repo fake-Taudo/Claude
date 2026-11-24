@@ -66,9 +66,21 @@
   "id": "RT-10",
   "area": "Roboter",
   "status": "OK",
-  "detail": "100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus 1000 Bandzellen: Robotersimulation 0.187 ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund 0.66 ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.",
+  "detail": "100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus 1000 Bandzellen: Robotersimulation 0.205 ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund 0.72 ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.",
   "data": {
-   "ms": 0.18716666666519208
+   "ms": 0.20450000000031043
   }
+ },
+ {
+  "id": "RT-12",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "Bedienung: Memo „Automatisierung genehmigt“ mit Häkchen, Hangar-Liste, Gesamtliste, HUD-Karte „0 / 3“, Zuweisen per Karten-Tipp (gesperrter Sektor abgelehnt, Startsektor angenommen), Rechteck, Abriss nach Rückfrage (Roboter ohne Hangar, nichts verloren, Erstattung 5,0 Tsd. ₥): alles wie erwartet"
+ },
+ {
+  "id": "RT-11",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "Alter Spielstand ohne Roboter (mit der Fassung vor den Roboter-Änderungen gespeichert, Schema 2): in der neuen Fassung geladen (Schema 3, ergänzt robotTut {\"seen\":false,\"skip\":false}) und 50 s mit fester Route, Abladen und Kapselstart weitergespielt – identisch mit der alten Fassung {\"trace\":[[599,14.9971,39,14.9971],[1199,17.3794,53,17.3794],[1799,24.7412,88,24.7412],[2399,26.4971,98,26.4971],[2999,32.15,116,32.15]],\"money\":32.15,\"cells\":1"
  }
 ]

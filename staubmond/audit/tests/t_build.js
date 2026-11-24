@@ -108,7 +108,7 @@ module.exports = async function (env) {
       const u = T.act('undo');
       const bad = T.check().filter(x => x.startsWith('stale'));
       const n = Robots.list.length, m = G.money;
-      rec('B-12', '3.6', bad.length ? 'FEHLER' : 'OK', 'Hangar bauen, 2 Roboter kaufen: Abriss wird korrekt verweigert (' + JSON.stringify(blocked) + '), aber „Rückgängig“ (Strg+Z) entfernt den Hangar trotzdem und erstattet den vollen Preis. Danach: ' + (bad.join(' | ') || 'keine veralteten Verweise') + '; ' + n + ' Roboter ohne Hangar.');
+      rec('B-12', '3.6', bad.length ? 'FEHLER' : 'OK', 'Hangar bauen, 2 Roboter kaufen: Abriss ' + (blocked.ok ? 'erlaubt (seit ROBOTER_SPEC: Roboter ziehen um oder stehen ohne Hangar, im Spiel mit Rückfrage)' : 'verweigert') + ' (' + JSON.stringify(blocked) + '); „Rückgängig“ (Strg+Z) entfernt den Hangar und erstattet den vollen Preis. Danach: ' + (bad.join(' | ') || 'keine veralteten Verweise') + '; ' + n + ' Roboter ohne Hangar.');
       // was passiert mit den Robotern ohne Hangar?
       T.ticks(600, 0); const states = Robots.list.map(r => r.state + '@' + r.x.toFixed(1) + ',' + r.y.toFixed(1));
       rec('B-13', '3.8', 'HINWEIS', 'Roboter ohne Hangar bleiben im Zustand ' + states.join(', ') + ' stehen (Robots.step: kein Hangar → return), sind weiter verkaufbar über das Roboter-Menü und zählen zum Stellenplan.');
