@@ -41,7 +41,9 @@ Vorgabe: `ROBOTER_SPEC.md`. Bestandsaufnahme vor den Änderungen: `audit/ROBOTER
 | Mk3 | 150.000 / 8 / 3,5 / 800 | **450.000** / **12** / **5** / **1.500** | Mk3 brachte nur 2,3× Mk2 (Ziel 3–4×); breiter und schneller (wie ein Kehr-Crawler), dafür teurer, sonst Amortisation in 10–15 Minuten |
 | Drohne | 1.000.000 / 14 / 2,5 / 400 | 1.000.000 / 14 / **5,5** / **2.000** | bleibt das stärkste Modell (sonst schwächer als der neue Mk3); kein Ziel vorgegeben |
 
-Weitere neue Werte: `unloadBase` 0,5 s, `unloadKgPerSec` 200, `retry` 2 s, `stall` 60 s, `stallTries` 3, `hangarRadio` 60 Zellen, `nearScreens` 1,5, `offlineMaxMove` 6 Zellen.
+Weitere neue Werte: `unloadBase` 0,5 s, `unloadKgPerSec` 200, `retry` 2 s, `stall` 60 s, `stallTries` 3, `hangarRadio` 60 Zellen, `nearScreens` 1,5, `offlineMaxMove` 6 Zellen, `strokeStep` 0,25 × Radius, `strokeMaxT` 0,25 s, `strokeMinRadius` 3.
+
+**Gebündelte Putzstriche (Rechenaufwand):** Jeder Roboter zog bisher in jedem Logiktick einen eigenen Strich mit `World.stroke` und tastete dabei den ganzen Bürstenkreis neu ab, obwohl er nur 0,07–0,2 Zellen weitergefahren war. Bei den großen Bürsten (Mk3 Radius 5, Drohne 5,5) sind das 120–145 Zellen je Tick. Unter 4× CPU-Drosselung lag der 95 %-Wert der Robotersimulation damit bei 1,6–2,3 ms, also an der Grenze. Roboter ab Radius 3 sammeln ihre Fahrt jetzt und ziehen einen Strich, sobald sie ¼ ihres Radius gefahren sind (spätestens nach 0,25 s, sofort am Ende eines Abschnitts und vor jeder Fahrt ohne Putzen). `World.stroke` und das Putzen des Spielers sind unverändert. Für kleinere Bürsten bleibt es beim Strich je Tick: Bei Mk1 hätte das Bündeln den Rand der Putzbahn sichtbar weniger sauber gelassen (Ertrag −25 % im Test), und die Ersparnis wäre dort gering. Wirkung: Mk1 und Mk2 liefern exakt dasselbe, Mk3 +0,1 %, Drohne +0,2 bis +5,4 %. Die Putzarbeit je Tick sinkt unter Drosselung von 0,72 auf 0,26 ms, der 95 %-Wert des ganzen Ticks von 1,6–2,3 auf 1,3–1,5 ms.
 
 Einen „Effizienz-Faktor“ oder einen festen kg/s-Wert je Modell gibt es bewusst nicht. Die Leistung bleibt flächenbasiert (Bürstenbreite × Tempo), wie beim Werkzeug des Spielers. Die Messung zeigt: In allen Gebieten begrenzen die Fläche und die Lieferfahrten, nicht die kg/s-Obergrenze. Ein zusätzlicher Faktor hätte nichts bewirkt.
 
@@ -86,12 +88,13 @@ Alle Prüfungen laufen automatisch und deterministisch: `node audit/run.js` (Erg
 | RT-07 Speichern/Laden | Rundlauf mit 2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebenen Ansprüchen und Robotern mitten in Lieferung und Abladen identisch |
 | RT-08 Forschung | jeder Roboter-Knoten wirkt genau einmal auf die beschriebene Größe, auch auf gekaufte Roboter; Selbstentleerung liefert per Funk |
 | RT-09 Abriss und Kauf | Umzug ohne Verlust, nur Baupreis zurück; voller Hangar verhindert Kauf; passender Betrag kauft; Doppelklick bucht einmal |
-| RT-10 Leistung (ungedrosselt) | 100 Roboter + 1.000 Bandzellen: 0,19–0,26 ms je Logiktick |
-| RT-10b Leistung mit 4× CPU-Drosselung (iPad-Emulation), echte Schleife mit Zeichnen | Robotersimulation 0,46–0,57 ms je Tick im Mittel, 95 % ≤ 1,6–1,7 ms (Ziel ≤ 2 ms je Bild bei 1 Tick pro Bild) |
+| RT-10 Leistung (ungedrosselt) | 100 Roboter + 1.000 Bandzellen: 0,18–0,26 ms je Logiktick |
+| RT-10b Leistung mit 4× CPU-Drosselung (iPad-Emulation), echte Schleife mit Zeichnen | Robotersimulation 0,40–0,49 ms je Tick im Mittel, 95 % ≤ 1,3–1,5 ms (Ziel ≤ 2 ms je Bild bei 1 Tick pro Bild). Vor dem Bündeln der Putzstriche: 95 % ≤ 1,6–2,3 ms |
 | RT-11 Alter Spielstand | mit der Fassung vor den Änderungen gespeichert (Schema 2, ohne Roboter), in der neuen geladen: 50 s Weiterspielen identisch mit der alten Fassung |
 | RT-12 Bedienung | Memo mit Häkchen, Hangar-Liste, Gesamtliste, HUD-Karte, Kartentipp (gesperrt abgelehnt, gültig angenommen), Rechteck, Abriss nach Rückfrage |
 | Test 11 Bestehende Prüfungen | Statusvergleich aller Prüfungen gegen den Stand vor den Roboterarbeiten (Commit 61e221e): keine Verschlechterung. B-12 (Hangar-Rückgängig) und Z-03 (Reihenfolge der Roboter) jetzt grün. RB-06 (60-s-Lauf ohne Roboter) identisch, RB-05 (CONFIG außerhalb `CONFIG.robots`) byte-identisch. Die übrigen FEHLER-Einträge sind die bekannten Altfunde aus `audit/BERICHT.md`, unverändert |
-| Langläufe (5 × 10.000 Fuzzing-Aktionen, 5 × 20 Std.) | siehe Nachtrag unten |
+| Langläufe (5 × 10.000 Fuzzing-Aktionen, 5 × 20 Std.) | keine Roboterverletzung; nur bekannte Altfunde, siehe Nachtrag unten |
+| RB-07 Bauen am Touch-Gerät (Handy und iPad) | Gebäude per Touch auswählen, Platz antippen, „Bestätigen“ antippen → gebaut; Leiste ganz im Bild (behebt einen Fehler außerhalb der Roboterarbeit, siehe unten) |
 | Altprüfung R-10b (Offline gegen Live) | 92 % (vorher 90–91 %; mit den schnelleren Robotern ohne Teilschritte 87 %) |
 
 Zusätzlich von Hand im Browser geprüft (Screenshots Desktop 1280 × 800 und Handy 390 × 844): Memo, Hangar-Einsatz, Gesamtliste, Karten-Zuweisung mit Vorschau, HUD-Knopf mit Warnpunkt, Abriss-Rückfrage, Roboter-Optik mit den neuen Werten. Konsolenfehler: keine.
@@ -125,4 +128,9 @@ Zusätzlich von Hand im Browser geprüft (Screenshots Desktop 1280 × 800 und Ha
 
 ## Nachtrag: Langläufe
 
-(wird nach Abschluss ergänzt)
+- **20-Stunden-Simulation (5 Seeds):** Massen- und Geldbilanz sowie die Neuzählung stimmen an jedem Kontrollpunkt. Gemeldet werden nur die bekannten Altfunde: Fahrzeugtank um Bruchteile eines Gramms überfüllt (F-11) und Bot-Stillstände. Der Simulations-Bot erreicht Lizenz 1 erst nach 98–135 Minuten (einfacher Bot) und kauft direkt danach Roboter; Roboterverletzungen gibt es keine.
+- **Fuzzing (5 × 10.000 Aktionen):** Beim ersten Lauf meldete das Fuzzing zwei Abweichungen beim Speichern und Laden (`robots.0.state: "toDrop" ≠ "work"`). Sie bestanden schon vor dieser Arbeit (Z-F6, Z-F7, Z-F12 im Ausgangsstand). Behoben durch das Mitspeichern von Ziel und Restzeit; RT-07 prüft das jetzt. Im zweiten Lauf (nach der Korrektur) 6 FEHLER statt 8, alle bekannte Altfunde ohne Roboterbezug: Spielerposition nach dem Laden mit Fahrzeug (V-06), Gleitkomma-Rest des Mondglanz-Index (10⁻⁹), Staubbilanz-Rundung (F-11), Fahrzeug verweist auf abgerissene Garage (B-14).
+
+## Nachtrag: Fehler beim Bauen am Touch-Gerät (unabhängig von den Robotern)
+
+Auf Handy und iPad ließ sich kein Gebäude setzen oder verschieben, nur Förderbänder. Die Leiste „Bestätigen / Drehen / Abbrechen“ lag im Container der Touch-Steuerung (`#touch`), den der Baumodus ausblendet. Die Leiste hängt jetzt direkt unter `#ui`, ist am Handy auf die Bildschirmbreite begrenzt, und „Abbrechen“ hat einen festen dunklen Hintergrund. Geprüft auf emuliertem Handy und iPad mit echten Touch-Eingaben für alle 17 Gebäudearten, eine Brücke über eine echte Schlucht und „Verschieben“. Dauerhaft gesichert durch RB-07 in `audit/tests/t_regress.js`.

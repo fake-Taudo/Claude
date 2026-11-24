@@ -6,6 +6,10 @@ module.exports = async function (env) {
     const rec = (id, status, detail, data) => out.push({ id, area: 'Roboter', status, detail, data });
     const inView0 = Renderer.inView;
     const mode = m => { Renderer.inView = m === 'near' ? () => true : m === 'far' ? () => false : inView0; };
+    // Speichern/Laden-Vergleich; der bekannte Gleitkomma-Rest des Mondglanz-Index (audit/BERICHT.md: glanzSum wird laufend
+    // summiert und beim Laden neu berechnet, Rest ≤ 2·10⁻⁹ ohne Wirkung) wird gezählt, aber nicht als Abweichung gewertet
+    let glanzRest = 0;
+    const rtDiff = async () => { const raw = (await T.roundtrip()).filter(x => !x.startsWith('.prog')); return raw.filter(x => { const m = x.match(/^\.glanz: ([\d.e-]+) ≠ ([\d.e-]+)$/); if (m && Math.abs(+m[1] - +m[2]) <= 2e-9) { glanzRest++; return false; } return true; }); };
     // Einsatzort: Hangar + Trichter am Rand des Startsektors, alles im Funknetz des Depots
     const setup = async (n, model, opts) => {
       opts = opts || {};
@@ -40,7 +44,7 @@ module.exports = async function (env) {
       const secs = []; for (let k = 0; k < 4; k++) secs.push(U.sectorAt(st.x + (k % 2) * 200 - 100, st.y + Math.floor(k / 2) * 200 - 100));
       for (let k = 0; k < 4; k++) T.act('assign', Robots.list.filter((r, i) => i % 4 === k).map(r => r.id), Robots.areaFor(secs[k]), true);
       T.resetBooks(); let bad = [];
-      for (let k = 0; k < 40 && !bad.length; k++) { mode(k % 3 ? 'far' : 'mixed'); T.ticks(30, 0); bad = T.check({ full: true }).filter(x => !x.includes('Stellenplan')); if (k === 20) { mode(); const d = (await T.roundtrip()).filter(x => !x.startsWith('.prog')); T.resetBooks(); if (d.length) bad.push('Rundlauf: ' + d.slice(0, 3).join(' | ')); } }
+      for (let k = 0; k < 40 && !bad.length; k++) { mode(k % 3 ? 'far' : 'mixed'); T.ticks(30, 0); bad = T.check({ full: true }).filter(x => !x.includes('Stellenplan')); if (k === 20) { mode(); const d = await rtDiff(); T.resetBooks(); if (d.length) bad.push('Rundlauf: ' + d.slice(0, 3).join(' | ')); } }
       mode(); const rc = T.check({ full: true, recount: true }).filter(x => !x.includes('Stellenplan'));
       rec('RT-02', !bad.length && !rc.length ? 'OK' : 'FEHLER', Robots.list.length + ' Roboter (alle Modelle, bewusst über den Stellenplan von 70 hinaus) in 4 Sektoren, 40 Prüfschritte, Speichern/Laden mitten im Betrieb: ' + ([...bad, ...rc].slice(0, 4).join(' | ') || 'Staubbilanz, Geldbilanz, Belegung und Neuzählung stimmen nach jedem Schritt'));
     }
@@ -125,9 +129,9 @@ module.exports = async function (env) {
       const hop = Buildings.list.find(b => b.type === 'hopper'); const r2 = Robots.list[2], r4 = Robots.list[4];
       r2.state = 'toDrop'; r2.dropId = hop.id; r2.load[0] = Math.max(r2.load[0], 5); r4.state = 'unloading'; r4.dropId = hop.id; r4.timer = 0.7; r4.load[0] = Math.max(r4.load[0], 7);
       const freeBefore = JSON.stringify(Robots.assigns.map(a => a.free || []));
-      const d = (await T.roundtrip()).filter(x => !x.startsWith('.prog'));
+      glanzRest = 0; const d = await rtDiff();
       const freeAfter = JSON.stringify(Robots.assigns.map(a => a.free || []));
-      rec('RT-07', !d.length && freeBefore === freeAfter ? 'OK' : 'FEHLER', '2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebene Bahn-Ansprüche, Roboter mitten in Lieferung und Abladen: Rundlauf ' + (d.slice(0, 4).join(' | ') || 'identisch') + '; Ansprüche erhalten ' + (freeBefore === freeAfter) + '. Funknetz wird nicht gespeichert, sondern beim Laden aus den Antennen neu berechnet.');
+      rec('RT-07', !d.length && freeBefore === freeAfter ? 'OK' : 'FEHLER', '2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebene Bahn-Ansprüche, Roboter mitten in Lieferung und Abladen: Rundlauf ' + (d.slice(0, 4).join(' | ') || 'identisch') + (glanzRest ? ' (bis auf den bekannten Gleitkomma-Rest des Mondglanz-Index ≤ 2·10⁻⁹)' : '') + '; Ansprüche erhalten ' + (freeBefore === freeAfter) + '. Funknetz wird nicht gespeichert, sondern beim Laden aus den Antennen neu berechnet.');
     }
     // 8) Forschung: jeder Roboter-Knoten genau einmal, auch für schon gekaufte Roboter
     {

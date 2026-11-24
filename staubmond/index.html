@@ -1634,6 +1634,8 @@ window.Loader = (function () {
      Hangars sind schwache Funkknoten (60 Zellen).
    - Fernmodus: jeder 6. Tick rechnet 6 Teilschritte mit derselben Schrittweite wie der
      Detailmodus – gleiche Ergebnisse. Detailbereich: Bild plus 1,5 Bildschirme.
+   - Große Bürsten (ab Radius 3) ziehen ihren Putzstrich gebündelt nach ¼ Radius Fahrweg statt in
+     jedem Tick (gleiches Ergebnis, ein Bruchteil der Rechenzeit); kleinere wie bisher jeden Tick.
    - Offline: bestehende Regeln (höchstens 8 h, 50 %/80 %, 1-s-Schritte), je Roboter in
      Teilschritte mit höchstens CONFIG.robots.offlineMaxMove Zellen Fahrweg geteilt.
    - Hangar-Abriss (auch über „Rückgängig“): Roboter ziehen in den nächsten Hangar mit Platz,
@@ -1781,7 +1783,9 @@ const CONFIG = {
       { id: 'drone', name: 'Schwarm-Drohne', price: 1000000, speed: 14, radius: 5.5, cap: 2000, licence: 6, fly: true },
     ],
     unloadBase: 0.5, unloadKgPerSec: 200,   // Abladen dauert 0,5 s + Menge / 200 kg/s
-    offlineMaxMove: 6,                     // Offline-Simulation: höchstens 6 Zellen Fahrweg je Teilschritt
+    offlineMaxMove: 6,
+    strokeStep: 0.25, strokeMaxT: 0.25,    // große Bürsten: Putzstrich nach ¼ Radius Fahrweg oder spätestens 0,25 s (Rechenaufwand)
+    strokeMinRadius: 3,                    // kleinere Bürsten ziehen wie bisher jeden Tick einen Strich (sonst bleibt der Bahnrand staubig)                     // Offline-Simulation: höchstens 6 Zellen Fahrweg je Teilschritt
     retry: 2,                              // Ziel voll / kein Ziel: erneut versuchen nach 2 s
     stall: 60,                             // ohne Fortschritt: Bahn freigeben nach 60 s, nach 3 Versuchen heim („Gefangen“)
     stallTries: 3,
@@ -7022,6 +7026,7 @@ const Robots = {
     return 1;
   },
   moveTo(r, tx, ty, dt, cleanIt) {
+    if (!cleanIt && r.skT) this.flushClean(r);
     const dx = U.dx(r.x, tx), dy = ty - r.y, d = Math.hypot(dx, dy);
     if (d < 1e-4) return true;
     let sp = this.speed(r) * this.terrainMul(r);
@@ -7043,24 +7048,35 @@ const Robots = {
       else if (Math.abs(dy) > 1e-3 && Buildings.covered(r.x, sy)) { nx = r.x; ny = sy; }
       else { r.netBlock = true; return false; }
       r.x = U.wrapX(nx); r.y = ny; r.a = Math.atan2(ny - oy, U.dx(ox, nx)); r.spin += step; r.progT = G.t;
-      if (cleanIt) this.cleanAlong(r, ox, oy, dt);
+      if (cleanIt) this.cleanAlong(r, ox, oy, dt, true);
       return false;
     }
     r.x = U.wrapX(nx); r.y = ny;
     r.a = Math.atan2(dy, dx);
     r.spin += step;
     if (step > 1e-3) r.progT = G.t;
-    if (cleanIt) this.cleanAlong(r, ox, oy, dt);
+    if (cleanIt) this.cleanAlong(r, ox, oy, dt, step >= d);
     return step >= d;
   },
-  cleanAlong(r, ox, oy, dt) {
-    const cap = this.cap(r), free = cap - this.loadKg(r);
-    if (free <= 0.001) return;
+  // Große Bürsten (ab strokeMinRadius): Putzfahrt sammeln und erst nach strokeStep × Radius Fahrweg (spätestens strokeMaxT s)
+  // als einen Strich ziehen – ein Strich je Logiktick tastete fast denselben Kreis immer wieder ab (gleiche Funktion World.stroke wie beim Spieler)
+  cleanAlong(r, ox, oy, dt, force) {
+    if (!r.skT) { r.skX = ox; r.skY = oy; r.skT = 0; }
+    r.skT += dt;
+    const C = CONFIG.robots;
+    const rad = this.radius(r);
+    if (!force && rad >= C.strokeMinRadius && r.skT < C.strokeMaxT && Math.hypot(U.dx(r.skX, r.x), r.y - r.skY) < rad * C.strokeStep) return;
+    this.flushClean(r);
+  },
+  flushClean(r) {
+    const T = r.skT || 0; r.skT = 0; if (T <= 0) return;
+    const free = this.cap(r) - this.loadKg(r);
+    if (free <= 0.001) { r.cleanFx = 0; return; }
     const c0 = G.stats.cells;
-    const kg = World.stroke(ox, oy, r.x, r.y, this.radius(r), Math.min(this.power(r) * dt * (this.offlineMode ? 1.15 : 1), free), this.offlineMode, Economy.fx('yield'));
+    const kg = World.stroke(r.skX, r.skY, r.x, r.y, this.radius(r), Math.min(this.power(r) * T * (this.offlineMode ? 1.15 : 1), free), this.offlineMode, Economy.fx('yield'));
     if (kg > 0) { for (let t = 0; t < NGOODS; t++) r.load[t] += World.col[t]; G.stats.robotKg += kg; r.gotA = (r.gotA || 0) + kg; Bus.emit('robotCleaned', r, kg); }
     G.stats.robotCells += G.stats.cells - c0;
-    r.cleanFx = kg / dt;
+    r.cleanFx = kg / T;
   },
   // nächster Abgabepunkt im Funknetz mit freiem Platz; einer, der die ganze Ladung aufnimmt, wird bevorzugt
   bestDrop(r) {

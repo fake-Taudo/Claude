@@ -3,7 +3,7 @@
   "id": "R-01",
   "area": "3.8",
   "status": "OK",
-  "detail": "Gleichwertigkeit Nah-/Fernmodus, gleiche Ausgangslage, 4 Spielminuten im Sektor M-13: mk1: nah 422.68 kg/3456 Zellen, fern 412.35 kg/3397 Zellen (-2.4 %) | mk2: nah 1701.32 kg/13253 Zellen, fern 1753.49 kg/13683 Zellen (+3.1 %) | mk3: nah 4595.37 kg/36502 Zellen, fern 4647.30 kg/36860 Zellen (+1.1 %). Toleranz laut Vorgabe 5 %.",
+  "detail": "Gleichwertigkeit Nah-/Fernmodus, gleiche Ausgangslage, 4 Spielminuten im Sektor M-13: mk1: nah 422.68 kg/3456 Zellen, fern 412.35 kg/3397 Zellen (-2.4 %) | mk2: nah 1701.32 kg/13253 Zellen, fern 1753.49 kg/13683 Zellen (+3.1 %) | mk3: nah 4629.06 kg/36501 Zellen, fern 4570.41 kg/36091 Zellen (-1.3 %). Toleranz laut Vorgabe 5 %.",
   "data": {
    "mk1-near": {
     "cells": 3456,
@@ -22,12 +22,12 @@
     "kg": 1753.4941176464208
    },
    "mk3-near": {
-    "cells": 36502,
-    "kg": 4595.374509803326
+    "cells": 36501,
+    "kg": 4629.06470588238
    },
    "mk3-far": {
-    "cells": 36860,
-    "kg": 4647.299999999395
+    "cells": 36091,
+    "kg": 4570.411764705904
    }
   }
  },
