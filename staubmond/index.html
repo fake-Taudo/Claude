@@ -3194,14 +3194,14 @@ const Buildings = {
     this.list.push(b); this.map.set(b.id, b);
     if (b.type === 'bridge') { for (const k of b.cells) World.bridgeCells.set(k, b.id); }
     else for (let yy = 0; yy < b.h; yy++) for (let xx = 0; xx < b.w; xx++) this.occ.set((b.y + yy) * WSIZE + U.wrapI(b.x + xx), b);
-    if (b.type === 'antenna' || b.type === 'outpost' || b.type === 'depot') this.covDirty = true;
+    if (b.type === 'antenna' || b.type === 'outpost' || b.type === 'depot' || b.type === 'hangar') this.covDirty = true;
     this.refreshLists();
   },
   unregister(b) {
     this.list.splice(this.list.indexOf(b), 1); this.map.delete(b.id);
     if (b.type === 'bridge') { for (const k of b.cells) World.bridgeCells.delete(k); }
     else for (let yy = 0; yy < b.h; yy++) for (let xx = 0; xx < b.w; xx++) this.occ.delete((b.y + yy) * WSIZE + U.wrapI(b.x + xx));
-    if (b.type === 'antenna' || b.type === 'outpost') this.covDirty = true;
+    if (b.type === 'antenna' || b.type === 'outpost' || b.type === 'hangar') this.covDirty = true;
     this.refreshLists();
   },
   refreshLists() {
@@ -3300,6 +3300,7 @@ const Buildings = {
     if (!noUndo) this.pushUndo({ k: 'place', id: b.id, paid: price });
     G.stats.builds++;
     Bus.emit('built', b);
+    if (type === 'hangar') Bus.emit('hangarBuilt', b);
     return { ok: true, b };
   },
   // Inhalt eines Gebäudes/Bands als Geld erstatten (nichts geht verloren)
@@ -3307,7 +3308,7 @@ const Buildings = {
   snapshot(b) { return { id: b.id, type: b.type, x: b.x, y: b.y, rot: b.rot, name: b.name }; },
   remove(b, noUndo) {
     if (!b || b.def.fixed) return false;
-    if (b.type === 'hangar' && Robots.list.some(r => r.hangar === b.id)) { UI.toast('Im Hangar wohnen noch Roboter. Erst Roboter umsiedeln oder verkaufen.', 'warn'); return false; }
+    if (b.type === 'hangar') { const m = Robots.rehome(b); if (m.moved + m.homeless) UI.toast(m.moved + ' Roboter ziehen in einen anderen Hangar' + (m.homeless ? ', ' + m.homeless + ' stehen ohne Hangar da (neuen Hangar bauen)' : '') + '.', m.homeless ? 'warn' : ''); }
     let goods = this.refundGoods(b.store) + this.refundGoods(b.inBuf) + this.refundGoods(b.outBuf) + this.refundGoods(b.capsule);
     if (b.hold) { goods += b.hold.kg * Economy.value(b.hold.t); Pool.free(b.hold); b.hold = null; }
     if (b.type === 'garage') for (const v of Vehicles.list) if (v.garage === b.id) { v.garage = 0; const dep = this.mainDepot(); const sp = Move.findFree(dep.x + dep.w + 4, dep.y + dep.h + 4, v.def.body, 'veh', 40); if (sp) { v.x = sp.x; v.y = sp.y; } }
@@ -3367,6 +3368,7 @@ const Buildings = {
     Audio.sfx('click');
   },
   unregisterRefund(b, paid) {
+    if (b.type === 'hangar') Robots.rehome(b);   // Rückgängig eines Hangar-Baus: Roboter ziehen um wie beim Abriss
     let goods = this.refundGoods(b.store) + this.refundGoods(b.inBuf) + this.refundGoods(b.outBuf) + this.refundGoods(b.capsule);
     if (b.hold) { goods += b.hold.kg * Economy.value(b.hold.t); b.hold = null; }
     this.unregister(b); this.relink(); Economy.grant(paid + goods, 'refund');
@@ -3618,7 +3620,7 @@ const Buildings = {
 
   /* --- Funknetz: Depots + Antennen-Ketten, Abdeckungsraster 16×16 Zellen --- */
   radioRadius(b) {
-    let r = b.type === 'antenna' ? CONFIG.antennaRadius : CONFIG.depotRadioRadius;
+    let r = b.type === 'antenna' ? CONFIG.antennaRadius : b.type === 'hangar' ? CONFIG.robots.hangarRadio : CONFIG.depotRadioRadius;
     r *= Economy.fx('radio');
     const reg = World.regionAt(b.x, b.y); if (CONFIG.regions[reg].signal) r *= CONFIG.regions[reg].signal;
     return r;
@@ -3628,7 +3630,7 @@ const Buildings = {
     const N = WSIZE / 16;
     if (!this.coverage) this.coverage = new Uint8Array(N * N);
     const cov = this.coverage; cov.fill(0);
-    const nodes = this.list.filter(b => b.type === 'antenna' || b.type === 'depot' || b.type === 'outpost');
+    const nodes = this.list.filter(b => b.type === 'antenna' || b.type === 'depot' || b.type === 'outpost' || b.type === 'hangar');
     const on = new Set(nodes.filter(b => b.type !== 'antenna'));
     let changed = true;
     while (changed) {
@@ -6725,13 +6727,14 @@ const Robots = {
   },
   fromSave(s) {
     const r = { id: s.id, model: s.model, def: this.def(s.model), x: s.x, y: s.y, px: s.x, py: s.y, a: s.a || 0, state: s.state || 'home', load: new Float64Array(NGOODS),
-      hangar: s.hangar, assign: s.assign || 0, rowY: s.rowY || 0, dir: s.dir || 1, col: s.col || 0, tx: NaN, timer: 0, warn: false, spin: 0, near: false, dropId: 0, cleanFx: 0 };
+      hangar: s.hangar || 0, assign: s.assign || 0, rowY: s.rowY || 0, dir: s.dir || 1, col: s.col || 0, tx: NaN, timer: 0, warn: false, spin: 0, near: false, dropId: 0, cleanFx: 0,
+      stuck: !!s.stuck, noTarget: false, waitT: 0, progT: G ? G.t : 0, stall: 0, st: '' };
     if (s.load) for (let i = 0; i < NGOODS; i++) r.load[i] = s.load[i] || 0;
-    if (r.state === 'toDrop' || r.state === 'radio') r.state = 'work';
+    if (this.BUSY[r.state]) r.state = r.assign ? 'work' : 'home';   // Lieferung wird nach dem Laden neu entschieden, die Ladung bleibt
     return r;
   },
   save() {
-    G.robots = this.list.map(r => ({ id: r.id, model: r.model, x: r.x, y: r.y, a: r.a, state: r.state, load: Array.from(r.load), hangar: r.hangar, assign: r.assign, rowY: r.rowY, dir: r.dir, col: r.col }));
+    G.robots = this.list.map(r => { const o = { id: r.id, model: r.model, x: r.x, y: r.y, a: r.a, state: r.state, load: Array.from(r.load), hangar: r.hangar, assign: r.assign, rowY: r.rowY, dir: r.dir, col: r.col }; if (r.stuck) o.stuck = true; return o; });
     G.assigns = this.assigns.map(a => Object.assign({}, a));
   },
   speed(r) { return r.def.speed * (1 + CONFIG.robotUpgrades[0].step * G.robotUp.speed) * Economy.fx('robotSpeed') * (G.ev.windUntil > G.t ? CONFIG.events.solarWind.mul : 1); },
@@ -6754,20 +6757,55 @@ const Robots = {
     Bus.emit('robotBought', r);
     return { ok: true, r };
   },
-  sell(r) { Economy.grant(Economy.robotPrice(r.def) + this.loadKg(r) * 1, 'refund'); this.list.splice(this.list.indexOf(r), 1); },
+  sell(r) { this.release(r); Economy.grant(Economy.robotPrice(r.def) + this.loadKg(r) * 1, 'refund'); this.list.splice(this.list.indexOf(r), 1); },
+  // Zustände einer laufenden Lieferung: Zuweisen/Heimschicken wartet, bis die Fracht abgegeben ist (nichts geht verloren)
+  BUSY: { toDrop: 1, unloading: 1, blocked: 1, radio: 1 },
+  // Zustand für Anzeige und Ereignisse (Namen wie in ROBOTER_SPEC.md)
+  status(r) {
+    if (r.warn) return 'noSignal';
+    if (r.stuck) return 'stuck';
+    if (r.noTarget) return 'noTarget';
+    switch (r.state) {
+      case 'work': return r.appr ? 'toWork' : 'cleaning';
+      case 'toDrop': return 'toDeliver';
+      case 'unloading': case 'radio': return 'unloading';
+      case 'blocked': return 'blockedFull';
+      case 'home': return r.hangar ? 'done' : 'homeless';
+      default: return r.hangar ? 'idle' : 'homeless';
+    }
+  },
+  // freier Platz an einem Abgabepunkt (Depots nehmen alles)
+  room(b) { if (b.type === 'depot' || b.type === 'outpost') return Infinity; return b.def.buffer ? Math.max(0, b.def.buffer - Buildings.total(b.store)) : 0; },
+  // nächster Hangar mit freiem Platz (ohne den Hangar „not“)
+  findHome(r, not) {
+    let best = null, bd = Infinity; const slots = Buildings.hangarSlots();
+    for (const h of Buildings.list) { if (h.type !== 'hangar' || h === not || this.inHangar(h) >= slots) continue; const c = Buildings.center(h), d = U.dist2(r.x, r.y, c.x, c.y); if (d < bd) { bd = d; best = h; } }
+    return best;
+  },
+  // Hangar verschwindet (Abriss oder Rückgängig): Roboter ziehen in den nächsten Hangar mit Platz, sonst bleiben sie ohne Hangar stehen
+  rehome(h) {
+    let moved = 0, homeless = 0;
+    for (const r of this.list) { if (r.hangar !== h.id) continue; r.hangar = 0; const n = this.findHome(r, h); if (n) { r.hangar = n.id; moved++; } else homeless++; if (r.state === 'idle') r.state = 'home'; }
+    return { moved, homeless };
+  },
   /* --- Zuweisungen --- */
   areaFor(s) { const sx = s % NSEC, sy = (s / NSEC) | 0; return { x0: sx * SEC, y0: sy * SEC, w: SEC, h: SEC, sector: s }; },
   assignArea(robots, area, auto) {
     const a = { id: G.nextId++, x0: U.wrapI(area.x0), y0: Math.max(2, area.y0), w: area.w, h: Math.min(area.h, WSIZE - 2 - Math.max(2, area.y0)), sector: area.sector === undefined ? -1 : area.sector, auto: auto !== false, nextY: 0, pass: 0, claims: 0, done: false, created: G.t };
     a.nextY = a.y0;
     this.assigns.push(a);
-    for (const r of robots) { this.release(r); r.assign = a.id; r.state = 'work'; r.tx = NaN; r.rowY = 0; }
+    for (const r of robots) { this.release(r); r.assign = a.id; if (!this.BUSY[r.state]) r.state = 'work'; r.tx = NaN; r.rowY = 0; r.stuck = false; r.stall = 0; r.progT = G.t; r.gotA = 0; }
     this.cleanupAssigns();
     Bus.emit('assigned', a, robots.length);
     return a;
   },
-  release(r) { r.assign = 0; r.rowY = 0; r.tx = NaN; },
-  recall(robots) { for (const r of robots) { this.release(r); if (r.state !== 'toDrop') r.state = 'home'; } this.cleanupAssigns(); },
+  // Bahn-Anspruch freigeben: die Bahn wird vom nächsten Roboter an der ersten staubigen Stelle fortgesetzt
+  release(r) {
+    const a = r.assign && r.rowY ? this.assignById(r.assign) : null;
+    if (a && !a.done) (a.free || (a.free = [])).push([r.rowY, r.band || 2]);
+    r.assign = 0; r.rowY = 0; r.tx = NaN;
+  },
+  recall(robots) { for (const r of robots) { this.release(r); if (!this.BUSY[r.state]) r.state = 'home'; } this.cleanupAssigns(); },
   cleanupAssigns() { this.assigns = this.assigns.filter(a => this.list.some(r => r.assign === a.id)); },
   assignById(id) { return this.assigns.find(a => a.id === id) || null; },
   robotsOf(a) { return this.list.filter(r => r.assign === a.id); },
@@ -6782,11 +6820,24 @@ const Robots = {
     a.done = true;
     const robots = this.robotsOf(a);
     if (!this.offlineMode) UI.radio(TXT.radio.robotsDone.replace('{s}', a.sector >= 0 ? U.sectorLabel(a.sector) : 'Rechteck'));
-    if (a.auto && a.sector >= 0) {
+    // automatisch weiter nur, wenn dieses Gebiet noch Ertrag brachte – sonst liegt der Rest außerhalb des Netzes: heim
+    const got = robots.reduce((k, r) => k + (r.gotA || 0), 0);
+    if (a.auto && a.sector >= 0 && got > 0.01) {
       const next = this.nextSector(a.sector);
       if (next >= 0) { const na = this.assignArea(robots, this.areaFor(next), true); return na; }
     }
     this.recall(robots);
+  },
+  // nächster Sektor (vom Punkt aus) mit Staub, freigeschaltet, im Funknetz, nicht fertig; bereits bearbeitete Sektoren nur, wenn nichts anderes bleibt
+  autoSector(x, y) {
+    let best = -1, bd = Infinity;
+    for (let s = 0; s < NSEC * NSEC; s++) {
+      if (World.secDone[s] || World.locked(World.secRegion[s])) continue;
+      const c = this.areaFor(s); if (!Buildings.covered(c.x0 + 128, c.y0 + 128)) continue;
+      let d = U.dist2(x, y, c.x0 + 128, c.y0 + 128); if (this.assignedSector(s)) d *= 4;
+      if (d < bd) { bd = d; best = s; }
+    }
+    return best;
   },
   nextSector(s) {
     const sx = s % NSEC, sy = (s / NSEC) | 0;
@@ -6805,14 +6856,16 @@ const Robots = {
     return best;
   },
   /* --- Spalte im Bahnstreifen schmutzig? --- */
-  colDirty(x, yb0, yb1) {
+  colDirty(x, yb0, yb1, ty) {
     const xi = U.wrapI(Math.floor(x));
+    if (ty !== undefined && !Buildings.covered(xi, ty)) return false;   // Fahrlinie außerhalb des Funknetzes: nicht erreichbar
     for (let y = yb0; y <= yb1; y++) {
       if (y < 2 || y >= WSIZE - 2) continue;
       if (World.dustAt(xi, y) > CLEAN_T || World.meteorAt(xi, y) > 0) {
         const t = World.terrAt(xi, y);
         if (t === T_ROCK || t === T_GRAVEL || t === T_CANYON || t === T_BRIDGE) continue;
         if (World.locked(World.regionAt(xi, y))) continue;
+        if (!Buildings.covered(xi, y)) continue;   // außerhalb des Funknetzes wird nicht geputzt
         return true;
       }
     }
@@ -6820,6 +6873,7 @@ const Robots = {
   },
   // Bahnen reihum vergeben: Start bei der Zeile nächst dem ersten Roboter, danach umlaufend
   claimRow(r, a) {
+    if (a.free && a.free.length) { const [y, b] = a.free.shift(); r.rowY = y; r.band = b; r.dir = U.dx(a.x0, r.x) < a.w / 2 ? 1 : -1; r.col = r.dir > 0 ? 0 : a.w - 1; r.tx = NaN; return true; }
     const band = Math.max(1, this.radius(r) * 2 * 0.86);
     if (a.covered === undefined) { a.covered = 0; a.nextY = U.clamp(Math.floor(r.y - a.y0 - 1), 0, a.h - 1) + a.y0; }
     if (a.covered >= a.h) return false;
@@ -6835,11 +6889,11 @@ const Robots = {
   scan(r, a, maxCols) {
     const b = r.band || 2, yb0 = Math.floor(r.rowY - b / 2), yb1 = Math.floor(r.rowY + b / 2);
     let col = r.col, n = 0;
-    while (col >= 0 && col < a.w && n < maxCols) { if (this.colDirty(a.x0 + col + 0.5, yb0, yb1)) break; col += r.dir; n++; }
+    while (col >= 0 && col < a.w && n < maxCols) { if (this.colDirty(a.x0 + col + 0.5, yb0, yb1, r.rowY)) break; col += r.dir; n++; }
     if (col < 0 || col >= a.w) { r.col = col; return -1; }
     if (n >= maxCols) { r.col = col; return 0; }
     let end = col, m = 0;
-    while (m < 40) { const nc = end + r.dir; if (nc < 0 || nc >= a.w || !this.colDirty(a.x0 + nc + 0.5, yb0, yb1)) break; end = nc; m++; }
+    while (m < 40) { const nc = end + r.dir; if (nc < 0 || nc >= a.w || !this.colDirty(a.x0 + nc + 0.5, yb0, yb1, r.rowY)) break; end = nc; m++; }
     r.sx = U.wrapX(a.x0 + col + 0.5 - r.dir * 0.4);
     r.col = end; r.tx = U.wrapX(a.x0 + end + 0.5 + r.dir * 0.3);
     return 1;
@@ -6866,10 +6920,21 @@ const Robots = {
     }
     const step = sp * dt;
     const ox = r.x, oy = r.y;
-    if (step >= d) { r.x = U.wrapX(tx); r.y = ty; }
-    else { r.x = U.wrapX(r.x + dx / d * step); r.y += dy / d * step; }
+    let nx = step >= d ? tx : r.x + dx / d * step, ny = step >= d ? ty : r.y + dy / d * step;
+    if (!Buildings.covered(nx, ny)) {
+      // Roboter verlassen das Funknetz nicht (sonst stünden sie dort fest): am Netzrand entlanggleiten, sonst blockiert
+      const sx = r.x + Math.sign(dx) * Math.min(step, Math.abs(dx)), sy = r.y + Math.sign(dy) * Math.min(step, Math.abs(dy));
+      if (Math.abs(dx) > 1e-3 && Buildings.covered(sx, r.y)) { nx = sx; ny = r.y; }
+      else if (Math.abs(dy) > 1e-3 && Buildings.covered(r.x, sy)) { nx = r.x; ny = sy; }
+      else { r.netBlock = true; return false; }
+      r.x = U.wrapX(nx); r.y = ny; r.a = Math.atan2(ny - oy, U.dx(ox, nx)); r.spin += step; r.progT = G.t;
+      if (cleanIt) this.cleanAlong(r, ox, oy, dt);
+      return false;
+    }
+    r.x = U.wrapX(nx); r.y = ny;
     r.a = Math.atan2(dy, dx);
     r.spin += step;
+    if (step > 1e-3) r.progT = G.t;
     if (cleanIt) this.cleanAlong(r, ox, oy, dt);
     return step >= d;
   },
@@ -6877,48 +6942,72 @@ const Robots = {
     const cap = this.cap(r), free = cap - this.loadKg(r);
     if (free <= 0.001) return;
     const c0 = G.stats.cells;
-    const kg = World.stroke(ox, oy, r.x, r.y, this.radius(r), Math.min(this.power(r) * dt * (this.offlineMode ? 1.15 : 1), free), r.far || this.offlineMode, Economy.fx('yield'));
-    if (kg > 0) { for (let t = 0; t < NGOODS; t++) r.load[t] += World.col[t]; G.stats.robotKg += kg; }
+    const kg = World.stroke(ox, oy, r.x, r.y, this.radius(r), Math.min(this.power(r) * dt * (this.offlineMode ? 1.15 : 1), free), this.offlineMode, Economy.fx('yield'));
+    if (kg > 0) { for (let t = 0; t < NGOODS; t++) r.load[t] += World.col[t]; G.stats.robotKg += kg; r.gotA = (r.gotA || 0) + kg; Bus.emit('robotCleaned', r, kg); }
     G.stats.robotCells += G.stats.cells - c0;
     r.cleanFx = kg / dt;
   },
+  // nächster Abgabepunkt im Funknetz mit freiem Platz; einer, der die ganze Ladung aufnimmt, wird bevorzugt
   bestDrop(r) {
     let best = null, bd = Infinity; const kg = this.loadKg(r);
     for (const b of Buildings.list) {
-      if (!b.def.drop || !Buildings.dropAccepts(b, kg)) continue;
+      if (!b.def.drop) continue;
+      const room = this.room(b); if (room < 0.01) continue;
       const c = Buildings.center(b); if (!Buildings.covered(c.x, c.y)) continue;
-      const d = U.dist2(r.x, r.y, c.x, c.y); if (d < bd) { bd = d; best = b; }
+      let d = U.dist2(r.x, r.y, c.x, c.y); if (room < kg) d *= 4;
+      if (d < bd) { bd = d; best = b; }
     }
     return best;
   },
+  // Fracht exakt ins Ziel buchen; passt nicht alles hinein, bleibt der Rest am Roboter
   unload(r, b) {
     const kg = this.loadKg(r);
-    if (this.offlineMode) { this.offlineKg += kg; r.load.fill(0); return; }
-    for (let t = 0; t < NGOODS; t++) if (r.load[t] > 0) { Buildings.deliver(b, t, r.load[t]); r.load[t] = 0; }
+    if (kg <= 0) return 0;
+    if (this.offlineMode) { this.offlineKg += kg; r.load.fill(0); return kg; }
+    const f = Math.min(1, this.room(b) / kg);
+    let moved = 0;
+    for (let t = 0; t < NGOODS; t++) if (r.load[t] > 0) {
+      const m = f >= 1 ? r.load[t] : r.load[t] * f;
+      Buildings.deliver(b, t, m); moved += m;
+      r.load[t] = f >= 1 ? 0 : r.load[t] - m; if (r.load[t] < 1e-9) r.load[t] = 0;
+    }
     if (r.near) Audio.sfx('robot');
+    Bus.emit('robotDelivered', r, moved, b);
+    return moved;
   },
   step(r, dt) {
     if (!Buildings.covered(r.x, r.y)) {
       if (!r.warn) { r.warn = true; if (!this.offlineMode && G.t - this.warnT > 30) { this.warnT = G.t; UI.radio(TXT.radio.noSignal); } }
+      r.progT = G.t;   // Warten auf Funk zählt nicht als Stillstand
       return;
     }
     r.warn = false;
     const a = r.assign ? this.assignById(r.assign) : null;
     if (r.assign && !a) r.assign = 0;
+    const C = CONFIG.robots;
     switch (r.state) {
       case 'home': case 'idle': {
-        if (a) { r.state = 'work'; return; }
-        const h = Buildings.byId(r.hangar);
-        if (!h) { const any = Buildings.list.find(b => b.type === 'hangar'); if (any) r.hangar = any.id; else return; }
-        const hh = Buildings.byId(r.hangar), slot = this.list.filter(q => q.hangar === r.hangar).indexOf(r);
+        if (a) { r.state = 'work'; r.stuck = false; r.progT = G.t; return; }
+        if (this.loadKg(r) > 0.01) { if (G.t >= r.waitT) { const d = this.bestDrop(r); if (d) { r.noTarget = false; r.state = 'toDrop'; r.dropId = d.id; return; } r.noTarget = true; r.waitT = G.t + C.retry; } }
+        else r.noTarget = false;
+        let hh = r.hangar ? Buildings.byId(r.hangar) : null;
+        if (!hh || hh.type !== 'hangar') {
+          // ohne Hangar: in Abständen einen mit freiem Platz suchen, sonst stehen bleiben
+          r.hangar = 0;
+          if (G.t < r.waitT) { r.state = 'idle'; return; }
+          hh = this.findHome(r); if (!hh) { r.waitT = G.t + C.retry; r.state = 'idle'; return; }
+          r.hangar = hh.id; r.state = 'home';
+        }
+        const slot = this.list.filter(q => q.hangar === r.hangar).indexOf(r);
         const tx = U.wrapX(hh.x + (slot % 3) * 1.2 + 0.4), ty = hh.y + hh.h + 0.8 + Math.floor(slot / 3) * 1.2;
-        if (this.loadKg(r) > 0.01) { const d = this.bestDrop(r); if (d) { r.state = 'toDrop'; r.dropId = d.id; return; } }
-        if (this.moveTo(r, tx, ty, dt, false)) r.state = 'idle';
+        if (this.moveTo(r, tx, ty, dt, false)) { r.state = 'idle'; r.stuck = false; }
+        else if (r.netBlock) { r.netBlock = false; r.state = 'idle'; }   // Heimweg führt aus dem Netz: hier warten
         return;
       }
       case 'work': {
         if (!a) { r.state = 'home'; return; }
         if (this.loadKg(r) >= this.cap(r) * 0.995) { this.beginUnload(r); return; }
+        r.noTarget = false;
         if (!r.rowY) {
           if (!this.claimRow(r, a)) {
             if (this.areaDone(a)) { if (!a.done) this.finish(a); return; }
@@ -6932,46 +7021,82 @@ const Robots = {
           if (res === 0) return;
           r.appr = Math.abs(U.dx(r.x, r.sx)) > 1.2 || Math.abs(r.y - r.rowY) > 1.2;
         }
+        // Wächter: ohne Fortschritt Bahn freigeben, nach mehreren Versuchen heim mit Warnung „Gefangen“ (nie Endlosschleife)
+        if (G.t - r.progT > C.stall) {
+          r.stall++; r.progT = G.t;
+          if (r.stall >= C.stallTries) { this.release(r); r.stuck = true; r.stall = 0; r.state = 'home'; this.cleanupAssigns(); if (!this.offlineMode && G.t - (this.stuckT || -99) > 30) { this.stuckT = G.t; UI.toast('Ein K.E.H.R.-Bot ist festgefahren und kehrt zum Hangar zurück.', 'warn'); } return; }
+          this.release(r); r.assign = a.id; return;
+        }
         // erst zum Anfang des schmutzigen Abschnitts, dann putzend bis zum Ende
-        if (r.appr) { if (this.moveTo(r, r.sx, r.rowY, dt, Math.abs(r.y - r.rowY) < 1.5)) r.appr = false; return; }
-        if (this.moveTo(r, r.tx, r.rowY, dt, true)) { r.col += r.dir; r.tx = NaN; }
+        if (r.appr) { if (this.moveTo(r, r.sx, r.rowY, dt, Math.abs(r.y - r.rowY) < 1.5)) r.appr = false; else if (r.netBlock) { r.netBlock = false; r.appr = false; r.col += r.dir; r.tx = NaN; } return; }
+        if (this.moveTo(r, r.tx, r.rowY, dt, true)) { r.col += r.dir; r.tx = NaN; r.stall = 0; }
+        else if (r.netBlock) { r.netBlock = false; r.col += r.dir; r.tx = NaN; }   // Abschnitt liegt hinter dem Netzrand: überspringen
         return;
       }
       case 'toDrop': {
         const b = Buildings.byId(r.dropId);
-        if (!b || !Buildings.dropAccepts(b, this.loadKg(r))) { const d = this.bestDrop(r); if (!d) { r.state = r.assign ? 'work' : 'home'; return; } r.dropId = d.id; return; }
+        if (!b || this.room(b) < 0.01) { r.state = r.assign ? 'work' : 'home'; this.beginUnload(r); return; }
         const c = Buildings.center(b), arrive = Buildings.distTo(b, r.x, r.y) < 1.2;
-        if (arrive || this.moveTo(r, c.x, b.y + b.h + 0.6, dt, false)) { this.unload(r, b); r.state = r.assign ? 'work' : 'home'; }
+        if (arrive || this.moveTo(r, c.x, b.y + b.h + 0.6, dt, false)) { r.state = 'unloading'; r.timer = C.unloadBase + this.loadKg(r) / C.unloadKgPerSec; }
+        else if (r.netBlock) { r.netBlock = false; r.noTarget = true; r.waitT = G.t + C.retry; r.state = r.assign ? 'work' : 'home'; }   // Weg führt aus dem Netz: Ziel unerreichbar
+        return;
+      }
+      case 'unloading': {
+        r.timer -= dt; if (r.timer > 0) return;
+        const b = Buildings.byId(r.dropId);
+        if (b) this.unload(r, b);
+        r.progT = G.t;
+        if (this.loadKg(r) > 0.01) { r.state = 'blocked'; r.timer = C.retry; return; }   // Ziel voll: Rest bleibt am Roboter
+        r.state = r.assign ? 'work' : 'home';
+        return;
+      }
+      case 'blocked': {
+        r.timer -= dt; r.progT = G.t; if (r.timer > 0) return;
+        const b = Buildings.byId(r.dropId), kg = this.loadKg(r);
+        if (kg <= 0.01) { r.state = r.assign ? 'work' : 'home'; return; }
+        if (b && this.room(b) > 0.01) { r.state = 'unloading'; r.timer = C.unloadBase + kg / C.unloadKgPerSec; return; }
+        const d = this.bestDrop(r);
+        if (d && d !== b) { r.state = 'toDrop'; r.dropId = d.id; return; }
+        r.timer = C.retry;
         return;
       }
       case 'radio': {
-        r.timer -= dt;
-        if (r.timer <= 0) { const b = this.bestDrop(r); if (b) this.unload(r, b); r.state = r.assign ? 'work' : 'home'; }
+        r.timer -= dt; r.progT = G.t; if (r.timer > 0) return;
+        const b = this.bestDrop(r);
+        if (b) { this.unload(r, b); r.noTarget = false; } else { r.noTarget = true; r.waitT = G.t + C.retry; }
+        r.state = r.assign ? 'work' : 'home';
         return;
       }
     }
   },
   beginUnload(r) {
+    if (G.t < r.waitT) { r.progT = G.t; return; }   // kein Ziel: nur alle paar Sekunden neu suchen
     if (Economy.fx('selfEmpty') && r.model !== 'mk1') { r.state = 'radio'; r.timer = 1; return; }
     const b = this.bestDrop(r);
-    if (!b) return;
-    r.state = 'toDrop'; r.dropId = b.id;
+    if (!b) { r.noTarget = true; r.waitT = G.t + CONFIG.robots.retry; r.progT = G.t; return; }
+    r.noTarget = false; r.state = 'toDrop'; r.dropId = b.id;
   },
   update(dt) {
     this.tick++;
-    const g = this.tick % CONFIG.robotFarGroups, farDt = dt * CONFIG.robotFarGroups;
+    const g = this.tick % CONFIG.robotFarGroups, nG = CONFIG.robotFarGroups;
+    // Detail-Modus: sichtbarer Bereich plus Rand (in Zellen)
+    const m = CONFIG.robots.nearScreens * Math.max(Renderer.W, Renderer.H) / Math.max(1e-3, Renderer.s);
     for (let i = 0; i < this.list.length; i++) {
       const r = this.list[i];
-      const near = Renderer.inView(r.x, r.y, 12);
+      const near = Renderer.inView(r.x, r.y, m);
       if (near) {
         if (!r.near) { r.px = r.x; r.py = r.y; }
         r.near = true; r.far = false; r.px = r.x; r.py = r.y;
         this.step(r, dt);
-        if (r.cleanFx > 0 && Math.random() < 0.5) Fx.dust(r.x, r.y, this.radius(r), r.a, 0);
+        if (r.cleanFx > 0 && VFX.r() < 0.5) Fx.dust(r.x, r.y, this.radius(r), r.a, 0);
       } else {
         r.near = false; r.far = true;
-        if (i % CONFIG.robotFarGroups === g) { r.px = r.x; r.py = r.y; this.step(r, farDt); }
+        // ferner Modus: alle 6 Ticks gebündelt (10 Hz), aber in denselben Teilschritten wie der Detail-Modus –
+        // so liefert ein ferner Roboter exakt dieselbe Menge ab (keine verschenkte Restzeit an Bahnenden)
+        if (i % nG === g) { r.px = r.x; r.py = r.y; for (let k = 0; k < nG; k++) this.step(r, dt); }
       }
+      const st = this.status(r);
+      if (st !== r.st) { const prev = r.st; r.st = st; Bus.emit('robotStatus', r, st, prev); }
     }
   },
   // Offline: Roboter mit groben Schritten nachsimulieren (Erlöse über Durchschnittswert)
@@ -9058,7 +9183,8 @@ Object.assign(UI, {
       const kv = U.h('div', { class: 'kv' }), add = (a, v) => { kv.appendChild(U.h('span', { text: a })); kv.appendChild(U.h('span', { text: v })); };
       add('Abwesend', U.time(r.away)); add('Simuliert (' + Math.round(r.eff * 100) + ' % Effizienz)', U.time(r.sim));
       add('Verdient', U.money(r.money)); add('Gereinigte Zellen', U.int(r.cells)); add('Abgeschlossene Sektoren', U.int(r.sectors));
-      b.appendChild(U.h('div', { class: 'note', style: { marginBottom: '10px' }, text: 'Ihre K.E.H.R.-Bots haben pflichtbewusst weitergeputzt. Förderbänder ruhen während Ihrer Abwesenheit.' }));
+      if (r.kg !== undefined) add('Abgeliefert und verschickt', U.kg(r.kg) + ' (' + U.int(r.robots || 0) + ' Roboter)');
+      b.appendChild(U.h('div', { class: 'note', style: { marginBottom: '10px' }, text: 'Ihre K.E.H.R.-Bots haben pflichtbewusst weitergeputzt. Nur Roboter im Funknetz arbeiten. Die Ware geht per Sammelkapsel direkt zur Erde; Förderbänder ruhen während Ihrer Abwesenheit.' }));
       b.appendChild(kv);
     } });
   },
@@ -9660,11 +9786,19 @@ const Shop = {
     const rs = this.robotsById(ids); if (!rs.length) return this.fail('Keine freien Roboter');
     if (!Buildings.covered(area.x0 + area.w / 2, area.y0 + area.h / 2)) return this.fail('Bereich liegt außerhalb des Funknetzes. Antennen-Kette bauen!');
     const ex = area.sector >= 0 ? Robots.assignedSector(area.sector) : null;
-    if (ex) { for (const r of rs) { Robots.release(r); r.assign = ex.id; r.state = 'work'; } ex.done = false; }
+    if (ex) { for (const r of rs) { Robots.release(r); r.assign = ex.id; if (!Robots.BUSY[r.state]) r.state = 'work'; r.stuck = false; r.progT = G.t; } ex.done = false; }
     else Robots.assignArea(rs, area, auto);
     return { ok: true, msg: rs.length + ' Roboter → ' + (area.sector >= 0 ? 'Sektor ' + U.sectorLabel(area.sector) : 'Rechteck') };
   },
   recallRobots(ids) { Robots.recall(this.robotsById(ids)); return { ok: true }; },
+  // „Automatisch“: nächster nicht abgeschlossener, freigeschalteter Sektor mit Staub im Funknetz; danach automatisch weiter
+  assignAuto(ids) {
+    const rs = this.robotsById(ids); if (!rs.length) return this.fail('Keine Roboter gewählt');
+    let cx = 0, cy = 0; for (const r of rs) { cx += r.x; cy += r.y; } cx /= rs.length; cy /= rs.length;
+    const s = Robots.autoSector(cx, cy); if (s < 0) return this.fail('Kein Sektor mit Staub im Funknetz. Antennen bauen oder Lizenz erweitern.');
+    Robots.assignArea(rs, Robots.areaFor(s), true);
+    return { ok: true, msg: rs.length + ' Roboter → Sektor ' + U.sectorLabel(s) + ' (automatisch)' };
+  },
   place(type, x, y, rot) { return Buildings.place(type, x, y, rot); },
   remove(bid) { const b = Buildings.byId(bid); if (!b) return this.fail('Gebäude fehlt'); return Buildings.remove(b) ? { ok: true } : this.fail('Abriss nicht möglich'); },
   move(bid, x, y, rot) { const b = Buildings.byId(bid); if (!b) return this.fail('Gebäude fehlt'); return Buildings.move(b, x, y, rot); },
@@ -10254,7 +10388,7 @@ const Game = {
     const money = Robots.offlineKg * Math.max(1, G.avgVal);
     Economy.grant(money, 'offline');
     Robots.offlineMode = false; this.state = 'play'; this.showWait(null);
-    UI.offlineSummary({ away, sim, eff, money: G.money - m0, cells: G.stats.cells - c0, sectors: G.stats.sectors - s0 });
+    UI.offlineSummary({ away, sim, eff, money: G.money - m0, cells: G.stats.cells - c0, sectors: G.stats.sectors - s0, kg: Robots.offlineKg, robots: Robots.list.length });
     Save.soon();
   },
   async newMission() {

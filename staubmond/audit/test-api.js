@@ -129,7 +129,7 @@ window.__test = (function () {
     for (const b of Buildings.list) if (b.hold) chk(b.hold, b.type + b.id);
     // veraltete Verweise
     const ids = new Set(Buildings.list.map(b => b.id));
-    for (const r of Robots.list) if (!ids.has(r.hangar)) add('stale', 'Roboter ' + r.id + ' verweist auf fehlenden Hangar ' + r.hangar);
+    for (const r of Robots.list) if (r.hangar && !ids.has(r.hangar)) add('stale', 'Roboter ' + r.id + ' verweist auf fehlenden Hangar ' + r.hangar);   // 0 = ohne Hangar (erlaubt)
     for (const v of Vehicles.list) if (v.garage && !ids.has(v.garage)) add('stale', 'Fahrzeug ' + v.id + ' verweist auf fehlende Garage ' + v.garage);
     const vid = new Set(); for (const v of Vehicles.list) { if (vid.has(v.id)) add('dup', 'Fahrzeug-ID doppelt ' + v.id); vid.add(v.id); }
     const rid = new Set(); for (const r of Robots.list) { if (rid.has(r.id)) add('dup', 'Roboter-ID doppelt ' + r.id); rid.add(r.id); }

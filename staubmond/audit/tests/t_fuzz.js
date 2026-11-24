@@ -77,7 +77,7 @@ const SETUP = () => {
         case 'remove': { const b = pick(Buildings.list, a[1]); if (b) T.act('remove', b.id); break; }
         case 'move': { const b = pick(Buildings.list, a[1]); if (b) T.act('move', b.id, a[2], a[3], a[4]); break; }
         case 'rotate': { const b = pick(Buildings.list, a[1]); if (b) T.act('rotate', b.id); break; }
-        case 'robot': { const h = pick(Buildings.list.filter(b => b.type === 'hangar'), a[1]); if (h) T.act('robot', CONFIG.robots[Math.floor(a[5] * CONFIG.robots.length)].id, h.id); break; }
+        case 'robot': { const h = pick(Buildings.list.filter(b => b.type === 'hangar'), a[1]); if (h) T.act('robot', CONFIG.robots.models[Math.floor(a[5] * CONFIG.robots.models.length)].id, h.id); break; }
         case 'robotSell': { const r = pick(Robots.list, a[1]); if (r) T.act('robotSell', r.id); break; }
         case 'recallVeh': { const v = pick(Vehicles.list, a[1]); const g = Buildings.list.find(b => b.type === 'garage'); if (v) T.act('recallVeh', v.id, a[5] < 0.5 && g ? g.id : undefined); break; }
         case 'vehUp': { const v = pick(Vehicles.list, a[1]); if (v) T.act('vehUp', v.id, ['speed', 'width', 'cap'][Math.floor(a[5] * 3)]); break; }

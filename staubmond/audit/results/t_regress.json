@@ -27,7 +27,7 @@
   "id": "RB-05",
   "area": "Phase B",
   "status": "OK",
-  "detail": "CONFIG byte-identisch mit index_audit_original.html: true (a7c2053ff9)"
+  "detail": "CONFIG außerhalb des Roboter-Blocks und saveSchema byte-identisch mit index_audit_original.html: true (9b61c12bda)"
  },
  {
   "id": "RB-06",

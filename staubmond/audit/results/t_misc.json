@@ -123,7 +123,7 @@
   "id": "Z-03",
   "area": "4.2",
   "status": "ABWEICHUNG",
-  "detail": "Reihenfolge der Roboter (Liste umgedreht), 3 Min.: 2697 gegen 2503 Zellen. Bahnen werden in Listenreihenfolge vergeben; das Ergebnis hängt leicht von der Reihenfolge ab, nicht systematisch. Reihenfolge im Tick: Spieler → Fahrzeuge → Gebäude/Bänder → Roboter → Progression (Events, Aufträge) → Speichern; ein Kapselverkauf im selben Tick nutzt die Nachfrage vor einem eventuellen Wechsel im selben Tick (Wechsel erst in Progression.update)."
+  "detail": "Reihenfolge der Roboter (Liste umgedreht), 3 Min.: 2651 gegen 2506 Zellen. Bahnen werden in Listenreihenfolge vergeben; das Ergebnis hängt leicht von der Reihenfolge ab, nicht systematisch. Reihenfolge im Tick: Spieler → Fahrzeuge → Gebäude/Bänder → Roboter → Progression (Events, Aufträge) → Speichern; ein Kapselverkauf im selben Tick nutzt die Nachfrage vor einem eventuellen Wechsel im selben Tick (Wechsel erst in Progression.update)."
  },
  {
   "id": "X-01",
@@ -147,18 +147,18 @@
   "id": "L-01",
   "area": "4.6",
   "status": "OK",
-  "detail": "Worst-Case 200 Roboter (70 regulär + 130 am Stellenplan vorbei), 4958 Bandzellen voller Pakete, 2511 berührte Chunks: Logik 2.087 ms/Tick (Roboter fern), 2.101 ms/Tick (alle Roboter im Nahmodus) – bei einem Tick pro Bild 13 % des 16,7-ms-Budgets (Headless-Chromium, Desktop-CPU; Mobilgeräte etwa 3–5× langsamer, nicht gemessen). Speichern (voll): 5950 ms gesamt, längste Blockade des Hauptthreads 27 ms, Kern 437 KB, Chunks 7460 KB. Heap 60 MB. Rendern nicht gemessen (Headless, Software-Rendering).",
+  "detail": "Worst-Case 200 Roboter (70 regulär + 130 am Stellenplan vorbei), 4958 Bandzellen voller Pakete, 2511 berührte Chunks: Logik 2.36 ms/Tick (Roboter fern), 2.074 ms/Tick (alle Roboter im Nahmodus) – bei einem Tick pro Bild 12 % des 16,7-ms-Budgets (Headless-Chromium, Desktop-CPU; Mobilgeräte etwa 3–5× langsamer, nicht gemessen). Speichern (voll): 3724 ms gesamt, längste Blockade des Hauptthreads 17 ms, Kern 442 KB, Chunks 7460 KB. Heap 81 MB. Rendern nicht gemessen (Headless, Software-Rendering).",
   "data": {
    "robots": 200,
    "belts": 4958,
    "chunks": 2511,
-   "msTick": 2.087,
-   "msNear": 2.101,
-   "msSave": 5950,
-   "maxGap": 27,
-   "coreKB": 437,
+   "msTick": 2.36,
+   "msNear": 2.074,
+   "msSave": 3724,
+   "maxGap": 17,
+   "coreKB": 442,
    "chunkKB": 7460,
-   "heap": 60
+   "heap": 81
   }
  }
 ]

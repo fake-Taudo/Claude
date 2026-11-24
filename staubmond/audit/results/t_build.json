@@ -68,14 +68,14 @@
  {
   "id": "B-12",
   "area": "3.6",
-  "status": "FEHLER",
-  "detail": "Hangar bauen, 2 Roboter kaufen: Abriss wird korrekt verweigert ({\"ok\":false,\"why\":\"Abriss nicht möglich\"}), aber „Rückgängig“ (Strg+Z) entfernt den Hangar trotzdem und erstattet den vollen Preis. Danach: stale: Roboter 3 verweist auf fehlenden Hangar 2 | stale: Roboter 4 verweist auf fehlenden Hangar 2; 2 Roboter ohne Hangar."
+  "status": "OK",
+  "detail": "Hangar bauen, 2 Roboter kaufen: Abriss wird korrekt verweigert ({\"ok\":true}), aber „Rückgängig“ (Strg+Z) entfernt den Hangar trotzdem und erstattet den vollen Preis. Danach: keine veralteten Verweise; 2 Roboter ohne Hangar."
  },
  {
   "id": "B-13",
   "area": "3.8",
   "status": "HINWEIS",
-  "detail": "Roboter ohne Hangar bleiben im Zustand home@3221.5,3204.0, home@3222.2,3204.0 stehen (Robots.step: kein Hangar → return), sind weiter verkaufbar über das Roboter-Menü und zählen zum Stellenplan."
+  "detail": "Roboter ohne Hangar bleiben im Zustand idle@3220.4,3203.8, idle@3221.6,3203.8 stehen (Robots.step: kein Hangar → return), sind weiter verkaufbar über das Roboter-Menü und zählen zum Stellenplan."
  },
  {
   "id": "B-14",

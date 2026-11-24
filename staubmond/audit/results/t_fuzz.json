@@ -28,7 +28,7 @@
   "id": "Z-S0",
   "area": "2.5",
   "status": "HINWEIS",
-  "detail": "Seed 1000: 1000 Aktionen in 24 s, Spielzeit 3.0 Min., Endzustand {\"money\":14141377.444499727,\"buildings\":6,\"belts\":88,\"robots\":2,\"vehicles\":37,\"t\":182.83333333337097}, neue Verletzungsarten 1"
+  "detail": "Seed 1000: 1000 Aktionen in 20 s, Spielzeit 3.0 Min., Endzustand {\"money\":14283502.204891883,\"buildings\":5,\"belts\":88,\"robots\":0,\"vehicles\":37,\"t\":182.10000000003706}, neue Verletzungsarten 1"
  },
  {
   "id": "Z-F3",
@@ -64,7 +64,7 @@
   "id": "Z-S1",
   "area": "2.5",
   "status": "HINWEIS",
-  "detail": "Seed 8919: 1000 Aktionen in 9 s, Spielzeit 2.4 Min., Endzustand {\"money\":20190836.142792687,\"buildings\":5,\"belts\":141,\"robots\":1,\"vehicles\":31,\"t\":146.81666666667564}, neue Verletzungsarten 1"
+  "detail": "Seed 8919: 1000 Aktionen in 7 s, Spielzeit 2.4 Min., Endzustand {\"money\":20190836.142792687,\"buildings\":5,\"belts\":141,\"robots\":1,\"vehicles\":31,\"t\":146.81666666667564}, neue Verletzungsarten 1"
  },
  {
   "id": "Z-SUM",

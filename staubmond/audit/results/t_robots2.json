@@ -1,0 +1,74 @@
+[
+ {
+  "id": "RT-01",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "Ein Roboter, 10 Spielminuten, abgelieferte Menge Detail- gegen Fernmodus: mk1 238.9 / 238.9 kg (0.0 %), mk2 1044.9 / 1044.9 kg (0.0 %), mk3 2388.2 / 2388.2 kg (0.0 %) – Toleranz 5 %",
+  "data": {
+   "mk1-near": 238.9,
+   "mk1-far": 238.9,
+   "mk2-near": 1044.9,
+   "mk2-far": 1044.9,
+   "mk3-near": 2388.2,
+   "mk3-far": 2388.2
+  }
+ },
+ {
+  "id": "RT-02",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "100 Roboter (alle Modelle, bewusst über den Stellenplan von 70 hinaus) in 4 Sektoren, 40 Prüfschritte, Speichern/Laden mitten im Betrieb: Staubbilanz, Geldbilanz, Belegung und Neuzählung stimmen nach jedem Schritt"
+ },
+ {
+  "id": "RT-03",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "10 Mk1 im selben Sektor, 5 Spielminuten: entfernt 871.28 kg = abgeliefert/verkauft 776.53 kg + Roboterfracht 94.75 kg; Neuzählung jeder Zelle stimmt (keine Zelle doppelt gezählt)"
+ },
+ {
+  "id": "RT-04",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "300 Zufallsänderungen (Trichter/Antenne/Hangar bauen und abreißen, Umweisen, automatisch zuweisen, Verkaufen, Kaufen, Heimschicken, Rückgängig) im Wechsel von Detail- und Fernmodus: Ausnahmen keine; Invarianten eingehalten (keine verlorene Fracht, keine veralteten Verweise, Ansprüche im Gebiet); nach 2 Min. Ruhe {}, hängend 0",
+  "data": {}
+ },
+ {
+  "id": "RT-05",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "Funknetz: 0 Neuberechnungen in 10 s ohne Änderung; Antennenkette gebaut → Roboter im fernen Sektor arbeiten (2/2); mittlere Antenne abgerissen → 1 von 1 Robotern außerhalb des Netzes mit Warnung „kein Funksignal“, stehen still true; Antenne wieder da (Rückgängig) → 2 arbeiten weiter. Hangar zählt als schwache Antenne (60 Zellen)."
+ },
+ {
+  "id": "RT-06",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "3 Std. abwesend (3 Roboter im Netz, 1 außerhalb): +16125 ₥, Roboter außerhalb bewegt sich nicht (true). Zweites Laden ohne Speichern rechnet erneut auf den gespeicherten Stand (+16218 ₥, kein Doppelgewinn: Endstand 17293 über Speicherstand). Uhr 2 Std. zurück: +0 ₥; Uhr 10 Tage vor (vom Stand nach den 3 Std., Netz schon weitgehend sauber): +2859 ₥, angerechnete Abwesenheit 8.00 Std. (Deckel 8 Std.), simuliert 4.00 Std. bei 50 % Wirkungsgrad."
+ },
+ {
+  "id": "RT-07",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebene Bahn-Ansprüche: Rundlauf identisch; Ansprüche erhalten true. Funknetz wird nicht gespeichert, sondern beim Laden aus den Antennen neu berechnet."
+ },
+ {
+  "id": "RT-08",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "Robo-Kalibrierung, Doppelschicht, Größere Robo-Tanks, Selbstentleerung, Hangar-Erweiterung, Serienfertigung, Flottenkommando: jede wirkt genau auf die beschriebene Größe, auf den schon gekauften Roboter und nur einmal. Selbstentleerung: voller Mk2 gibt 225.0 kg per Funk ab, ohne zum Ziel zu fahren (Weg 5.4 Zellen in 1,5 s, putzt dabei weiter)."
+ },
+ {
+  "id": "RT-09",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "Hangar mit 4 Robotern abgerissen: 6 Roboter im zweiten Hangar (6 Plätze), 2 ohne Hangar, Geld nur +5000 ₥ (Baupreis), Fracht bleibt. Zweiten Hangar abgerissen: 8 ohne Hangar, Invarianten ok. Neuer Hangar: 6 ziehen ein. Kauf in vollen Hangar: {\"ok\":false,\"why\":\"Hangar voll (6 Plätze)\"}; genau passender Betrag kauft, Doppelklick bucht einmal (Roboter 8 → 9, Konto 0)"
+ },
+ {
+  "id": "RT-10",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus 1000 Bandzellen: Robotersimulation 0.187 ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund 0.66 ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.",
+  "data": {
+   "ms": 0.18716666666519208
+  }
+ }
+]
