@@ -121,10 +121,13 @@ module.exports = async function (env) {
       T.act('assign', [Robots.list[3].id], Robots.areaFor(U.sectorAt(st.x, st.y)), false);
       mode('far'); T.ticks(60 * 45, 0); mode();
       Robots.list[0].load[1] = 3.25; T.resetBooks(); Robots.release(Robots.list[1]);   // Anspruch freigegeben → in a.free
+      // mitten in der Lieferung und beim Abladen: Ziel und Restzeit müssen den Rundlauf überstehen
+      const hop = Buildings.list.find(b => b.type === 'hopper'); const r2 = Robots.list[2], r4 = Robots.list[4];
+      r2.state = 'toDrop'; r2.dropId = hop.id; r2.load[0] = Math.max(r2.load[0], 5); r4.state = 'unloading'; r4.dropId = hop.id; r4.timer = 0.7; r4.load[0] = Math.max(r4.load[0], 7);
       const freeBefore = JSON.stringify(Robots.assigns.map(a => a.free || []));
       const d = (await T.roundtrip()).filter(x => !x.startsWith('.prog'));
       const freeAfter = JSON.stringify(Robots.assigns.map(a => a.free || []));
-      rec('RT-07', !d.length && freeBefore === freeAfter ? 'OK' : 'FEHLER', '2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebene Bahn-Ansprüche: Rundlauf ' + (d.slice(0, 4).join(' | ') || 'identisch') + '; Ansprüche erhalten ' + (freeBefore === freeAfter) + '. Funknetz wird nicht gespeichert, sondern beim Laden aus den Antennen neu berechnet.');
+      rec('RT-07', !d.length && freeBefore === freeAfter ? 'OK' : 'FEHLER', '2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebene Bahn-Ansprüche, Roboter mitten in Lieferung und Abladen: Rundlauf ' + (d.slice(0, 4).join(' | ') || 'identisch') + '; Ansprüche erhalten ' + (freeBefore === freeAfter) + '. Funknetz wird nicht gespeichert, sondern beim Laden aus den Antennen neu berechnet.');
     }
     // 8) Forschung: jeder Roboter-Knoten genau einmal, auch für schon gekaufte Roboter
     {

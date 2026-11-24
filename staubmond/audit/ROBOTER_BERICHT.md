@@ -14,7 +14,7 @@ Vorgabe: `ROBOTER_SPEC.md`. Bestandsaufnahme vor den Änderungen: `audit/ROBOTER
 | Teil | Umsetzung | Fundstelle in `index.html` |
 |---|---|---|
 | Eigener Block `CONFIG.robots` | `models` plus neue Werte (Abladen, Wiederholung, Wächter, Hangar-Funk, Detailbereich, Offline-Teilschritte). Ältere Roboterwerte bleiben unverändert an ihrem Platz | `CONFIG.robots` |
-| Speicher-Schema 3 | neues Feld `robotTut`; `Save.migrate` ergänzt es für alte Stände | `CONFIG.saveSchema`, `Save.migrate` |
+| Speicher-Schema 3 | neues Feld `robotTut`; `Save.migrate` ergänzt es für alte Stände. Roboter in Lieferung, beim Abladen oder wartend speichern Ziel und Restzeit mit (optionale Felder `drop`, `timer`) und setzen nach dem Laden genau dort fort. Ältere Stände ohne diese Felder entscheiden wie bisher neu, die Ladung bleibt | `CONFIG.saveSchema`, `Save.migrate`, `Robots.save`, `Robots.fromSave` |
 | Zustandsautomat | idle, toWork, cleaning, toDeliver, unloading (0,5 s + Menge / 200 kg/s), blockedFull (Teilabgabe, alle 2 s neu, auch anderes Ziel), done, noSignal, stuck (60 s ohne Fortschritt → Bahn frei; nach 3 Versuchen heim mit Warnung „gefangen“), noTarget, dazu „ohne Hangar“ | `Robots.step`, `Robots.status` |
 | Exaktes Abliefern | Fracht wird nur so weit gebucht, wie Platz ist; der Rest bleibt am Roboter | `Robots.unload`, `Robots.room` |
 | Funknetz | Hangar ist schwacher Funkknoten (60 Zellen). Roboter verlassen das Netz nicht von selbst: Sie gleiten am Rand entlang, Abschnitte hinter dem Rand werden übersprungen, und Gebiete ohne Ertrag ketten nicht weiter | `Buildings.radioRadius`, `Robots.moveTo`, `Robots.colDirty`, `Robots.finish` |
@@ -83,7 +83,7 @@ Alle Prüfungen laufen automatisch und deterministisch: `node audit/run.js` (Erg
 | RT-04 300 Zufallsänderungen | keine Ausnahme, keine verlorene Fracht, keine veralteten Verweise, keine hängenden Ansprüche |
 | RT-05 Funknetz | 0 Neuberechnungen ohne Änderung; Kette trägt; Antenne weg → Warnung und Stillstand; Rückgängig → weiter |
 | RT-06 Offline | 3 Std. → +19.070 ₥ (nur Roboter im Netz); zweites Laden rechnet nicht doppelt; Uhr zurück → 0; Uhr 10 Tage vor → auf 8 Std. gedeckelt, nicht negativ |
-| RT-07 Speichern/Laden | Rundlauf mit 2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebenen Ansprüchen identisch |
+| RT-07 Speichern/Laden | Rundlauf mit 2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebenen Ansprüchen und Robotern mitten in Lieferung und Abladen identisch |
 | RT-08 Forschung | jeder Roboter-Knoten wirkt genau einmal auf die beschriebene Größe, auch auf gekaufte Roboter; Selbstentleerung liefert per Funk |
 | RT-09 Abriss und Kauf | Umzug ohne Verlust, nur Baupreis zurück; voller Hangar verhindert Kauf; passender Betrag kauft; Doppelklick bucht einmal |
 | RT-10 Leistung (ungedrosselt) | 100 Roboter + 1.000 Bandzellen: 0,19–0,26 ms je Logiktick |

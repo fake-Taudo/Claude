@@ -6819,11 +6819,12 @@ const Robots = {
       hangar: s.hangar || 0, assign: s.assign || 0, rowY: s.rowY || 0, dir: s.dir || 1, col: s.col || 0, tx: NaN, timer: 0, warn: false, spin: 0, near: false, dropId: 0, cleanFx: 0,
       stuck: !!s.stuck, noTarget: false, waitT: 0, progT: G ? G.t : 0, stall: 0, st: '' };
     if (s.load) for (let i = 0; i < NGOODS; i++) r.load[i] = s.load[i] || 0;
-    if (this.BUSY[r.state]) r.state = r.assign ? 'work' : 'home';   // Lieferung wird nach dem Laden neu entschieden, die Ladung bleibt
+    // Liefer- und Abladezustände mit Ziel und Restzeit fortsetzen; ältere Stände ohne diese Angaben entscheiden neu (Ladung bleibt)
+    if (this.BUSY[r.state]) { if (s.drop !== undefined) { r.dropId = s.drop; r.timer = s.timer || 0; } else r.state = r.assign ? 'work' : 'home'; }
     return r;
   },
   save() {
-    G.robots = this.list.map(r => { const o = { id: r.id, model: r.model, x: r.x, y: r.y, a: r.a, state: r.state, load: Array.from(r.load), hangar: r.hangar, assign: r.assign, rowY: r.rowY, dir: r.dir, col: r.col }; if (r.stuck) o.stuck = true; return o; });
+    G.robots = this.list.map(r => { const o = { id: r.id, model: r.model, x: r.x, y: r.y, a: r.a, state: r.state, load: Array.from(r.load), hangar: r.hangar, assign: r.assign, rowY: r.rowY, dir: r.dir, col: r.col }; if (r.stuck) o.stuck = true; if (this.BUSY[r.state]) { o.drop = r.dropId || 0; o.timer = r.timer || 0; } return o; });
     G.assigns = this.assigns.map(a => Object.assign({}, a));
   },
   speed(r) { return r.def.speed * (1 + CONFIG.robotUpgrades[0].step * G.robotUp.speed) * Economy.fx('robotSpeed') * (G.ev.windUntil > G.t ? CONFIG.events.solarWind.mul : 1); },

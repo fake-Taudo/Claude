@@ -48,7 +48,7 @@
   "id": "RT-07",
   "area": "Roboter",
   "status": "OK",
-  "detail": "2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebene Bahn-Ansprüche: Rundlauf identisch; Ansprüche erhalten true. Funknetz wird nicht gespeichert, sondern beim Laden aus den Antennen neu berechnet."
+  "detail": "2 Hangars, Mk1/Mk3/Drohne, Upgrades, Ladungen, freigegebene Bahn-Ansprüche, Roboter mitten in Lieferung und Abladen: Rundlauf identisch; Ansprüche erhalten true. Funknetz wird nicht gespeichert, sondern beim Laden aus den Antennen neu berechnet."
  },
  {
   "id": "RT-08",
@@ -66,9 +66,9 @@
   "id": "RT-10",
   "area": "Roboter",
   "status": "OK",
-  "detail": "100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus 1000 Bandzellen: Robotersimulation 0.262 ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund 0.92 ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.",
+  "detail": "100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus 1000 Bandzellen: Robotersimulation 0.213 ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund 0.74 ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.",
   "data": {
-   "ms": 0.2618333333315483
+   "ms": 0.21283333332588275
   }
  },
  {
@@ -81,7 +81,7 @@
   "id": "RT-10b",
   "area": "Roboter",
   "status": "OK",
-  "detail": "CPU 4× gedrosselt (Emulation eines iPad 9; eher vorsichtig), echte Spielschleife mit Zeichnen, 100 Roboter, davon 12 im Detail-Modus: Robotersimulation 0.464 ms pro Logiktick im Mittel, 95 % ≤ 1.700 ms (Ziel ≤ 2 ms pro Bild bei 1 Tick pro Bild). Nicht aussagekräftig und nicht bewertet: Bildzeit 207 ms im Mittel (8.0 Ticks pro Bild), weil Headless-Chromium ohne GPU per Software zeichnet – die Bildrate auf einem echten iPad ist damit nicht geprüft."
+  "detail": "CPU 4× gedrosselt (Emulation eines iPad 9; eher vorsichtig), echte Spielschleife mit Zeichnen, 100 Roboter, davon 12 im Detail-Modus: Robotersimulation 0.456 ms pro Logiktick im Mittel, 95 % ≤ 1.900 ms (Ziel ≤ 2 ms pro Bild bei 1 Tick pro Bild). Nicht aussagekräftig und nicht bewertet: Bildzeit 186 ms im Mittel (8.0 Ticks pro Bild), weil Headless-Chromium ohne GPU per Software zeichnet – die Bildrate auf einem echten iPad ist damit nicht geprüft."
  },
  {
   "id": "RT-11",
