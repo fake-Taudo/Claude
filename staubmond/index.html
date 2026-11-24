@@ -1491,9 +1491,9 @@ window.Loader = (function () {
    Roboter
    - Roboter fahren über Felsen und Kraterränder (langsamer) und hüpfen über
      Schluchten (sehr langsam) – sie bleiben nie stecken. Drohnen ignorieren alles.
-   - Ferne Roboter laufen in 6 Gruppen à 10 Hz; Offline-Fortschritt simuliert die
-     Roboter mit 1-s-Schritten, Erlöse werden über den zuletzt gemessenen
-     Durchschnittswert pro kg abgerechnet (Förderbänder ruhen offline).
+   - Ferne Roboter laufen in 6 Gruppen à 10 Hz (je 6 Teilschritte, siehe unten);
+     Offline-Fortschritt simuliert die Roboter mit 1-s-Schritten, Erlöse werden über
+     den zuletzt gemessenen Durchschnittswert pro kg abgerechnet (Förderbänder ruhen offline).
    Bauen
    - Förderband-Pakete à 2,5 kg; Stufe 1/2/3 = 4/6/9 Zellen/s bei 1/2/4 Paketen pro Zelle
      → 10/30/90 kg/s. Pakete werden nur übergeben, wenn das Ziel Platz hat (Rückstau).
@@ -1610,6 +1610,33 @@ window.Loader = (function () {
      von selbst verschwindet, sobald wieder Fortschritt kommt.
    - Nach dem Übergang (oder wenn ein Spiel startet) entfernt sich der Ladebildschirm
      vollständig: DOM, CSS, Canvas, Listener, AudioContext und window.Loader.
+   Roboter-Automatisierung (Vorgabe: ROBOTER_SPEC.md; Bericht: audit/ROBOTER_BERICHT.md)
+   - Wiederverwendet: World.stroke (Staub, wie beim Spieler), Economy (Geld), Buildings (Hangar,
+     Trichter, Antennen, Funknetz), Bus (Ereignisse robotBought, robotCleaned, robotDelivered,
+     robotStatus, hangarBuilt), Shop-Befehle (Tastatur, Touch und Koop nutzen dieselben).
+   - Neue Roboterwerte nur im Block CONFIG.robots. Ältere Roboterwerte (robotPowerPerCell,
+     robotUpgrades, robotTerrain, robotFarGroups, robotFleet) bleiben an ihrem Platz und unverändert.
+   - Leistung bleibt flächenbasiert (Bürstenbreite × Tempo, gedeckelt über robotPowerPerCell)
+     statt eines festen kg/s-Werts je Modell: ein Roboter putzt wie ein Werkzeug, die Massenbilanz
+     bleibt exakt. Abgestimmt wird über Preis, Tempo, Radius und Tank (Werte siehe CONFIG.robots).
+   - Bestehende Regeln behalten: Upgrades gelten für alle Modelle; Hindernisse bremsen statt zu
+     blockieren (Mk3 ignoriert kleine Kraterränder, Drohnen alles).
+   - Zustände: idle, toWork, cleaning, toDeliver, unloading (0,5 s + Menge/200 kg/s), blockedFull
+     (Teilabgabe, alle 2 s neu), done, noSignal, stuck (60 s ohne Fortschritt → Bahn frei, nach 3
+     Versuchen heim mit „Gefangen“), noTarget, dazu „ohne Hangar“.
+   - Roboter verlassen das Funknetz nicht von selbst (gleiten am Rand entlang, Abschnitte dahinter
+     werden übersprungen). Wer nach einem Netzverlust außerhalb steht, wartet mit Warnung.
+     Hangars sind schwache Funkknoten (60 Zellen).
+   - Fernmodus: jeder 6. Tick rechnet 6 Teilschritte mit derselben Schrittweite wie der
+     Detailmodus – gleiche Ergebnisse. Detailbereich: Bild plus 1,5 Bildschirme.
+   - Offline: bestehende Regeln (höchstens 8 h, 50 %/80 %, 1-s-Schritte), je Roboter in
+     Teilschritte mit höchstens CONFIG.robots.offlineMaxMove Zellen Fahrweg geteilt.
+   - Hangar-Abriss (auch über „Rückgängig“): Roboter ziehen in den nächsten Hangar mit Platz,
+     sonst stehen sie „ohne Hangar“ und arbeiten weiter. Nie Verlust, es entsteht kein Geld.
+   - Zuweisung: fertige oder gesperrte Sektoren und Gebiete ohne Funknetz werden mit Grund
+     abgelehnt (Kartenvorschau rot). „Automatisch“ wählt den nächsten Sektor mit Staub im Netz.
+   - Speicher-Schema 3: neues Feld robotTut (Memo „Automatisierung genehmigt“); ältere Stände
+     werden ergänzt und spielen ohne Roboter unverändert weiter.
    ============================================================================ */
 
 /* ============================================================================
@@ -1740,13 +1767,16 @@ const CONFIG = {
   bridgeMaxLen: 12,
   // Roboter-Automatisierung (K.E.H.R.-Bots): Modelle und Verhalten. Weitere, ältere Roboterwerte stehen unten (robotPowerPerCell, robotUpgrades, …)
   robots: {
+    // Balancing (audit/ROBOTER_BERICHT.md): Vorschlagswerte Mk1 2.500/4/1,2/30, Mk2 20.000/6/2,0/150, Mk3 150.000/8/3,5/800, Drohne 1.000.000/14/2,5/400
+    // verfehlten Amortisation und Stufen-Sprung; angepasst wurden nur Preis, Tempo, Radius und Tank
     models: [
-      { id: 'mk1', name: 'K.E.H.R. Mk1', price: 2500, speed: 4, radius: 1.2, cap: 30, licence: 1 },
-      { id: 'mk2', name: 'K.E.H.R. Mk2', price: 20000, speed: 6, radius: 2.0, cap: 150, licence: 2 },
-      { id: 'mk3', name: 'K.E.H.R. Mk3', price: 150000, speed: 8, radius: 3.5, cap: 800, licence: 4, smallRims: true },
-      { id: 'drone', name: 'Schwarm-Drohne', price: 1000000, speed: 14, radius: 2.5, cap: 400, licence: 6, fly: true },
+      { id: 'mk1', name: 'K.E.H.R. Mk1', price: 2200, speed: 4, radius: 1.2, cap: 45, licence: 1 },
+      { id: 'mk2', name: 'K.E.H.R. Mk2', price: 9000, speed: 7, radius: 2.0, cap: 250, licence: 2 },
+      { id: 'mk3', name: 'K.E.H.R. Mk3', price: 450000, speed: 12, radius: 5, cap: 1500, licence: 4, smallRims: true },
+      { id: 'drone', name: 'Schwarm-Drohne', price: 1000000, speed: 14, radius: 5.5, cap: 2000, licence: 6, fly: true },
     ],
     unloadBase: 0.5, unloadKgPerSec: 200,   // Abladen dauert 0,5 s + Menge / 200 kg/s
+    offlineMaxMove: 6,                     // Offline-Simulation: höchstens 6 Zellen Fahrweg je Teilschritt
     retry: 2,                              // Ziel voll / kein Ziel: erneut versuchen nach 2 s
     stall: 60,                             // ohne Fortschritt: Bahn freigeben nach 60 s, nach 3 Versuchen heim („Gefangen“)
     stallTries: 3,
@@ -7179,7 +7209,9 @@ const Robots = {
     }
   },
   // Offline: Roboter mit groben Schritten nachsimulieren (Erlöse über Durchschnittswert)
-  offlineStep(dt) { for (const r of this.list) { r.far = true; this.step(r, dt); } },
+  // Offline-Schritt (CONFIG.offline.step) je Roboter in Teilschritte mit höchstens offlineMaxMove Zellen Fahrweg teilen:
+  // schnelle Modelle springen sonst über Bahnenden und Netzränder und lieferten offline merklich weniger als live
+  offlineStep(dt) { const mm = CONFIG.robots.offlineMaxMove; for (const r of this.list) { r.far = true; const n = Math.max(1, Math.ceil(this.speed(r) * dt / mm)); for (let k = 0; k < n; k++) this.step(r, dt / n); } },
   draw(alpha, lod) { Draw.robotList(alpha, lod); },
 };
 

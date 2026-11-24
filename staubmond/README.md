@@ -35,6 +35,19 @@ Pausenmenü → **Koop (Einladungscode)** → **Hosten**. Mitspieler geben den 6
 
 Die Kasse ist gemeinsam, gespeichert wird beim Host. Clients behalten ihren eigenen Spielstand.
 
+## Roboter (K.E.H.R.-Bots)
+
+Ab Lizenz 1 meldet sich das Memo „Automatisierung genehmigt“ mit drei Schritten: Roboter-Hangar bauen (Bauen → Roboter-Hangar), einen Roboter in Dienst nehmen, ihn einem Sektor zuweisen.
+
+- **Hangar → Tab „Einsatz“:** jede Zeile zeigt Zustand (Symbol und Text), Gebiet und Füllstand, dazu Zuweisen, Heimschicken, Upgrades und Verkaufen (100 % zurück). Oben „Alle zuweisen“, „Automatisch“ und „Alle heimschicken“.
+- **Zuweisen auf der Karte:** Sektor antippen oder Rechteck ziehen. Die Vorschau ist petrolfarben, wenn es geht, und rot mit Grund, wenn nicht (gesperrt, außerhalb des Funknetzes, schon gereinigt).
+- **Automatisch:** nächster Sektor mit Staub im Funknetz, danach selbstständig weiter.
+- **Funknetz:** Roboter arbeiten nur im Netz aus Depot, Außenposten, Antennen (Ketten) und – schwach – Hangars. Sie liefern an Trichter, Hangar oder Depot ab.
+- **HUD:** Der Roboter-Knopf zeigt „arbeiten / gesamt“, ein roter Punkt mit „!“ meldet Probleme (kein Funk, Ziel voll, kein Abgabeziel, gefangen, ohne Hangar) und öffnet die Übersicht aller Roboter.
+- **Offline:** Roboter im Netz arbeiten weiter (höchstens 8 Stunden, halbe Leistung, mit Forschung 80 %).
+
+Vorgabe: `ROBOTER_SPEC.md`, Bestandsaufnahme und Bericht: `audit/ROBOTER_BESTAND.md`, `audit/ROBOTER_BERICHT.md`. Prüfungen: `node audit/run.js` (alle, mit Playwright und Chromium) oder `node audit/run.js t_robots2` (die Roboter-Pflichttests).
+
 ## Grafik und Effekte
 
 Einstellungen → **Grafik** (Qualitätsstufe Niedrig/Mittel/Hoch/Ultra oder Automatisch) und **Effekte** (Effektstärke, Lichtblitze, Kamera-Wackeln, Kamera-Impulse, Bewegung reduzieren) – jeweils mit Live-Vorschau. „Bewegung reduzieren“ übernimmt beim ersten Start die Systemeinstellung. Der Boden wird per WebGL gezeichnet; ohne WebGL fällt das Spiel auf Canvas zurück.

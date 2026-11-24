@@ -3,14 +3,14 @@
   "id": "RT-01",
   "area": "Roboter",
   "status": "OK",
-  "detail": "Ein Roboter, 10 Spielminuten, abgelieferte Menge Detail- gegen Fernmodus: mk1 238.9 / 238.9 kg (0.0 %), mk2 1044.9 / 1044.9 kg (0.0 %), mk3 2388.2 / 2388.2 kg (0.0 %) – Toleranz 5 %",
+  "detail": "Ein Roboter, 10 Spielminuten, abgelieferte Menge Detail- gegen Fernmodus: mk1 358.3 / 358.3 kg (0.0 %), mk2 1243.9 / 1243.9 kg (0.0 %), mk3 5970.6 / 5970.6 kg (0.0 %) – Toleranz 5 %",
   "data": {
-   "mk1-near": 238.9,
-   "mk1-far": 238.9,
-   "mk2-near": 1044.9,
-   "mk2-far": 1044.9,
-   "mk3-near": 2388.2,
-   "mk3-far": 2388.2
+   "mk1-near": 358.3,
+   "mk1-far": 358.3,
+   "mk2-near": 1243.9,
+   "mk2-far": 1243.9,
+   "mk3-near": 5970.6,
+   "mk3-far": 5970.6
   }
  },
  {
@@ -23,7 +23,7 @@
   "id": "RT-03",
   "area": "Roboter",
   "status": "OK",
-  "detail": "10 Mk1 im selben Sektor, 5 Spielminuten: entfernt 871.28 kg = abgeliefert/verkauft 776.53 kg + Roboterfracht 94.75 kg; Neuzählung jeder Zelle stimmt (keine Zelle doppelt gezählt)"
+  "detail": "10 Mk1 im selben Sektor, 5 Spielminuten: entfernt 1074.89 kg = abgeliefert/verkauft 895.81 kg + Roboterfracht 179.07 kg; Neuzählung jeder Zelle stimmt (keine Zelle doppelt gezählt)"
  },
  {
   "id": "RT-04",
@@ -36,13 +36,13 @@
   "id": "RT-05",
   "area": "Roboter",
   "status": "OK",
-  "detail": "Funknetz: 0 Neuberechnungen in 10 s ohne Änderung; Antennenkette gebaut → Roboter im fernen Sektor arbeiten (2/2); mittlere Antenne abgerissen → 1 von 1 Robotern außerhalb des Netzes mit Warnung „kein Funksignal“, stehen still true; Antenne wieder da (Rückgängig) → 2 arbeiten weiter. Hangar zählt als schwache Antenne (60 Zellen)."
+  "detail": "Funknetz: 0 Neuberechnungen in 10 s ohne Änderung; Antennenkette gebaut → Roboter im fernen Sektor arbeiten (2/2); mittlere Antenne abgerissen → 2 von 2 Robotern außerhalb des Netzes mit Warnung „kein Funksignal“, stehen still true; Antenne wieder da (Rückgängig) → 2 arbeiten weiter. Hangar zählt als schwache Antenne (60 Zellen)."
  },
  {
   "id": "RT-06",
   "area": "Roboter",
   "status": "OK",
-  "detail": "3 Std. abwesend (3 Roboter im Netz, 1 außerhalb): +16125 ₥, Roboter außerhalb bewegt sich nicht (true). Zweites Laden ohne Speichern rechnet erneut auf den gespeicherten Stand (+16218 ₥, kein Doppelgewinn: Endstand 17293 über Speicherstand). Uhr 2 Std. zurück: +0 ₥; Uhr 10 Tage vor (vom Stand nach den 3 Std., Netz schon weitgehend sauber): +2859 ₥, angerechnete Abwesenheit 8.00 Std. (Deckel 8 Std.), simuliert 4.00 Std. bei 50 % Wirkungsgrad."
+  "detail": "3 Std. abwesend (3 Roboter im Netz, 1 außerhalb): +19070 ₥, Roboter außerhalb bewegt sich nicht (true). Zweites Laden ohne Speichern rechnet erneut auf den gespeicherten Stand (+19082 ₥, kein Doppelgewinn: Endstand 20052 über Speicherstand). Uhr 2 Std. zurück: +0 ₥; Uhr 10 Tage vor (vom Stand nach den 3 Std., Netz schon weitgehend sauber): +0 ₥, angerechnete Abwesenheit 8.00 Std. (Deckel 8 Std.), simuliert 4.00 Std. bei 50 % Wirkungsgrad."
  },
  {
   "id": "RT-07",
@@ -54,7 +54,7 @@
   "id": "RT-08",
   "area": "Roboter",
   "status": "OK",
-  "detail": "Robo-Kalibrierung, Doppelschicht, Größere Robo-Tanks, Selbstentleerung, Hangar-Erweiterung, Serienfertigung, Flottenkommando: jede wirkt genau auf die beschriebene Größe, auf den schon gekauften Roboter und nur einmal. Selbstentleerung: voller Mk2 gibt 225.0 kg per Funk ab, ohne zum Ziel zu fahren (Weg 5.4 Zellen in 1,5 s, putzt dabei weiter)."
+  "detail": "Robo-Kalibrierung, Doppelschicht, Größere Robo-Tanks, Selbstentleerung, Hangar-Erweiterung, Serienfertigung, Flottenkommando: jede wirkt genau auf die beschriebene Größe, auf den schon gekauften Roboter und nur einmal. Selbstentleerung: voller Mk2 gibt 375.0 kg per Funk ab, ohne zum Ziel zu fahren (Weg 6.3 Zellen in 1,5 s, putzt dabei weiter)."
  },
  {
   "id": "RT-09",
@@ -66,9 +66,9 @@
   "id": "RT-10",
   "area": "Roboter",
   "status": "OK",
-  "detail": "100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus 1000 Bandzellen: Robotersimulation 0.205 ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund 0.72 ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.",
+  "detail": "100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus 1000 Bandzellen: Robotersimulation 0.262 ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund 0.92 ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.",
   "data": {
-   "ms": 0.20450000000031043
+   "ms": 0.2618333333315483
   }
  },
  {
@@ -76,6 +76,12 @@
   "area": "Roboter",
   "status": "OK",
   "detail": "Bedienung: Memo „Automatisierung genehmigt“ mit Häkchen, Hangar-Liste, Gesamtliste, HUD-Karte „0 / 3“, Zuweisen per Karten-Tipp (gesperrter Sektor abgelehnt, Startsektor angenommen), Rechteck, Abriss nach Rückfrage (Roboter ohne Hangar, nichts verloren, Erstattung 5,0 Tsd. ₥): alles wie erwartet"
+ },
+ {
+  "id": "RT-10b",
+  "area": "Roboter",
+  "status": "OK",
+  "detail": "CPU 4× gedrosselt (Emulation eines iPad 9; eher vorsichtig), echte Spielschleife mit Zeichnen, 100 Roboter, davon 12 im Detail-Modus: Robotersimulation 0.464 ms pro Logiktick im Mittel, 95 % ≤ 1.700 ms (Ziel ≤ 2 ms pro Bild bei 1 Tick pro Bild). Nicht aussagekräftig und nicht bewertet: Bildzeit 207 ms im Mittel (8.0 Ticks pro Bild), weil Headless-Chromium ohne GPU per Software zeichnet – die Bildrate auf einem echten iPad ist damit nicht geprüft."
  },
  {
   "id": "RT-11",

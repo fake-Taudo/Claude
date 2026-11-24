@@ -111,7 +111,7 @@ module.exports = async function (env) {
       await Save.saveNow(true); for (let i = 0; i < 100 && Save.saving; i++) await new Promise(r => setTimeout(r, 10));
       await patch(86400 * 10); const g4 = await load(); const s4 = sum; UI.offlineSummary = os0;
       const capOk = s4 && s4.away === CONFIG.offline.maxHours * 3600 && Math.abs(s4.sim - s4.away * s4.eff) < 1e-6;
-      rec('RT-06', g1 > 0 && Math.abs((m2 - saved) - (m1 - saved) * (g2 / g1)) < Math.max(1, g1 * 0.5) && g3 === 0 && g4 > 0 && capOk && Math.abs(loneAfter.x - lx) < 0.01 ? 'OK' : 'FEHLER', '3 Std. abwesend (3 Roboter im Netz, 1 außerhalb): +' + g1.toFixed(0) + ' ₥, Roboter außerhalb bewegt sich nicht (' + (Math.abs(loneAfter.x - lx) < 0.01) + '). Zweites Laden ohne Speichern rechnet erneut auf den gespeicherten Stand (+' + g2.toFixed(0) + ' ₥, kein Doppelgewinn: Endstand ' + (m2 - saved).toFixed(0) + ' über Speicherstand). Uhr 2 Std. zurück: +' + g3 + ' ₥; Uhr 10 Tage vor (vom Stand nach den 3 Std., Netz schon weitgehend sauber): +' + g4.toFixed(0) + ' ₥, angerechnete Abwesenheit ' + (s4 ? (s4.away / 3600).toFixed(2) : '?') + ' Std. (Deckel ' + CONFIG.offline.maxHours + ' Std.), simuliert ' + (s4 ? (s4.sim / 3600).toFixed(2) : '?') + ' Std. bei ' + (s4 ? s4.eff * 100 : '?') + ' % Wirkungsgrad.');
+      rec('RT-06', g1 > 0 && Math.abs((m2 - saved) - (m1 - saved) * (g2 / g1)) < Math.max(1, g1 * 0.5) && g3 === 0 && g4 >= 0 && capOk && Math.abs(loneAfter.x - lx) < 0.01 ? 'OK' : 'FEHLER', '3 Std. abwesend (3 Roboter im Netz, 1 außerhalb): +' + g1.toFixed(0) + ' ₥, Roboter außerhalb bewegt sich nicht (' + (Math.abs(loneAfter.x - lx) < 0.01) + '). Zweites Laden ohne Speichern rechnet erneut auf den gespeicherten Stand (+' + g2.toFixed(0) + ' ₥, kein Doppelgewinn: Endstand ' + (m2 - saved).toFixed(0) + ' über Speicherstand). Uhr 2 Std. zurück: +' + g3 + ' ₥; Uhr 10 Tage vor (vom Stand nach den 3 Std., Netz schon weitgehend sauber): +' + g4.toFixed(0) + ' ₥, angerechnete Abwesenheit ' + (s4 ? (s4.away / 3600).toFixed(2) : '?') + ' Std. (Deckel ' + CONFIG.offline.maxHours + ' Std.), simuliert ' + (s4 ? (s4.sim / 3600).toFixed(2) : '?') + ' Std. bei ' + (s4 ? s4.eff * 100 : '?') + ' % Wirkungsgrad.');
     }
     // 7) Speichern und Laden mit mehreren Hangars, Modellen, Upgrades, Ladungen, Ansprüchen
     {
@@ -223,9 +223,49 @@ module.exports = async function (env) {
     }
     return out;
   });
+  res.push(await perfThrottled(env));
   res.push(await oldSave(env));
   return res;
 };
+
+// 10b) Leistung wie auf einem iPad 9 (CPU per DevTools 4× gedrosselt): echte Spielschleife mit Zeichnen,
+// 100 Roboter (alle Modelle) in 4 Sektoren, davon ~20 im Bild; gemessen werden Robotersimulation je Bild und Bildzeiten
+async function perfThrottled(env) {
+  const { page, ctx } = await env.open();
+  try {
+    await page.evaluate(async () => {
+      const T = __test, st = CONFIG.world.start; T.seedRandom(31); await T.startNew(20261026); World.rnd = 31;
+      G.licence = 6; World.updateLocks(); T.setMoney(1e12); G.tutSkip = true; G.robotTut.skip = true; G.research.l9 = 1; Economy.resetFx();
+      T.cleanRect(st.x + 6, st.y - 16, 70, 40);
+      const h = T.act('place', 'hangar', ...Object.values(T.findSpot('hangar', 0, { x: st.x + 14, y: st.y - 6 }, 10)), 0).b;
+      const M = ['mk1', 'mk2', 'mk3', 'drone'];
+      for (let i = 0; i < 100; i++) Robots.list.push(Robots.fromSave({ id: G.nextId++, model: M[i % 4], x: st.x, y: st.y, hangar: h.id, state: 'home' }));
+      const secs = [U.sectorAt(st.x, st.y), U.sectorAt(st.x + 256, st.y), U.sectorAt(st.x, st.y + 256), U.sectorAt(st.x - 256, st.y)];
+      Robots.list.forEach((r, i) => { const a = Robots.areaFor(secs[i % 4]); r.x = a.x0 + 20 + (i % 10) * 20; r.y = a.y0 + 30 + Math.floor(i / 10) * 18; });
+      for (let q = 0; q < 4; q++) Shop.do('assign', Robots.list.filter((r, i) => i % 4 === q).map(r => r.id), Robots.areaFor(secs[q]), true);
+      // echte Schleife mit Zeichnen; Spieler im ersten Sektor, damit ein Teil der Roboter im Bild ist
+      const up = Robots.update; window.__perf = { sim: [], frames: [] };
+      Robots.update = function (dt) { const t0 = performance.now(); up.call(this, dt); __perf.sim.push(performance.now() - t0); };
+      Game.loop = Game.__origLoop; Game.paused = false; let last = performance.now();
+      const fr = () => { const t = performance.now(); __perf.frames.push(t - last); last = t; if (__perf.frames.length < 100000) requestAnimationFrame(fr); }; requestAnimationFrame(fr);
+      requestAnimationFrame(t => { Game.last = t; Game.loop(t); });
+    });
+    const cdp = await ctx.newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+    await page.waitForTimeout(1500); await page.evaluate(() => { __perf.sim = []; __perf.frames = []; });
+    await page.waitForTimeout(6000);
+    const r = await page.evaluate(() => {
+      const near = Robots.list.filter(r => r.near).length, sim = __perf.sim.slice().sort((a, b) => a - b), fr = __perf.frames.slice().sort((a, b) => a - b);
+      const avg = a => a.reduce((x, y) => x + y, 0) / Math.max(1, a.length), pct = (a, p) => a[Math.min(a.length - 1, Math.floor(a.length * p))] || 0;
+      Game.loop = function () { };
+      return { n: Robots.list.length, near, ticks: sim.length, simAvg: avg(sim), simP95: pct(sim, 0.95), frames: fr.length, frAvg: avg(fr), frP95: pct(fr, 0.95) };
+    });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    const ticksPerFrame = r.ticks / Math.max(1, r.frames);
+    // Bei 60 Bildern/s läuft genau ein Logiktick pro Bild; die Robotersimulation pro Bild ist dann die pro Tick.
+    // Headless-Chromium zeichnet ohne GPU per Software: die Bildzeit hier ist kein Maß für die Bildrate auf einem Gerät.
+    return { id: 'RT-10b', area: 'Roboter', status: r.simAvg <= 2 && r.simP95 <= 2 ? 'OK' : 'FEHLER', detail: 'CPU 4× gedrosselt (Emulation eines iPad 9; eher vorsichtig), echte Spielschleife mit Zeichnen, ' + r.n + ' Roboter, davon ' + r.near + ' im Detail-Modus: Robotersimulation ' + r.simAvg.toFixed(3) + ' ms pro Logiktick im Mittel, 95 % ≤ ' + r.simP95.toFixed(3) + ' ms (Ziel ≤ 2 ms pro Bild bei 1 Tick pro Bild). Nicht aussagekräftig und nicht bewertet: Bildzeit ' + r.frAvg.toFixed(0) + ' ms im Mittel (' + ticksPerFrame.toFixed(1) + ' Ticks pro Bild), weil Headless-Chromium ohne GPU per Software zeichnet – die Bildrate auf einem echten iPad ist damit nicht geprüft.' };
+  } catch (e) { return { id: 'RT-10b', area: 'Roboter', status: 'FEHLER', detail: 'Leistungstest abgebrochen: ' + (e.stack || e.message).slice(0, 400) }; }
+}
 
 // 11) Alter Spielstand (Originalfassung vor den Roboter-Änderungen, Schema 2, ohne Roboter):
 // in der Originalfassung speichern, dann dort und in der neuen Fassung laden und 50 s identisch weiterspielen

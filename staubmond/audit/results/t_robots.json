@@ -3,31 +3,31 @@
   "id": "R-01",
   "area": "3.8",
   "status": "OK",
-  "detail": "Gleichwertigkeit Nah-/Fernmodus, gleiche Ausgangslage, 4 Spielminuten im Sektor M-13: mk1: nah 358.38 kg/2996 Zellen, fern 349.41 kg/2933 Zellen (-2.5 %) | mk2: nah 1359.47 kg/10657 Zellen, fern 1364.18 kg/10686 Zellen (+0.3 %) | mk3: nah 2376.93 kg/18248 Zellen, fern 2368.66 kg/18199 Zellen (-0.3 %). Toleranz laut Vorgabe 5 %.",
+  "detail": "Gleichwertigkeit Nah-/Fernmodus, gleiche Ausgangslage, 4 Spielminuten im Sektor M-13: mk1: nah 422.68 kg/3456 Zellen, fern 412.35 kg/3397 Zellen (-2.4 %) | mk2: nah 1701.32 kg/13253 Zellen, fern 1753.49 kg/13683 Zellen (+3.1 %) | mk3: nah 4595.37 kg/36502 Zellen, fern 4647.30 kg/36860 Zellen (+1.1 %). Toleranz laut Vorgabe 5 %.",
   "data": {
    "mk1-near": {
-    "cells": 2996,
-    "kg": 358.3764705881871
+    "cells": 3456,
+    "kg": 422.68235294107325
    },
    "mk1-far": {
-    "cells": 2933,
-    "kg": 349.4117647058404
+    "cells": 3397,
+    "kg": 412.34509803916444
    },
    "mk2-near": {
-    "cells": 10657,
-    "kg": 1359.4745098035173
+    "cells": 13253,
+    "kg": 1701.3176470581868
    },
    "mk2-far": {
-    "cells": 10686,
-    "kg": 1364.1764705878343
+    "cells": 13683,
+    "kg": 1753.4941176464208
    },
    "mk3-near": {
-    "cells": 18248,
-    "kg": 2376.9313725485167
+    "cells": 36502,
+    "kg": 4595.374509803326
    },
    "mk3-far": {
-    "cells": 18199,
-    "kg": 2368.65686274459
+    "cells": 36860,
+    "kg": 4647.299999999395
    }
   }
  },
@@ -59,7 +59,7 @@
   "id": "R-06",
   "area": "3.8",
   "status": "OK",
-  "detail": "Volle Roboter (0 auf dem Weg zum Trichter), Trichter wird abgerissen: neue Ziele werden gewählt, Ladung kommt an (work 47.6, work 55.3, work 55.1); Invarianten ok"
+  "detail": "Volle Roboter (0 auf dem Weg zum Trichter), Trichter wird abgerissen: neue Ziele werden gewählt, Ladung kommt an (work 59.2, work 66.1, work 69.6); Invarianten ok"
  },
  {
   "id": "R-07",
@@ -83,21 +83,21 @@
   "id": "R-10",
   "area": "3.8",
   "status": "HINWEIS",
-  "detail": "Offline 2 h (Effizienz 50 % → 1 h simuliert in 1-s-Schritten, Leistung ×1,15): 115184 Zellen, +15946 ₥. (Vergleich mit gleicher Ausgangslage siehe R-10b). Erlös offline = kg × gleitender Durchschnittswert (G.avgVal) statt echter Verkauf: Aufträge „Lieferauftrag“ und Statistik „Verkauft“ zählen Offline-Ware nicht."
+  "detail": "Offline 2 h (Effizienz 50 % → 1 h simuliert in 1-s-Schritten, Leistung ×1,15): 150686 Zellen, +18116 ₥. (Vergleich mit gleicher Ausgangslage siehe R-10b). Erlös offline = kg × gleitender Durchschnittswert (G.avgVal) statt echter Verkauf: Aufträge „Lieferauftrag“ und Statistik „Verkauft“ zählen Offline-Ware nicht."
  },
  {
   "id": "R-10b",
   "area": "3.8",
   "status": "OK",
-  "detail": "Gleiche Ausgangslage (4 Mk2, Sektor M-13), 15 simulierte Minuten: Fernmodus live 5652.5 kg/45554 Zellen, Offline-Schritte (1 s, Leistung ×1,15) 5097.8 kg/40411 Zellen (90 %). Erwartet ≈ 100–115 % (die Effizienz 50 %/80 % wird separat über die simulierte Dauer angewendet). Effektive Offline-Ausbeute damit ≈ 45 % statt 50 % der Live-Leistung.",
+  "detail": "Gleiche Ausgangslage (4 Mk2, Sektor M-13), 15 simulierte Minuten: Fernmodus live 7638.6 kg/61792 Zellen, Offline-Schritte (1 s, Leistung ×1,15) 7056 kg/56825 Zellen (92 %). Erwartet ≈ 100–115 % (die Effizienz 50 %/80 % wird separat über die simulierte Dauer angewendet). Effektive Offline-Ausbeute damit ≈ 46 % statt 50 % der Live-Leistung.",
   "data": {
    "far": {
-    "cells": 45554,
-    "kg": 5652.5
+    "cells": 61792,
+    "kg": 7638.6
    },
    "offline": {
-    "cells": 40411,
-    "kg": 5097.8
+    "cells": 56825,
+    "kg": 7056
    }
   }
  },
@@ -105,13 +105,13 @@
   "id": "R-11",
   "area": "3.8",
   "status": "OK",
-  "detail": "Zweimal laden ohne Speichern dazwischen (Neuladen kurz nach der Offline-Zusammenfassung): Offline wird zwar erneut berechnet (1. Laden +13963 ₥, 2. Laden +14146 ₥), aber jeweils auf den unveränderten gespeicherten Stand (99915000 ₥) – Endstand 99930116 ₥ = Stand + nur ein Offline-Gewinn (Rest 970.00 ₥ = Sektor-/Fundprämien während der Offline-Simulation). Keine Doppelgutschrift."
+  "detail": "Zweimal laden ohne Speichern dazwischen (Neuladen kurz nach der Offline-Zusammenfassung): Offline wird zwar erneut berechnet (1. Laden +19086 ₥, 2. Laden +19095 ₥), aber jeweils auf den unveränderten gespeicherten Stand (99959000 ₥) – Endstand 99979065 ₥ = Stand + nur ein Offline-Gewinn (Rest 970.00 ₥ = Sektor-/Fundprämien während der Offline-Simulation). Keine Doppelgutschrift."
  },
  {
   "id": "R-12",
   "area": "3.8",
   "status": "OK",
-  "detail": "Uhr 1 Tag zurückgestellt: +0 ₥ (keine Gutschrift); 30 Tage vorgestellt: +4947 ₥ (auf 8 h gedeckelt, Berechnung 0.2 s); 45 s Abwesenheit: +0 ₥ (unter 1 Min. keine Gutschrift)"
+  "detail": "Uhr 1 Tag zurückgestellt: +0 ₥ (keine Gutschrift); 30 Tage vorgestellt: +0 ₥ (auf 8 h gedeckelt, Berechnung 0.3 s); 45 s Abwesenheit: +0 ₥ (unter 1 Min. keine Gutschrift)"
  },
  {
   "id": "R-13",
