@@ -234,6 +234,10 @@ body.has-kbd .ctx-btn .key { display: inline; }
 #ctx.desk { right: 50%; transform: translateX(50%); bottom: calc(76px + var(--sab)); align-items: center; flex-direction: row; }
 #build-bar { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + var(--sab)); display: flex; gap: 8px; pointer-events: auto; }
 #build-bar .btn { min-width: 64px; min-height: 52px; }
+#build-bar .btn:not(.primary):not(.petrol) { background: var(--surface-solid); border-color: var(--line-2); color: var(--white); }
+body.prof-phone #build-bar { width: calc(100vw - 16px - var(--sal) - var(--sar)); gap: 6px; }
+body.prof-phone #build-bar .btn { flex: 1 1 0; min-width: 0; padding: 8px 6px; justify-content: center; white-space: nowrap; }
+body.prof-phone #build-bar .btn span { overflow: hidden; text-overflow: ellipsis; }
 body.lefty #btn-clean { right: auto; left: calc(22px + var(--sal)); }
 body.lefty #ctx { right: auto; left: calc(16px + var(--sal)); align-items: flex-start; }
 body.lefty #ctx.desk { left: 50%; }
@@ -930,8 +934,9 @@ body.reduce-motion .certificate, body.reduce-motion .alop-stamp, body.reduce-mot
     <div id="joy-hint" class="hidden"><span>Hier ziehen<br>zum Laufen</span></div>
     <div id="joy" class="hidden"><i></i><b></b></div>
     <button id="btn-clean" class="tbtn" aria-label="Putzen"></button>
-    <div id="build-bar" class="hidden"></div>
   </div>
+  <!-- Bestätigen/Drehen/Abbrechen beim Bauen am Touch-Gerät: nicht in #touch, das im Baumodus ausgeblendet wird -->
+  <div id="build-bar" class="hidden"></div>
   <div id="ctx"></div>
   <div id="tutorial" class="hidden"></div>
   <div id="menu" class="hidden"></div>

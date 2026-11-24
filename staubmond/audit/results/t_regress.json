@@ -34,5 +34,17 @@
   "area": "Phase B",
   "status": "OK",
   "detail": "60-s-Logiklauf (feste Route, Abladen und Kapsel alle 10 s), Original gegen aktuelle Fassung: identisch {\"trace\":[[599,6.8941,30,6.8941],[1199,13.5882,66,13.5882],[1799,20.1412,90,20.1412],[2399,25.1382,102,25.1382],[2999,29.8971,119,29.8971],[3599,33.2882,156,33.2882]],\"money\":33.288235,\"cells\":156,\"gl"
+ },
+ {
+  "id": "RB-07",
+  "area": "Bauen",
+  "status": "OK",
+  "detail": "Touch-Bauen (Handy 390 × 844): Sammeltrichter antippen, Platz antippen, „Bestätigen“ antippen → gebaut true; Leiste 374 × 52 px, ganz im Bild true"
+ },
+ {
+  "id": "RB-07",
+  "area": "Bauen",
+  "status": "OK",
+  "detail": "Touch-Bauen (iPad 820 × 1180): Sammeltrichter antippen, Platz antippen, „Bestätigen“ antippen → gebaut true; Leiste 398 × 52 px, ganz im Bild true"
  }
 ]

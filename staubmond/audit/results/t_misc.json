@@ -147,18 +147,18 @@
   "id": "L-01",
   "area": "4.6",
   "status": "OK",
-  "detail": "Worst-Case 200 Roboter (70 regulär + 130 am Stellenplan vorbei), 4958 Bandzellen voller Pakete, 2518 berührte Chunks: Logik 2.413 ms/Tick (Roboter fern), 2.137 ms/Tick (alle Roboter im Nahmodus) – bei einem Tick pro Bild 13 % des 16,7-ms-Budgets (Headless-Chromium, Desktop-CPU; Mobilgeräte etwa 3–5× langsamer, nicht gemessen). Speichern (voll): 6575 ms gesamt, längste Blockade des Hauptthreads 33 ms, Kern 439 KB, Chunks 7476 KB. Heap 81 MB. Rendern nicht gemessen (Headless, Software-Rendering).",
+  "detail": "Worst-Case 200 Roboter (70 regulär + 130 am Stellenplan vorbei), 4958 Bandzellen voller Pakete, 2518 berührte Chunks: Logik 2.264 ms/Tick (Roboter fern), 2.12 ms/Tick (alle Roboter im Nahmodus) – bei einem Tick pro Bild 13 % des 16,7-ms-Budgets (Headless-Chromium, Desktop-CPU; Mobilgeräte etwa 3–5× langsamer, nicht gemessen). Speichern (voll): 5822 ms gesamt, längste Blockade des Hauptthreads 24 ms, Kern 440 KB, Chunks 7476 KB. Heap 86 MB. Rendern nicht gemessen (Headless, Software-Rendering).",
   "data": {
    "robots": 200,
    "belts": 4958,
    "chunks": 2518,
-   "msTick": 2.413,
-   "msNear": 2.137,
-   "msSave": 6575,
-   "maxGap": 33,
-   "coreKB": 439,
+   "msTick": 2.264,
+   "msNear": 2.12,
+   "msSave": 5822,
+   "maxGap": 24,
+   "coreKB": 440,
    "chunkKB": 7476,
-   "heap": 81
+   "heap": 86
   }
  }
 ]

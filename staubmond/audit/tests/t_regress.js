@@ -90,5 +90,31 @@ module.exports = async function (env) {
   };
   const a = await run60('audit/index_audit_original_instrumented.html'), b = await run60('audit/index_audit_instrumented.html');
   rec('RB-06', 'Phase B', a === b ? 'OK' : 'ABWEICHUNG', '60-s-Logiklauf (feste Route, Abladen und Kapsel alle 10 s), Original gegen aktuelle Fassung: ' + (a === b ? 'identisch ' + b.slice(0, 200) : 'Original ' + a.slice(0, 260) + ' | aktuell ' + b.slice(0, 260)));
+
+  // RB-07: Bauen am Touch-Gerät. Die Leiste „Bestätigen/Drehen/Abbrechen“ lag im Container der Touch-Steuerung,
+  // der im Baumodus ausgeblendet wird – ohne sichtbaren „Bestätigen“-Knopf ließ sich kein Gebäude setzen.
+  for (const [dev, vp] of [['Handy', { width: 390, height: 844 }], ['iPad', { width: 820, height: 1180 }]]) {
+    const ctx = await env.browser.newContext({ viewport: vp, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await ctx.addInitScript(env.L.initScript(5));
+    const { page: p } = await env.open({ ctx });
+    try {
+      await p.evaluate(async () => {
+        const T = __test, st = CONFIG.world.start; await T.startNew(20261026); G.tutSkip = true; UI.tutorial(); G.licence = 6; World.updateLocks(); T.setMoney(1e6); G.robotTut.skip = true;
+        Player.x = st.x + 0.5; Player.y = st.y + 30; T.cleanRect(st.x - 30, st.y + 10, 60, 45); Camera.snap();
+        Game.loop = Game.__origLoop; Game.paused = false; requestAnimationFrame(t => { Game.last = t; Game.loop(t); });
+        Build.toggle(true);
+      });
+      await p.waitForTimeout(300);
+      const tap = async (x, y) => { await p.touchscreen.tap(x, y); await p.waitForTimeout(250); };
+      const card = await p.$('#build-dock button.card[title="Sammeltrichter"]'); await card.scrollIntoViewIfNeeded(); const cb = await card.boundingBox();
+      await tap(cb.x + cb.width / 2, cb.y + cb.height / 2);
+      const w = await p.evaluate(() => { const st = CONFIG.world.start; return Camera.toScreen(st.x + 4, st.y + 25); }); await tap(w.x, w.y);
+      const bar = await p.evaluate(() => { const r = document.getElementById('build-bar').getBoundingClientRect(); return { w: r.width, h: r.height, l: r.left, r: r.right, vw: innerWidth }; });
+      const btn = await p.$('#build-bar button.primary'); let built = false;
+      if (btn && bar.w > 0) { const bb = await btn.boundingBox(); await tap(bb.x + bb.width / 2, bb.y + bb.height / 2); built = await p.evaluate(() => Buildings.list.some(b => b.type === 'hopper')); }
+      const inside = bar.w > 0 && bar.l >= 0 && bar.r <= bar.vw;
+      rec('RB-07', 'Bauen', built && inside ? 'OK' : 'FEHLER', 'Touch-Bauen (' + dev + ' ' + vp.width + ' × ' + vp.height + '): Sammeltrichter antippen, Platz antippen, „Bestätigen“ antippen → gebaut ' + built + '; Leiste ' + Math.round(bar.w) + ' × ' + Math.round(bar.h) + ' px, ganz im Bild ' + inside);
+    } catch (e) { rec('RB-07', 'Bauen', 'FEHLER', 'Touch-Bauen (' + dev + '): Test abgebrochen: ' + e.message.slice(0, 300)); }
+  }
   return out;
 };
