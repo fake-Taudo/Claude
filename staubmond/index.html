@@ -711,25 +711,87 @@ body.prof-phone .tree .branch.on { display: flex; }
 @media (max-width: 1100px) { #map .legend { max-width: none; right: calc(10px + var(--sar)); bottom: calc(14px + var(--sab)); left: calc(10px + var(--sal)); justify-content: center; } }
 body.prof-phone #map .legend { font-size: 11px; padding: 6px 9px; }
 
-/* Hauptmenü */
+/* Hauptmenü – gleiche Kulisse und gleiches Logo wie der Ladebildschirm (die Szene läuft als Menü-Kulisse weiter) */
+#ld-cv.sm-scene { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; pointer-events: none; transition: opacity var(--t-slow) linear; }
+.sm-logo { display: inline-block; white-space: nowrap; margin: 0; font-weight: 900; letter-spacing: .06em; line-height: 1; padding: 0 .02em 0 .06em; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: radial-gradient(circle at 18% 40%, rgba(138,119,94,.38) 0 1.2px, transparent 1.6px) 0 0 / 9px 7px, radial-gradient(circle at 70% 70%, rgba(169,149,121,.3) 0 1px, transparent 1.4px) 0 0 / 7px 9px,
+    linear-gradient(180deg, var(--white) 0%, #E2D8C6 52%, #C9A27E 78%, #FF9A5A 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 6px 30px rgba(0,0,0,.35); }
 #menu { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-start; pointer-events: none; padding: calc(20px + var(--sat)) calc(20px + var(--sar)) calc(20px + var(--sab)) calc(20px + var(--sal)); }
-#menu .mbox { pointer-events: auto; width: min(400px, 100%); margin-left: clamp(0px, 7vw, 120px); }
-#menu h1 { font-size: clamp(46px, 9vw, 80px); margin: 0; letter-spacing: -.04em; line-height: .95; font-weight: 900; text-shadow: 0 4px 30px rgba(0,0,0,.5); position: relative; }
-#menu h1 span { color: var(--orange); }
-#menu h1 canvas { position: absolute; left: -40px; top: -40px; pointer-events: none; }
-#menu h1.dusty { animation: logoclean 1.6s ease-out both; }
-@keyframes logoclean { from { color: #9C8A6E; text-shadow: 0 0 0 transparent; } 60% { color: inherit; } }
-#menu .tag { color: var(--muted); margin: 10px 0 26px; font-size: 15px; line-height: 1.45; }
-#menu .mbtns { display: flex; flex-direction: column; gap: 10px; }
-#menu .mbtns .btn { justify-content: flex-start; padding: 14px 18px; font-size: 16px; border-radius: 14px; background: rgba(18,23,34,.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); min-height: 52px; }
-#menu .mbtns .btn svg { width: 22px; height: 22px; }
-#menu .mbtns .btn.primary { background: var(--btn-orange); }
-#menu .mbtns .btn.disabled { background: rgba(18,23,34,.6); }
-#menu .foot { margin-top: 20px; font-size: 12px; color: var(--muted-2); }
+#menu.await { visibility: hidden; }
+#menu .mbox { pointer-events: auto; width: min(420px, 100%); margin-left: clamp(0px, 6vw, 112px); display: flex; flex-direction: column; gap: 14px; max-height: 100%; }
+#menu .mlogo .sm-logo { font-size: clamp(38px, 4.4vw, 62px); }
+#menu .msub { margin-top: 8px; font-size: clamp(11px, 1.1vw, 13px); letter-spacing: .22em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding-left: .2em; }
+#menu .mmemo { align-self: flex-start; max-width: 360px; background: var(--paper); color: var(--paper-ink); border-radius: 4px; padding: 8px 12px 9px 14px; font: 13px/1.45 "Courier New", Courier, ui-monospace, monospace;
+  box-shadow: 0 2px 0 rgba(0,0,0,.1), 0 10px 24px rgba(0,0,0,.3); transform: rotate(-1.1deg); border-left: 3px solid var(--stamp); }
+#menu .mmemo b { display: block; font: 900 10.5px system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--stamp); margin-bottom: 2px; }
+#menu .mpanel { display: flex; flex-direction: column; gap: 2px; padding: 8px; border-radius: 20px; background: rgba(18,23,34,.8); border: 1px solid var(--line-2);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 20px 50px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.05); overflow-y: auto; }
+#menu .mb { display: grid; grid-template-columns: 40px 1fr 18px; gap: 12px; align-items: center; min-height: 52px; padding: 6px 10px 6px 6px; border: 0; border-radius: 14px; background: transparent; color: var(--white);
+  font: 700 15.5px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-align: left; cursor: pointer; touch-action: manipulation; transition: background var(--t-fast), transform var(--t-instant); }
+#menu .mb:hover { background: rgba(255,255,255,.06); }
+#menu .mb:focus-visible { outline: 2px solid var(--petrol-l); outline-offset: 1px; }
+#menu .mb:active { transform: scale(.985); }
+#menu .mb .mi { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(31,143,140,.16); color: var(--petrol-l); box-shadow: inset 0 0 0 1px rgba(99,203,198,.18); }
+#menu .mb .mi svg { width: 21px; height: 21px; }
+#menu .mb .mt { min-width: 0; }
+#menu .mb .ml { display: block; }
+#menu .mb small { display: block; font-size: 12.5px; font-weight: 500; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#menu .mb .mc { color: var(--muted-2); display: grid; place-items: center; }
+#menu .mb .mc svg { width: 16px; height: 16px; transform: rotate(-90deg); }
+#menu .mb.primary { min-height: 64px; margin-bottom: 6px; background: linear-gradient(180deg, var(--btn-orange) 0%, var(--btn-orange-d) 100%); box-shadow: 0 10px 24px rgba(196,80,14,.32), inset 0 1px 0 rgba(255,255,255,.2); font-size: 17px; }
+#menu .mb.primary:hover { background: linear-gradient(180deg, #D4590F 0%, var(--btn-orange) 100%); }
+#menu .mb.primary .mi { background: rgba(255,255,255,.16); color: #fff; box-shadow: none; }
+#menu .mb.primary small, #menu .mb.primary .mc { color: rgba(255,255,255,.85); }
+#menu .mb.disabled { cursor: default; }
+#menu .mb.primary.disabled { background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px var(--line-2); }
+#menu .mb.primary.disabled .mi { background: rgba(255,255,255,.08); color: var(--muted); }
+#menu .mb.primary.disabled .ml { color: var(--muted); }
+#menu .mb.primary.disabled small { color: var(--muted-2); }
+#menu .foot { font-size: 12px; color: var(--muted); line-height: 1.5; padding-left: 4px; text-shadow: 0 1px 3px rgba(0,0,0,.9); }
 #menu .foot a, .legal a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; display: inline-block; padding: 6px 0; }
 #menu .foot a { color: var(--white); font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 0 10px rgba(0,0,0,.8); }
 .legal { margin-top: 14px; font-size: 12.5px; line-height: 1.5; color: var(--muted-2); }
-@media (max-width: 600px) { #menu { align-items: flex-end; } #menu .mbox { margin: 0 auto; } }
+/* Aufbau: Logo kommt (beim Start) vom Ladebildschirm herübergeglitten, der Rest baut sich gestaffelt auf */
+#menu.flip .mlogo { visibility: hidden; }
+#menu.enter .mlogo, #menu.enter .mmemo, #menu.enter .foot { animation: menuin var(--t-slow) var(--ease-slow) both; }
+#menu.enter .mlogo { animation-duration: 700ms; }
+#menu.enter.flip .mlogo { animation: none; }
+#menu { --d: 0ms; }
+#menu.fromload { --d: 620ms; }   /* vom Ladebildschirm: erst wenn das Logo fast angekommen ist */
+#menu.enter .mmemo { animation-delay: calc(var(--d) + 380ms); }
+#menu.enter .mpanel { animation: menupanel 640ms var(--ease-slow) calc(var(--d) + 200ms) both; }
+#menu.enter .mb { animation: menuin var(--t-slow) var(--ease-slow) both; animation-delay: calc(var(--d) + 280ms + var(--i) * 55ms); }
+#menu.enter .foot { animation-delay: calc(var(--d) + 700ms); }
+@keyframes menuin { from { opacity: 0; transform: translateY(12px); } }
+@keyframes menupanel { from { opacity: 0; transform: translateX(-18px); } }
+body.reduce-motion #menu.enter *, body.reduce-motion #menu.enter .mb { animation-name: menufade !important; animation-delay: 0ms !important; animation-duration: var(--t-base) !important; }
+@media (prefers-reduced-motion: reduce) { #menu.enter * { animation-name: menufade !important; animation-delay: 0ms !important; } }
+@keyframes menufade { from { opacity: 0; } }
+/* Hochformat / schmal: Logo oben mittig (dort steht es auch im Ladebildschirm), Tafel unten über dem Mond */
+@media (max-width: 700px), (max-aspect-ratio: 1/1) {
+  #menu { align-items: stretch; justify-content: center; }
+  #menu .mbox { margin: 0; width: min(460px, 100%); justify-content: space-between; height: 100%; gap: 10px; }
+  #menu .mlogo { text-align: center; padding-top: 3vh; }
+  #menu .mlogo .sm-logo { font-size: clamp(30px, 10vw, 58px); }
+  #menu .msub { font-size: 11px; letter-spacing: .18em; }
+  #menu .mmemo { align-self: center; font-size: 12.5px; margin-top: 4px; }
+  #menu .mlogo + .mmemo { margin-bottom: auto; }
+  #menu .mb { min-height: 48px; font-size: 15px; }
+  #menu .mb.primary { min-height: 58px; }
+  #menu .mb .mi { width: 36px; height: 36px; }
+  #menu .foot { text-align: center; }
+}
+@media (max-height: 720px) { #menu .mmemo { display: none; } }
+@media (max-height: 560px) and (orientation: landscape) {
+  #menu .mbox { gap: 8px; width: min(540px, 100%); }
+  #menu .mpanel { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 4px; }
+  #menu .mb.primary { grid-column: 1 / -1; min-height: 52px; margin-bottom: 2px; }
+  #menu .mb { min-height: 44px; grid-template-columns: 34px 1fr 14px; gap: 8px; font-size: 14.5px; }
+  #menu .mb .mi { width: 34px; height: 34px; }
+  #menu .mb small { display: none; }
+  #menu .mb.primary small { display: block; }
+}
 .slots { display: flex; flex-direction: column; gap: 10px; }
 .slot { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; padding: 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 16px; }
 .slot.empty { grid-template-columns: 1fr; }
@@ -817,6 +879,7 @@ body.reduce-motion .certificate, body.reduce-motion .alop-stamp, body.reduce-mot
   background: linear-gradient(180deg, var(--void, #0B0E14) 0%, #141B2B 100%); font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-user-select: none; user-select: none; touch-action: manipulation; transition: opacity 600ms cubic-bezier(.16,1,.3,1); }
 #loader.leave { opacity: 0; pointer-events: none; }
+#loader.handover { background: transparent; pointer-events: none; }
 #loader .ld-moon0 { position: absolute; left: 50%; width: 140vw; height: 140vw; bottom: calc(40% - 140vw); transform: translateX(-50%); border-radius: 50%;
   background: radial-gradient(circle at 34% 22%, #B5A184 0, #8A775E 34%, #5C4F3E 72%, #3A3128 100%); box-shadow: 0 -8px 60px rgba(201,186,160,.16); }
 @media (orientation: landscape) { #loader .ld-moon0 { width: 140vw; height: 140vw; } }
@@ -978,7 +1041,7 @@ const THEME = {
   loader: {
     sky: ['#0B0E14', '#141B2B'], stars: [40, 25, 12], starSpeed: [3, 7, 14], shootEvery: [8, 12],
     weights: [5, 10, 30, 25, 10, 20], maxRate: 0.25, catchUp: 0.7, catchUpShort: 0.45,
-    minShow: 1800, shortIf: 600, finale: 2200, finaleShort: 1200, slowStage: 6000, hangAfter: 25000, leave: 900,
+    minShow: 1800, shortIf: 600, finale: 2200, finaleShort: 1200, slowStage: 6000, hangAfter: 25000, leave: 1300,
     memoEvery: 2200, tipEvery: 6000, srEvery: 4000, particles: 300, particlesPhone: 120, glints: 5, streakEvery: 5000,
     earthRise: 3000, earthLift: 40, zoomOut: 0.08, cap: 0.4, capPhone: 0.5, capLand: 0.44, moonR: 0.7, patch: 1.0,
     dust: ['#B5A184', '#8A775E', '#5C4F3E', '#3A3128'], clean: ['#F4F8FC', '#C7D1DC', '#97A4B4', '#5E6A79'],
@@ -1137,7 +1200,11 @@ window.Loader = (function () {
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     const port = H > W, cap = H * (phone && port ? L.capPhone : phone ? L.capLand : L.cap), R = Math.max(W * L.moonR, cap * 1.08), cx = W / 2, cy = H - cap + R;
     const er = Math.min(W, H) * (port ? 0.085 : 0.072);
-    G = { cx, cy, R, cap, ex: W * (port ? 0.2 : 0.16), ey: H * 0.3, er, x0: Math.max(0, cx - R), x1: Math.min(W, cx + R), y0: Math.max(0, cy - R), y1: H, aH: Math.max(18, H * 0.03) };
+    // Mondausschnitt groß genug für alle Kamerastellungen (Ladeszene, Finale herausgezoomt, Menü-Komposition) – sonst
+    // wären beim Herauszoomen die Kanten der Mondgrafik zu sehen
+    const fx = W / 2, fy = H * 0.62, M = menuTarget(); let vx0 = 0, vx1 = W, vy1 = H;
+    for (const [z, ox, oy] of [[1 - L.zoomOut, 0, 0], [M.zoom, M.ox, M.oy]]) { vx0 = Math.min(vx0, fx + (-ox - fx) / z); vx1 = Math.max(vx1, fx + (W - ox - fx) / z); vy1 = Math.max(vy1, fy + (H - oy - fy) / z); }
+    G = { cx, cy, R, cap, ex: W * (port ? 0.2 : 0.16), ey: H * 0.3, er, x0: Math.max(cx - R, Math.floor(vx0)), x1: Math.min(cx + R, Math.ceil(vx1)), y0: Math.max(0, cy - R), y1: Math.min(cy + R, Math.ceil(vy1)), aH: Math.max(18, H * 0.03) };
     G.s = Math.min(1, (dpr * 0.5)); G.ow = Math.ceil((G.x1 - G.x0) * G.s); G.oh = Math.ceil((G.y1 - G.y0) * G.s); G.rhoMax = cap * L.patch;
     buildMoon(); buildEarth(); buildSky();
     G.done = 0; G.lastA = null; reErase();
@@ -1219,12 +1286,13 @@ window.Loader = (function () {
   /* --- Szene zeichnen --- */
   let astroTh = -Math.PI / 2, astroPh = 0, scrubT = 0, shootT = t0 + rr(L.shootEvery[0], L.shootEvery[1]) * 1000, shoot = null, flashCount = 0;
   const shootS = { x: 0, y: 0, a: 0, t: 0 };
-  let leave = null;
+  let leave = null, scene = false, sceneHidden = false;
   function frame(tn) {
     if (!alive) return;
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, Math.max(0, (tn - last) / 1000)); last = tn;
-    if (typeof Game !== 'undefined' && Game.state === 'play') { destroy(); return; }
+    // Spiel läuft: Menü-Kulisse anhalten (kommt im Hauptmenü wieder); noch nicht übergeben → ganz abbauen
+    if (typeof Game !== 'undefined' && (Game.state === 'play' || (scene && Game.state !== 'menu'))) { if (scene) hideScene(); else destroy(); return; }
     const c0 = now();
     try { update(dt, tn); draw(dt, tn); } catch (err) { console.warn('Ladebildschirm:', err); if (done) { destroy(); return; } simple = true; }
     perf = perf * 0.95 + (now() - c0) * 0.05;
@@ -1291,14 +1359,16 @@ window.Loader = (function () {
     }
     if (shoot) { x.globalAlpha = Math.min(1, shoot.t * 6, (0.85 - shoot.t) * 4) * 0.7; x.save(); x.translate(shoot.x, shoot.y); x.rotate(shoot.a + Math.PI); x.drawImage(SPR.shoot, 0, -4, 130, 6); x.restore(); }
     x.globalAlpha = 1;
-    // Kamera: im Finale weich 8 % zurück, beim Übergang zur Menü-Szene
+    // Kamera: im Finale weich 8 % zurück; nach dem Tippen ohne Schnitt in die Menü-Komposition (danach Menü-Kulisse)
     let zoom = 1, ox = 0, oy = 0;
     if (!rd && (phase === 'finale' || phase === 'ready' || phase === 'leave')) { const u = phase === 'finale' ? easeIO((tn - phaseT) / finDur) : 1; zoom = 1 - L.zoomOut * u; }
-    if (leave) { const u = easeIO((tn - leave.t) / L.leave); zoom *= 1 - 0.06 * u; oy = H * 0.08 * u; }
-    const fx = W / 2, fy = H * 0.62;
+    const fx = W / 2, fy = H * 0.62, mu = menuU(tn), M = mu > 0 ? menuTarget() : null;
+    if (M) { zoom += (M.zoom - zoom) * mu; ox = M.ox * mu; oy = M.oy * mu; }
     x.setTransform(dpr * zoom, 0, 0, dpr * zoom, dpr * (fx - fx * zoom + ox), dpr * (fy - fy * zoom + oy));
-    // Erde geht links oben auf (40 px, heller werdend), Wolken ziehen langsam
-    const eu = rd ? 1 : ease((tn - t0) / L.earthRise), ex = G.ex + (leave ? (W * 0.82 - G.ex) * easeIO((tn - leave.t) / L.leave) : 0), ey = G.ey + L.earthLift * (1 - eu) + (leave ? (H * 0.2 - G.ey) * easeIO((tn - leave.t) / L.leave) : 0), eS = SPR.earthS;
+    // Erde geht links oben auf (40 px, heller werdend), Wolken ziehen langsam; fürs Menü wandert sie nach oben rechts
+    const eu = rd ? 1 : ease((tn - t0) / L.earthRise), eS = SPR.earthS;
+    let ex = G.ex, ey = G.ey + L.earthLift * (1 - eu);
+    if (M) { const tx = fx + (M.ex - ox - fx) / zoom, ty = fy + (M.ey - oy - fy) / zoom; ex += (tx - ex) * mu; ey += (ty - ey) * mu; }
     x.globalAlpha = 0.25 + 0.75 * eu; x.drawImage(SPR.earth, ex - eS / 2, ey - eS / 2, eS, eS);
     x.save(); x.beginPath(); x.arc(ex, ey, G.er, 0, 6.283); x.clip(); const co = rd ? 0 : (t * G.er * 0.06) % SPR.cloudsW; x.globalAlpha *= 0.8; x.drawImage(SPR.clouds, ex - G.er - co, ey - G.er, SPR.cloudsW, G.er * 2); x.drawImage(SPR.clouds, ex - G.er - co + SPR.cloudsW, ey - G.er, SPR.cloudsW, G.er * 2); x.restore();
     x.globalAlpha = 1;
@@ -1326,9 +1396,18 @@ window.Loader = (function () {
     x.globalCompositeOperation = 'lighter';
     for (let i = 0; i < L.glints; i++) if (GL.l[i] > 0) { const u = GL.l[i] / 0.7, s = G.aH * 0.55 * Math.sin(u * Math.PI); x.globalAlpha = Math.sin(u * Math.PI); x.drawImage(SPR.glint, GL.x[i] - s, GL.y[i] - s, s * 2, s * 2); }
     x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
-    // Lesbarkeit unten (Text liegt auf dem Mond)
+    // Lesbarkeit unten (Text liegt auf dem Mond); im Hochformat-Menü liegt die Tafel unten auf dem Mond
     x.setTransform(dpr, 0, 0, dpr, 0, 0); x.drawImage(SPR.vig, 0, H * 0.55, W, H * 0.45);
+    if (mu > 0 && !menuTarget().wide) { x.globalAlpha = mu; x.drawImage(SPR.vig, 0, H * 0.3, W, H * 0.7); x.globalAlpha = 1; }
   }
+  // Menü-Komposition: Querformat Mond nach rechts unten (Menütafel links), Hochformat Mond tiefer (Tafel unten); Erde oben rechts
+  function menuTarget() {
+    const wide = W >= 720 && W > H * 1.15;
+    return wide ? { wide, zoom: 0.84, ox: W * 0.17, oy: H * 0.1, ex: W * 0.84, ey: H * 0.2 }
+      : { wide, zoom: 0.86, ox: 0, oy: H * (H > W ? -0.12 : 0.14), ex: W * 0.8, ey: H * (H > W ? 0.27 : 0.24) };   // Hochformat: Horizont über der Menütafel
+  }
+  // Anteil des Übergangs in die Menü-Komposition (0 = Ladeszene, 1 = Menü)
+  function menuU(tn) { return scene ? 1 : leave ? (still() ? 1 : easeIO((tn - leave.t) / L.leave)) : 0; }
   function drawCapsule(x, tn) {
     const rd = still(), u = phase === 'finale' ? Math.min(1, (tn - phaseT) / finDur) : 1, th = -Math.PI / 2 + 0.16, nx = Math.cos(th), ny = Math.sin(th);
     const bx = G.cx + nx * G.R, by = G.cy + ny * G.R, ch = G.aH * 2.6, cw = ch * 0.66;
@@ -1372,10 +1451,49 @@ window.Loader = (function () {
     phase = 'leave'; leave = { t: now() };
     if (ac) { try { mg.gain.setTargetAtTime(0, ac.currentTime, 0.15); } catch (er) { } }
     try { if (typeof Audio !== 'undefined' && Audio.unlock) { Audio.unlock(); if (!muted && !ac) Audio.sfx('cash'); } } catch (er) { }
-    try { if (typeof Menu !== 'undefined') Menu.openT = Menu.t - 10; const h1 = document.querySelector('#menu h1'); if (h1 && typeof UI !== 'undefined' && UI.logoDust) { h1.classList.remove('dusty'); void h1.offsetWidth; h1.classList.add('dusty'); UI.logoDust(h1); } } catch (er) { }
-    q('.ld-top').style.transition = q('.ld-card').style.transition = 'opacity ' + T.motion.slow + 'ms linear'; q('.ld-top').style.opacity = q('.ld-card').style.opacity = '0';
-    setTimeout(() => root.classList.add('leave'), L.leave * 0.35);
-    setTimeout(destroy, L.leave + 80);
+    removeEventListener('keydown', onKey, true);
+    if (initState !== 1) {   // nur die einfache HTML-Szene: wie bisher ausblenden, das Menü zeichnet seine eigene Kulisse
+      try { if (typeof UI !== 'undefined' && UI.menuEnter) UI.menuEnter(); } catch (er) { }
+      root.classList.add('leave'); setTimeout(destroy, L.leave + 80); return;
+    }
+    handover();
+  }
+  // Übergang ohne Schnitt: Die Szene bleibt und wird zur Menü-Kulisse. Das Canvas wandert unter die Menüebene und
+  // zeichnet weiter (Kamera fährt in menuTarget), die Karte blendet aus, das Logo gleitet an seinen Platz im Menü.
+  function handover() {
+    const ui = document.getElementById('ui'), rd = still(), dur = rd ? T.motion.slow : L.leave;
+    if (ui && ui.parentNode) { ui.parentNode.insertBefore(cv, ui); cv.classList.add('sm-scene'); }
+    root.classList.add('handover');
+    const card = q('.ld-card'), logo = q('.ld-logo'), sub = q('.ld-sub');
+    card.style.transition = 'opacity ' + T.motion.slow + 'ms linear, translate ' + dur + 'ms ' + T.motion.easeSlow; card.style.opacity = '0'; card.style.translate = '0 28px';
+    for (const c of root.querySelectorAll('.ld-corner, .ld-sr')) c.style.opacity = '0';
+    let tgt = null; try { if (typeof UI !== 'undefined' && UI.menuEnter) tgt = UI.menuEnter({ flip: true }); } catch (er) { }
+    const flip = (el, to) => {
+      if (!el || !to) return false;
+      const tr = r => { const g = document.createRange(); g.selectNodeContents(r); return g.getBoundingClientRect(); };
+      const a = tr(el), b = tr(to), e = el.getBoundingClientRect(); if (!a.height || !b.height) return false;
+      el.style.transformOrigin = (a.left - e.left) + 'px ' + (a.top - e.top) + 'px';
+      el.style.transition = rd ? 'opacity ' + dur + 'ms linear' : 'transform ' + dur + 'ms cubic-bezier(.65,0,.35,1)';
+      if (rd) el.style.opacity = '0'; else el.style.transform = 'translate(' + (b.left - a.left) + 'px,' + (b.top - a.top) + 'px) scale(' + (b.height / a.height) + ')';
+      return true;
+    };
+    const ok = tgt ? flip(logo, tgt.logo) && flip(sub, tgt.sub) : false;
+    if (!ok) { const top = q('.ld-top'); top.style.transition = 'opacity ' + T.motion.slow + 'ms linear'; top.style.opacity = '0'; }
+    setTimeout(() => {
+      if (!alive) return;
+      scene = true; phase = 'menu';
+      try { if (typeof UI !== 'undefined' && UI.menuFlipDone) UI.menuFlipDone(); } catch (er) { }
+      root.remove(); const css = document.getElementById('ld-css'); if (css) css.remove();
+      if (ac) { try { ac.close(); } catch (e) { } ac = null; }
+      removeEventListener('error', onErr); removeEventListener('unhandledrejection', onRej);
+    }, dur + 40);
+  }
+  // Menü-Kulisse während des Spiels anhalten und im Hauptmenü wieder zeigen (kein Neuaufbau, kein Ruckeln)
+  function hideScene() { if (!scene || sceneHidden) return; sceneHidden = true; cancelAnimationFrame(raf); raf = 0; cv.style.opacity = '0'; cv.style.display = 'none'; }
+  function showScene() {
+    if (!alive || !scene || !sceneHidden) return; sceneHidden = false;
+    cv.style.display = ''; cv.style.opacity = '0'; void cv.offsetWidth; cv.style.opacity = '1';
+    last = now(); if (!raf) raf = requestAnimationFrame(frame);
   }
   function fail(err) {
     if (failed) return; failed = true;
@@ -1392,14 +1510,16 @@ window.Loader = (function () {
     removeEventListener('keydown', onKey, true); removeEventListener('error', onErr); removeEventListener('unhandledrejection', onRej);
     if (ac) { try { ac.close(); } catch (e) { } ac = null; }
     for (const k in SPR) SPR[k] = null;
-    root.remove(); const css = document.getElementById('ld-css'); if (css) css.remove();
+    root.remove(); cv.remove(); const css = document.getElementById('ld-css'); if (css) css.remove();
     try { if (typeof Menu !== 'undefined' && Menu.openT === undefined) Menu.openT = Menu.t - 10; } catch (e) { }
+    // wartet das Hauptmenü noch auf den Übergang (Abbruch, Fehler, „Trotzdem starten“), baut es sich jetzt selbst auf
+    try { const m = document.getElementById('menu'); if (m && m.classList.contains('await') && typeof UI !== 'undefined' && UI.menuEnter) UI.menuEnter(); } catch (e) { }
     window.Loader = undefined;
   }
   // Ereignisse
   let rzT = 0;
   function onResize() { clearTimeout(rzT); rzT = setTimeout(() => { if (alive) layout(); }, 60); }
-  function onVis() { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; if (ac) ac.suspend(); } else if (alive && !raf) { last = now(); raf = requestAnimationFrame(frame); if (ac) ac.resume(); } }
+  function onVis() { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; if (ac) ac.suspend(); } else if (alive && !raf && !sceneHidden) { last = now(); raf = requestAnimationFrame(frame); if (ac) ac.resume(); } }
   // Tastatur: Enter/Leertaste starten; solange der Ladebildschirm steht, erreichen Tasten das Spiel darunter nicht (Tab bleibt frei)
   function onKey(e) { if (!alive || phase === 'leave') return; if (e.target === elMute || e.target === elSimple || e.target === q('.ld-reload')) return; if ((e.key === 'Enter' || e.key === ' ') && phase === 'ready') { start(e); return; } if (e.key !== 'Tab') e.stopPropagation(); }
   function onErr(e) { if (!done) fail(e.error || new Error(e.message + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''))); }
@@ -1436,6 +1556,10 @@ window.Loader = (function () {
       else if (failed) { const g = q('.ld-go'); g.hidden = false; g.onclick = () => { try { if (typeof Audio !== 'undefined' && Audio.unlock) Audio.unlock(); } catch (e) { } destroy(); }; } },
     warn, fail,
     skip() { destroy(); },
+    // Hauptmenü: Kulisse zeichnet (Menu.frame zeichnet dann nicht), Menü wartet noch auf den Übergang, Kulisse zeigen
+    sceneOn() { return alive && !sceneHidden; },
+    menuPending() { return alive && !scene && phase !== 'leave'; },
+    showScene,
     get state() { return { phase, shown, real, done, short, perf, particles: P.l.reduce((a, l) => a + (l > 0), 0) }; },
   };
 })();
@@ -1613,8 +1737,17 @@ window.Loader = (function () {
      Spiel trotzdem fertig, erscheint zusätzlich „Trotzdem starten“. Stufe > 6 s →
      Geduld-Hinweis und Schimmern; 25 s ganz ohne Rückmeldung → Fehlermeldung, die
      von selbst verschwindet, sobald wieder Fortschritt kommt.
-   - Nach dem Übergang (oder wenn ein Spiel startet) entfernt sich der Ladebildschirm
-     vollständig: DOM, CSS, Canvas, Listener, AudioContext und window.Loader.
+   - Übergang ohne Schnitt: Nach dem Tippen bleibt die Szene stehen und wird zur Kulisse
+     des Hauptmenüs. Das Canvas wandert unter die Menüebene, die Kamera fährt in die
+     Menü-Komposition (Querformat: Mond rechts unten, Tafel links; Hochformat: Horizont
+     über der Tafel; Erde oben rechts), die Karte blendet aus, das Logo gleitet an seinen
+     Platz im Menü, danach baut sich die Tafel gestaffelt auf. Übriges DOM, CSS, Ton und
+     Fehler-Wächter des Ladebildschirms werden entfernt. Im Spiel wird die Kulisse
+     angehalten und ausgeblendet, im Hauptmenü wieder gezeigt. Ohne Ladeszene (einfache
+     HTML-Szene, Abbruch) zeichnet Menu.frame eine vereinfachte Kulisse in denselben Farben.
+   - Hauptmenü im Schema des Spiels: Logo wie im Ladebildschirm, ALOP-Memo, Glas-Tafel wie
+     die Spiel-Panels mit Symbolkacheln (Petrol) und „Weiterspielen“ in Orange mit Platz
+     und Speicherzeit. „Bewegung reduzieren“: keine Kamerafahrt, nur kurzes Überblenden.
    Roboter-Automatisierung (Vorgabe: ROBOTER_SPEC.md; Bericht: audit/ROBOTER_BERICHT.md)
    - Wiederverwendet: World.stroke (Staub, wie beim Spieler), Economy (Geld), Buildings (Hangar,
      Trichter, Antennen, Funknetz), Bus (Ereignisse robotBought, robotCleaned, robotDelivered,
@@ -9405,53 +9538,49 @@ Object.assign(UI, {
     }).catch(() => { });
   },
   /* --- Hauptmenü --- */
+  // Hauptmenü im Design-Schema des Spiels: Logo wie im Ladebildschirm, ALOP-Memo, Glas-Tafel wie die Spiel-Panels.
+  // Kommt das Menü aus dem Ladebildschirm, wartet es unsichtbar, bis der Übergang es aufbaut (Loader.handover → menuEnter).
   mainMenu() {
-    const m = this.el('menu'); m.innerHTML = ''; m.classList.remove('hidden');
+    const m = this.el('menu'); m.innerHTML = ''; m.classList.remove('hidden', 'enter', 'flip', 'fromload');
+    const pending = !!(window.Loader && Loader.menuPending && Loader.menuPending());
+    m.classList.toggle('await', pending);
     const box = U.h('div', { class: 'mbox' });
-    const h1 = U.h('h1', { class: 'dusty', html: 'Staub<span>mond</span>' });
-    box.appendChild(h1);
-    box.appendChild(U.h('div', { class: 'tag', text: 'Das ALOP hat beschlossen, den Mond zu putzen. Das Budget reichte für eine Zahnbürste.' }));
-    const btns = U.h('div', { class: 'mbtns' });
-    const b = (ic, t, fn, cls) => { const e = U.h('button', { class: 'btn ' + (cls || ''), onclick: () => { Audio.unlock(); Audio.sfx('click'); fn(); } }); e.innerHTML = Icons.svg(ic) + '<span>' + t + '</span>'; btns.appendChild(e); return e; };
-    const cont = b('play', 'Weiterspielen', () => { if (Save.lastSlot >= 0) Game.loadGame(Save.lastSlot); }, 'primary');
-    cont.classList.add('disabled');
-    Save.listSlots().then(list => { let best = -1, t = 0; list.forEach((s, i) => { if (s && s.saved > t) { t = s.saved; best = i; } }); Save.lastSlot = best; if (best >= 0) { cont.classList.remove('disabled'); cont.querySelector('span').textContent = 'Weiterspielen · Platz ' + (best + 1); } else cont.querySelector('span').textContent = 'Weiterspielen (kein Spielstand)'; });
-    b('star', 'Neues Spiel', () => this.open('slots', 'new'));
-    b('save', 'Spielstände', () => this.open('slots'));
-    b('gear', 'Einstellungen', () => this.open('settings'));
-    b('help', 'Steuerung & Hilfe', () => this.open('help'));
-    b('people', 'Koop beitreten', () => Net.panel());
-    if (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen) b('full', 'Vollbild', () => Game.fullscreen());
-    box.appendChild(btns);
+    box.appendChild(U.h('div', { class: 'mlogo' }, U.h('h1', { class: 'sm-logo', text: 'STAUBMOND' }), U.h('div', { class: 'msub', text: 'Amt für Lunare Oberflächenpflege' })));
+    box.appendChild(U.h('div', { class: 'mmemo', html: '<b>ALOP · Dienstanweisung 1</b>Der Mond wird geputzt. Das Budget reichte für eine Zahnbürste.' }));
+    const panel = U.h('nav', { class: 'mpanel', 'aria-label': 'Hauptmenü' });
+    let n = 0;
+    const b = (ic, t, sub, fn, cls) => {
+      const e = U.h('button', { class: 'mb ' + (cls || ''), style: { '--i': n++ }, onclick: () => { if (e.classList.contains('disabled')) { Audio.sfx('error'); return; } Audio.unlock(); Audio.sfx('click'); fn(); } });
+      e.innerHTML = '<span class="mi">' + Icons.svg(ic, 'currentColor', 2.2) + '</span><span class="mt"><span class="ml">' + U.esc(t) + '</span>' + (sub ? '<small>' + U.esc(sub) + '</small>' : '') + '</span><span class="mc">' + Icons.svg('chev', 'currentColor', 2.4) + '</span>';
+      panel.appendChild(e); return e;
+    };
+    const cont = b('play', 'Weiterspielen', 'Spielstände werden gesucht …', () => { if (Save.lastSlot >= 0) Game.loadGame(Save.lastSlot); }, 'primary disabled');
+    Save.listSlots().then(list => {
+      let best = -1, t = 0; list.forEach((s, i) => { if (s && s.saved > t) { t = s.saved; best = i; } }); Save.lastSlot = best;
+      const sm = cont.querySelector('small');
+      if (best >= 0) { cont.classList.remove('disabled'); sm.textContent = 'Platz ' + (best + 1) + ' · gespeichert ' + this.ago(t); }
+      else sm.textContent = 'Noch kein Spielstand – starten Sie unten ein neues Spiel';
+    });
+    b('star', 'Neues Spiel', 'Mit der Zahnbürste beginnen', () => this.open('slots', 'new'));
+    b('save', 'Spielstände', 'Drei Plätze mit automatischen Backups', () => this.open('slots'));
+    b('people', 'Koop beitreten', 'Mit Einladungscode, bis zu 8 Personen', () => Net.panel());
+    b('gear', 'Einstellungen', '', () => this.open('settings'));
+    b('help', 'Steuerung & Hilfe', '', () => this.open('help'));
+    if (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen) b('full', 'Vollbild', '', () => Game.fullscreen());
+    box.appendChild(panel);
     box.appendChild(U.h('div', { class: 'foot', html: 'Version ' + CONFIG.version + ' · Alle Grafiken und Klänge werden live erzeugt.' + (Save.fallback ? '<br>IndexedDB nicht verfügbar – eingeschränkter Speicher.' : '') + '<br>' + '<a href="impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz</a>' }));
     m.appendChild(box);
     Menu.open();
-    requestAnimationFrame(() => this.logoDust(h1));
+    if (!pending) this.menuEnter();
   },
-  // Staub wird beim Öffnen von den Buchstaben des Logos weggeweht
-  logoDust(h1) {
-    if (!h1.isConnected || VFX.reduce()) { h1.classList.remove('dusty'); return; }
-    const r = h1.getBoundingClientRect(), pad = 40, W = Math.ceil(r.width + pad * 2), H = Math.ceil(r.height + pad * 2), d = Math.min(2, devicePixelRatio || 1);
-    const cv = U.h('canvas', { 'aria-hidden': 'true' }); cv.width = W * d; cv.height = H * d; cv.style.width = W + 'px'; cv.style.height = H + 'px'; h1.appendChild(cv);
-    const off = document.createElement('canvas'); off.width = W; off.height = H; const o = off.getContext('2d'), cs = getComputedStyle(h1);
-    o.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily; o.textBaseline = 'alphabetic'; o.fillStyle = '#fff';
-    const base = pad + r.height * 0.8; o.fillText('Staubmond', pad, base);
-    const data = o.getImageData(0, 0, W, H).data, P = [];
-    for (let y = 0; y < H; y += 3) for (let x = 0; x < W; x += 3) if (data[(y * W + x) * 4 + 3] > 128 && VFX.r() < 0.55) P.push({ x, y, vx: 0, vy: 0, dl: (x - pad) / r.width * 0.5 + VFX.r() * 0.25, s: VFX.rr(1, 2.4), c: VFX.r() < 0.5 ? THEME.dust.light : THEME.dust.base });
-    const ctx = cv.getContext('2d'), t0 = performance.now();
-    const step = now => {
-      const t = (now - t0) / 1000; ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, W, H);
-      let alive = 0;
-      for (const q of P) {
-        const u = t - q.dl;
-        if (u > 0) { q.vx += (90 + VFX.r() * 60) * 0.016; q.vy += (VFX.r() - 0.65) * 30 * 0.016; q.x += q.vx * 0.016; q.y += q.vy * 0.016; }
-        const a = u <= 0 ? 0.95 : Math.max(0, 0.95 - u * 1.1); if (a <= 0) continue; alive++;
-        ctx.globalAlpha = a; ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, q.s, q.s);
-      }
-      if (alive && t < 3) requestAnimationFrame(step); else cv.remove();
-    };
-    requestAnimationFrame(step);
+  // „vor 5 Min.“, „vor 2 Std.“, „vor 3 Tagen“
+  ago(t) { const s = Math.max(0, (Date.now() - t) / 1000); return s < 90 ? 'gerade eben' : s < 5400 ? 'vor ' + Math.round(s / 60) + ' Min.' : s < 129600 ? 'vor ' + Math.round(s / 3600) + ' Std.' : 'vor ' + Math.round(s / 86400) + ' Tagen'; },
+  // Menü einblenden (gestaffelt); mit flip bleibt das Logo verborgen, bis das Logo des Ladebildschirms angekommen ist
+  menuEnter(o) {
+    const m = this.el('menu'); m.classList.remove('await', 'enter'); m.classList.toggle('flip', !!(o && o.flip)); m.classList.toggle('fromload', !!(o && o.flip)); void m.offsetWidth; m.classList.add('enter');
+    return { logo: m.querySelector('.sm-logo'), sub: m.querySelector('.msub') };
   },
+  menuFlipDone() { this.el('menu').classList.remove('flip'); },
   offlineSummary(r) {
     this.panel({ title: 'Während du weg warst …', small: true, icon: 'robot', render: b => {
       const kv = U.h('div', { class: 'kv' }), add = (a, v) => { kv.appendChild(U.h('span', { text: a })); kv.appendChild(U.h('span', { text: v })); };
@@ -10653,6 +10782,7 @@ const Game = {
     this.state = 'menu'; this.paused = false;
     UI.leaveGame(); UI.mainMenu();
     Menu.init();
+    if (window.Loader && Loader.showScene) Loader.showScene();   // Kulisse des Ladebildschirms läuft als Menü-Hintergrund weiter
   },
   setPaused(p) { this.paused = p; return true; },
   showWait(text, frac) { const w = document.getElementById('hud-wait'); if (text === null) { w.classList.add('hidden'); return; } w.classList.remove('hidden'); document.getElementById('hud').classList.remove('hidden'); w.innerHTML = '<div>' + U.esc(text) + '</div><div class="bar"><i style="width:' + Math.round((frac || 0) * 100) + '%"></i></div>'; },
@@ -10805,55 +10935,49 @@ const Game = {
 
 /* Animierter Mondhintergrund im Hauptmenü */
 const Menu = {
-  t: 0, moon: null, stars: null, on: false,
-  init() {
-    this.on = true;
-    if (!this.moon) {
-      const S = 900, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
-      const g = x.createRadialGradient(S * 0.38, S * 0.36, S * 0.05, S / 2, S / 2, S / 2); g.addColorStop(0, '#e9e4d8'); g.addColorStop(0.7, '#b9b0a0'); g.addColorStop(1, '#6f685d');
-      x.fillStyle = g; x.beginPath(); x.arc(S / 2, S / 2, S / 2, 0, Math.PI * 2); x.fill();
-      x.save(); x.clip();
-      const r = U.rng(7);
-      for (let i = 0; i < 18; i++) { x.fillStyle = 'rgba(80,74,66,' + (0.12 + r() * 0.12) + ')'; x.beginPath(); x.ellipse(r() * S, r() * S, 40 + r() * 140, 30 + r() * 110, r() * 3, 0, Math.PI * 2); x.fill(); }
-      for (let i = 0; i < 170; i++) { const cx = r() * S, cy = r() * S, rr = 3 + Math.pow(r(), 3) * 46; x.fillStyle = 'rgba(70,64,56,0.35)'; x.beginPath(); x.arc(cx, cy, rr, 0, Math.PI * 2); x.fill(); x.strokeStyle = 'rgba(255,250,240,0.35)'; x.lineWidth = Math.max(1, rr * 0.18); x.beginPath(); x.arc(cx - rr * 0.1, cy - rr * 0.1, rr, Math.PI * 0.9, Math.PI * 1.9); x.stroke(); }
-      // gereinigter Streifen (Augenzwinkern)
-      x.strokeStyle = 'rgba(214,224,232,0.85)'; x.lineWidth = 16; x.lineCap = 'round'; x.beginPath(); x.moveTo(S * 0.3, S * 0.62); x.quadraticCurveTo(S * 0.45, S * 0.55, S * 0.58, S * 0.6); x.stroke();
-      const sh = x.createRadialGradient(S * 0.3, S * 0.3, S * 0.3, S * 0.45, S * 0.45, S * 0.62); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,10,0.75)'); x.fillStyle = sh; x.fillRect(0, 0, S, S);
-      x.restore();
-      this.moon = c;
-      this.stars = []; for (let i = 0; i < 260; i++) this.stars.push([VFX.r(), VFX.r(), VFX.r() * 1.4 + 0.3, VFX.r() * 6]);
-    }
-  },
+  // Hintergrund des Hauptmenüs. Normalerweise zeichnet die Szene des Ladebildschirms weiter (Loader.sceneOn); nur ohne sie
+  // (Testmodus, einfache Ladeszene) zeichnet das Menü eine vereinfachte Kulisse in denselben Farben und derselben Anordnung.
+  t: 0, moon: null, stars: null, on: false, mS: 0,
+  init() { this.on = true; if (!this.stars) { this.stars = []; for (let i = 0; i < 160; i++) this.stars.push([VFX.r(), VFX.r() * 0.72, VFX.r() < 0.6 ? 0 : VFX.r() < 0.7 ? 1 : 2, VFX.r() * 6.28]); } },
   stop() { this.on = false; },
   open() { this.openT = this.t; },
+  // sauberer Mond (Farben THEME.loader.clean), einmal je Größe vorgezeichnet
+  paintMoon(S) {
+    const c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), P = THEME.loader.clean, R = S / 2;
+    let g = x.createRadialGradient(R * 0.58, R * 0.4, R * 0.04, R, R, R); g.addColorStop(0, P[0]); g.addColorStop(0.42, P[1]); g.addColorStop(0.85, P[2]); g.addColorStop(1, P[3]);
+    x.fillStyle = g; x.beginPath(); x.arc(R, R, R, 0, 6.283); x.fill(); x.save(); x.clip();
+    const r = U.rng(11);
+    for (let i = 0; i < 120; i++) {
+      const a = -Math.PI * r(), d = Math.sqrt(r()) * 0.98, nx = Math.cos(a) * d, ny = Math.sin(a) * d, cr = (i < 30 ? 0.025 + r() * 0.045 : 0.006 + r() * 0.016) * R, f = Math.sqrt(Math.max(0.08, 1 - nx * nx - ny * ny));
+      x.save(); x.translate(R + nx * R, R + ny * R); x.scale(1, f);
+      g = x.createRadialGradient(-cr * 0.3, -cr * 0.3, cr * 0.05, 0, 0, cr); g.addColorStop(0, 'rgba(70,82,100,.42)'); g.addColorStop(0.75, 'rgba(90,104,124,.18)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.beginPath(); x.arc(0, 0, cr, 0, 6.283); x.fill(); x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = Math.max(1, cr * 0.12); x.beginPath(); x.arc(0, 0, cr * 0.93, -0.25, 1.9); x.stroke(); x.restore();
+    }
+    g = x.createRadialGradient(R * 0.55, R * 0.3, R * 0.55, R * 0.8, R * 0.7, R * 1.5); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(6,8,16,.6)'); x.fillStyle = g; x.fillRect(0, 0, S, S);
+    x.restore(); this.moon = c; this.mS = S;
+  },
   frame(dt) {
     this.t += dt;
-    const R = Renderer, ctx = R.ctx, k = R.k, W = R.W, H = R.H;
+    if (window.Loader && Loader.sceneOn && Loader.sceneOn()) return;   // die Ladeszene zeichnet die Kulisse
+    const R = Renderer, ctx = R.ctx, k = R.k, W = R.W, H = R.H, L = THEME.loader, red = VFX.reduce();
     ctx.setTransform(k, 0, 0, k, 0, 0);
-    const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#03060a'); bg.addColorStop(1, '#0a1218'); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-    // drei Sternebenen mit Parallaxe (langsame Drift, am Desktop zusätzlich zur Maus)
-    const mxp = Input.mouse.inside ? (Input.mouse.x / W - 0.5) : 0, myp = Input.mouse.inside ? (Input.mouse.y / H - 0.5) : 0;
-    for (const s of this.stars) { const z = s[2] < 0.8 ? 0.25 : s[2] < 1.25 ? 0.6 : 1, x = (((s[0] * W + this.t * 4 * z - mxp * 26 * z) % W) + W) % W, y = s[1] * H - myp * 16 * z; ctx.fillStyle = 'rgba(255,255,255,' + ((0.3 + 0.35 * Math.sin(this.t * 1.3 + s[3])) * (0.55 + z * 0.45)).toFixed(3) + ')'; ctx.fillRect(x, y, s[2] * (0.8 + z * 0.5), s[2] * (0.8 + z * 0.5)); }
-    // Erde geht beim Öffnen über dem Mondhorizont auf
-    const rise = U.clamp((this.t - (this.openT || 0)) / (VFX.reduce() ? 0.3 : 4.5), 0, 1), re = 1 - Math.pow(1 - rise, 3);
-    const ex = W * 0.82, er = Math.min(W, H) * 0.07, ey = H * 0.2 + Math.sin(this.t * 0.1) * 6 + (1 - re) * H * 0.42;
-    const at = ctx.createRadialGradient(ex, ey, er * 0.9, ex, ey, er * 1.7); at.addColorStop(0, 'rgba(127,195,255,' + (0.28 * re).toFixed(3) + ')'); at.addColorStop(1, 'rgba(127,195,255,0)'); ctx.fillStyle = at; ctx.beginPath(); ctx.arc(ex, ey, er * 1.7, 0, Math.PI * 2); ctx.fill();
-    const eg = ctx.createRadialGradient(ex - er * 0.4, ey - er * 0.4, er * 0.1, ex, ey, er); eg.addColorStop(0, '#7fc3ff'); eg.addColorStop(0.6, '#2a6fb6'); eg.addColorStop(1, '#0d2b4d');
-    ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(ex, ey, er, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(80,160,90,0.8)'; ctx.beginPath(); ctx.ellipse(ex - er * 0.2, ey + er * 0.1, er * 0.35, er * 0.25, 0.6, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.beginPath(); ctx.ellipse(ex + er * 0.25, ey - er * 0.35, er * 0.45, er * 0.12, -0.3, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(0,0,15,0.5)'; ctx.beginPath(); ctx.arc(ex + er * 0.35, ey + er * 0.3, er, 0, Math.PI * 2); ctx.fill();
-    // Mond (langsam drehend)
-    const mr = Math.max(W, H) * 0.52, mx = W * 0.72, my = H * 0.98;
-    ctx.save(); ctx.translate(mx, my); ctx.rotate(this.t * 0.012); ctx.drawImage(this.moon, -mr, -mr, mr * 2, mr * 2); ctx.restore();
-    // kleiner Astronaut mit Zahnbürste
-    const ax = W * 0.6 + Math.sin(this.t * 0.4) * 30, ay = my - mr * 0.995 + 4;
-    ctx.save(); ctx.translate(ax, ay - Math.abs(Math.sin(this.t * 2.2)) * 6);
-    ctx.fillStyle = C_ORANGE; ctx.beginPath(); ctx.ellipse(0, -12, 8, 11, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#f4f6f7'; ctx.beginPath(); ctx.arc(0, -26, 7, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#2b5c86'; ctx.beginPath(); ctx.ellipse(2.5, -26, 4, 4.5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#4fb6e8'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(6, -12); ctx.lineTo(18, -2 + Math.sin(this.t * 14) * 2); ctx.stroke();
-    ctx.restore();
+    const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, L.sky[0]); bg.addColorStop(1, L.sky[1]); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    for (const s of this.stars) { const l = s[2], x = red ? s[0] * W : ((s[0] * W + this.t * L.starSpeed[l]) % W + W) % W, a = red ? 0.7 : 0.55 + 0.45 * Math.sin(this.t * (1 + l * 0.7) + s[3]); ctx.globalAlpha = a * (0.45 + l * 0.25); ctx.fillStyle = l === 2 ? '#EAF1F8' : '#fff'; ctx.beginPath(); ctx.arc(x, s[1] * H, l === 2 ? 1.6 : l ? 1.1 : 0.8, 0, 6.283); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    // gleiche Anordnung wie die Kulisse (Ladeszene in Menü-Komposition)
+    const wide = W >= 720 && W > H * 1.15, port = H > W, cap = H * (port ? L.capPhone : L.cap), z = wide ? 0.84 : 0.86, Rm = Math.max(W * L.moonR, cap * 1.08) * z;
+    const fx = W / 2, fy = H * 0.62, cx = fx + (W / 2 - fx) * z + (wide ? W * 0.17 : 0), cy = fy + (H - cap + Rm / z - fy) * z + H * (wide ? 0.1 : port ? -0.12 : 0.14);
+    const ex = W * (wide ? 0.84 : 0.8), ey = H * (wide ? 0.2 : port ? 0.27 : 0.24), er = Math.min(W, H) * (port ? 0.085 : 0.072) * z;
+    // Erde mit Atmosphäre
+    let g = ctx.createRadialGradient(ex, ey, er * 0.9, ex, ey, er * 1.4); g.addColorStop(0, L.halo + '.3)'); g.addColorStop(1, L.halo + '0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, er * 1.4, 0, 6.283); ctx.fill();
+    g = ctx.createRadialGradient(ex - er * 0.4, ey - er * 0.45, er * 0.08, ex, ey, er); g.addColorStop(0, L.earth[0]); g.addColorStop(0.4, L.earth[1]); g.addColorStop(0.8, L.earth[2]); g.addColorStop(1, L.earth[3]);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, er, 0, 6.283); ctx.fill();
+    // Mond (vorgezeichnet, sanft drehend)
+    const S = Math.min(2048, Math.ceil(Rm * 2 * Math.min(1.5, k))); if (!this.moon || Math.abs(this.mS - S) > 64) this.paintMoon(S);
+    ctx.save(); ctx.translate(cx, cy); if (!red) ctx.rotate(this.t * 0.006); ctx.drawImage(this.moon, -Rm, -Rm, Rm * 2, Rm * 2); ctx.restore();
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, Rm - 1, Math.PI * 1.08, Math.PI * 1.72); ctx.stroke();
+    // Lesbarkeit: im Hochformat liegt die Menütafel unten auf dem Mond
+    if (!wide) { g = ctx.createLinearGradient(0, H * 0.3, 0, H); g.addColorStop(0, 'rgba(11,14,20,0)'); g.addColorStop(0.55, 'rgba(11,14,20,.4)'); g.addColorStop(1, 'rgba(11,14,20,.8)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
   },
 };
 

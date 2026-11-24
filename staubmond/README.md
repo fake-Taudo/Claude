@@ -56,6 +56,8 @@ Einstellungen → **Grafik** (Qualitätsstufe Niedrig/Mittel/Hoch/Ultra oder Aut
 
 Beim Öffnen erscheint sofort (noch ohne JavaScript) eine einfache Mondszene, die dann in die animierte Szene „Der Mond hat einen Termin“ überblendet: Ein Astronaut putzt mit der Zahnbürste den Mond, die geputzte Fläche und der **Mondglanz-Index** folgen dem echten Fortschritt der sechs Start-Stufen. Am Ende startet eine Kapsel, danach führt „Zum Starten tippen“ (Desktop: Klick oder Enter) ins Hauptmenü und schaltet den Ton frei.
 
+Der Übergang ins Hauptmenü hat keinen Schnitt: Die Szene bleibt als Kulisse des Menüs stehen, die Kamera fährt in die Menü-Ansicht, das Logo gleitet an seinen Platz, und die Menütafel baut sich auf. Das Hauptmenü nutzt dasselbe Design wie das Spiel: Logo, ALOP-Memo und eine Tafel wie die Spiel-Panels. „Weiterspielen“ zeigt den zuletzt gespeicherten Platz.
+
 - „Effekte vereinfachen“ (unten links) und der Lautsprecher (unten rechts) werden gemerkt.
 - „Bewegung reduzieren“ (System oder Einstellungen) zeigt ruhige Standbilder statt Animation.
 - Fehler beim Start zeigen eine Meldung mit „Neu laden“ und technischen Details; fehlt IndexedDB oder ist ein Spielstand beschädigt, erscheint ein gelber Hinweis, und das Spiel nutzt wie gewohnt den Notfall-Speicher bzw. das letzte Backup.

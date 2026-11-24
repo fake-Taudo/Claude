@@ -66,9 +66,9 @@
   "id": "RT-10",
   "area": "Roboter",
   "status": "OK",
-  "detail": "100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus 1000 Bandzellen: Robotersimulation 0.172 ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund 0.60 ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.",
+  "detail": "100 Roboter (alle Modelle, 20 im Detail-Modus, 80 fern) plus 1000 Bandzellen: Robotersimulation 0.198 ms pro Logiktick im Mittel (Headless-Chromium auf Desktop-CPU; ein iPad 9. Generation ist etwa 3–4× langsamer, also rund 0.69 ms – geschätzt, nicht gemessen). Ziel ≤ 2 ms.",
   "data": {
-   "ms": 0.1715000000068297
+   "ms": 0.19783333333364378
   }
  },
  {
@@ -81,7 +81,7 @@
   "id": "RT-10b",
   "area": "Roboter",
   "status": "OK",
-  "detail": "CPU 4× gedrosselt (Emulation eines iPad 9; eher vorsichtig), echte Spielschleife mit Zeichnen, 100 Roboter, davon 11 im Detail-Modus: Robotersimulation 0.421 ms pro Logiktick im Mittel, 95 % ≤ 1.300 ms (Ziel ≤ 2 ms pro Bild bei 1 Tick pro Bild). Nicht aussagekräftig und nicht bewertet: Bildzeit 157 ms im Mittel (7.7 Ticks pro Bild), weil Headless-Chromium ohne GPU per Software zeichnet – die Bildrate auf einem echten iPad ist damit nicht geprüft."
+  "detail": "CPU 4× gedrosselt (Emulation eines iPad 9; eher vorsichtig), echte Spielschleife mit Zeichnen, 100 Roboter, davon 11 im Detail-Modus: Robotersimulation 0.392 ms pro Logiktick im Mittel, 95 % ≤ 1.200 ms (Ziel ≤ 2 ms pro Bild bei 1 Tick pro Bild). Nicht aussagekräftig und nicht bewertet: Bildzeit 153 ms im Mittel (7.5 Ticks pro Bild), weil Headless-Chromium ohne GPU per Software zeichnet – die Bildrate auf einem echten iPad ist damit nicht geprüft."
  },
  {
   "id": "RT-11",
